@@ -1,5 +1,5 @@
-<module-name> (0.0.1-1) unstable; urgency=low
+swh-sword (0.0.1-1) unstable; urgency=low
 
-  *
+  * Bootstrap version
 
- -- AUTHOR-NAME <AUTHOR-EMAIL>  <UTC-DATE>
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 22 May 2017 20:14:03 +0200
