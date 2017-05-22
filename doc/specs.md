@@ -1,5 +1,5 @@
-swh-sword-poc (draft)
-================
+swh-sword (draft)
+===========
 
 SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
@@ -9,22 +9,23 @@ This protocol will be used to interact between a client and a server.
 In this document, we will refer to a client (e.g. HAL server) and a
 server (SWH).
 
-Rougly, the sword protocol exchange, from repository to repository
+Roughly, the sword protocol exchange, from repository to repository
 scenario, can be summarized in the following manner:
 
 1. Discussion with the client and the server to establish the server's
-   abilities (GET). The client asks the server's capacities through a
-   GET query to the service document uri. The server answers with the
-   sword version supported (v2), a URI list it supports.
+   abilities (GET). The client can ask the server's abilities through
+   a GET query to the service document uri. The server answers with
+   the sword version supported (v2), a URI list it supports, the
+   collection it can query, etc...
 
-2. Client deposits one or more files through the deposit creation uri
-   via a POST request.
+2. Client deposits one archive through the deposit creation uri via a
+   POST request (or possibly in multiple requests)
 
-3. Client updates existing files through the deposit update uri via
-   a PUT request.
+3. Client updates existing archive through the deposit update uri via
+   a PUT request (or possibly in multiple requests)
 
 4. Client deletes a document through the delete uri via a DELETE
-   request.
+   request (cf. limitation paragraph about this one)
 
 # Limitation
 
