@@ -1,43 +1,62 @@
 swh-sword (draft)
-===========
+=================
 
 SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
 
-This protocol will be used to interact between a client and a server.
+This protocol will be used to interact between a client (a repository)
+and a server (swh repository) to permit the deposit of software
+tarballs.
 
 In this document, we will refer to a client (e.g. HAL server) and a
-server (SWH).
+server (SWH's).
 
-Roughly, the sword protocol exchange, from repository to repository
-scenario, can be summarized in the following manner:
+To summarize, the SWORD protocol exchange, from repository to
+repository scenario is:
 
-1. Discussion with the client and the server to establish the server's
-   abilities (GET). The client can ask the server's abilities through
-   a GET query to the service document uri. The server answers with
-   the sword version supported (v2), a URI list it supports, the
-   collection it can query, etc...
+- Discussion with the client and the server to establish the server's
+  abilities (GET). The client can ask the server's abilities through a
+  GET query to the service document uri. The server answers to the
+  client describing but not limited to, the sword version supported
+  (v2), the max upload size it expects, a URI list of supported
+  endpoints, the collection it can query, etc...
 
-2. Client deposits one archive through the deposit creation uri via a
-   POST request (or possibly in multiple requests)
+- Client deposits one document version (archive) through the deposit
+  creation uri (one or more POST request, in effect chunking the
+  artifact to deposit)
 
-3. Client updates existing archive through the deposit update uri via
-   a PUT request (or possibly in multiple requests)
+- Client updates existing document version (archive) through the
+  deposit update uri via (one or more PUT requests, in effect chunking
+  the artifact to deposit)
 
-4. Client deletes a document through the delete uri via a DELETE
-   request (cf. limitation paragraph about this one)
+- Client deletes a document through the delete uri via a DELETE
+  request (cf. limitation paragraph about this one)
+
+- Client can list collections' documents (let's not?).
+
+
+Note:
+
+IRI: Internationalized Resource identifier
+
+# API
+
+API access is over HTTPS.
+All API endpoints are rooted at https://archive.softwareheritage.org/deposit/.
 
 # Limitation
 
 In the current state, there will be some voluntary shortcomings in the
 implementation, notably:
 
-- no authentication
 - no removal
-- upload limitation of 1Gib (less?)
-- only tarball (.zip, .tar.gz) will be accepted
+- no mediation (we do not know the other system's users)
+- upload limitation of 100Mib
+- only tarballs (.zip, .tar.gz) will be accepted
+- no authentication or a simple one not dealt with at the application
+  layer
 - SWORD defines a collection notion.  As SWH is a software archive, we
-  will define only one collection dubbed 'software'.
+  will define only one collection or none if possible.
 
 # Service Document
 
@@ -46,14 +65,15 @@ This is a step permitting the client to determine the server's abilities.
 The server responds its abilities:
 - protocol sword version v2
 - accepted mime types: application/zip, application/gzip
-- mediation (to act on behalf of) accepted (e.g. HAL will send data on
-  behalf of a HAL user)
+- upload max size accepted, beyond that, it's expected the client
+  chunk the tarball into multiple ones
 - the collections the client can act upon (the only collection
   'software')
+- mediation not supported
 
 ## API
 
-GET /v1/servicedocument/
+GET /1/servicedocument/
 
 Answer:
 - 200, Content-Type: application/atomserv+xml: OK, with the body
@@ -62,8 +82,8 @@ Answer:
 ## Sample
 
 ``` shell
-GET https://sword.softwareheritage.org/v1/servicedocument HTTP/1.1
-Host: sword.softwareheritage.org
+GET https://archive.softwareheritage.org/1/servicedocument HTTP/1.1
+Host: archive.softwareheritage.org
 ```
 
 Server answers:
@@ -83,18 +103,13 @@ Server answers:
     <workspace>
         <atom:title>The SWH archive</atom:title>
 
-        <collection href="https://sword.softwareherigage.org/v1/software/">
+        <collection href="https://archive.softwareherigage.org/1/deposit/">
             <atom:title>SWH Collection</atom:title>
-            <accept>application/zip</accept>
             <accept>application/gzip</accept>
-            <accept alternate="multipart-related">application/zip</accept>
             <accept alternate="multipart-related">application/gzip</accept>
-            <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
-            <dcterms:abstract>Software Heritage's software collection</dcterms:abstract>
-            <sword:mediation>true</sword:mediation>
-            <sword:treatment>Treatment description</sword:treatment>
+            <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
+            <sword:mediation>false</sword:mediation>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-            <sword:service>https://sword.softwareheritage.org/v1/software/</sword:service>
         </collection>
     </workspace>
 </service>
@@ -102,11 +117,13 @@ Server answers:
 
 # Deposit Creation
 
-The client uploads in possibly multiple steps an archive holding the
-software source code to deposit in swh. The body also holds metadata
-information (to be defined) that are to be injected in swh's model.
+The client posts (in possibly multiple requests):
+- only an archive holding the software source code.
+- only an envelop with metadata (to be defined) describing information
+on an (already or not yet) uploaded archive
+- both
 
-After validation of the body request, the server:
+After validation of the header and body request, the server:
 
 - uploads such content in a temporary location (to be defined).
 
@@ -118,15 +135,122 @@ After validation of the body request, the server:
   associated metadata (swh-loader-tar). The operation status mentioned
   earlier is a reference to that injection operation.
 
+## Mono deposit
+
+This describes the posting of an archive (in possibly multiple
+requests).
+
+### client
+
+In one or multiple requests, the client can deposit a binary file,
+supplying the following headers:
+- Content-Type (text): accepted mimetype
+- Content-Length (int):
+- Content-MD5 (text): md5 checksum hex encoded of the tarball
+- Content-Disposition (text): attachment; filename=[filename] ; the filename
+  parameter must be text (ascii)
+- Packaging (IRI): http://purl.org/net/sword/package/SimpleZip
+- In-Progress (bool): true to specify it's not the last request, false
+  to specify it's a final request and the server can go on with
+  processing the request's information
+
+Example:
+```
+POST Col-IRI HTTP/1.1
+Host: archive.softwareheritage.org
+Content-Type: application/zip
+Content-Length: [content length]
+Content-MD5: [md5-digest]
+Content-Disposition: attachment; filename=[filename]
+Packaging: http://purl.org/net/sword/package/METSDSpaceSIP
+In-Progress: true|false
+[request entity]
+```
+
+POST /1/software/
+
+### server
+
+The server receives the request and:
+- saves the archives in a temporary location
+- executes a md5 checksum on that archive and check it against the
+  same header information
+- adds a deposit entry and retrieves the associated id
+
+The server answers either:
+- OK: 201 created with one header 'Location' with the deposit receipt
+  id
+- KO: with the error status code and associated message
+  (cf. [possible errors paragraph](#possible errors)).
+
+## Multipart deposit
+
+This describes the posting of an archive along with metadata about
+that archive (in possibly multiple requests).
+
+Client provides:
+- Content-Disposition (text): header of type 'attachment' on the Entry
+  Part with a name parameter set to 'atom'
+- Content-Disposition (text): header of type 'attachment' on the Media
+  Part with a name parameter set to payload and a filename parameter
+  [SWORD004] (the filename will be expressed in ASCII).
+- Content-MD5 (text): md5 checksum hex encoded of the tarball
+
+- Packaging (text): http://purl.org/net/sword/package/SimpleZip
+  (packaging format used on the Media Part)
+- MAY provide an In-Progress header with a value of true or false
+  on the main HTTP header
+- add metadata formats or foreign markup to the atom:entry element (TO
+  BE DEFINED)
+
+Example:
+
+``` xml
+POST deposit HTTP/1.1
+Host: archive.softwareheritage.org
+Content-Length: [content length]
+Content-Type: multipart/related;
+            boundary="===============1605871705==";
+            type="application/atom+xml"
+In-Progress: false
+MIME-Version: 1.0
+
+Media Post
+--===============1605871705==
+Content-Type: application/atom+xml; charset="utf-8"
+Content-Disposition: attachment; name="atom"
+MIME-Version: 1.0
+
+<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <title>Title</title>
+    <id>hal-or-other-archive-id</id>
+    <updated>2005-10-07T17:17:08Z</updated>
+    <author><name>Contributor</name></author>
+
+    <!-- some embedded metadata TO BE DEFINED -->
+
+</entry>
+--===============1605871705==
+Content-Type: application/zip
+Content-Disposition: attachment; name=payload; filename=[filename]
+Packaging: http://purl.org/net/sword/package/SimpleZip
+Content-MD5: [md5-digest]
+MIME-Version: 1.0
+
+[...binary package data...]
+--===============1605871705==--
+```
+
 ## API
 
-POST /v1/software/
+POST /1/software/
 
 Answers:
 
 - OK: 201 created + 'Location' header with the deposit receipt id
-- KO: 400 bad request when a problem is raised during the post request
-  checks (wrong header, checksum mismatched, tarball too big, etc...)
+- KO: any errors mentioned in the [possible errors paragraph](#possible errors).
 
 ## Sample
 
@@ -151,12 +275,14 @@ After validation of the body request, the server:
   earlier is a reference to that injection operation. The fact that
   the version is a new one is up to the tarball injection.
 
-URL: PUT /v1/software/
+URL: PUT /1/software/
 
 # Deposit Removal
 
 [#limitation](As explained in the limitation paragraph), removal won't
 be implemented.  Nothing is removed from the SWH archive.
+
+The server answers a '405 Method not allowed' error.
 
 
 # Operation Status
@@ -164,7 +290,61 @@ be implemented.  Nothing is removed from the SWH archive.
 Providing a deposit receipt id, the client asks the operation status
 of a prior upload.
 
-URL: GET /v1/software/{deposit_receipt}
+URL: GET /1/software/{deposit_receipt}
+
+
+# Possible errors
+
+## sword:ErrorContent
+
+IRI: http://purl.org/net/sword/error/ErrorContent
+
+The supplied format is not the same as that identified in the
+Packaging header and/or that supported by the server Associated HTTP
+
+Status: 415 (Unsupported Media Type) or 406 (Not Acceptable)
+
+## sword:ErrorChecksumMismatch
+
+IRI: http://purl.org/net/sword/error/ErrorChecksumMismatch
+
+Checksum sent does not match the calculated checksum. The server MUST
+also return a status code of 412 Precondition Failed
+
+## sword:ErrorBadRequest
+
+IRI: http://purl.org/net/sword/error/ErrorBadRequest
+
+Some parameters sent with the POST/PUT were not understood. The server
+MUST also return a status code of 400 Bad Request.
+
+## sword:MediationNotAllowed
+
+IRI: http://purl.org/net/sword/error/MediationNotAllowed
+
+Used where a client has attempted a mediated deposit, but this is not
+supported by the server. The server MUST also return a status code of
+412 Precondition Failed.
+
+## sword:MethodNotAllowed
+
+IRI: http://purl.org/net/sword/error/MethodNotAllowed
+
+Used when the client has attempted one of the HTTP update verbs (POST,
+PUT, DELETE) but the server has decided not to respond to such
+requests on the specified resource at that time. The server MUST also
+return a status code of 405 Method Not Allowed
+
+## sword:MaxUploadSizeExceeded
+
+IRI: http://purl.org/net/sword/error/MaxUploadSizeExceeded
+
+Used when the client has attempted to supply to the server a file
+which exceeds the server's maximum upload size limit
+
+Associated HTTP Status: 413 (Request Entity Too Large)
+
+----------------------------------------------------------------------
 
 
 # Tarball Injection
@@ -184,6 +364,17 @@ Note:
   author (or committer?) date to discriminate which is the last known
   version for the same 'origin'.
 
+
+# Technical
+
+We will need:
+- one dedicated db to store state - swh-sword
+- one dedicated temporary storage to store archives
+- 'deposit' table:
+  - id (bigint); deposit receipt id
+  - external id (text):
+  - date: date of the full deposit is done
+  - status (enum): received, ongoing, partial, full
 
 # source
 
