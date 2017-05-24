@@ -198,12 +198,11 @@ Client provides:
 
 - Packaging (text): http://purl.org/net/sword/package/SimpleZip
   (packaging format used on the Media Part)
-- MAY provide an In-Progress header with a value of true or false
-  on the main HTTP header
+- In-Progress (bool): true|false
 - add metadata formats or foreign markup to the atom:entry element (TO
   BE DEFINED)
 
-Example:
+## Example
 
 ``` xml
 POST deposit HTTP/1.1
@@ -245,37 +244,38 @@ MIME-Version: 1.0
 
 ## API
 
-POST /1/software/
+POST /1/deposit/
 
 Answers:
 
 - OK: 201 created + 'Location' header with the deposit receipt id
 - KO: any errors mentioned in the [possible errors paragraph](#possible errors).
 
-## Sample
-
-TODO
-
 # Deposit Update
 
-The client previously uploaded an archive and wants to add a new
-version (possibly in multiple steps as well). Providing the identifier
-of the previous version deposit received from the status URI, the
-client executes a PUT request on the same URI as the deposit one.
+The client previously uploaded an archive and wants to add either new
+metadata information or a new version for that previous deposit
+(possibly in multiple steps as well).  The important thing to note
+here is that for swh, this will result in a new version of the
+previous deposit in any case.
+
+Providing the identifier of the previous version deposit received from
+the status URI, the client executes a PUT request on the same URI as
+the deposit one.
 
 After validation of the body request, the server:
 - uploads such content in a temporary location (to be defined).
 
-- answers the client an 'http 201 Created'. In the Location header of
-  the response lies a deposit receipt id permitting the client to
-  check back the operation status later on.
+- answers the client an 'http 204 (No content)'. In the Location
+  header of the response lies a deposit receipt id permitting the
+  client to check back the operation status later on.
 
 - Asynchronously, the server will inject the archive uploaded and the
-  associated metadata (swh-loader-tar). The operation status mentioned
-  earlier is a reference to that injection operation. The fact that
-  the version is a new one is up to the tarball injection.
+  associated metadata. The operation status mentioned earlier is a
+  reference to that injection operation. The fact that the version is
+  a new one is up to the tarball injection.
 
-URL: PUT /1/software/
+URL: PUT /1/deposit/<previous-swh-id>
 
 # Deposit Removal
 
