@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<service xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:sword="http://purl.org/net/sword/terms/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns="http://www.w3.org/2007/app">
+
+    <sword:version>2.0</sword:version>
+    <sword:maxUploadSize>{{ max_upload_size }}</sword:maxUploadSize>
+    <sword:verbose>{{ verbose }}</sword:verbose>
+    <sword:noOp>{{ noop }}</sword:noOp>
+
+    <workspace>
+        <atom:title>The Software Heritage (SWH) archive</atom:title>
+
+        <collection href="https://sword.softwareherigage.org/v1/deposit/">
+            <atom:title>SWH Software Archive</atom:title>
+            <accept>application/gzip</accept>
+            <accept alternate="multipart-related">application/gzip</accept>
+            <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
+            <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
+            <sword:mediation>false</sword:mediation>
+            <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
+            <sword:service>https://sword.softwareheritage.org/v1/deposit/</sword:service>
+        </collection>
+    </workspace>
+</service>

@@ -6,73 +6,73 @@
 import asyncio
 import aiohttp.web
 import click
-import json
-import multidict
+import jinja2
 
 from swh.core import config
-from swh.core.api_async import (SWHRemoteAPI, decode_request)
+from swh.core.api_async import SWHRemoteAPI
 
 
 DEFAULT_CONFIG = {
     'host': ('str', '0.0.0.0'),
     'port': ('int', 5012),
+    'max_upload_size': ('int', 200 * 1024 * 1024)
 }
 
 
-def encode_data(data, **kwargs):
+template_loader = jinja2.FileSystemLoader(
+    searchpath=["swh/deposit/templates"])
+template_env = jinja2.Environment(loader=template_loader)
+
+
+def encode_data(data, template_name=None, **kwargs):
     return aiohttp.web.Response(
-        body=json.dumps(data),
-        headers=multidict.MultiDict({'Content-Type': 'application/json'}),
+        body=data,
+        headers={'Content-Type': 'application/xml'},
         **kwargs
     )
 
 
 @asyncio.coroutine
 def index(request):
-    return aiohttp.web.Response(text='SWH SWORD Server')
+    return aiohttp.web.Response(text='SWH Deposit Server')
 
 
 @asyncio.coroutine
-def hello(request):
-    name = request.match_info.get('name', "Anonymous")
-    text = "Hello, %s\n" % name
-    return aiohttp.web.Response(text=text)
+def service_document(request):
+    tpl = template_env.get_template('service_document.xml')
+    output = tpl.render(
+        noop=True, verbose=False, max_upload_size=200*1024*1024)
+    return encode_data(data=output)
 
 
 @asyncio.coroutine
-def service_document():
+def create_document(request):
     pass
 
 
 @asyncio.coroutine
-def create_document():
+def update_document(request):
     pass
 
 
 @asyncio.coroutine
-def update_document():
+def status_operation(request):
     pass
 
 
 @asyncio.coroutine
-def status_operation():
-    pass
-
-
-@asyncio.coroutine
-def delete_document():
+def delete_document(request):
     raise ValueError('Not implemented')
 
 
 def make_app(config, **kwargs):
     app = SWHRemoteAPI(**kwargs)
-    app.router.add_route('GET', '/', index)
-    app.router.add_route('GET', '/{name}', hello)
-    app.router.add_route('GET', '/v1/software/', service_document)
-    app.router.add_route('GET', '/v1/status/', status_operation)
-    app.router.add_route('POST', '/v1/software/', create_document)
-    app.router.add_route('PUT', '/v1/software/', update_document)
-    app.router.add_route('DELETE', '/v1/software/', delete_document)
+    app.router.add_route('GET',    '/', index)
+    app.router.add_route('GET',    '/api/1/deposit/', service_document)
+    app.router.add_route('GET',    '/api/1/status/', status_operation)
+    app.router.add_route('POST',   '/api/1/deposit/', create_document)
+    app.router.add_route('PUT',    '/api/1/deposit/', update_document)
+    app.router.add_route('DELETE', '/api/1/deposit/', delete_document)
     app.update(config)
     return app
 
