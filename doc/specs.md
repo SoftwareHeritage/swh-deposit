@@ -1,5 +1,7 @@
-swh-sword (draft)
+swh-deposit (draft)
 =================
+
+This is SWH's SWORD Server implementation.
 
 SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
@@ -17,9 +19,9 @@ repository scenario is:
 - Discussion with the client and the server to establish the server's
   abilities (GET). The client can ask the server's abilities through a
   GET query to the service document uri. The server answers to the
-  client describing but not limited to, the sword version supported
-  (v2), the max upload size it expects, a URI list of supported
-  endpoints, the collection it can query, etc...
+  client describing for example, the sword version supported (v2), the
+  max upload size it expects, a URI list of supported endpoints, the
+  collection it can query, etc...
 
 - Client deposits one document version (archive) through the deposit
   creation uri (one or more POST request, in effect chunking the
@@ -30,9 +32,10 @@ repository scenario is:
   the artifact to deposit)
 
 - Client deletes a document through the delete uri via a DELETE
-  request (cf. limitation paragraph about this one)
+  request (this will not be implemented, cf. limitation paragraph for
+  detail)
 
-- Client can list collections' documents (let's not?).
+- Client can list collections' documents
 
 
 Note:
@@ -51,12 +54,61 @@ implementation, notably:
 
 - no removal
 - no mediation (we do not know the other system's users)
-- upload limitation of 100Mib
+- upload limitation of 200Mib
 - only tarballs (.zip, .tar.gz) will be accepted
-- no authentication or a simple one not dealt with at the application
-  layer
 - SWORD defines a collection notion.  As SWH is a software archive, we
   will define only one collection or none if possible.
+- no authentication enforced at the application layer
+- basic authentication at the server layer
+
+
+# Nomenclatura
+
+SWORD uses IRI. This means Internationalized Resource Identifier. In
+this chapter, we will describe SWH's IRI.
+
+## SD-IRI - The Service Document IRI
+
+This is the IRI from which the root service document can be
+located.
+
+## Col-IRI - The Collection IRI
+
+Only one collection of software is used in this repository.
+
+Note:
+This is the IRI to which the initial deposit will take place, and
+which are listed in the Service Document.
+Discuss to check if we want to implement this or not.
+
+## Cont-IRI - The Content IRI
+
+This is the IRI from which the client will be able to retrieve
+representations of the object as it resides in the SWORD server.
+
+## EM-IRI - The Atom Edit Media IRI
+
+To simplify, this is the same as the Cont-IRI.
+
+## Edit-IRI - The Atom Entry Edit IRI
+
+This is the IRI of the Atom Entry of the object, and therefore also of
+the container within the SWORD server.
+
+## SE-IRI - The SWORD Edit IRI
+
+This is the IRI to which clients may POST additional content to an
+Atom Entry Resource. This MAY be the same as the Edit-IRI, but is
+defined separately as it supports HTTP POST explicitly while the
+Edit-IRI is defined by [AtomPub] as limited to GET, PUT and DELETE
+operations.
+
+## State-IRI - The SWORD Statement IRI
+
+This is the one of the IRIs which can be used to retrieve a
+description of the object from the sword server, including the
+structure of the object and its state. This will be used as the
+operation status endpoint.
 
 # Service Document
 
