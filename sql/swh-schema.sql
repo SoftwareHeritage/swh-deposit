@@ -1,5 +1,5 @@
 ---
---- Software Heritage Data Model
+--- Software Heritage - SWH Deposit Data Model
 ---
 
 create table dbversion(
@@ -21,6 +21,15 @@ create type deposit_status as enum (
 
 comment on type deposit_status is 'Deposit''s life cycle';
 
+create table client(
+  id bigserial primary key,
+  name text not null
+);
+
+comment on table client is 'Deposit''s Client references';
+comment on column client.id is 'Short identifier for the client';
+comment on column client.name is 'Human readable name for the client e.g hal, arXiv, etc...';
+
 create table deposit_type(
   id serial primary key,
   name text not null
@@ -32,19 +41,23 @@ comment on column deposit_type.name is 'Human readable name for the deposit type
 
 create table deposit(
   id bigserial primary key,
-  date timestamptz not null,
+  reception_date timestamptz not null,
+  deposit_date timestamptz not null,
   type serial not null references deposit_type(id),
   external_id text not null,
   metadata jsonb not null,
-  status deposit_status not null
+  status deposit_status not null,
+  client bigint not null
 );
 
 comment on table deposit is 'Deposit reception table of archive to load in swh';
 comment on column deposit.id is 'Deposit receipt id';
-comment on column deposit.date is 'Deposit reception date';
+comment on column deposit.reception_date is 'First deposit reception date';
+comment on column deposit.deposit_date is 'Date when the deposit is deemed complete';
 comment on column deposit.type is 'Deposit reception source type';
 comment on column deposit.external_id is 'Deposit''s unique external identifier';
 comment on column deposit.metadata is 'Deposit information on the data to inject';
 -- path to the archive + "raw" metadata from the source (hal)
-
+-- this can be updated
 comment on column deposit.status is 'Deposit''s status regarding injection';
+comment on column deposit.client is 'Deposit client identifier';
