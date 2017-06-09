@@ -1,4 +1,4 @@
-Source: swh-sword
+Source: swh-deposit
 Maintainer: Software Heritage developers <swh-devel@inria.fr>
 Section: python
 Priority: optional
@@ -12,9 +12,9 @@ Build-Depends: debhelper (>= 9),
                python3-click,
                python3-vcversioner
 Standards-Version: 3.9.6
-Homepage: https://forge.softwareheritage.org/diffusion/<PHABRICATOR_CALLSIGN>/
+Homepage: https://forge.softwareheritage.org/source/swh-deposit/
 
-Package: python3-swh.sword
+Package: python3-swh.deposit
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
-Description: Software Heritage SWORD Server
+Description: Software Heritage Deposit Server

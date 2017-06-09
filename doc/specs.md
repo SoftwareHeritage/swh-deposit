@@ -420,7 +420,7 @@ Note:
 # Technical
 
 We will need:
-- one dedicated db to store state - swh-sword
+- one dedicated db to store state - swh-deposit
 - one dedicated temporary storage to store archives
 - 'deposit' table:
   - id (bigint); deposit receipt id
