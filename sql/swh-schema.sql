@@ -45,19 +45,35 @@ create table deposit(
   deposit_date timestamptz not null,
   type serial not null references deposit_type(id),
   external_id text not null,
-  metadata jsonb not null,
   status deposit_status not null,
-  client bigint not null
+  client_id bigint not null
 );
 
 comment on table deposit is 'Deposit reception table of archive to load in swh';
+
 comment on column deposit.id is 'Deposit receipt id';
 comment on column deposit.reception_date is 'First deposit reception date';
-comment on column deposit.deposit_date is 'Date when the deposit is deemed complete';
+comment on column deposit.complete_date is 'Date when the deposit is deemed complete and ready for injection';
 comment on column deposit.type is 'Deposit reception source type';
 comment on column deposit.external_id is 'Deposit''s unique external identifier';
-comment on column deposit.metadata is 'Deposit information on the data to inject';
--- path to the archive + "raw" metadata from the source (hal)
--- this can be updated
 comment on column deposit.status is 'Deposit''s status regarding injection';
-comment on column deposit.client is 'Deposit client identifier';
+comment on column deposit.client_id is 'Deposit client identifier';
+
+
+--create unique index deposit_pkey on deposit(client_id, external_id);
+
+-- We may need another table for the multiple requests
+-- When reading for injection, we'd need to aggregate information
+
+create table deposit_request(
+  id bigserial primary key,
+  deposit_id bigint not null references deposit(id),
+  metadata jsonb not null
+);
+
+comment on table deposit_request is 'Deposit request made by the client';
+
+comment on column deposit_request.id is 'Deposit request id';
+comment on column deposit_request.deposit_id is 'Deposit concerned by the request';
+comment on column deposit_request.metadata is 'Deposit request information on the data to inject';
+-- path to the archive + "raw" metadata from the source (e.g hal)
