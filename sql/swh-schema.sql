@@ -2,14 +2,15 @@
 --- Software Heritage - SWH Deposit Data Model
 ---
 
+-----------
+-- schema
+-----------
+
 create table dbversion(
   version     int primary key,
   release     timestamptz,
   description text
 );
-
-insert into dbversion(version, release, description)
-values(1, now(), 'Work In Progress');
 
 create type deposit_status as enum (
   'partially-received',  -- the deposit is partial since it can be done in multiple requests
@@ -77,3 +78,13 @@ comment on column deposit_request.id is 'Deposit request id';
 comment on column deposit_request.deposit_id is 'Deposit concerned by the request';
 comment on column deposit_request.metadata is 'Deposit request information on the data to inject';
 -- path to the archive + "raw" metadata from the source (e.g hal)
+
+-----------
+-- data
+-----------
+
+insert into dbversion(version, release, description)
+values(1, now(), 'Work In Progress');
+
+insert into client(name)
+values ('hal');
