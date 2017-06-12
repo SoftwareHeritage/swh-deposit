@@ -1,0 +1,5 @@
+port: 5012
+host: localhost
+
+# 200 Mib max size
+max_upload_size: 209715200

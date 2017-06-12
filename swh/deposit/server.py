@@ -9,19 +9,14 @@ import click
 import jinja2
 
 from swh.core import config
+from swh.core.config import SWHConfig
 from swh.core.api_async import SWHRemoteAPI
 
 
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG_SERVER = {
     'host': ('str', '0.0.0.0'),
     'port': ('int', 5012),
-    'max_upload_size': ('int', 200 * 1024 * 1024)
 }
-
-
-template_loader = jinja2.FileSystemLoader(
-    searchpath=["swh/deposit/templates"])
-template_env = jinja2.Environment(loader=template_loader)
 
 
 def encode_data(data, template_name=None, **kwargs):
@@ -32,47 +27,63 @@ def encode_data(data, template_name=None, **kwargs):
     )
 
 
-@asyncio.coroutine
-def index(request):
-    return aiohttp.web.Response(text='SWH Deposit Server')
+class DepositWebServer(SWHConfig):
+    """Base class to define endpoints route.
 
+    """
 
-@asyncio.coroutine
-def service_document(request):
-    tpl = template_env.get_template('service_document.xml')
-    output = tpl.render(
-        noop=True, verbose=False, max_upload_size=200*1024*1024)
-    return encode_data(data=output)
+    CONFIG_BASE_FILENAME = 'deposit/server'
 
+    DEFAULT_CONFIG = {
+        'max_upload_size': ('int', 200 * 1024 * 1024),
+    }
 
-@asyncio.coroutine
-def create_document(request):
-    pass
+    def __init__(self, config=None):
+        if config:
+            self.config = config
+        else:
+            self.config = self.parse_config_file()
+        template_loader = jinja2.FileSystemLoader(
+            searchpath=["swh/deposit/templates"])
+        self.template_env = jinja2.Environment(loader=template_loader)
 
+    @asyncio.coroutine
+    def index(self, request):
+        return aiohttp.web.Response(text='SWH Deposit Server')
 
-@asyncio.coroutine
-def update_document(request):
-    pass
+    @asyncio.coroutine
+    def service_document(self, request):
+        tpl = self.template_env.get_template('service_document.xml')
+        output = tpl.render(
+            noop=True, verbose=False, max_upload_size=200*1024*1024)
+        return encode_data(data=output)
 
+    @asyncio.coroutine
+    def create_document(self, request):
+        pass
 
-@asyncio.coroutine
-def status_operation(request):
-    pass
+    @asyncio.coroutine
+    def update_document(self, request):
+        pass
 
+    @asyncio.coroutine
+    def status_operation(self, request):
+        pass
 
-@asyncio.coroutine
-def delete_document(request):
-    raise ValueError('Not implemented')
+    @asyncio.coroutine
+    def delete_document(self, request):
+        raise ValueError('Not implemented')
 
 
 def make_app(config, **kwargs):
     app = SWHRemoteAPI(**kwargs)
-    app.router.add_route('GET',    '/', index)
-    app.router.add_route('GET',    '/api/1/deposit/', service_document)
-    app.router.add_route('GET',    '/api/1/status/', status_operation)
-    app.router.add_route('POST',   '/api/1/deposit/', create_document)
-    app.router.add_route('PUT',    '/api/1/deposit/', update_document)
-    app.router.add_route('DELETE', '/api/1/deposit/', delete_document)
+    server = DepositWebServer()
+    app.router.add_route('GET',    '/', server.index)
+    app.router.add_route('GET',    '/api/1/deposit/', server.service_document)
+    app.router.add_route('GET',    '/api/1/status/', server.status_operation)
+    app.router.add_route('POST',   '/api/1/deposit/', server.create_document)
+    app.router.add_route('PUT',    '/api/1/deposit/', server.update_document)
+    app.router.add_route('DELETE', '/api/1/deposit/', server.delete_document)
     app.update(config)
     return app
 

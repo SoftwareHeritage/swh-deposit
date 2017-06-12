@@ -1,0 +1,5 @@
+run-dev:
+	python3 -m swh.deposit.server ./resources/deposit/server.yml
+
+run:
+	python3 -m swh.deposit.server ~/.config/swh/deposit/server.yml
