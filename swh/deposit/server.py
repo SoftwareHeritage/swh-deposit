@@ -7,11 +7,12 @@ import asyncio
 import aiohttp.web
 import click
 import jinja2
+import json
 
 from swh.core import config
 from swh.core.config import SWHConfig
 from swh.core.api_async import SWHRemoteAPI
-
+from swh.deposit.backend import DepositBackend
 
 DEFAULT_CONFIG_SERVER = {
     'host': ('str', '0.0.0.0'),
@@ -36,6 +37,7 @@ class DepositWebServer(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 200 * 1024 * 1024),
+        'deposit_db': ('str', 'dbname=deposit-db'),
     }
 
     def __init__(self, config=None):
@@ -46,6 +48,7 @@ class DepositWebServer(SWHConfig):
         template_loader = jinja2.FileSystemLoader(
             searchpath=["swh/deposit/templates"])
         self.template_env = jinja2.Environment(loader=template_loader)
+        self.backend = DepositBackend()
 
     @asyncio.coroutine
     def index(self, request):
@@ -55,7 +58,8 @@ class DepositWebServer(SWHConfig):
     def service_document(self, request):
         tpl = self.template_env.get_template('service_document.xml')
         output = tpl.render(
-            noop=True, verbose=False, max_upload_size=200*1024*1024)
+            noop=True, verbose=False,
+            max_upload_size=self.config['max_upload_size'])
         return encode_data(data=output)
 
     @asyncio.coroutine
@@ -74,16 +78,24 @@ class DepositWebServer(SWHConfig):
     def delete_document(self, request):
         raise ValueError('Not implemented')
 
+    @asyncio.coroutine
+    def client_get(self, request):
+        clients = self.backend.client_list()
+        return aiohttp.web.Response(
+            body=json.dumps(clients),
+            headers={'Content-Type': 'application/json'})
+
 
 def make_app(config, **kwargs):
     app = SWHRemoteAPI(**kwargs)
     server = DepositWebServer()
-    app.router.add_route('GET',    '/', server.index)
+    app.router.add_route('GET',    '/',               server.index)
     app.router.add_route('GET',    '/api/1/deposit/', server.service_document)
     app.router.add_route('GET',    '/api/1/status/', server.status_operation)
     app.router.add_route('POST',   '/api/1/deposit/', server.create_document)
     app.router.add_route('PUT',    '/api/1/deposit/', server.update_document)
     app.router.add_route('DELETE', '/api/1/deposit/', server.delete_document)
+    app.router.add_route('GET',    '/api/1/client/', server.client_get)
     app.update(config)
     return app
 

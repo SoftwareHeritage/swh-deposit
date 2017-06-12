@@ -13,23 +13,28 @@ create table dbversion(
 );
 
 create type deposit_status as enum (
-  'partially-received',  -- the deposit is partial since it can be done in multiple requests
-  'received',            -- deposit is fully deposited and can be injected
-  'injecting',           -- injection is ongoing on swh's side
-  'injected',            -- injection is successfully done
-  'failed'               -- injection failed due to some error
+  'partial',      -- the deposit is new or partially received since it
+                  -- can be done in multiple requests
+  'expired',      -- deposit has been there too long and is now deemed
+                  -- ready to be garbage collected
+  'ready',        -- deposit is fully received and ready for injection
+  'injecting',    -- injection is ongoing on swh's side
+  'success',      -- injection successful
+  'failure'       -- injection failure
 );
 
 comment on type deposit_status is 'Deposit''s life cycle';
 
 create table client(
   id bigserial primary key,
-  name text not null
+  name text not null,
+  credential bytea
 );
 
 comment on table client is 'Deposit''s Client references';
 comment on column client.id is 'Short identifier for the client';
 comment on column client.name is 'Human readable name for the client e.g hal, arXiv, etc...';
+comment on column client.credential is 'Associated credential for the clients...';
 
 create table deposit_type(
   id serial primary key,
@@ -47,7 +52,8 @@ create table deposit(
   type serial not null references deposit_type(id),
   external_id text not null,
   status deposit_status not null,
-  client_id bigint not null
+  client_id bigint not null,
+  swh_id text
 );
 
 comment on table deposit is 'Deposit reception table of archive to load in swh';
@@ -59,9 +65,10 @@ comment on column deposit.type is 'Deposit reception source type';
 comment on column deposit.external_id is 'Deposit''s unique external identifier';
 comment on column deposit.status is 'Deposit''s status regarding injection';
 comment on column deposit.client_id is 'Deposit client identifier';
+comment on column deposit.swh_id is 'SWH''s result identifier';
 
 
---create unique index deposit_pkey on deposit(client_id, external_id);
+-- create unique index deposit_pkey on deposit(client_id, external_id);
 
 -- We may need another table for the multiple requests
 -- When reading for injection, we'd need to aggregate information
