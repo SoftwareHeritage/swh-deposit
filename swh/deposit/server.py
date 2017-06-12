@@ -85,10 +85,10 @@ def make_app(config, **kwargs):
 @click.option('--debug/--nodebug', default=True,
               help="Indicates if the server should run in debug mode")
 def launch(config_path, host, port, debug):
-    c = config.read(config_path, DEFAULT_CONFIG)
-    port = port if port else c['port']
-    host = host if host else c['host']
-    app = make_app(c, debug=bool(debug))
+    cfg = config.read(config_path, DEFAULT_CONFIG_SERVER)
+    port = port if port else cfg['port']
+    host = host if host else cfg['host']
+    app = make_app(cfg, debug=bool(debug))
     aiohttp.web.run_app(app, host=host, port=port)
 
 
