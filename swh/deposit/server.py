@@ -14,7 +14,8 @@ from swh.core.config import SWHConfig
 from swh.core.api_async import SWHRemoteAPI
 from swh.deposit.backend import DepositBackend
 
-DEFAULT_CONFIG_SERVER = {
+DEFAULT_CONFIG_PATH = 'deposit/server'
+DEFAULT_CONFIG = {
     'host': ('str', '0.0.0.0'),
     'port': ('int', 5012),
 }
@@ -33,11 +34,11 @@ class DepositWebServer(SWHConfig):
 
     """
 
-    CONFIG_BASE_FILENAME = 'deposit/server'
+    CONFIG_BASE_FILENAME = DEFAULT_CONFIG_PATH
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 200 * 1024 * 1024),
-        'deposit_db': ('str', 'dbname=deposit-db'),
+        'deposit_db': ('str', 'dbname=softwareheritage-deposit-dev'),
     }
 
     def __init__(self, config=None):
@@ -87,6 +88,12 @@ class DepositWebServer(SWHConfig):
 
 
 def make_app(config, **kwargs):
+    """Initialize server application.
+
+    Returns:
+       Application ready for running and serving api endpoints.
+
+    """
     app = SWHRemoteAPI(**kwargs)
     server = DepositWebServer()
     app.router.add_route('GET',    '/',               server.index)
@@ -100,6 +107,16 @@ def make_app(config, **kwargs):
     return app
 
 
+def make_app_from_configfile(config_path=DEFAULT_CONFIG_PATH, **kwargs):
+    """Initialize server application from configuration file.
+
+    Returns:
+       Application ready for running and serving api endpoints.
+
+    """
+    return make_app(config.read(config_path, DEFAULT_CONFIG), **kwargs)
+
+
 @click.command()
 @click.argument('config-path', required=1)
 @click.option('--host', default='0.0.0.0', help="Host to run the server")
@@ -108,10 +125,7 @@ def make_app(config, **kwargs):
 @click.option('--debug/--nodebug', default=True,
               help="Indicates if the server should run in debug mode")
 def launch(config_path, host, port, debug):
-    cfg = config.read(config_path, DEFAULT_CONFIG_SERVER)
-    port = port if port else cfg['port']
-    host = host if host else cfg['host']
-    app = make_app(cfg, debug=bool(debug))
+    app = make_app_from_configfile(config_path, debug=bool(debug))
     aiohttp.web.run_app(app, host=host, port=port)
 
 
