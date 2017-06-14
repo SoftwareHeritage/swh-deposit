@@ -38,7 +38,7 @@ class DepositWebServer(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
-        'deposit_db': ('str', 'dbname=softwareheritage-deposit-dev'),
+        'dbconn': ('str', 'dbname=softwareheritage-deposit-dev'),
     }
 
     def __init__(self, config=None):
@@ -49,7 +49,7 @@ class DepositWebServer(SWHConfig):
         template_loader = jinja2.FileSystemLoader(
             searchpath=["swh/deposit/templates"])
         self.template_env = jinja2.Environment(loader=template_loader)
-        self.backend = DepositBackend()
+        self.backend = DepositBackend(self.config['dbconn'])
 
     @asyncio.coroutine
     def index(self, request):

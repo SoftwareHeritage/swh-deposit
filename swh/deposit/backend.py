@@ -8,8 +8,6 @@ from functools import wraps
 import psycopg2
 import psycopg2.extras
 
-from swh.core.config import SWHConfig
-
 
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 
@@ -37,29 +35,20 @@ def autocommit(fn):
     return wrapped
 
 
-class DepositBackend(SWHConfig):
+class DepositBackend():
     """Backend for the Software Heritage deposit database.
 
     """
 
-    CONFIG_BASE_FILENAME = 'deposit/backend'
-
-    DEFAULT_CONFIG = {
-        'deposit_db': ('str', 'dbname=swh-deposit'),
-    }
-
-    def __init__(self, **override_config):
-        self.config = self.parse_config_file(global_config=False)
-        self.config.update(override_config)
-
+    def __init__(self, dbconn):
         self.db = None
-
+        self.dbconn = dbconn
         self.reconnect()
 
     def reconnect(self):
         if not self.db or self.db.closed:
             self.db = psycopg2.connect(
-                dsn=self.config['deposit_db'],
+                dsn=self.dbconn,
                 cursor_factory=psycopg2.extras.RealDictCursor,
             )
 
