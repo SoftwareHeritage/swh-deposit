@@ -1,5 +1,7 @@
-swh-deposit (0.0.1-1) unstable; urgency=low
+swh-deposit (0.0.1-1~swh1) unstable-swh; urgency=medium
 
-  * Bootstrap version
+  * Initial release
+  * v0.0.1
+  * Add basic server implementation for deployment testing
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 22 May 2017 20:14:03 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 14 Jun 2017 12:48:37 +0200
