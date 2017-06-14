@@ -17,7 +17,7 @@ from swh.deposit.backend import DepositBackend
 DEFAULT_CONFIG_PATH = 'deposit/server'
 DEFAULT_CONFIG = {
     'host': ('str', '0.0.0.0'),
-    'port': ('int', 5012),
+    'port': ('int', 5006),
 }
 
 
@@ -37,7 +37,7 @@ class DepositWebServer(SWHConfig):
     CONFIG_BASE_FILENAME = DEFAULT_CONFIG_PATH
 
     DEFAULT_CONFIG = {
-        'max_upload_size': ('int', 200 * 1024 * 1024),
+        'max_upload_size': ('int', 209715200),
         'deposit_db': ('str', 'dbname=softwareheritage-deposit-dev'),
     }
 
@@ -120,7 +120,7 @@ def make_app_from_configfile(config_path=DEFAULT_CONFIG_PATH, **kwargs):
 @click.command()
 @click.argument('config-path', required=1)
 @click.option('--host', default='0.0.0.0', help="Host to run the server")
-@click.option('--port', default=5012, type=click.INT,
+@click.option('--port', default=5006, type=click.INT,
               help="Binding port of the server")
 @click.option('--debug/--nodebug', default=True,
               help="Indicates if the server should run in debug mode")
