@@ -1,0 +1,17 @@
+- model: deposit.dbversion
+  pk: 1
+  fields:
+    release: '2017-07-31 08:10:00.303000+00:00'
+    description: Work in Progress
+- model: deposit.depositcollection
+  pk: 1
+  fields:
+    name: hal
+- model: deposit.depositrequesttype
+  pk: 1
+  fields:
+    name: archive
+- model: deposit.depositrequesttype
+  pk: 2
+  fields:
+    name: metadata

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+
+    {% block header %}{% endblock %}
+
+    <!-- BEGIN: bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap-responsive.min.css' %}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+    <!-- END: bootstrap -->
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+    <link rel="icon" href="{% static 'img/icons/swh-logo-32x32.png' %}" sizes="32x32" />
+    <link rel="icon" href="{% static 'img/icons/swh-logo-deposit-192x192.png' %}" sizes="192x192" />
+    <link rel="apple-touch-icon-precomposed" href="{% static 'img/icons/swh-logo-deposit-180x180.png' %}" />
+    <meta name="msapplication-TileImage" content="{% static 'img/icons/swh-logo-deposit-270x270.png' %}" />
+  </head>
+  <body
+    <a id="top"></a>
+    <nav class="navbar navbar-default navbar-static-top" id="swh-navbar-collapse">
+      <div class="navbar-header">
+        <div class="logo">
+          <a class="navbar-brand" href="{% url 'home' %}"> <!-- logo -->
+            <img alt="SWH Deposit" src="{% static 'img/swh-logo-deposit.png' %}" class="swh-logo" />
+          </a>
+          <a class="navbar-brand sitename" href="{% url 'home' %}">
+            <span class="first-word">Software</span> <span class="second-word">Heritage</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="container">
+      </div>
+      <div class="container content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+    <div id="footer" class="panel-footer">
+      <a href="https://www.softwareheritage.org">Software Heritage</a> &mdash;
+      Copyright (C) 2015&ndash;2018, The Software Heritage developers.
+      License: <a href="https://www.gnu.org/licenses/agpl.html">GNU
+      AGPLv3+</a>. <br /> The source code of Software Heritage <em>itself</em>
+      is available on
+      our <a href="https://forge.softwareheritage.org/">development
+      forge</a>. <br /> The source code files <em>archived</em> by Software
+      Heritage are available under their own copyright and licenses. <br />
+      <a href="https://www.softwareheritage.org/software-heritage-api-terms-of-use/">Terms of use</a> -
+      <a href="https://www.softwareheritage.org/contact/">Contact</a>.
+    </div>
+    <div id="back-to-top">
+      <a href="#top"><img alt="back to top" src="{% static 'img/arrow-up-small.png' %}" /></a>
+    </div>
+  </body>
+</html>

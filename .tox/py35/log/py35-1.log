@@ -1,0 +1,178 @@
+actionid: py35
+msg: getenv
+cmdargs: ['/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35/bin/pip', 'install', '.[testing]', 'pytest-cov', 'pifpaf']
+env: {'DEBFULLNAME': 'Nicolas Dandrimont', 'GSM_SKIP_SSH_AGENT_WORKAROUND': 'true', 'LANG': 'fr_FR.UTF-8', 'DISPLAY': ':0', 'XDG_VTNR': '2', 'ALTERNATE_EDITOR': '', 'ZEITGEIST_DATA_PATH': '/home/ndandrim/.local/share/zeitgeist', 'LOGNAME': 'ndandrim', 'PWD': '/home/ndandrim/work/swh-environment/swh-deposit', 'XAUTHORITY': '/run/user/1000/gdm/Xauthority', 'DESKTOP_AUTOSTART_ID': '10a7964f7111f989a7154032010187853800000222540007', 'QT_QPA_PLATFORMTHEME': 'qt5ct', 'COLORTERM': 'truecolor', 'XDG_SESSION_ID': '1282', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/f0760c29_c039_4786_bbdc_042fd69adafb', 'GOPATH': '/home/ndandrim/opt/go', 'XDG_SESSION_DESKTOP': 'gnome-xorg', 'GDMSESSION': 'gnome-xorg', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'USERNAME': 'ndandrim', 'WINDOWPATH': '2', 'LESS': '-iMFXSx4R', 'DESKTOP_SESSION': 'gnome-xorg', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'VTE_VERSION': '5401', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/local/share/:/usr/share/', 'GNOME_TERMINAL_SERVICE': ':1.92', 'XDG_MENU_PREFIX': 'gnome-', 'QT_ACCESSIBILITY': '1', 'SHELL': '/bin/zsh', 'GDM_LANG': 'fr_FR.UTF-8', 'XDG_SESSION_TYPE': 'x11', 'TERM': 'xterm-256color', 'GTK_MODULES': 'gtk-vector-screenshot:gail:atk-bridge:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot', 'SESSION_MANAGER': 'local/drepper:@/tmp/.ICE-unix/22254,unix/drepper:/tmp/.ICE-unix/22254', 'SSH_AUTH_SOCK': '/run/user/1000/gnupg/S.gpg-agent.ssh', 'PATH': '/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35/bin:/home/ndandrim/bin:/home/ndandrim/bin:/home/ndandrim/.local/bin:/home/ndandrim/opt/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games', 'XDG_CURRENT_DESKTOP': 'GNOME', 'DEBEMAIL': 'olasd@debian.org', 'HOME': '/home/ndandrim', 'XDG_SEAT': 'seat0', 'XDG_RUNTIME_DIR': '/run/user/1000', 'GPG_AGENT_INFO': '/run/user/1000/gnupg/S.gpg-agent:0:1', 'USER': 'ndandrim', 'EDITOR': 'emacsclient -c', 'SHLVL': '1', 'OLDPWD': '/home/ndandrim/work/swh-environment', 'ZSH': '/home/ndandrim/.oh-my-zsh', 'PAGER': 'less', 'LC_CTYPE': 'fr_FR.UTF-8', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'ZSH_TMUX_TERM': 'screen-256color', '_ZSH_TMUX_FIXED_CONFIG': '/home/ndandrim/.oh-my-zsh/plugins/tmux/tmux.only.conf', '_VIRTUALENVWRAPPER_API': ' mkvirtualenv rmvirtualenv lsvirtualenv showvirtualenv workon add2virtualenv cdsitepackages cdvirtualenv lssitepackages toggleglobalsitepackages cpvirtualenv setvirtualenvproject mkproject cdproject mktmpenv', 'VIRTUALENVWRAPPER_SCRIPT': '/usr/share/virtualenvwrapper/virtualenvwrapper.sh', 'ENV_NAME': 'swh-deposit', '_': '/usr/bin/tox', 'PYTHONHASHSEED': '1004320095', 'VIRTUAL_ENV': '/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35'}
+
+Processing /home/ndandrim/work/swh-environment/swh-deposit
+Collecting pytest-cov
+  Using cached https://files.pythonhosted.org/packages/30/0a/1b009b525526cd3cd9f52f52391b426c5a3597447be811a10bcb1f6b05eb/pytest_cov-2.6.0-py2.py3-none-any.whl
+Collecting pifpaf
+  Using cached https://files.pythonhosted.org/packages/e5/98/e5991ed8f899a621e163c32ffefb47c18ce274757bd9e39010482db2b1f7/pifpaf-2.1.2-py2.py3-none-any.whl
+Collecting vcversioner (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/c5/cc/33162c0a7b28a4d8c83da07bc2b12cee58c120b4a9e8bba31c41c8d35a16/vcversioner-2.16.0.0.tar.gz
+Collecting click (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/fa/37/45185cb5abbc30d7257104c434fe0b07e5a195a6847506c074527aa599ec/Click-7.0-py2.py3-none-any.whl
+Collecting Django<2.0 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/44/e7/872bbf76aa16b7a061698d75325dac023285db33db4bda8ba8fe5d3bb356/Django-1.11.16-py2.py3-none-any.whl
+Collecting djangorestframework (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/99/0b/d37a5a96c5d301e23adcabcc2f3fa659fb34e6308590f95ebb50cdbe98a1/djangorestframework-3.9.0-py2.py3-none-any.whl
+Collecting xmltodict (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/42/a9/7e99652c6bc619d19d58cdd8c47560730eb5825d43a7e25db2e1d776ceb7/xmltodict-0.11.0-py2.py3-none-any.whl
+Collecting swh.core>=0.0.36 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/34/f5/57a52eeffbb76eed3ede67fcf630c1a8147d16fd35216dd24dae53266bab/swh.core-0.0.44-py3-none-any.whl
+Collecting swh.loader.tar>=0.0.35 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/48/5b/9626a7eae4a2e038e2b3ef58225c401b6182b7b4db14f7a99e9c156703c5/swh.loader.tar-0.0.35-py3-none-any.whl
+Collecting swh.loader.core>=0.0.32 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/f8/e2/a0446b4d1afaf9431c84b3795170c41500aa3d8223f96edc5bec5d4908b2/swh.loader.core-0.0.35-py3-none-any.whl
+Collecting swh.scheduler>=0.0.26 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/54/46/3b3061c4a40d37cca7a5b66b00cb7c1c0fceadef5127b0a7b6e18b2b17be/swh.scheduler-0.0.32-py3-none-any.whl
+Collecting swh.model>=0.0.26 (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/fa/8d/319e35e01dd0e33959ad0f9fa6fe098fd1cb880f52fee266450d3767d050/swh.model-0.0.28-py3-none-any.whl
+Collecting pytest (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/80/2a/2995cbec008f624e1dd8ddc5350535a5d2f33c10b82c06037298e6c52bee/pytest-3.9.2-py2.py3-none-any.whl
+Collecting pytest-django (from swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/6e/fe/6e5b43eac75c617cd9383ce82dd76d08fa198a770b06986951b3086980c9/pytest_django-3.4.3-py2.py3-none-any.whl
+Collecting coverage>=4.4 (from pytest-cov)
+  Downloading https://files.pythonhosted.org/packages/2c/c0/8047b7cbbcdbd7d21f8d68126196b7915da892c5af3d1a99dba082d33ec0/coverage-4.5.1-cp35-cp35m-manylinux1_x86_64.whl (202kB)
+Collecting fixtures (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/a8/28/7eed6bf76792f418029a18d5b2ace87ce7562927cdd00f1cefe481cd148f/fixtures-3.0.0-py2.py3-none-any.whl
+Collecting pbr (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/76/0c/304d968fe010ba7c2ecc1d57e28741ddd3a305439dcf1cdb3b6f896a3c00/pbr-5.1.0-py2.py3-none-any.whl
+Collecting psutil (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/7d/9a/1e93d41708f8ed2b564395edfa3389f0fd6d567597401c2e5e2775118d8b/psutil-5.4.7.tar.gz
+Collecting xattr; sys_platform != "win32" (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/60/80/a1f35bfd3c7ffb78791b2a6a15c233584a102a20547fd96d48933ec453e7/xattr-0.9.6.tar.gz
+Collecting daiquiri (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/a5/aa/31a81f03d8a6c8859706018ed1580fa2d2a16ee72976079d48139f28fd53/daiquiri-1.5.0-py2.py3-none-any.whl
+Collecting jinja2 (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/7f/ff/ae64bacdfc95f27a016a7bed8e8686763ba4d277a78ca76f32659220a731/Jinja2-2.10-py2.py3-none-any.whl
+Collecting six (from pifpaf)
+  Using cached https://files.pythonhosted.org/packages/67/4b/141a581104b1f6397bfa78ac9d43d8ad29a7ca43ea90a2d863fe3056e86a/six-1.11.0-py2.py3-none-any.whl
+Collecting pytz (from Django<2.0->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/52/8b/876c5745f617630be90cfb8fafe363c6d7204b176dc707d1805d1e9a0a35/pytz-2018.6-py2.py3-none-any.whl
+Collecting python-dateutil (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/cf/f5/af2b09c957ace60dcfac112b669c45c8c97e32f94aa8b56da4c6d1682825/python_dateutil-2.7.3-py2.py3-none-any.whl
+Collecting requests (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/f1/ca/10332a30cb25b627192b4ea272c351bce3ca1091e541245cccbace6051d8/requests-2.20.0-py2.py3-none-any.whl
+Collecting arrow (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+Collecting Flask (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/7f/e7/08578774ed4536d3242b14dacb4696386634607af824ea997202cd0edb4b/Flask-1.0.2-py2.py3-none-any.whl
+Collecting PyYAML (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz
+Collecting msgpack-python (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/8a/20/6eca772d1a5830336f84aca1d8198e5a3f4715cd1c7fc36d3cc7f7185091/msgpack-python-0.5.6.tar.gz
+Collecting aiohttp (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Downloading https://files.pythonhosted.org/packages/70/c0/380f2bd0a6505998e984efd23b692afe662c4e27603f066c632eed7bf3ee/aiohttp-3.4.4-cp35-cp35m-manylinux1_x86_64.whl (1.1MB)
+Collecting psycopg2 (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Downloading https://files.pythonhosted.org/packages/53/fc/dfc645d6b89cbc288b0d7b8bc9e83b8052ef263781562a89ec748e8ae008/psycopg2-2.7.5-cp35-cp35m-manylinux1_x86_64.whl (2.7MB)
+Collecting systemd-python (from swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/e8/a8/00ba0f605837a8f69523e6c3a4fb14675a6430c163f836540129c50b3aef/systemd-python-234.tar.gz
+Collecting swh.loader.dir>=0.0.32 (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/6c/c5/4dfd80e3defc27a359ce697ebeeeda307d3d9d34e5a00a3cc23f7e76927f/swh.loader.dir-0.0.32-py3-none-any.whl
+Collecting swh.storage>=0.0.83 (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/28/5f/9105428385e6d0dc3b417ce5ec32df0936d3061bb34038c1160beb7e7e61/swh.storage-0.0.108-py3-none-any.whl
+Collecting retrying (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/44/ef/beae4b4ef80902f22e3af073397f079c96969c69b2c7d52a57ea9ae61c9d/retrying-1.3.3.tar.gz
+Collecting kombu (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/97/61/65838c7da048e56d549e358ac19c0979c892e17dc6186610c49531d35b70/kombu-4.2.1-py2.py3-none-any.whl
+Collecting elasticsearch>5.4 (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/b1/f1/89735ebb863767516d55cee2cfdd5e2883ff1db903be3ba1fe15a1725adc/elasticsearch-6.3.1-py2.py3-none-any.whl
+Collecting celery (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/e8/58/2a0b1067ab2c12131b5c089dfc579467c76402475c5231095e36a43b749c/celery-4.2.1-py2.py3-none-any.whl
+Collecting py>=1.5.0 (from pytest->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/3e/c7/3da685ef117d42ac8d71af525208759742dd235f8094221fdaafcd3dba8f/py-1.7.0-py2.py3-none-any.whl
+Collecting attrs>=17.4.0 (from pytest->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/3a/e1/5f9023cc983f1a628a8c2fd051ad19e76ff7b142a0faf329336f9a62a514/attrs-18.2.0-py2.py3-none-any.whl
+Collecting pluggy>=0.7 (from pytest->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/1c/e7/017c262070af41fe251401cb0d0e1b7c38f656da634cd0c15604f1f30864/pluggy-0.8.0-py2.py3-none-any.whl
+Collecting atomicwrites>=1.0 (from pytest->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/3a/9a/9d878f8d885706e2530402de6417141129a943802c084238914fa6798d97/atomicwrites-1.2.1-py2.py3-none-any.whl
+Collecting pathlib2>=2.2.0; python_version < "3.6" (from pytest->swh.deposit==0.0.63.post15)
+  Downloading https://files.pythonhosted.org/packages/66/a7/9f8d84f31728d78beade9b1271ccbfb290c41c1e4dc13dbd4997ad594dcd/pathlib2-2.3.2-py2.py3-none-any.whl
+Collecting more-itertools>=4.0.0 (from pytest->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/79/b1/eace304ef66bd7d3d8b2f78cc374b73ca03bc53664d78151e9df3b3996cc/more_itertools-4.3.0-py3-none-any.whl
+Requirement already satisfied: setuptools in ./.tox/py35/lib/python3.5/site-packages (from pytest->swh.deposit==0.0.63.post15) (40.4.3)
+Collecting testtools>=0.9.22 (from fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/87/74/a4d55da28d7bba6d6f49430f22a62afd8472cb24a63fa61daef80d3e821b/testtools-2.3.0-py2.py3-none-any.whl
+Collecting cffi>=1.0.0 (from xattr; sys_platform != "win32"->pifpaf)
+  Downloading https://files.pythonhosted.org/packages/59/cc/0e1635b4951021ef35f5c92b32c865ae605fac2a19d724fb6ff99d745c81/cffi-1.11.5-cp35-cp35m-manylinux1_x86_64.whl (420kB)
+Collecting MarkupSafe>=0.23 (from jinja2->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/4d/de/32d741db316d8fdb7680822dd37001ef7a448255de9699ab4bfcbdf4172b/MarkupSafe-1.0.tar.gz
+Collecting idna<2.8,>=2.5 (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/4b/2a/0276479a4b3caeb8a8c1af2f8e4355746a97fab05a372e4a2c6a6b876165/idna-2.7-py2.py3-none-any.whl
+Collecting chardet<3.1.0,>=3.0.2 (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl
+Collecting urllib3<1.25,>=1.21.1 (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/8c/4b/5cbc4cb46095f369117dcb751821e1bef9dd86a07c968d8757e9204c324c/urllib3-1.24-py2.py3-none-any.whl
+Collecting certifi>=2017.4.17 (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/56/9d/1d02dd80bc4cd955f98980f28c5ee2200e1209292d5f9e9cc8d030d18655/certifi-2018.10.15-py2.py3-none-any.whl
+Collecting Werkzeug>=0.14 (from Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/20/c4/12e3e56473e52375aa29c4764e70d1b8f3efa6682bef8d0aae04fe335243/Werkzeug-0.14.1-py2.py3-none-any.whl
+Collecting itsdangerous>=0.24 (from Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/c9/c3/8dadb353944803796515ce68ad3944e6e7acc934f5036c40829cb96e64a1/ItsDangerous-1.0.0-py2.py3-none-any.whl
+Collecting yarl<2.0,>=1.0 (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Downloading https://files.pythonhosted.org/packages/67/9b/8075ec8f51df63c09afcce59ddb325d57e4d0a3c03db794c9d58f7a1ca4f/yarl-1.2.6-cp35-cp35m-manylinux1_x86_64.whl (248kB)
+Collecting multidict<5.0,>=4.0 (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Downloading https://files.pythonhosted.org/packages/13/fb/c354524db72408c60f9044b81491f0f3bac9d315279177ae51f4cfb340b5/multidict-4.4.2-cp35-cp35m-manylinux1_x86_64.whl (378kB)
+Collecting async-timeout<4.0,>=3.0 (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/e1/1e/5a4441be21b0726c4464f3f23c8b19628372f606755a9d2e46c187e65ec4/async_timeout-3.0.1-py3-none-any.whl
+Collecting idna-ssl>=1.0; python_version < "3.7" (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/46/03/07c4894aae38b0de52b52586b24bf189bb83e4ddabfe2e2c8f2419eec6f4/idna-ssl-1.1.0.tar.gz
+Collecting swh.objstorage>=0.0.17 (from swh.storage>=0.0.83->swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/cf/73/7d079976231c31834ea4c779b512b1fc316230eb98618816700230e9c3a4/swh.objstorage-0.0.27-py3-none-any.whl
+Collecting amqp<3.0,>=2.1.4 (from kombu->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/7f/cf/12d4611fc67babd4ae250c9e8249c5650ae1933395488e9e7e3562b4ff24/amqp-2.3.2-py2.py3-none-any.whl
+Collecting billiard<3.6.0,>=3.5.0.2 (from celery->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/87/ac/9b3cc065557ad5769d0626fd5dba0ad1cb40e3a72fe6acd3d081b4ad864e/billiard-3.5.0.4.tar.gz
+Collecting unittest2>=1.0.0 (from testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/72/20/7f0f433060a962200b7272b8c12ba90ef5b903e218174301d0abfd523813/unittest2-1.1.0-py2.py3-none-any.whl
+Collecting python-mimeparse (from testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/26/2e/03bce213a9bf02a2750dcb04e761785e9c763fc11071edc4b447eacbb842/python_mimeparse-1.6.0-py2.py3-none-any.whl
+Collecting extras>=1.0.0 (from testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/03/e9/e915af1f97914cd0bc021e125fd1bfd4106de614a275e4b6866dd9a209ac/extras-1.0.0-py2.py3-none-any.whl
+Collecting traceback2 (from testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/17/0a/6ac05a3723017a967193456a2efa0aa9ac4b51456891af1e2353bb9de21e/traceback2-1.4.0-py2.py3-none-any.whl
+Collecting pycparser (from cffi>=1.0.0->xattr; sys_platform != "win32"->pifpaf)
+Collecting vine>=1.1.3 (from amqp<3.0,>=2.1.4->kombu->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15)
+  Using cached https://files.pythonhosted.org/packages/10/50/5b1ebe42843c19f35edb15022ecae339fbec6db5b241a7a13c924dabf2a3/vine-1.1.4-py2.py3-none-any.whl
+Collecting argparse (from unittest2>=1.0.0->testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/f2/94/3af39d34be01a24a6e65433d19e107099374224905f1e0cc6bbe1fd22a2f/argparse-1.4.0-py2.py3-none-any.whl
+Collecting linecache2 (from traceback2->testtools>=0.9.22->fixtures->pifpaf)
+  Using cached https://files.pythonhosted.org/packages/c7/a3/c5da2a44c85bfbb6eebcfc1dde24933f8704441b98fdde6528f4831757a6/linecache2-1.0.0-py2.py3-none-any.whl
+Building wheels for collected packages: swh.deposit, vcversioner, psutil, xattr, PyYAML, msgpack-python, systemd-python, retrying, MarkupSafe, idna-ssl, billiard
+  Running setup.py bdist_wheel for swh.deposit: started
+  Running setup.py bdist_wheel for swh.deposit: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/55/3c/96/f7dd981c18c32627a2fe662a91b952c280c130bd40595bc093
+  Running setup.py bdist_wheel for vcversioner: started
+  Running setup.py bdist_wheel for vcversioner: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/33/84/29/2fff179e8de0b5e0d17ee4a570536f547b809d62ada8d6d861
+  Running setup.py bdist_wheel for psutil: started
+  Running setup.py bdist_wheel for psutil: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/e2/9d/ea/1913d16f19bb927c32197308dec69cd8d10b61be8f7e265524
+  Running setup.py bdist_wheel for xattr: started
+  Running setup.py bdist_wheel for xattr: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/8f/2d/20/eaf8403b661a46b93a1da3031f56eacb18eaae912d8a1683da
+  Running setup.py bdist_wheel for PyYAML: started
+  Running setup.py bdist_wheel for PyYAML: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/ad/da/0c/74eb680767247273e2cf2723482cb9c924fe70af57c334513f
+  Running setup.py bdist_wheel for msgpack-python: started
+  Running setup.py bdist_wheel for msgpack-python: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/d5/de/86/7fa56fda12511be47ea0808f3502bc879df4e63ab168ec0406
+  Running setup.py bdist_wheel for systemd-python: started
+  Running setup.py bdist_wheel for systemd-python: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/d2/84/93/96e75117f7bf74081a9cd614878f4063fd6e409c67d22eaa49
+  Running setup.py bdist_wheel for retrying: started
+  Running setup.py bdist_wheel for retrying: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/d7/a9/33/acc7b709e2a35caa7d4cae442f6fe6fbf2c43f80823d46460c
+  Running setup.py bdist_wheel for MarkupSafe: started
+  Running setup.py bdist_wheel for MarkupSafe: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/33/56/20/ebe49a5c612fffe1c5a632146b16596f9e64676768661e4e46
+  Running setup.py bdist_wheel for idna-ssl: started
+  Running setup.py bdist_wheel for idna-ssl: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/d3/00/b3/32d613e19e08a739751dd6bf998cfed277728f8b2127ad4eb7
+  Running setup.py bdist_wheel for billiard: started
+  Running setup.py bdist_wheel for billiard: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/43/a5/a3/d5513d0baa904819b2ee9c58ff594a0c834cd6fcd19d43d9ce
+Successfully built swh.deposit vcversioner psutil xattr PyYAML msgpack-python systemd-python retrying MarkupSafe idna-ssl billiard
+Installing collected packages: py, attrs, pluggy, atomicwrites, six, pathlib2, more-itertools, pytest, coverage, pytest-cov, pbr, linecache2, traceback2, argparse, unittest2, python-mimeparse, extras, testtools, fixtures, psutil, pycparser, cffi, xattr, daiquiri, MarkupSafe, jinja2, click, pifpaf, vcversioner, pytz, Django, djangorestframework, xmltodict, python-dateutil, idna, chardet, urllib3, certifi, requests, arrow, Werkzeug, itsdangerous, Flask, PyYAML, msgpack-python, multidict, yarl, async-timeout, idna-ssl, aiohttp, psycopg2, systemd-python, swh.core, swh.model, swh.objstorage, vine, amqp, kombu, elasticsearch, billiard, celery, swh.scheduler, swh.storage, retrying, swh.loader.core, swh.loader.dir, swh.loader.tar, pytest-django, swh.deposit
+Successfully installed Django-1.11.16 Flask-1.0.2 MarkupSafe-1.0 PyYAML-3.13 Werkzeug-0.14.1 aiohttp-3.4.4 amqp-2.3.2 argparse-1.4.0 arrow-0.12.1 async-timeout-3.0.1 atomicwrites-1.2.1 attrs-18.2.0 billiard-3.5.0.4 celery-4.2.1 certifi-2018.10.15 cffi-1.11.5 chardet-3.0.4 click-7.0 coverage-4.5.1 daiquiri-1.5.0 djangorestframework-3.9.0 elasticsearch-6.3.1 extras-1.0.0 fixtures-3.0.0 idna-2.7 idna-ssl-1.1.0 itsdangerous-1.0.0 jinja2-2.10 kombu-4.2.1 linecache2-1.0.0 more-itertools-4.3.0 msgpack-python-0.5.6 multidict-4.4.2 pathlib2-2.3.2 pbr-5.1.0 pifpaf-2.1.2 pluggy-0.8.0 psutil-5.4.7 psycopg2-2.7.5 py-1.7.0 pycparser-2.19 pytest-3.9.2 pytest-cov-2.6.0 pytest-django-3.4.3 python-dateutil-2.7.3 python-mimeparse-1.6.0 pytz-2018.6 requests-2.20.0 retrying-1.3.3 six-1.11.0 swh.core-0.0.44 swh.deposit-0.0.63.post15 swh.loader.core-0.0.35 swh.loader.dir-0.0.32 swh.loader.tar-0.0.35 swh.model-0.0.28 swh.objstorage-0.0.27 swh.scheduler-0.0.32 swh.storage-0.0.108 systemd-python-234 testtools-2.3.0 traceback2-1.4.0 unittest2-1.1.0 urllib3-1.24 vcversioner-2.16.0.0 vine-1.1.4 xattr-0.9.6 xmltodict-0.11.0 yarl-1.2.6

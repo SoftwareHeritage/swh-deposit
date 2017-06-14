@@ -1,0 +1,61 @@
+actionid: py35
+msg: installpkg
+cmdargs: ['/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35/bin/pip', 'install', '/home/ndandrim/work/swh-environment/swh-deposit/.tox/dist/swh.deposit-0.0.63.post15.zip']
+env: {'DEBFULLNAME': 'Nicolas Dandrimont', 'GSM_SKIP_SSH_AGENT_WORKAROUND': 'true', 'LANG': 'fr_FR.UTF-8', 'DISPLAY': ':0', 'XDG_VTNR': '2', 'ALTERNATE_EDITOR': '', 'ZEITGEIST_DATA_PATH': '/home/ndandrim/.local/share/zeitgeist', 'LOGNAME': 'ndandrim', 'PWD': '/home/ndandrim/work/swh-environment/swh-deposit', 'XAUTHORITY': '/run/user/1000/gdm/Xauthority', 'DESKTOP_AUTOSTART_ID': '10a7964f7111f989a7154032010187853800000222540007', 'QT_QPA_PLATFORMTHEME': 'qt5ct', 'COLORTERM': 'truecolor', 'XDG_SESSION_ID': '1282', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/f0760c29_c039_4786_bbdc_042fd69adafb', 'GOPATH': '/home/ndandrim/opt/go', 'XDG_SESSION_DESKTOP': 'gnome-xorg', 'GDMSESSION': 'gnome-xorg', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'USERNAME': 'ndandrim', 'WINDOWPATH': '2', 'LESS': '-iMFXSx4R', 'DESKTOP_SESSION': 'gnome-xorg', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'VTE_VERSION': '5401', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/share/gnome:/usr/local/share/:/usr/share/', 'GNOME_TERMINAL_SERVICE': ':1.92', 'XDG_MENU_PREFIX': 'gnome-', 'QT_ACCESSIBILITY': '1', 'SHELL': '/bin/zsh', 'GDM_LANG': 'fr_FR.UTF-8', 'XDG_SESSION_TYPE': 'x11', 'TERM': 'xterm-256color', 'GTK_MODULES': 'gtk-vector-screenshot:gail:atk-bridge:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot:gtk-vector-screenshot', 'SESSION_MANAGER': 'local/drepper:@/tmp/.ICE-unix/22254,unix/drepper:/tmp/.ICE-unix/22254', 'SSH_AUTH_SOCK': '/run/user/1000/gnupg/S.gpg-agent.ssh', 'PATH': '/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35/bin:/home/ndandrim/bin:/home/ndandrim/bin:/home/ndandrim/.local/bin:/home/ndandrim/opt/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games', 'XDG_CURRENT_DESKTOP': 'GNOME', 'DEBEMAIL': 'olasd@debian.org', 'HOME': '/home/ndandrim', 'XDG_SEAT': 'seat0', 'XDG_RUNTIME_DIR': '/run/user/1000', 'GPG_AGENT_INFO': '/run/user/1000/gnupg/S.gpg-agent:0:1', 'USER': 'ndandrim', 'EDITOR': 'emacsclient -c', 'SHLVL': '1', 'OLDPWD': '/home/ndandrim/work/swh-environment', 'ZSH': '/home/ndandrim/.oh-my-zsh', 'PAGER': 'less', 'LC_CTYPE': 'fr_FR.UTF-8', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'ZSH_TMUX_TERM': 'screen-256color', '_ZSH_TMUX_FIXED_CONFIG': '/home/ndandrim/.oh-my-zsh/plugins/tmux/tmux.only.conf', '_VIRTUALENVWRAPPER_API': ' mkvirtualenv rmvirtualenv lsvirtualenv showvirtualenv workon add2virtualenv cdsitepackages cdvirtualenv lssitepackages toggleglobalsitepackages cpvirtualenv setvirtualenvproject mkproject cdproject mktmpenv', 'VIRTUALENVWRAPPER_SCRIPT': '/usr/share/virtualenvwrapper/virtualenvwrapper.sh', 'ENV_NAME': 'swh-deposit', '_': '/usr/bin/tox', 'PYTHONHASHSEED': '1004320095', 'VIRTUAL_ENV': '/home/ndandrim/work/swh-environment/swh-deposit/.tox/py35'}
+
+Processing ./.tox/dist/swh.deposit-0.0.63.post15.zip
+Requirement already satisfied: vcversioner in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (2.16.0.0)
+Requirement already satisfied: click in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (7.0)
+Requirement already satisfied: Django<2.0 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (1.11.16)
+Requirement already satisfied: djangorestframework in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (3.9.0)
+Requirement already satisfied: xmltodict in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.11.0)
+Requirement already satisfied: swh.core>=0.0.36 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.0.44)
+Requirement already satisfied: swh.loader.tar>=0.0.35 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.0.35)
+Requirement already satisfied: swh.loader.core>=0.0.32 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.0.35)
+Requirement already satisfied: swh.scheduler>=0.0.26 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.0.32)
+Requirement already satisfied: swh.model>=0.0.26 in ./.tox/py35/lib/python3.5/site-packages (from swh.deposit==0.0.63.post15) (0.0.28)
+Requirement already satisfied: pytz in ./.tox/py35/lib/python3.5/site-packages (from Django<2.0->swh.deposit==0.0.63.post15) (2018.6)
+Requirement already satisfied: python-dateutil in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2.7.3)
+Requirement already satisfied: requests in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2.20.0)
+Requirement already satisfied: arrow in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (0.12.1)
+Requirement already satisfied: Flask in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.0.2)
+Requirement already satisfied: PyYAML in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (3.13)
+Requirement already satisfied: msgpack-python in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (0.5.6)
+Requirement already satisfied: aiohttp in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (3.4.4)
+Requirement already satisfied: psycopg2 in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2.7.5)
+Requirement already satisfied: systemd-python in ./.tox/py35/lib/python3.5/site-packages (from swh.core>=0.0.36->swh.deposit==0.0.63.post15) (234)
+Requirement already satisfied: swh.loader.dir>=0.0.32 in ./.tox/py35/lib/python3.5/site-packages (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15) (0.0.32)
+Requirement already satisfied: swh.storage>=0.0.83 in ./.tox/py35/lib/python3.5/site-packages (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15) (0.0.108)
+Requirement already satisfied: retrying in ./.tox/py35/lib/python3.5/site-packages (from swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15) (1.3.3)
+Requirement already satisfied: psutil in ./.tox/py35/lib/python3.5/site-packages (from swh.loader.core>=0.0.32->swh.deposit==0.0.63.post15) (5.4.7)
+Requirement already satisfied: kombu in ./.tox/py35/lib/python3.5/site-packages (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (4.2.1)
+Requirement already satisfied: elasticsearch>5.4 in ./.tox/py35/lib/python3.5/site-packages (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (6.3.1)
+Requirement already satisfied: celery in ./.tox/py35/lib/python3.5/site-packages (from swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (4.2.1)
+Requirement already satisfied: six>=1.5 in ./.tox/py35/lib/python3.5/site-packages (from python-dateutil->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.11.0)
+Requirement already satisfied: idna<2.8,>=2.5 in ./.tox/py35/lib/python3.5/site-packages (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2.7)
+Requirement already satisfied: chardet<3.1.0,>=3.0.2 in ./.tox/py35/lib/python3.5/site-packages (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (3.0.4)
+Requirement already satisfied: urllib3<1.25,>=1.21.1 in ./.tox/py35/lib/python3.5/site-packages (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.24)
+Requirement already satisfied: certifi>=2017.4.17 in ./.tox/py35/lib/python3.5/site-packages (from requests->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2018.10.15)
+Requirement already satisfied: Werkzeug>=0.14 in ./.tox/py35/lib/python3.5/site-packages (from Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (0.14.1)
+Requirement already satisfied: Jinja2>=2.10 in ./.tox/py35/lib/python3.5/site-packages (from Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (2.10)
+Requirement already satisfied: itsdangerous>=0.24 in ./.tox/py35/lib/python3.5/site-packages (from Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.0.0)
+Requirement already satisfied: yarl<2.0,>=1.0 in ./.tox/py35/lib/python3.5/site-packages (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.2.6)
+Requirement already satisfied: multidict<5.0,>=4.0 in ./.tox/py35/lib/python3.5/site-packages (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (4.4.2)
+Requirement already satisfied: async-timeout<4.0,>=3.0 in ./.tox/py35/lib/python3.5/site-packages (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (3.0.1)
+Requirement already satisfied: attrs>=17.3.0 in ./.tox/py35/lib/python3.5/site-packages (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (18.2.0)
+Requirement already satisfied: idna-ssl>=1.0; python_version < "3.7" in ./.tox/py35/lib/python3.5/site-packages (from aiohttp->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.1.0)
+Requirement already satisfied: swh.objstorage>=0.0.17 in ./.tox/py35/lib/python3.5/site-packages (from swh.storage>=0.0.83->swh.loader.tar>=0.0.35->swh.deposit==0.0.63.post15) (0.0.27)
+Requirement already satisfied: amqp<3.0,>=2.1.4 in ./.tox/py35/lib/python3.5/site-packages (from kombu->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (2.3.2)
+Requirement already satisfied: billiard<3.6.0,>=3.5.0.2 in ./.tox/py35/lib/python3.5/site-packages (from celery->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (3.5.0.4)
+Requirement already satisfied: MarkupSafe>=0.23 in ./.tox/py35/lib/python3.5/site-packages (from Jinja2>=2.10->Flask->swh.core>=0.0.36->swh.deposit==0.0.63.post15) (1.0)
+Requirement already satisfied: vine>=1.1.3 in ./.tox/py35/lib/python3.5/site-packages (from amqp<3.0,>=2.1.4->kombu->swh.scheduler>=0.0.26->swh.deposit==0.0.63.post15) (1.1.4)
+Building wheels for collected packages: swh.deposit
+  Running setup.py bdist_wheel for swh.deposit: started
+  Running setup.py bdist_wheel for swh.deposit: finished with status 'done'
+  Stored in directory: /home/ndandrim/.cache/pip/wheels/55/4a/89/a83bff4c389c84aaec24ad3fcb1888617c4d7f8a626dfe6213
+Successfully built swh.deposit
+Installing collected packages: swh.deposit
+  Found existing installation: swh.deposit 0.0.63.post15
+    Uninstalling swh.deposit-0.0.63.post15:
+      Successfully uninstalled swh.deposit-0.0.63.post15
+Successfully installed swh.deposit-0.0.63.post15

@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<service xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:sword="http://purl.org/net/sword/terms/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns="http://www.w3.org/2007/app">
+
+    <sword:version>2.0</sword:version>
+    <sword:maxUploadSize>{{ max_upload_size }}</sword:maxUploadSize>
+
+    <workspace>
+        <atom:title>The Software Heritage (SWH) Archive</atom:title>
+        {% for col_name, col_uri in collections.items %}<collection href="{{ col_uri }}">
+            <atom:title>{{ col_name }} Software Collection</atom:title>
+            {% for accept_content_type in accept_content_types %}<accept>{{ accept_content_type }}</accept>
+            {% endfor %}<sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
+            <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
+            <sword:treatment>Collect, Preserve, Share</sword:treatment>
+            <sword:mediation>false</sword:mediation>
+            <sword:metadataRelevantHeader>false</sword:metadataRelevantHeader>
+            {% for accept_packaging in accept_packagings %}<sword:acceptPackaging>{{ accept_packaging }}</sword:acceptPackaging>
+            {% endfor %}<sword:service>{{ col_uri }}</sword:service>
+            <sword:name>{{ col_name }}</sword:name>
+        </collection>{% endfor %}
+    </workspace>
+</service>

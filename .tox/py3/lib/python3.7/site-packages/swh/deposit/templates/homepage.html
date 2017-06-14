@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}The Software Heritage Deposit{% endblock %}
+
+{% block content %}
+<h1>Welcome to the Software Heritage deposit</h1>
+
+<h2>Overview</h2>
+
+<p>
+The long term goal of the Software Heritage initiative is
+to <strong>collect</strong> all publicly available software in source
+code form together with its development history, replicate it
+massively to ensure its <strong>preservation</strong>,
+and <strong>share</strong> it with everyone who needs it.
+</p>
+
+<h2>What's the deposit?</h2>
+
+This is <a href="https://www.softwareheritage.org">Software Heritage</a>'s
+<a href="http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html">SWORD
+2.0</a> Server implementation.
+
+<strong>S.W.O.R.D</strong> (<strong>S</strong>imple <strong>W</strong>eb-Service <strong>O</strong>ffering <strong>R</strong>epository
+<strong>D</strong>eposit) is an interoperability standard for digital
+file deposit.
+
+This implementation will permit interaction between a client (a
+repository, e.g. hal) and a server
+(<a href="https://archive.softwareheritage.org">SWH repository</a>) to
+permit deposits of software source code archives with associated
+metadata.
+
+
+<h2>Documentation</h2>
+
+<p>
+  <ul>
+    <li><a href="https://docs.softwareheritage.org/devel/swh-deposit">Index</a></li>
+    <li><a href="https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html">Getting Started</a></li>
+    <li><a href="https://docs.softwareheritage.org/devel/swh-deposit/spec-api.html">Specification</a></li>
+  </ul>
+</p>
+
+{% endblock %}

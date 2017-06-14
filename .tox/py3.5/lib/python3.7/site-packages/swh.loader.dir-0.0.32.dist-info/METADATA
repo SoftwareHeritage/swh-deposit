@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: swh.loader.dir
+Version: 0.0.32
+Summary: Software Heritage Directory Loader
+Home-page: https://forge.softwareheritage.org/diffusion/DLDDIR
+Author: Software Heritage developers
+Author-email: swh-devel@inria.fr
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Dist: vcversioner
+Requires-Dist: retrying
+Requires-Dist: click
+Requires-Dist: swh.core (>=0.0.14)
+Requires-Dist: swh.model (>=0.0.18)
+Requires-Dist: swh.scheduler (>=0.0.14)
+Requires-Dist: swh.storage (>=0.0.83)
+Requires-Dist: swh.loader.core (>=0.0.32)
+
+UNKNOWN
+
+

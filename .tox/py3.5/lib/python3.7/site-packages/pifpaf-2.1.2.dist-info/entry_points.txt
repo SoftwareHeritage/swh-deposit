@@ -1,0 +1,26 @@
+[console_scripts]
+pifpaf = pifpaf.__main__:run_main
+
+[pifpaf.daemons]
+aodh = pifpaf.drivers.aodh:AodhDriver
+ceph = pifpaf.drivers.ceph:CephDriver
+consul = pifpaf.drivers.consul:ConsulDriver
+couchdb = pifpaf.drivers.couchdb:CouchDBDriver
+elasticsearch = pifpaf.drivers.elasticsearch:ElasticsearchDriver
+etcd = pifpaf.drivers.etcd:EtcdDriver
+fakes3 = pifpaf.drivers.fakes3:FakeS3Driver
+gnocchi = pifpaf.drivers.gnocchi:GnocchiDriver
+influxdb = pifpaf.drivers.influxdb:InfluxDBDriver
+kafka = pifpaf.drivers.kafka:KafkaDriver
+keystone = pifpaf.drivers.keystone:KeystoneDriver
+memcached = pifpaf.drivers.memcached:MemcachedDriver
+mongodb = pifpaf.drivers.mongodb:MongoDBDriver
+mysql = pifpaf.drivers.mysql:MySQLDriver
+postgresql = pifpaf.drivers.postgresql:PostgreSQLDriver
+rabbitmq = pifpaf.drivers.rabbitmq:RabbitMQDriver
+redis = pifpaf.drivers.redis:RedisDriver
+s3rver = pifpaf.drivers.s3rver:S3rverDriver
+swift = pifpaf.drivers.swift:SwiftDriver
+vault = pifpaf.drivers.vault:VaultDriver
+zookeeper = pifpaf.drivers.zookeeper:ZooKeeperDriver
+

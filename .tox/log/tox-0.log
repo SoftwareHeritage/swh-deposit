@@ -1,0 +1,392 @@
+actionid: tox
+msg: packaging
+cmdargs: ['/usr/bin/python3', local('/home/ndandrim/work/swh-environment/swh-deposit/setup.py'), 'sdist', '--formats=zip', '--dist-dir', local('/home/ndandrim/work/swh-environment/swh-deposit/.tox/dist')]
+env: None
+
+running sdist
+running egg_info
+writing swh.deposit.egg-info/PKG-INFO
+writing dependency_links to swh.deposit.egg-info/dependency_links.txt
+writing requirements to swh.deposit.egg-info/requires.txt
+writing top-level names to swh.deposit.egg-info/top_level.txt
+reading manifest template 'MANIFEST.in'
+writing manifest file 'swh.deposit.egg-info/SOURCES.txt'
+running check
+creating swh.deposit-0.0.63.post15
+creating swh.deposit-0.0.63.post15/bin
+creating swh.deposit-0.0.63.post15/debian
+creating swh.deposit-0.0.63.post15/debian/source
+creating swh.deposit-0.0.63.post15/docs
+creating swh.deposit-0.0.63.post15/docs/_static
+creating swh.deposit-0.0.63.post15/docs/_templates
+creating swh.deposit-0.0.63.post15/docs/endpoints
+creating swh.deposit-0.0.63.post15/docs/images
+creating swh.deposit-0.0.63.post15/docs/specs
+creating swh.deposit-0.0.63.post15/resources
+creating swh.deposit-0.0.63.post15/resources/deposit
+creating swh.deposit-0.0.63.post15/swh
+creating swh.deposit-0.0.63.post15/swh.deposit.egg-info
+creating swh.deposit-0.0.63.post15/swh/deposit
+creating swh.deposit-0.0.63.post15/swh/deposit/api
+creating swh.deposit-0.0.63.post15/swh/deposit/api/private
+creating swh.deposit-0.0.63.post15/swh/deposit/client
+creating swh.deposit-0.0.63.post15/swh/deposit/fixtures
+creating swh.deposit-0.0.63.post15/swh/deposit/loader
+creating swh.deposit-0.0.63.post15/swh/deposit/migrations
+creating swh.deposit-0.0.63.post15/swh/deposit/settings
+creating swh.deposit-0.0.63.post15/swh/deposit/static
+creating swh.deposit-0.0.63.post15/swh/deposit/static/css
+creating swh.deposit-0.0.63.post15/swh/deposit/static/img
+creating swh.deposit-0.0.63.post15/swh/deposit/static/img/icons
+creating swh.deposit-0.0.63.post15/swh/deposit/templates
+creating swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+creating swh.deposit-0.0.63.post15/swh/deposit/templates/rest_framework
+creating swh.deposit-0.0.63.post15/swh/deposit/tests
+creating swh.deposit-0.0.63.post15/swh/deposit/tests/api
+creating swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+copying files to swh.deposit-0.0.63.post15...
+copying .gitignore -> swh.deposit-0.0.63.post15
+copying AUTHORS -> swh.deposit-0.0.63.post15
+copying LICENSE -> swh.deposit-0.0.63.post15
+copying MANIFEST.in -> swh.deposit-0.0.63.post15
+copying Makefile -> swh.deposit-0.0.63.post15
+copying Makefile.local -> swh.deposit-0.0.63.post15
+copying README.md -> swh.deposit-0.0.63.post15
+copying pytest.ini -> swh.deposit-0.0.63.post15
+copying requirements-swh.txt -> swh.deposit-0.0.63.post15
+copying requirements-test.txt -> swh.deposit-0.0.63.post15
+copying requirements.txt -> swh.deposit-0.0.63.post15
+copying setup.py -> swh.deposit-0.0.63.post15
+copying tox.ini -> swh.deposit-0.0.63.post15
+copying version.txt -> swh.deposit-0.0.63.post15
+copying bin/Makefile -> swh.deposit-0.0.63.post15/bin
+copying bin/content.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/create_deposit.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/create_deposit_atom.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/create_deposit_with_metadata.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/default-setup -> swh.deposit-0.0.63.post15/bin
+copying bin/download-deposit-archive.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/home.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/replace-deposit-archive.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/service-document.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/status.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/swh-deposit -> swh.deposit-0.0.63.post15/bin
+copying bin/update-deposit-with-another-archive.sh -> swh.deposit-0.0.63.post15/bin
+copying bin/update-status.sh -> swh.deposit-0.0.63.post15/bin
+copying debian/changelog -> swh.deposit-0.0.63.post15/debian
+copying debian/compat -> swh.deposit-0.0.63.post15/debian
+copying debian/control -> swh.deposit-0.0.63.post15/debian
+copying debian/copyright -> swh.deposit-0.0.63.post15/debian
+copying debian/rules -> swh.deposit-0.0.63.post15/debian
+copying debian/source/format -> swh.deposit-0.0.63.post15/debian/source
+copying docs/.gitignore -> swh.deposit-0.0.63.post15/docs
+copying docs/Makefile -> swh.deposit-0.0.63.post15/docs
+copying docs/conf.py -> swh.deposit-0.0.63.post15/docs
+copying docs/dev-info.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/getting-started.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/index.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/metadata.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/spec-api.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/sys-info.rst -> swh.deposit-0.0.63.post15/docs
+copying docs/_static/.placeholder -> swh.deposit-0.0.63.post15/docs/_static
+copying docs/_templates/.placeholder -> swh.deposit-0.0.63.post15/docs/_templates
+copying docs/endpoints/collection.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/endpoints/content.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/endpoints/service-document.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/endpoints/status.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/endpoints/update-media.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/endpoints/update-metadata.rst -> swh.deposit-0.0.63.post15/docs/endpoints
+copying docs/images/deposit-create-chart.png -> swh.deposit-0.0.63.post15/docs/images
+copying docs/images/deposit-delete-chart.png -> swh.deposit-0.0.63.post15/docs/images
+copying docs/images/deposit-update-chart.png -> swh.deposit-0.0.63.post15/docs/images
+copying docs/specs/blueprint.rst -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/metadata_example.xml -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/spec-loading.rst -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/spec-meta-deposit.rst -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/spec-sparse-deposit.rst -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/specs.rst -> swh.deposit-0.0.63.post15/docs/specs
+copying docs/specs/swh.xsd -> swh.deposit-0.0.63.post15/docs/specs
+copying resources/deposit/server.yml -> swh.deposit-0.0.63.post15/resources/deposit
+copying swh/__init__.py -> swh.deposit-0.0.63.post15/swh
+copying swh/manage.py -> swh.deposit-0.0.63.post15/swh
+copying swh.deposit.egg-info/PKG-INFO -> swh.deposit-0.0.63.post15/swh.deposit.egg-info
+copying swh.deposit.egg-info/SOURCES.txt -> swh.deposit-0.0.63.post15/swh.deposit.egg-info
+copying swh.deposit.egg-info/dependency_links.txt -> swh.deposit-0.0.63.post15/swh.deposit.egg-info
+copying swh.deposit.egg-info/requires.txt -> swh.deposit-0.0.63.post15/swh.deposit.egg-info
+copying swh.deposit.egg-info/top_level.txt -> swh.deposit-0.0.63.post15/swh.deposit.egg-info
+copying swh/deposit/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/apps.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/auth.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/config.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/create_user.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/errors.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/models.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/parsers.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/signals.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/urls.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/utils.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/wsgi.py -> swh.deposit-0.0.63.post15/swh/deposit
+copying swh/deposit/api/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/common.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/converters.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/deposit.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/deposit_content.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/deposit_status.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/deposit_update.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/service_document.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/urls.py -> swh.deposit-0.0.63.post15/swh/deposit/api
+copying swh/deposit/api/private/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/api/private/deposit_check.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/api/private/deposit_list.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/api/private/deposit_read.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/api/private/deposit_update_status.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/api/private/urls.py -> swh.deposit-0.0.63.post15/swh/deposit/api/private
+copying swh/deposit/client/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/client
+copying swh/deposit/client/cli.py -> swh.deposit-0.0.63.post15/swh/deposit/client
+copying swh/deposit/fixtures/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/fixtures
+copying swh/deposit/fixtures/deposit_data.yaml -> swh.deposit-0.0.63.post15/swh/deposit/fixtures
+copying swh/deposit/loader/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/loader
+copying swh/deposit/loader/checker.py -> swh.deposit-0.0.63.post15/swh/deposit/loader
+copying swh/deposit/loader/loader.py -> swh.deposit-0.0.63.post15/swh/deposit/loader
+copying swh/deposit/loader/scheduler.py -> swh.deposit-0.0.63.post15/swh/deposit/loader
+copying swh/deposit/loader/tasks.py -> swh.deposit-0.0.63.post15/swh/deposit/loader
+copying swh/deposit/migrations/0001_initial.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0002_depositrequest_archive.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0003_temporaryarchive.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0004_delete_temporaryarchive.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0005_auto_20171019_1436.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0006_depositclient_url.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0007_auto_20171129_1609.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0008_auto_20171130_1513.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0009_deposit_parent.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0010_auto_20180110_0953.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0011_auto_20180115_1510.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0012_deposit_status_detail.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0013_depositrequest_raw_metadata.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/0014_auto_20180720_1221.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/migrations/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/migrations
+copying swh/deposit/settings/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/settings
+copying swh/deposit/settings/common.py -> swh.deposit-0.0.63.post15/swh/deposit/settings
+copying swh/deposit/settings/development.py -> swh.deposit-0.0.63.post15/swh/deposit/settings
+copying swh/deposit/settings/production.py -> swh.deposit-0.0.63.post15/swh/deposit/settings
+copying swh/deposit/settings/testing.py -> swh.deposit-0.0.63.post15/swh/deposit/settings
+copying swh/deposit/static/robots.txt -> swh.deposit-0.0.63.post15/swh/deposit/static
+copying swh/deposit/static/css/bootstrap-responsive.min.css -> swh.deposit-0.0.63.post15/swh/deposit/static/css
+copying swh/deposit/static/css/style.css -> swh.deposit-0.0.63.post15/swh/deposit/static/css
+copying swh/deposit/static/img/arrow-up-small.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img
+copying swh/deposit/static/img/swh-logo-deposit.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img
+copying swh/deposit/static/img/swh-logo-deposit.svg -> swh.deposit-0.0.63.post15/swh/deposit/static/img
+copying swh/deposit/static/img/icons/swh-logo-32x32.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img/icons
+copying swh/deposit/static/img/icons/swh-logo-deposit-180x180.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img/icons
+copying swh/deposit/static/img/icons/swh-logo-deposit-192x192.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img/icons
+copying swh/deposit/static/img/icons/swh-logo-deposit-270x270.png -> swh.deposit-0.0.63.post15/swh/deposit/static/img/icons
+copying swh/deposit/templates/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/templates
+copying swh/deposit/templates/homepage.html -> swh.deposit-0.0.63.post15/swh/deposit/templates
+copying swh/deposit/templates/layout.html -> swh.deposit-0.0.63.post15/swh/deposit/templates
+copying swh/deposit/templates/deposit/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/deposit/content.xml -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/deposit/deposit_receipt.xml -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/deposit/error.xml -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/deposit/service_document.xml -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/deposit/status.xml -> swh.deposit-0.0.63.post15/swh/deposit/templates/deposit
+copying swh/deposit/templates/rest_framework/api.html -> swh.deposit-0.0.63.post15/swh/deposit/templates/rest_framework
+copying swh/deposit/tests/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/tests
+copying swh/deposit/tests/common.py -> swh.deposit-0.0.63.post15/swh/deposit/tests
+copying swh/deposit/tests/test_utils.py -> swh.deposit-0.0.63.post15/swh/deposit/tests
+copying swh/deposit/tests/api/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_common.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_converters.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_atom.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_binary.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_check.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_delete.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_list.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_multipart.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_read_archive.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_read_metadata.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_status.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_update.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_deposit_update_status.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_parser.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/api/test_service_document.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/api
+copying swh/deposit/tests/loader/__init__.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+copying swh/deposit/tests/loader/common.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+copying swh/deposit/tests/loader/test_checker.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+copying swh/deposit/tests/loader/test_client.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+copying swh/deposit/tests/loader/test_loader.py -> swh.deposit-0.0.63.post15/swh/deposit/tests/loader
+Writing swh.deposit-0.0.63.post15/setup.cfg
+creating '.tox/dist/swh.deposit-0.0.63.post15.zip' and adding 'swh.deposit-0.0.63.post15' to it
+adding 'swh.deposit-0.0.63.post15/.gitignore'
+adding 'swh.deposit-0.0.63.post15/AUTHORS'
+adding 'swh.deposit-0.0.63.post15/LICENSE'
+adding 'swh.deposit-0.0.63.post15/PKG-INFO'
+adding 'swh.deposit-0.0.63.post15/Makefile'
+adding 'swh.deposit-0.0.63.post15/requirements-test.txt'
+adding 'swh.deposit-0.0.63.post15/requirements-swh.txt'
+adding 'swh.deposit-0.0.63.post15/version.txt'
+adding 'swh.deposit-0.0.63.post15/setup.py'
+adding 'swh.deposit-0.0.63.post15/MANIFEST.in'
+adding 'swh.deposit-0.0.63.post15/Makefile.local'
+adding 'swh.deposit-0.0.63.post15/tox.ini'
+adding 'swh.deposit-0.0.63.post15/setup.cfg'
+adding 'swh.deposit-0.0.63.post15/README.md'
+adding 'swh.deposit-0.0.63.post15/requirements.txt'
+adding 'swh.deposit-0.0.63.post15/pytest.ini'
+adding 'swh.deposit-0.0.63.post15/swh.deposit.egg-info/requires.txt'
+adding 'swh.deposit-0.0.63.post15/swh.deposit.egg-info/dependency_links.txt'
+adding 'swh.deposit-0.0.63.post15/swh.deposit.egg-info/PKG-INFO'
+adding 'swh.deposit-0.0.63.post15/swh.deposit.egg-info/SOURCES.txt'
+adding 'swh.deposit-0.0.63.post15/swh.deposit.egg-info/top_level.txt'
+adding 'swh.deposit-0.0.63.post15/swh/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/manage.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/create_user.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/auth.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/apps.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/parsers.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/utils.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/models.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/wsgi.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/config.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/signals.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/urls.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/errors.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/settings/testing.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/settings/common.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/settings/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/settings/development.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/settings/production.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/layout.html'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/homepage.html'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/rest_framework/api.html'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/error.xml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/service_document.xml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/content.xml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/status.xml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/templates/deposit/deposit_receipt.xml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/loader/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/loader/tasks.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/loader/scheduler.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/loader/checker.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/loader/loader.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/common.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/deposit.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/converters.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/deposit_status.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/urls.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/deposit_update.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/deposit_content.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/service_document.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/deposit_read.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/deposit_check.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/urls.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/deposit_update_status.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/api/private/deposit_list.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0004_delete_temporaryarchive.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0005_auto_20171019_1436.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0002_depositrequest_archive.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0014_auto_20180720_1221.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0010_auto_20180110_0953.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0013_depositrequest_raw_metadata.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0011_auto_20180115_1510.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0006_depositclient_url.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0001_initial.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0012_deposit_status_detail.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0007_auto_20171129_1609.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0009_deposit_parent.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0003_temporaryarchive.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/migrations/0008_auto_20171130_1513.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/common.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/test_utils.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/loader/common.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/loader/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/loader/test_client.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/loader/test_checker.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/loader/test_loader.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_read_metadata.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_common.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_service_document.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_update.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_status.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_update_status.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_list.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_read_archive.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_multipart.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_binary.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_check.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_parser.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_atom.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_deposit_delete.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/tests/api/test_converters.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/client/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/client/cli.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/fixtures/deposit_data.yaml'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/fixtures/__init__.py'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/robots.txt'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/css/bootstrap-responsive.min.css'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/css/style.css'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/swh-logo-deposit.png'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/swh-logo-deposit.svg'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/arrow-up-small.png'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/icons/swh-logo-deposit-270x270.png'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/icons/swh-logo-deposit-192x192.png'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/icons/swh-logo-32x32.png'
+adding 'swh.deposit-0.0.63.post15/swh/deposit/static/img/icons/swh-logo-deposit-180x180.png'
+adding 'swh.deposit-0.0.63.post15/bin/default-setup'
+adding 'swh.deposit-0.0.63.post15/bin/create_deposit_with_metadata.sh'
+adding 'swh.deposit-0.0.63.post15/bin/home.sh'
+adding 'swh.deposit-0.0.63.post15/bin/update-status.sh'
+adding 'swh.deposit-0.0.63.post15/bin/service-document.sh'
+adding 'swh.deposit-0.0.63.post15/bin/content.sh'
+adding 'swh.deposit-0.0.63.post15/bin/Makefile'
+adding 'swh.deposit-0.0.63.post15/bin/update-deposit-with-another-archive.sh'
+adding 'swh.deposit-0.0.63.post15/bin/download-deposit-archive.sh'
+adding 'swh.deposit-0.0.63.post15/bin/swh-deposit'
+adding 'swh.deposit-0.0.63.post15/bin/create_deposit.sh'
+adding 'swh.deposit-0.0.63.post15/bin/status.sh'
+adding 'swh.deposit-0.0.63.post15/bin/replace-deposit-archive.sh'
+adding 'swh.deposit-0.0.63.post15/bin/create_deposit_atom.sh'
+adding 'swh.deposit-0.0.63.post15/docs/getting-started.rst'
+adding 'swh.deposit-0.0.63.post15/docs/metadata.rst'
+adding 'swh.deposit-0.0.63.post15/docs/.gitignore'
+adding 'swh.deposit-0.0.63.post15/docs/Makefile'
+adding 'swh.deposit-0.0.63.post15/docs/dev-info.rst'
+adding 'swh.deposit-0.0.63.post15/docs/sys-info.rst'
+adding 'swh.deposit-0.0.63.post15/docs/conf.py'
+adding 'swh.deposit-0.0.63.post15/docs/index.rst'
+adding 'swh.deposit-0.0.63.post15/docs/spec-api.rst'
+adding 'swh.deposit-0.0.63.post15/docs/specs/metadata_example.xml'
+adding 'swh.deposit-0.0.63.post15/docs/specs/specs.rst'
+adding 'swh.deposit-0.0.63.post15/docs/specs/blueprint.rst'
+adding 'swh.deposit-0.0.63.post15/docs/specs/spec-sparse-deposit.rst'
+adding 'swh.deposit-0.0.63.post15/docs/specs/spec-loading.rst'
+adding 'swh.deposit-0.0.63.post15/docs/specs/swh.xsd'
+adding 'swh.deposit-0.0.63.post15/docs/specs/spec-meta-deposit.rst'
+adding 'swh.deposit-0.0.63.post15/docs/images/deposit-delete-chart.png'
+adding 'swh.deposit-0.0.63.post15/docs/images/deposit-update-chart.png'
+adding 'swh.deposit-0.0.63.post15/docs/images/deposit-create-chart.png'
+adding 'swh.deposit-0.0.63.post15/docs/_templates/.placeholder'
+adding 'swh.deposit-0.0.63.post15/docs/_static/.placeholder'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/service-document.rst'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/collection.rst'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/content.rst'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/update-metadata.rst'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/update-media.rst'
+adding 'swh.deposit-0.0.63.post15/docs/endpoints/status.rst'
+adding 'swh.deposit-0.0.63.post15/resources/deposit/server.yml'
+adding 'swh.deposit-0.0.63.post15/debian/changelog'
+adding 'swh.deposit-0.0.63.post15/debian/rules'
+adding 'swh.deposit-0.0.63.post15/debian/control'
+adding 'swh.deposit-0.0.63.post15/debian/copyright'
+adding 'swh.deposit-0.0.63.post15/debian/compat'
+adding 'swh.deposit-0.0.63.post15/debian/source/format'
+removing 'swh.deposit-0.0.63.post15' (and everything under it)
