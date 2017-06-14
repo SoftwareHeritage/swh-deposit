@@ -1,3 +1,10 @@
+swh-deposit (0.0.2-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.2
+  * Fix db connection initialization
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 14 Jun 2017 13:49:31 +0200
+
 swh-deposit (0.0.1-1~swh1) unstable-swh; urgency=medium
 
   * Initial release
