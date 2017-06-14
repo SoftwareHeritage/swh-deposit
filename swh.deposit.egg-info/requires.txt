@@ -1,0 +1,6 @@
+aiohttp
+click
+jinja
+retrying
+swh.core>=0.0.14
+vcversioner
