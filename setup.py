@@ -16,12 +16,12 @@ def parse_requirements():
 # Edit this part to match your module
 # full sample: https://forge.softwareheritage.org/diffusion/DCORE/browse/master/setup.py
 setup(
-    name='swh.<module-name>',
-    description='Software Heritage <Module\'s intent>',
+    name='swh.deposit',
+    description='Software Heritage Deposit Server',
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
-    url='https://forge.softwareheritage.org/diffusion/<module-git-code>',
-    packages=[],  # packages's modules
+    url='https://forge.softwareheritage.org/source/swh-deposit/',
+    packages=['swh.deposit'],
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
