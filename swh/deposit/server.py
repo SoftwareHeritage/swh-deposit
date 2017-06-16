@@ -9,10 +9,14 @@ import click
 import jinja2
 import json
 
+from aiohttp.web import Response
 from swh.core import config
 from swh.core.config import SWHConfig
 from swh.core.api_async import SWHRemoteAPI
 from swh.deposit.backend import DepositBackend
+
+from .auth import middleware_basic_auth
+
 
 DEFAULT_CONFIG_PATH = 'deposit/server'
 DEFAULT_CONFIG = {
@@ -20,12 +24,13 @@ DEFAULT_CONFIG = {
     'port': ('int', 5006),
     'template_path': ('list[str]', [
         'swh/deposit/templates',
-    ])
+    ]),
+    'basic-authentication': ('bool', True),
 }
 
 
 def encode_data(data, template_name=None, **kwargs):
-    return aiohttp.web.Response(
+    return Response(
         body=data,
         headers={'Content-Type': 'application/xml'},
         **kwargs
@@ -54,7 +59,7 @@ class DepositWebServer(SWHConfig):
 
     @asyncio.coroutine
     def index(self, request):
-        return aiohttp.web.Response(text='SWH Deposit Server')
+        return Response(text='SWH Deposit Server')
 
     @asyncio.coroutine
     def service_document(self, request):
@@ -83,9 +88,8 @@ class DepositWebServer(SWHConfig):
     @asyncio.coroutine
     def client_get(self, request):
         clients = self.backend.client_list()
-        return aiohttp.web.Response(
-            body=json.dumps(clients),
-            headers={'Content-Type': 'application/json'})
+        return Response(body=json.dumps(clients),
+                        headers={'Content-Type': 'application/json'})
 
 
 def make_app(config, **kwargs):
@@ -95,7 +99,11 @@ def make_app(config, **kwargs):
        Application ready for running and serving api endpoints.
 
     """
-    app = SWHRemoteAPI(**kwargs)
+    middlewares = ()
+    if config['basic-authentication']:
+        middlewares = (middleware_basic_auth,)
+
+    app = SWHRemoteAPI(middlewares=middlewares, **kwargs)
     server = DepositWebServer(**config)
     app.router.add_route('GET',    '/',               server.index)
     app.router.add_route('GET',    '/api/1/deposit/', server.service_document)
@@ -105,6 +113,7 @@ def make_app(config, **kwargs):
     app.router.add_route('DELETE', '/api/1/deposit/', server.delete_document)
     app.router.add_route('GET',    '/api/1/client/', server.client_get)
     app.update(config)
+    app['backend'] = server.backend
     return app
 
 

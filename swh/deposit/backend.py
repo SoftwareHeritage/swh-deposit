@@ -145,8 +145,8 @@ class DepositBackend():
         return {row['name']: row['id'] for row in cursor.fetchall()}
 
     @autocommit
-    def client_get(self, id, cursor=None):
-        cursor.execute('select id, name, credential from client where id=%s',
-                       (id, ))
+    def client_get(self, name, cursor=None):
+        cursor.execute('select id, name, credential from client where name=%s',
+                       (name, ))
 
         return cursor.fetchone()
