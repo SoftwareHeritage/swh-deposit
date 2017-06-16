@@ -1,6 +1,6 @@
 vcversioner
 
 aiohttp
-jinja
+jinja2
 retrying
 click
