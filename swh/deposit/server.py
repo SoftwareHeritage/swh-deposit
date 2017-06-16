@@ -122,7 +122,7 @@ def make_app_from_configfile(config_path=DEFAULT_CONFIG_PATH, **kwargs):
 @click.option('--host', default='0.0.0.0', help="Host to run the server")
 @click.option('--port', default=5006, type=click.INT,
               help="Binding port of the server")
-@click.option('--debug/--nodebug', default=True,
+@click.option('--debug/--nodebug', default=False,
               help="Indicates if the server should run in debug mode")
 def launch(config_path, host, port, debug):
     app = make_app_from_configfile(config_path, debug=bool(debug))
