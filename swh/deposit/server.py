@@ -18,6 +18,9 @@ DEFAULT_CONFIG_PATH = 'deposit/server'
 DEFAULT_CONFIG = {
     'host': ('str', '0.0.0.0'),
     'port': ('int', 5006),
+    'template_path': ('list[str]', [
+        'swh/deposit/templates',
+    ])
 }
 
 
@@ -41,13 +44,11 @@ class DepositWebServer(SWHConfig):
         'dbconn': ('str', 'dbname=softwareheritage-deposit-dev'),
     }
 
-    def __init__(self, config=None):
-        if config:
-            self.config = config
-        else:
-            self.config = self.parse_config_file()
+    def __init__(self, **config):
+        self.config = self.parse_config_file()
+        self.config.update(config)
         template_loader = jinja2.FileSystemLoader(
-            searchpath=["swh/deposit/templates"])
+            searchpath=self.config['template_path'])
         self.template_env = jinja2.Environment(loader=template_loader)
         self.backend = DepositBackend(self.config['dbconn'])
 
@@ -95,7 +96,7 @@ def make_app(config, **kwargs):
 
     """
     app = SWHRemoteAPI(**kwargs)
-    server = DepositWebServer()
+    server = DepositWebServer(**config)
     app.router.add_route('GET',    '/',               server.index)
     app.router.add_route('GET',    '/api/1/deposit/', server.service_document)
     app.router.add_route('GET',    '/api/1/status/', server.status_operation)
