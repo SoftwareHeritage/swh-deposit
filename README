@@ -1,5 +1,4 @@
-swh-deposit (draft)
-===================
+= swh-deposit (draft) =
 
 This is SWH's SWORD Server implementation.
 
@@ -13,55 +12,45 @@ tarballs.
 In this document, we will refer to a client (e.g. HAL server) and a
 server (SWH's).
 
-Table of contents
----------------------
-1. [use cases](#uc)
-2. [api overview](#api)
-3. [limitations](#limitations)
-4. [scenarios](#scenarios)
-5. [errors](#errors)
-6. [tarball injection](#tarball)
-7. [technical](#technical)
-8. [sources](#sources)
 
-# <a name="uc"> Use cases
+== Use cases ==
 
-## First deposit
+=== First deposit ===
 
 From client's deposit repository server to SWH's repository server
 (aka deposit).
 
--[\[1\]](#1) The client requests for the server's abilities.
-  (GET query to the *service document uri*)
+1. The client requests for the server's abilities.
+(GET query to the *service document uri*)
 
--[\[2\]](#2)The server answers the client with the service document
+2. The server answers the client with the service document
 
--[\[3\]](#3) The client sends the deposit (an archive -> .zip, .tar.gz)
+3. The client sends the deposit (an archive -> .zip, .tar.gz)
 through the deposit *creation uri*.
-   (one or more POST requests since the archive and metadata can be sent
-   in multiple requests)
+(one or more POST requests since the archive and metadata can be sent
+in multiple requests)
 
 
--[\[4\]](#4) The server notifies the client it acknowledged the
+4. The server notifies the client it acknowledged the
 client's request. ('http 201 Created' with a deposit receipt id in
 the Location header of the response)
 
 
-## Updating an existing archive
+=== Updating an existing archive ===
 
--[\[5\]](#5) Client updates existing archive through the deposit *update uri*
-  (one or more PUT requests, in effect chunking the artifact to deposit)
+5. Client updates existing archive through the deposit *update uri*
+(one or more PUT requests, in effect chunking the artifact to deposit)
 
-## Deleting an existing archive
+=== Deleting an existing archive ===
 
--[\[6\]](#6) Document deletion will not be implemented,
+6. Document deletion will not be implemented,
 cf. limitation paragraph for detail
 
-## Client asks for operation status and repository id
+=== Client asks for operation status and repository id ===
 
--[\[7\]](#7) TODO: Detail this when clear
+NOTE: add specifictions about operation status and injection
 
-# <a name="api"> API overview
+== API overview ==
 
 API access is over HTTPS.
 
@@ -77,10 +66,10 @@ API endpoints:
       https://archive.softwareheritage.org/api/1/software/.
 
 
-TODO: Determine which one of those solutions according to sword possibilities
+IMPORTANT: Determine which one of those solutions according to sword possibilities
 (cf. 'unclear points' chapter below)
 
-# <a name="limitations"> Limitations
+== Limitations ==
 
 Applying the SWORD protocol procedure will result with voluntary implementation
 shortcomings during the first iteration:
@@ -94,7 +83,7 @@ shortcomings during the first iteration:
   on a per client basis (authentication:
   http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#authenticationmediateddeposit)
 
-## unclear points
+== Unclear points ==
 
 - SWORD defines a 'collection' concpet. should we apply the 'collection' concept
    even thought SWH is software archive having one 'software' collection?
@@ -109,7 +98,7 @@ shortcomings during the first iteration:
         The is client pushes us software in 'their' one collection.
         The collection name could show up in the uri endpoint.
 
-  - option B:
+    - option B:
       Define none? (is it possible? i don't think it is due to the service
       document part listing the collection to act upon...)
 
@@ -117,28 +106,28 @@ shortcomings during the first iteration:
       collection name
 
 
-## <a name="scenarios"> Scenarios
-### <a name="1">[1] Client request for Service Document
+== <a name="scenarios"> Scenarios ==
+=== 1. Client request for Service Document ===
 
 This is the endpoint permitting the client to ask the server's abilities.
 
 
-#### API endpoint
+==== API endpoint ====
 
 GET api/1/servicedocument/
 
 Answer:
-- 200, Content-Type: application/atomserv+xml: OK, with the body
+> 200, Content-Type: application/atomserv+xml: OK, with the body
   described below
 
-#### Sample request:
+==== Sample request:====
 
-``` shell
+```lang=shell
 GET https://archive.softwareheritage.org/api/1/servicedocument HTTP/1.1
 Host: archive.softwareheritage.org
 ```
 
-### <a name="2"> [2] Sever respond for Service Document
+=== 2. Sever respond for Service Document ===
 
 The server returns its abilities with the service document in xml format:
 - protocol sword version v2
@@ -148,8 +137,8 @@ The server returns its abilities with the service document in xml format:
 - the collections the client can act upon (swh supports only one software collection)
 - mediation not supported
 
-#### Sample answer:
-``` xml
+==== Sample answer:====
+``` lang=xml
 <?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
@@ -175,7 +164,7 @@ The server returns its abilities with the service document in xml format:
 ```
 
 
-## Deposit Creation: client point of view
+== Deposit Creation: client point of view ==
 
 Process of deposit creation:
 
@@ -188,15 +177,15 @@ Process of deposit creation:
 <- [4] server returns deposit receipt id
 
 
-*[3.3] Asynchronously, the server will inject the archive uploaded and the
-  associated metadata. The operation status mentioned
-  earlier is a reference to that injection operation.
+NOTE: [3.3] Asynchronously, the server will inject the archive uploaded and the
+associated metadata. The operation status mentioned
+earlier is a reference to that injection operation.
 
 The image bellow represent only the communication and creation of
 a deposit:
 {F2403754}
 
-###  <a name="3"></a> [3] client request
+=== [3] client request  ===
 
 The client can send a deposit through one request deposit or multiple requests deposit.
 
@@ -216,13 +205,13 @@ the client can deposit a binary file, supplying the following headers:
   to specify it's a final request and the server can go on with
   processing the request's information.
 
-if In-Progress is not present the  server MUST assume that it is false
+WARNING: if In-Progress is not present the  server MUST assume that it is false
 
-#### API endpoint
+==== API endpoint ====
 
 POST /api/1/deposit/
 
-#### One request deposit
+==== One request deposit ====
 
 The one request deposit is a single request containing both the metadata (body)
 and the archive (attachment).
@@ -244,9 +233,9 @@ Client provides:
 - add metadata formats or foreign markup to the atom:entry element
 
 
-#### sample request for multipart deposit:
+==== sample request for multipart deposit: ====
 
-``` xml
+``` lang=xml
 POST deposit HTTP/1.1
 Host: archive.softwareheritage.org
 Content-Length: [content length]
@@ -284,14 +273,14 @@ MIME-Version: 1.0
 --===============1605871705==--
 ```
 
-## Deposit Creation - server point of view
+== Deposit Creation - server point of view ==
 
 The server receives the request and:
 
-### [3.1] Validation of the header and body request
+=== [3.1] Validation of the header and body request ===
 
 
-### [3.2] Server uploads the content in a temporary location
+=== [3.2] Server uploads the content in a temporary location ==
 (deposit table in a separated DB).
 - saves the archives in a temporary location
 - executes a md5 checksum on that archive and check it against the
@@ -299,18 +288,18 @@ The server receives the request and:
 - adds a deposit entry and retrieves the associated id
 
 
-### <a name="4"></a> [4] Servers answers the client
+=== [4] Servers answers the client ===
 an 'http 201 Created' with a deposit receipt id in the Location header of
 the response.
 
-##### The server possible answers are:
+The server possible answers are:
 - OK: '201 created' + one header 'Location' holding the deposit receipt
   id
 - KO: with the error status code and associated message
   (cf. [possible errors paragraph](#possible errors)).
 
 
-### <a name="5"></a> [5] Deposit Update
+=== [5] Deposit Update ===
 
 The client previously uploaded an archive and wants to add either new
 metadata information or a new version for that previous deposit
@@ -334,25 +323,27 @@ After validation of the body request, the server:
   reference to that injection operation. The fact that the version is
   a new one is dealt with at the injection level.
 
-##### URL: PUT /1/deposit/<previous-swh-id>
+  URL: PUT /1/deposit/<previous-swh-id>
 
-## <a name="6"></a> [6] Deposit Removal
+=== [6] Deposit Removal ===
 
 [#limitation](As explained in the limitation paragraph), removal won't
 be implemented.  Nothing is removed from the SWH archive.
 
 The server answers a '405 Method not allowed' error.
 
-### <a name="7"></a>[7] Operation Status
+=== Operation Status ===
 
 Providing a deposit receipt id, the client asks the operation status
 of a prior upload.
 
-URL: GET /1/collection/{deposit_receipt}
+  URL: GET /1/collection/{deposit_receipt}
 
-or GET /1/deposit/{deposit_receipt}
+or
 
-note: depends of the decision taken about collections
+  GET /1/deposit/{deposit_receipt}
+
+NOTE: depends of the decision taken about collections
 
 ## <a name="errors"> Possible errors
 
@@ -407,7 +398,7 @@ Associated HTTP Status: 413 (Request Entity Too Large)
 
 ---------------
 
-# <a name="tarball"> Tarball Injection
+== Tarball Injection ==
 
 Providing we use indeed synthetic revision to represent a version of a
 tarball injected through the sword use case, this needs to be improved
@@ -415,7 +406,7 @@ so that the synthetic revision is created with a parent revision (the
 previous known one for the same 'origin').
 
 
-### Injection mapping
+=== Injection mapping ===
 | origin                              |      https://hal.inria.fr/hal-id      |
 |-------------------------------------|---------------------------------------|
 | origin_visit                        |           1 :reception_date           |
@@ -424,7 +415,7 @@ previous known one for the same 'origin').
 | directory                           | upper level of the uncompressed archive|
 
 
-##### Questions raised concerning injection:
+=== Questions raised concerning injection: ===
 - A deposit has one origin, yet an origin can have multiple deposits ?
 
 No, an origin can have multiple requests for the same deposit,
@@ -464,7 +455,8 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 
 
 
-## <a name="technical"> Technical detail
+== Technical details ==
+
 We will need:
 - one dedicated db to store state - swh-deposit
 
@@ -472,7 +464,7 @@ We will need:
 
 - one client to test the communication with SWORD protocol
 
-### <a name="deposit-reception-schema"> Deposit reception schema
+=== Deposit reception schema ===
 
 - **deposit** table:
   - id (bigint): deposit receipt id
@@ -524,7 +516,7 @@ The only update actions occurring on the deposit table are in regards of:
   (when the status is changed to ready)
   - swh-id being populated once we have the result of the injection
 
-#### SWH Identifier returned?
+==== SWH Identifier returned? ====
 
     swh-<client-name>-<synthetic-revision-id>
 
@@ -533,13 +525,13 @@ The only update actions occurring on the deposit table are in regards of:
     We could have a specific dedicated 'client' table to reference client
     identifier.
 
-### <a name="scheduling-injection"> Scheduling injection
+=== Scheduling injection ===
 All data and metadata separated with multiple requests should be aggregated
 before injection.
 
 TODO: injection modeling
 
-### <a name="metadata-injection"> Metadata injection
+=== Metadata injection ===
 - the metadata received with the deposit should be kept in the origin_metadata
 table before translation as part of the injection process and a indexation
 process should be scheduled.
@@ -547,51 +539,48 @@ process should be scheduled.
 origin_metadata table:
 ```
 origin                                  bigint        PK FK
-date                                    date          PK FK
-provenance_type                         text
-                      // (enum: 'publisher', 'lister' needs to be completed)
-raw_metadata                            jsonb
-                      // before translation
-indexer_configuration_id                bigint            FK
-                      // tool used for translation
-translated_metadata                     jsonb
-                    // with codemeta schema and terms
+discovery_date                          date          PK FK
+translation_date                        date          PK FK
+provenance_type                         text                  // (enum: 'publisher', 'lister' needs to be completed)
+raw_metadata                            jsonb                 // before translation
+indexer_configuration_id                bigint            FK  // tool used for translation
+translated_metadata                     jsonb                 // with codemeta schema and terms
 ```
 
-# <a name="nomenclature"> Nomenclature
+== Nomenclature ==
 
 SWORD uses IRI. This means Internationalized Resource Identifier. In
 this chapter, we will describe SWH's IRI.
 
-## SD-IRI - The Service Document IRI
+=== SD-IRI - The Service Document IRI ===
 
 This is the IRI from which the root service document can be
 located.
 
-## Col-IRI - The Collection IRI
+=== Col-IRI - The Collection IRI ===
 
 Only one collection of software is used in this repository.
 
-Note:
+NOTE:
 This is the IRI to which the initial deposit will take place, and
 which are listed in the Service Document.
 Discuss to check if we want to implement this or not.
 
-## Cont-IRI - The Content IRI
+=== Cont-IRI - The Content IRI ===
 
 This is the IRI from which the client will be able to retrieve
 representations of the object as it resides in the SWORD server.
 
-## EM-IRI - The Atom Edit Media IRI
+=== EM-IRI - The Atom Edit Media IRI ===
 
 To simplify, this is the same as the Cont-IRI.
 
-## Edit-IRI - The Atom Entry Edit IRI
+=== Edit-IRI - The Atom Entry Edit IRI ===
 
 This is the IRI of the Atom Entry of the object, and therefore also of
 the container within the SWORD server.
 
-## SE-IRI - The SWORD Edit IRI
+=== SE-IRI - The SWORD Edit IRI ===
 
 This is the IRI to which clients may POST additional content to an
 Atom Entry Resource. This MAY be the same as the Edit-IRI, but is
@@ -599,14 +588,14 @@ defined separately as it supports HTTP POST explicitly while the
 Edit-IRI is defined by [AtomPub] as limited to GET, PUT and DELETE
 operations.
 
-## State-IRI - The SWORD Statement IRI
+=== State-IRI - The SWORD Statement IRI ===
 
 This is the one of the IRIs which can be used to retrieve a
 description of the object from the sword server, including the
 structure of the object and its state. This will be used as the
 operation status endpoint.
 
-# <a name="sources"> sources
+== Sources ==
 
 - [SWORD v2 specification](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html)
 - [arxiv documentation](https://arxiv.org/help/submit_sword)
