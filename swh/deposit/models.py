@@ -17,7 +17,6 @@ class Dbversion(models.Model):
     description = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'dbversion'
 
 
@@ -31,7 +30,6 @@ class Client(models.Model):
     credential = models.BinaryField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'client'
 
 
@@ -73,7 +71,6 @@ class Deposit(models.Model):
         default='partial')
 
     class Meta:
-        managed = False
         db_table = 'deposit'
 
 
@@ -89,7 +86,6 @@ class DepositRequest(models.Model):
     metadata = JSONField()
 
     class Meta:
-        managed = False
         db_table = 'deposit_request'
 
 
@@ -99,5 +95,4 @@ class DepositType(models.Model):
     name = models.TextField()
 
     class Meta:
-        managed = False
         db_table = 'deposit_type'
