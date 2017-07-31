@@ -48,7 +48,7 @@ comment on column deposit_type.name is 'Human readable name for the deposit type
 create table deposit(
   id bigserial primary key,
   reception_date timestamptz not null,
-  complete_date timestamptz not null,
+  complete_date timestamptz,
   type serial not null references deposit_type(id),
   external_id text not null,
   status deposit_status not null,

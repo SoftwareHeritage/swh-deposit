@@ -2,10 +2,10 @@
 # cd swh_deposit && \
 #    python3 -m manage inspectdb
 
-from __future__ import unicode_literals
 
-from django.db import models
 from django.contrib.postgres.fields import JSONField
+from django.db import models
+from django.utils.timezone import now
 
 
 class Dbversion(models.Model):
@@ -13,7 +13,7 @@ class Dbversion(models.Model):
 
     """
     version = models.IntegerField(primary_key=True)
-    release = models.DateTimeField(blank=True, null=True)
+    release = models.DateTimeField(default=now, null=True)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -55,7 +55,7 @@ class Deposit(models.Model):
     # First deposit reception date
     reception_date = models.DateTimeField()
     # Date when the deposit is deemed complete and ready for injection
-    complete_date = models.DateTimeField()
+    complete_date = models.DateTimeField(null=True)
     # Deposit reception source type
     type = models.ForeignKey(
         'DepositType', models.DO_NOTHING, db_column='type')
