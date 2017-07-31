@@ -1,6 +1,5 @@
-from django.http import HttpResponse
-from django.template import loader
-from django.http import Http404
+from django.http import HttpResponse, Http404
+from django.shortcuts import render
 
 from swh.core.config import SWHConfig
 
@@ -46,11 +45,10 @@ class SWHDepositAPI(SWHConfig):
         self.config.update(config)
 
     def service_document(self, request):
-        template = loader.get_template('deposit/service_document.xml')
         context = {
             'max_upload_size': self.config['max_upload_size'],
             'verbose': self.config['verbose'],
             'noop': self.config['noop'],
         }
-        return HttpResponse(template.render(context, request),
-                            content_type='application/xml')
+        return render(request, 'deposit/service_document.xml',
+                      context, content_type='application/xml')
