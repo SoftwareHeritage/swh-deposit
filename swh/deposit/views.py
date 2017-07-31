@@ -2,6 +2,8 @@ from django.http import HttpResponse
 from django.template import loader
 from django.http import Http404
 
+from swh.core.config import SWHConfig
+
 from .models import Client
 
 
@@ -30,12 +32,25 @@ def client(request, client_id):
     return HttpResponse('Client {id: %s, name: %s}' % (c.id, c.name))
 
 
-def service_document(request):
-    template = loader.get_template('deposit/service_document.xml')
-    context = {
-        'max_upload_size': 209715200,
-        'verbose': False,
-        'noop': False,
+class SWHDepositAPI(SWHConfig):
+    CONFIG_BASE_FILENAME = 'deposit/server'
+
+    DEFAULT_CONFIG = {
+        'max_upload_size': ('int', 209715200),
+        'verbose': ('bool', False),
+        'noop': ('bool', False),
     }
-    return HttpResponse(template.render(context, request),
-                        content_type='application/xml')
+
+    def __init__(self, **config):
+        self.config = self.parse_config_file()
+        self.config.update(config)
+
+    def service_document(self, request):
+        template = loader.get_template('deposit/service_document.xml')
+        context = {
+            'max_upload_size': self.config['max_upload_size'],
+            'verbose': self.config['verbose'],
+            'noop': self.config['noop'],
+        }
+        return HttpResponse(template.render(context, request),
+                            content_type='application/xml')
