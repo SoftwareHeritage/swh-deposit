@@ -19,6 +19,13 @@ class Dbversion(models.Model):
     class Meta:
         db_table = 'dbversion'
 
+    def __str__(self):
+        return str({
+            'version': self.version,
+            'release': self.release,
+            'description': self.description
+        })
+
 
 class Client(models.Model):
     """Deposit's client references.
@@ -31,6 +38,9 @@ class Client(models.Model):
 
     class Meta:
         db_table = 'client'
+
+    def __str__(self):
+        return str({'id': self.id, 'name': self.name})
 
 
 DEPOSIT_STATUS = [
@@ -73,6 +83,16 @@ class Deposit(models.Model):
     class Meta:
         db_table = 'deposit'
 
+    def __str__(self):
+        return str({
+            'id': self.id,
+            'reception_date': self.reception_date,
+            'type': self.type,
+            'external_id': self.external_id,
+            'client_id': self.client_id,
+            'status': self.status
+        })
+
 
 class DepositRequest(models.Model):
     """Deposit request made by clients
@@ -88,6 +108,14 @@ class DepositRequest(models.Model):
     class Meta:
         db_table = 'deposit_request'
 
+    def __str__(self):
+        from json import dumps
+        return str({
+            'id': self.id,
+            'deposit': self.deposit,
+            'metadata': dumps(self.metadata),
+        })
+
 
 class DepositType(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -96,3 +124,6 @@ class DepositType(models.Model):
 
     class Meta:
         db_table = 'deposit_type'
+
+    def __str__(self):
+        return str({'id': self.id, 'name': self.name})
