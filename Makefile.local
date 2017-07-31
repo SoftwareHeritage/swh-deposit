@@ -1,5 +1,5 @@
 run-dev:
-	python3 -m swh.deposit.server ./resources/deposit/server.yml --debug
+	cd swh && python3 -m manage runserver
 
 run:
-	python3 -m swh.deposit.server ~/.config/swh/deposit/server.yml
+	gunicorn3 swh.wsgi
