@@ -83,7 +83,7 @@ class DepositRequest(models.Model):
     # Deposit concerned by the request
     deposit = models.ForeignKey(Deposit, models.DO_NOTHING)
     # Deposit request information on the data to inject
-    metadata = JSONField()
+    metadata = JSONField(null=True)
 
     class Meta:
         db_table = 'deposit_request'
