@@ -1,6 +1,5 @@
 vcversioner
 
-aiohttp
-jinja2
 retrying
 click
+django

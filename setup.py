@@ -19,7 +19,11 @@ setup(
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/source/swh-deposit/',
-    packages=['swh.deposit', 'swh.deposit.templates'],
+    packages=['swh.deposit',
+              'swh.deposit.fixtures',
+              'swh.deposit.migrations',
+              'swh.deposit.templates',
+              'swh.deposit.templates.deposit'],
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
