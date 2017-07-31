@@ -1,5 +1,5 @@
 from django.http import HttpResponse, Http404
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from swh.core.config import SWHConfig
 
@@ -23,11 +23,7 @@ def client(request, client_id):
     """List information about one client.
 
     """
-    c = Client.objects.filter(pk=client_id).all()
-    if len(c) <= 0:
-        raise Http404('Client with id %s not found' % client_id)
-
-    c = c[0]
+    c = get_object_or_404(Client, pk=client_id)
     return HttpResponse('Client {id: %s, name: %s}' % (c.id, c.name))
 
 
