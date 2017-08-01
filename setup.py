@@ -13,15 +13,17 @@ def parse_requirements():
     return requirements
 
 
-# Edit this part to match your module
-# full sample: https://forge.softwareheritage.org/diffusion/DCORE/browse/master/setup.py
 setup(
     name='swh.deposit',
     description='Software Heritage Deposit Server',
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/source/swh-deposit/',
-    packages=['swh.deposit'],
+    packages=['swh.deposit',
+              'swh.deposit.fixtures',
+              'swh.deposit.migrations',
+              'swh.deposit.templates',
+              'swh.deposit.templates.deposit'],
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],

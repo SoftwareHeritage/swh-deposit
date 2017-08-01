@@ -1,6 +1,5 @@
-aiohttp
 click
-jinja
+django
 retrying
 swh.core>=0.0.14
 vcversioner
