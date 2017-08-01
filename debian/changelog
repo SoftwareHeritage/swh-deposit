@@ -1,3 +1,11 @@
+swh-deposit (0.0.3-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.3
+  * Migrate to django framework
+  * Deployment tryouts
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 01 Aug 2017 12:36:22 +0200
+
 swh-deposit (0.0.2-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.2
