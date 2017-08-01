@@ -1,5 +1,24 @@
+FLAKEFLAGS='--exclude=swh/manage.py,swh/deposit/settings.py,swh/deposit/migrations/'
+
+MANAGE=python3 -m swh.manage
+
+db-drop:
+	dropdb swh-deposit-dev
+
+db-create:
+	createdb swh-deposit-dev
+
+db-prepare:
+	$(MANAGE) makemigrations
+
+db-migrate:
+	$(MANAGE) migrate
+
+db-load-data:
+	$(MANAGE) loaddata deposit_data
+
 run-dev:
-	python3 -m swh.deposit.server ./resources/deposit/server.yml
+	$(MANAGE) runserver
 
 run:
-	python3 -m swh.deposit.server ~/.config/swh/deposit/server.yml
+	gunicorn3 swh.deposit.wsgi
