@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'swh.urls'
+ROOT_URLCONF = 'swh.deposit.urls'
 
 TEMPLATES = [
     {
@@ -69,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'swh.wsgi.application'
+WSGI_APPLICATION = 'swh.deposit.wsgi.application'
 
 
 # Database

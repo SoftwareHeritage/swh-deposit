@@ -1,5 +1,5 @@
 run-dev:
-	cd swh && python3 -m manage runserver
+	python3 -m swh.manage runserver
 
 run:
-	gunicorn3 swh.wsgi
+	gunicorn3 swh.deposit.wsgi
