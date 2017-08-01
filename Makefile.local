@@ -1,3 +1,5 @@
+FLAKEFLAGS='--exclude=swh/manage.py,swh/deposit/settings.py,swh/deposit/migrations/'
+
 run-dev:
 	python3 -m swh.manage runserver
 
