@@ -32,22 +32,6 @@ class Dbversion(models.Model):
         })
 
 
-class Client(models.Model):
-    """Deposit's client references.
-
-    """
-    id = models.BigAutoField(primary_key=True)
-    # Human readable name for the client e.g hal, arXiv, etc...
-    name = models.TextField()
-    credential = models.BinaryField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'client'
-
-    def __str__(self):
-        return str({'id': self.id, 'name': self.name})
-
-
 DEPOSIT_STATUS = [
     ('partial', 'partial'),      # the deposit is new or partially received
                                  # since it can be done in multiple requests
@@ -77,7 +61,8 @@ class Deposit(models.Model):
     # Deposit's uniue external identifier
     external_id = models.TextField()
     # Deposit client
-    client_id = models.BigIntegerField()
+    client = models.ForeignKey(
+        'auth.User', models.DO_NOTHING)
     # SWH's injection result identifier
     swh_id = models.TextField(blank=True, null=True)
     # Deposit's status regarding injection

@@ -3,12 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
-
 from swh.core.config import SWHConfig
 
-from .models import Client
 from .auth import login_required
 
 
@@ -21,7 +20,7 @@ def clients(request):
     """List existing clients.
 
     """
-    cs = Client.objects.all()
+    cs = User.objects.all()
 
     return HttpResponse('Clients: %s' % ','.join((str(c) for c in cs)))
 
@@ -31,8 +30,8 @@ def client(request, client_id):
     """List information about one client.
 
     """
-    c = get_object_or_404(Client, pk=client_id)
-    return HttpResponse('Client {id: %s, name: %s}' % (c.id, c.name))
+    c = get_object_or_404(User, pk=client_id)
+    return HttpResponse('Client {id: %s, name: %s}' % (c.id, c.username))
 
 
 class SWHDepositAPI(SWHConfig):
