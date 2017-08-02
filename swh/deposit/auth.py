@@ -46,33 +46,12 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
     return response
 
 
-def login_required(realm=""):
-    """A simple decorator that requires a user to be logged in.
+class HttpBasicAuthMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
 
-    If they are not logged in the request is examined for a
-    'authorization' header.
-
-    If the header is present it is tested for basic authentication and
-    the user is logged in with the provided credentials.
-
-    If the header is not present a http 401 is sent back to the
-    requestor to provide credentials.
-
-    Use is simple:
-    ```
-    @login_required()
-    def view:
-       pass
-    ```
-
-    You can provide the name of the realm to ask for
-    authentication within.
-
-    """
-    def view_decorator(func):
-        def wrapper(request, *args, **kwargs):
-            return view_or_basicauth(func, request,
-                                     lambda u: u.is_authenticated(),
-                                     realm, *args, **kwargs)
-        return wrapper
-    return view_decorator
+    def __call__(self, request):
+        r = view_or_basicauth(view=self.get_response,
+                              request=request,
+                              test_func=lambda u: u.is_authenticated())
+        return r
