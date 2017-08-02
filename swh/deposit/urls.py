@@ -21,12 +21,12 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from swh.deposit.views import index, clients, client, SWHDepositAPI
+from swh.deposit.views import index, clients, client, SWHServiceDocument
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),
     url(r'^deposit[/]+$', index),
     url(r'^deposit/clients[/]+$', clients),
     url(r'^deposit/client/(?P<client_id>[0-9]+)', client),
-    url(r'^deposit/sd', SWHDepositAPI().service_document)
+    url(r'^deposit/sd', SWHServiceDocument.as_view())
 ]

@@ -6,6 +6,7 @@
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
+from django.views import View
 from swh.core.config import SWHConfig
 
 from .auth import login_required
@@ -35,6 +36,7 @@ def client(request, client_id):
 
 
 class SWHDepositAPI(SWHConfig):
+class SWHServiceDocument(SWHConfig, View):
     CONFIG_BASE_FILENAME = 'deposit/server'
 
     DEFAULT_CONFIG = {
@@ -47,7 +49,7 @@ class SWHDepositAPI(SWHConfig):
         self.config = self.parse_config_file()
         self.config.update(config)
 
-    def service_document(self, request):
+    def get(self, request):
         context = {
             'max_upload_size': self.config['max_upload_size'],
             'verbose': self.config['verbose'],
