@@ -9,12 +9,14 @@ from django.shortcuts import render, get_object_or_404
 from swh.core.config import SWHConfig
 
 from .models import Client
+from .auth import login_required
 
 
 def index(request):
     return HttpResponse('SWH Deposit API - WIP')
 
 
+@login_required()
 def clients(request):
     """List existing clients.
 
@@ -24,6 +26,7 @@ def clients(request):
     return HttpResponse('Clients: %s' % ','.join((str(c) for c in cs)))
 
 
+@login_required()
 def client(request, client_id):
     """List information about one client.
 
