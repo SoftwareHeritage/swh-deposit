@@ -5,35 +5,17 @@
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.views import View
+from django.views.generic import ListView
 from swh.core.config import SWHConfig
-
 
 
 def index(request):
     return HttpResponse('SWH Deposit API - WIP')
 
 
-def clients(request):
-    """List existing clients.
-
-    """
-    cs = User.objects.all()
-
-    return HttpResponse('Clients: %s' % ','.join((str(c) for c in cs)))
-
-
-def client(request, client_id):
-    """List information about one client.
-
-    """
-    c = get_object_or_404(User, pk=client_id)
-    return HttpResponse('Client {id: %s, name: %s}' % (c.id, c.username))
-
-
-class SWHDepositAPI(SWHConfig):
-class SWHServiceDocument(SWHConfig, View):
+class SWHView(SWHConfig, View):
     CONFIG_BASE_FILENAME = 'deposit/server'
 
     DEFAULT_CONFIG = {
@@ -43,10 +25,13 @@ class SWHServiceDocument(SWHConfig, View):
     }
 
     def __init__(self, **config):
+        super().__init__()
         self.config = self.parse_config_file()
         self.config.update(config)
 
-    def get(self, request):
+
+class SWHServiceDocument(SWHView):
+    def get(self, request, *args, **kwargs):
         context = {
             'max_upload_size': self.config['max_upload_size'],
             'verbose': self.config['verbose'],
@@ -54,3 +39,16 @@ class SWHServiceDocument(SWHConfig, View):
         }
         return render(request, 'deposit/service_document.xml',
                       context, content_type='application/xml')
+
+
+class SWHUser(ListView, SWHView):
+    model = User
+
+    def get(self, *args, **kwargs):
+        if 'client_id' in kwargs:
+            msg = 'Client '
+            cs = self.get_queryset().filter(pk=kwargs['client_id'])
+        else:
+            msg = 'Clients'
+            cs = self.get_queryset().all()
+        return HttpResponse('%s: %s' % (msg, ','.join((str(c) for c in cs))))
