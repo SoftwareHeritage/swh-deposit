@@ -5,6 +5,8 @@
 
 import base64
 
+from swh.core.config import SWHConfig
+
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 
@@ -46,12 +48,22 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
     return response
 
 
-class HttpBasicAuthMiddleware(object):
+class HttpBasicAuthMiddleware(SWHConfig):
+    CONFIG_BASE_FILENAME = 'deposit/server'
+
+    DEFAULT_CONFIG = {
+        'authentication': ('bool', True),
+    }
+
     def __init__(self, get_response):
+        super().__init__()
         self.get_response = get_response
+        self.config = self.parse_config_file()
 
     def __call__(self, request):
-        r = view_or_basicauth(view=self.get_response,
-                              request=request,
-                              test_func=lambda u: u.is_authenticated())
-        return r
+        if self.config['authentication']:
+            r = view_or_basicauth(view=self.get_response,
+                                  request=request,
+                                  test_func=lambda u: u.is_authenticated())
+            return r
+        return self.get_response(request)
