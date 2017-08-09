@@ -46,9 +46,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'swh.deposit.auth.HttpBasicAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'swh.deposit.auth.HttpBasicAuthMiddleware',
 ]
 
 ROOT_URLCONF = 'swh.deposit.urls'
