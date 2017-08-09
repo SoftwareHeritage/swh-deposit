@@ -52,7 +52,7 @@ class Deposit(models.Model):
     id = models.BigAutoField(primary_key=True)
 
     # First deposit reception date
-    reception_date = models.DateTimeField()
+    reception_date = models.DateTimeField(auto_now_add=True)
     # Date when the deposit is deemed complete and ready for injection
     complete_date = models.DateTimeField(null=True)
     # Deposit reception source type
