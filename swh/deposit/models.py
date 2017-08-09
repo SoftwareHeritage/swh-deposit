@@ -58,7 +58,7 @@ class Deposit(models.Model):
     # Deposit reception source type
     type = models.ForeignKey(
         'DepositType', models.DO_NOTHING, db_column='type')
-    # Deposit's uniue external identifier
+    # Deposit's unique external identifier
     external_id = models.TextField()
     # Deposit client
     client = models.ForeignKey(
