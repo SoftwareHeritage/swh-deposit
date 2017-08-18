@@ -59,7 +59,7 @@ class Deposit(models.Model):
     type = models.ForeignKey(
         'DepositType', models.DO_NOTHING, db_column='type')
     # Deposit's unique external identifier
-    external_id = models.TextField()
+    external_id = models.TextField(unique=True)
     # Deposit client
     client = models.ForeignKey(
         'auth.User', models.DO_NOTHING)
@@ -92,6 +92,7 @@ class DepositRequest(models.Model):
     id = models.BigAutoField(primary_key=True)
     # Deposit concerned by the request
     deposit = models.ForeignKey(Deposit, models.DO_NOTHING)
+    date = models.DateTimeField(auto_now_add=True)
     # Deposit request information on the data to inject
     metadata = JSONField(null=True)
 

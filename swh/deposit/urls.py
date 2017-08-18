@@ -20,14 +20,18 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from rest_framework.urlpatterns import format_suffix_patterns
 
-from swh.deposit.views import index, SWHServiceDocument, SWHUser
-
+from .views import SWHServiceDocument, SWHUser
+from .views import SWHDeposit
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),
-    url(r'^deposit[/]+$', index),
     url(r'^deposit/clients[/]+$', SWHUser.as_view()),
     url(r'^deposit/clients/(?P<client_id>[0-9]+)', SWHUser.as_view()),
-    url(r'^deposit/sd', SWHServiceDocument.as_view())
+    url(r'^deposit/sd', SWHServiceDocument.as_view()),
+    url(r'^deposit/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),
+        name='upload'),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
