@@ -85,7 +85,7 @@ shortcomings during the first iteration:
 
 == Unclear points ==
 
-- SWORD defines a 'collection' concpet. should we apply the 'collection' concept
+- SWORD defines a 'collection' concept. should we apply the 'collection' concept
    even thought SWH is software archive having one 'software' collection?
    - option A:
       The collection refers to a group of documents to which the document sent
