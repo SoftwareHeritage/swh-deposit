@@ -187,12 +187,14 @@ a deposit:
 
 === [3] client request  ===
 
-The client can send a deposit through one request deposit or multiple requests deposit.
+The client can send a deposit through one request deposit or multiple
+requests deposit.
 
 The deposit can contain:
-- an archive holding the software source code,
-- an envelop with metadata describing information regarding a deposit,
-- or both (Multipart deposit).
+- an archive holding the software source code (binary upload)
+- an envelop with metadata describing information regarding a deposit
+  (atom entry deposit)
+- or both (multipart deposit, exactly one archive and one envelop).
 
 the client can deposit a binary file, supplying the following headers:
 - Content-Type (text): accepted mimetype
@@ -205,19 +207,44 @@ the client can deposit a binary file, supplying the following headers:
   to specify it's a final request and the server can go on with
   processing the request's information.
 
-WARNING: if In-Progress is not present the  server MUST assume that it is false
+WARNING: if In-Progress is not present the server MUST assume that it is false
 
 ==== API endpoint ====
 
-POST /api/1/deposit/
+POST /api/1/deposit/<client-name>
 
-==== One request deposit ====
+=== Archive deposit ===
 
-The one request deposit is a single request containing both the metadata (body)
-and the archive (attachment).
+This is a single zip archive deposit. Almost no metadata is associated
+with the archive except for the unique external identifier.
 
-A Multipart deposit is a request of an archive along with metadata about
-that archive (can be applied in a one request deposit or multiple requests).
+Note: This kind of deposit should be partial (In-Progress: True) as
+almost no metadata can be associated with the uploaded archive.
+
+==== sample request for binary upload deposit ====
+
+```
+curl -i --data-binary @swh/deposit.zip \
+    -H 'In-Progress: false' -H 'Content-MD5: 0faa1ecbf9224b9bf48a7c691b8c2b6f' \
+    -H 'Content-Disposition: attachment; filename=[deposit.zip]' \
+    -H 'Slug: some-external-id' \
+    -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
+    -H 'Content-type: application/zip' \
+    -XPOST http://127.0.0.1:8000/deposit/hal
+```
+
+=== Atom entry deposit ===
+
+TBD
+
+Note: This kind of deposit should be partial (In-Progress: True) since
+no archive will be associated to those metadata.
+
+==== One request deposit / Multipart deposit ====
+
+The one request deposit is a single request containing both the
+metadata (as atom entry attachment) and the archive (as payload
+attachment). Thus, it is a multipart deposit.
 
 Client provides:
 - Content-Disposition (text): header of type 'attachment' on the Entry
@@ -231,7 +258,6 @@ Client provides:
 - In-Progress (bool): true|false; true means partial upload and we can expect
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
-
 
 ==== sample request for multipart deposit: ====
 
