@@ -184,6 +184,13 @@ class SWHDeposit(SWHView, APIView):
         self._debug_raw_content(filehandler)
 
         if 'content-length' in headers:
+            if headers['content-length'] > self.config['max_upload_size']:
+                return HttpResponse(
+                    status=status.HTTP_403_FORBIDDEN,
+                    content='Upload size limit of %s exceeded. '
+                    'Please consider sending the archive in '
+                    'multiple steps.' % self.config['max_upload_size'])
+
             length = self._compute_length(filehandler)
             self.log.debug('content_length: %s == %s' % (
                 length, headers['content-length']))

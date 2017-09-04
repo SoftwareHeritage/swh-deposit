@@ -178,6 +178,62 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+    def test_post_deposit_binary_upload_fail_if_no_content_disposition_header(
+            self):
+        """Binary upload must have content_disposition header provided...
+
+        """
+        # given
+        url = reverse('upload', args=['hal'])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',
+            data=data_text,
+            # + headers
+            HTTP_SLUG='some-external-id',
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text))
+
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+
+    # FIXME: Test this scenario (need a way to override the default
+    # size limit in test scenario)
+    #
+    # def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
+    #         self):
+    #     """Binary upload must not exceed the limit set up...
+
+    #     """
+    #     # given
+    #     url = reverse('upload', args=['hal'])
+    #     data_text = b'some content'
+    #     md5sum = hashlib.md5(data_text).hexdigest()
+
+    #     # when
+    #     response = self.client.post(
+    #         url,
+    #         content_type='application/zip',
+    #         data=data_text,
+    #         # + headers
+    #         HTTP_SLUG='some-external-id',
+    #         HTTP_CONTENT_MD5=md5sum,
+    #         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+    #         HTTP_IN_PROGRESS='false',
+    #         CONTENT_LENGTH=len(data_text),
+    #         HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+
+    #     # then
+    #     self.assertEqual(response.status_code,
+    #                      status.HTTP_403_FORBIDDEN)
+
     def test_post_deposit_multipart(self):
         """Test one deposit upload."""
         # given
