@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 
 from swh.core.config import SWHConfig
 from swh.objstorage import get_objstorage
+from swh.model.hashutil import hash_to_hex
 
 from .models import Deposit, DepositRequest, DepositType
 from .parsers import SWHFileUploadParser, SWHAtomEntryParser
@@ -151,6 +152,7 @@ class SWHDeposit(SWHView, APIView):
 
         TO BE REMOVED
         """
+        self.log.debug('____ debug content of file %s ____' % filehandler)
         for chunk in filehandler:
             self.log.debug(chunk)
 
@@ -224,8 +226,20 @@ class SWHDeposit(SWHView, APIView):
 
         deposit.save()
 
-        deposit_request = DepositRequest(deposit=deposit,
-                                         metadata=req.data)
+        raw_content = b''.join(filehandler.chunks())
+        id = self.objstorage.add(content=raw_content)
+
+        metadata = {
+            'id': hash_to_hex(id),
+            'name': filehandler.name
+        }
+
+        self.log.debug('metadata: %s' % metadata)
+
+        deposit_request = DepositRequest(
+            deposit=deposit,
+            metadata=metadata)
+
         deposit_request.save()
 
         context = {
