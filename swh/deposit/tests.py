@@ -147,7 +147,7 @@ and other stuff</description>
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -172,7 +172,7 @@ and other stuff</description>
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         # then
         self.assertEqual(response.status_code,
@@ -228,7 +228,7 @@ and other stuff</description>
     #         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
     #         HTTP_IN_PROGRESS='false',
     #         CONTENT_LENGTH=len(data_text),
-    #         HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+    #         HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
     #     # then
     #     self.assertEqual(response.status_code,
