@@ -3,13 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-# import hashlib
+import hashlib
 
-# from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.test import TestCase
-# from io import BytesIO
+from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -127,187 +127,185 @@ and other stuff</description>
     <something>something</something>
 </entry>"""
 
-#     def test_post_deposit_binary_upload(self):
-#         """Binary upload should be accepted
+    def test_post_deposit_binary_upload(self):
+        """Binary upload should be accepted
 
-#         """
-#         # given
-#         url = reverse('upload', args=['hal'])
-#         data_text = b'some content'
-#         md5sum = hashlib.md5(data_text).hexdigest()
+        """
+        # given
+        url = reverse('upload', args=['hal'])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
 
-#         # when
-#         response = self.client.post(
-#             url,
-#             content_type='application/zip',  # as zip
-#             data=data_text,
-#             # + headers
-#             HTTP_SLUG='some-external-id',
-#             HTTP_CONTENT_MD5=md5sum,
-#             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
-#             HTTP_IN_PROGRESS='false',
-#             HTTP_CONTENT_LENGTH=len(data_text),
-#             HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG='some-external-id',
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
 
-#         print(response)
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-#         # then
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    def test_post_deposit_binary_upload_only_supports_zip(self):
+        """Binary upload only supports application/zip (for now)...
 
-#     def test_post_deposit_binary_upload_only_supports_zip(self):
-#         """Binary upload only supports application/zip (for now)...
+        """
+        # given
+        url = reverse('upload', args=['hal'])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
 
-#         """
-#         # given
-#         url = reverse('upload', args=['hal'])
-#         data_text = b'some content'
-#         md5sum = hashlib.md5(data_text).hexdigest()
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/octet-stream',
+            data=data_text,
+            # + headers
+            HTTP_SLUG='some-external-id',
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
 
-#         # when
-#         response = self.client.post(
-#             url,
-#             content_type='application/octet-stream',
-#             data=data_text,
-#             # + headers
-#             HTTP_SLUG='some-external-id',
-#             HTTP_CONTENT_MD5=md5sum,
-#             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
-#             HTTP_IN_PROGRESS='false',
-#             HTTP_CONTENT_LENGTH=len(data_text),
-#             HTTP_CONTENT_DISPOSITION='attachment; filename=[filename0]')
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-#         # then
-#         self.assertEqual(response.status_code,
-#                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+    def test_post_deposit_multipart(self):
+        """Test one deposit upload."""
+        # given
+        url = reverse('upload', args=['hal'])
 
-#     def test_post_deposit_multipart(self):
-#         """Test one deposit upload."""
-#         # given
-#         url = reverse('upload', args=['hal'])
+        # from django.core.files import uploadedfile
+        data_atom_entry = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <title>Title</title>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2005-10-07T17:17:08Z</updated>
+    <author><name>Contributor</name></author>
+    <summary type="text">The abstract</summary>
 
-#         # from django.core.files import uploadedfile
-#         data_atom_entry = b"""<?xml version="1.0"?>
-# <entry xmlns="http://www.w3.org/2005/Atom"
-#         xmlns:dcterms="http://purl.org/dc/terms/">
-#     <title>Title</title>
-#     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-#     <updated>2005-10-07T17:17:08Z</updated>
-#     <author><name>Contributor</name></author>
-#     <summary type="text">The abstract</summary>
+    <!-- some embedded metadata -->
+    <dcterms:abstract>The abstract</dcterms:abstract>
+    <dcterms:accessRights>Access Rights</dcterms:accessRights>
+    <dcterms:alternative>Alternative Title</dcterms:alternative>
+    <dcterms:available>Date Available</dcterms:available>
+    <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
+    <dcterms:contributor>Contributor</dcterms:contributor>
+    <dcterms:description>Description</dcterms:description>
+    <dcterms:hasPart>Has Part</dcterms:hasPart>
+    <dcterms:hasVersion>Has Version</dcterms:hasVersion>
+    <dcterms:identifier>Identifier</dcterms:identifier>
+    <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
+    <dcterms:publisher>Publisher</dcterms:publisher>
+    <dcterms:references>References</dcterms:references>
+    <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
+    <dcterms:source>Source</dcterms:source>
+    <dcterms:title>Title</dcterms:title>
+    <dcterms:type>Type</dcterms:type>
 
-#     <!-- some embedded metadata -->
-#     <dcterms:abstract>The abstract</dcterms:abstract>
-#     <dcterms:accessRights>Access Rights</dcterms:accessRights>
-#     <dcterms:alternative>Alternative Title</dcterms:alternative>
-#     <dcterms:available>Date Available</dcterms:available>
-#     <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
-#     <dcterms:contributor>Contributor</dcterms:contributor>
-#     <dcterms:description>Description</dcterms:description>
-#     <dcterms:hasPart>Has Part</dcterms:hasPart>
-#     <dcterms:hasVersion>Has Version</dcterms:hasVersion>
-#     <dcterms:identifier>Identifier</dcterms:identifier>
-#     <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
-#     <dcterms:publisher>Publisher</dcterms:publisher>
-#     <dcterms:references>References</dcterms:references>
-#     <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
-#     <dcterms:source>Source</dcterms:source>
-#     <dcterms:title>Title</dcterms:title>
-#     <dcterms:type>Type</dcterms:type>
+</entry>"""
 
-# </entry>"""
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(BytesIO(archive_content),
+                                       field_name='archive0',
+                                       name='archive0',
+                                       content_type='application/zip',
+                                       size=len(archive_content),
+                                       charset=None)
 
-#         archive_content = b'some content representing archive'
-#         archive = InMemoryUploadedFile(BytesIO(archive_content),
-#                                        field_name='archive0',
-#                                        name='archive0',
-#                                        content_type='application/zip',
-#                                        size=len(archive_content),
-#                                        charset=None)
+        atom_entry = InMemoryUploadedFile(BytesIO(data_atom_entry),
+                                          field_name='atom0',
+                                          name='atom0',
+                                          content_type='application/atom+xml',
+                                          size=len(data_atom_entry),
+                                          charset='utf-8')
 
-#         atom_entry = InMemoryUploadedFile(BytesIO(data_atom_entry),
-#                                           field_name='atom0',
-#                                           name='atom0',
-#                                           content_type='application/atom+xml',
-#                                           size=len(data_atom_entry),
-#                                           charset='utf-8')
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false',
+            HTTP_SLUG='external-id')
 
-#         # when
-#         response = self.client.post(
-#             url,
-#             format='multipart',
-#             data={
-#                 'archive': archive,
-#                 'atom_entry': atom_entry,
-#             },
-#             # + headers
-#             HTTP_IN_PROGRESS='false',
-#             HTTP_SLUG='external-id')
+        print(response)
 
-#         print(response)
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-#         # then
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    def test_post_deposit_multipart_only_archive_and_atom_entry(self):
+        """Multipart deposit only accepts one archive and one atom+xml"""
+        # given
+        url = reverse('upload', args=['hal'])
 
-#     def test_post_deposit_multipart_only_archive_and_atom_entry(self):
-#         """Multipart deposit only accepts one archive and one atom+xml"""
-#         # given
-#         url = reverse('upload', args=['hal'])
+        # from django.core.files import uploadedfile
 
-#         # from django.core.files import uploadedfile
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(BytesIO(archive_content),
+                                       field_name='archive0',
+                                       name='archive0',
+                                       content_type='application/zip',
+                                       size=len(archive_content),
+                                       charset=None)
 
-#         archive_content = b'some content representing archive'
-#         archive = InMemoryUploadedFile(BytesIO(archive_content),
-#                                        field_name='archive0',
-#                                        name='archive0',
-#                                        content_type='application/zip',
-#                                        size=len(archive_content),
-#                                        charset=None)
+        other_archive_content = b"some-other-content"
+        other_archive = InMemoryUploadedFile(BytesIO(other_archive_content),
+                                             field_name='atom0',
+                                             name='atom0',
+                                             content_type='application/zip',
+                                             size=len(other_archive_content),
+                                             charset='utf-8')
 
-#         other_archive_content = b"some-other-content"
-#         other_archive = InMemoryUploadedFile(BytesIO(other_archive_content),
-#                                              field_name='atom0',
-#                                              name='atom0',
-#                                              content_type='application/zip',
-#                                              size=len(other_archive_content),
-#                                              charset='utf-8')
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': other_archive,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false',
+            HTTP_SLUG='external-id')
 
-#         # when
-#         response = self.client.post(
-#             url,
-#             format='multipart',
-#             data={
-#                 'archive': archive,
-#                 'atom_entry': other_archive,
-#             },
-#             # + headers
-#             HTTP_IN_PROGRESS='false',
-#             HTTP_SLUG='external-id')
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(response.content,
+                         b'Only 1 application/zip archive and 1 '
+                         b'atom+xml entry is supported.')
 
-#         # then
-#         self.assertEqual(response.status_code,
-#                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-#         self.assertEqual(response.content,
-#                          b'Only 1 application/zip archive and 1 '
-#                          b'atom+xml entry is supported.')
+        # when
+        archive.seek(0)
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false',
+            HTTP_SLUG='external-id')
 
-#         # when
-#         archive.seek(0)
-#         response = self.client.post(
-#             url,
-#             format='multipart',
-#             data={
-#                 'archive': archive,
-#             },
-#             # + headers
-#             HTTP_IN_PROGRESS='false',
-#             HTTP_SLUG='external-id')
-
-#         # then
-#         self.assertEqual(response.status_code,
-#                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-#         self.assertEqual(response.content,
-#                          b'You must provide both 1 application/zip and'
-#                          b' 1 atom+xml entry for multipart deposit.')
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(response.content,
+                         b'You must provide both 1 application/zip and'
+                         b' 1 atom+xml entry for multipart deposit.')
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
