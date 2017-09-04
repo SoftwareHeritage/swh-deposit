@@ -13,8 +13,6 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 from rest_framework import status
-# from rest_framework import generics
-# from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
 from swh.core.config import SWHConfig
@@ -23,8 +21,6 @@ from swh.objstorage import get_objstorage
 from .models import Deposit, DepositRequest, DepositType
 from .parsers import SWHFileUploadParser, SWHAtomEntryParser
 from .parsers import SWHMultiPartParser
-
-# from .serializers import DepositSerializer
 
 
 def index(req):
@@ -70,22 +66,10 @@ class SWHUser(ListView, SWHView):
         return HttpResponse('%s: %s' % (msg, ','.join((str(c) for c in cs))))
 
 
-# class SWHDeposit0(generics.ListCreateAPIView, generics.UpdateAPIView):
-#     """This class defines the create behavior of our rest api."""
-#     queryset = Deposit.objects.all()
-#     serializer_class = DepositSerializer
-
-
-# def store_file(objstorage, filehandler):
-#     pass
-
-
 class SWHDeposit(SWHView, APIView):
     """This class defines the create behavior of our rest api."""
-    # parser_classes = (MultiPartParser, FileUploadParser, )
     parser_classes = (SWHMultiPartParser, SWHFileUploadParser,
                       SWHAtomEntryParser)
-    # parser_classes = (FileUploadParser, )
 
     ADDITIONAL_CONFIG = {
         'objstorage': ('dict', {
@@ -96,25 +80,10 @@ class SWHDeposit(SWHView, APIView):
         })
     }
 
-    potential_headers = {
-        'MUST': ['Content-Disposition'],
-        'SHOULD': ['Content-Type', 'Content-MD5', 'Packaging'],
-        'MAY': ['In-Progress', 'On-Behalf-Of', 'Slug'],
-    }
-
     def __init__(self):
         super().__init__()
         self.objstorage = get_objstorage(**self.config['objstorage'])
         self.log = logging.getLogger('swh.deposit')
-
-    def _check_header_presence(self, headers):
-        """Check request header for a deposit.
-
-        """
-        for header_name in self.potential_headers['MUST']:
-            if header_name not in headers:
-                return False
-        return True
 
     def _read_headers(self, req):
         """Read the necessary headers from the request.
@@ -123,11 +92,10 @@ class SWHDeposit(SWHView, APIView):
         # if no Content-Type header, assume 'application/octet-stream'
         # source: https://www.w3.org/Protocols/rfc2616/rfc2616-sec7.html#sec7.2.1  # noqa
         """
-        for k, v in req._request.META.items():
-            key = k.lower()
-            if 'http_' in key:
-                self.log.debug('%s: %s' % (k, v))
-
+        # for k, v in req._request.META.items():
+        #     key = k.lower()
+        #     if 'http_' in key:
+        #         self.log.debug('%s: %s' % (k, v))
         meta = req._request.META
         content_type = req.content_type
         content_length = meta['CONTENT_LENGTH']
@@ -143,8 +111,10 @@ class SWHDeposit(SWHView, APIView):
         content_md5sum = meta.get('HTTP_CONTENT_MD5')
         if content_md5sum:
             content_md5sum = bytes.fromhex(content_md5sum)
+
         packaging = meta.get('HTTP_PACKAGING')
         slug = meta.get('HTTP_SLUG')
+
         return {
             'content-type': content_type,
             'content-length': content_length,
@@ -201,6 +171,13 @@ class SWHDeposit(SWHView, APIView):
         self.log.debug('stream: %s' % req.stream)
 
         self.log.debug(req.data)
+
+        # binary_upload_headers_rule = {
+        #     'MUST': ['Content-Disposition'],
+        #     'SHOULD': ['Content-Type', 'Content-MD5', 'Packaging'],
+        #     'MAY': ['In-Progress', 'On-Behalf-Of', 'Slug'],
+        # }
+
         filehandler = req.FILES['file']
         self._debug_raw_content(filehandler)
 
