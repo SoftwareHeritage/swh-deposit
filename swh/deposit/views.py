@@ -148,19 +148,10 @@ class SWHDeposit(SWHView, APIView):
             content_length += len(chunk)
         return content_length
 
-    def _debug_raw_content(self, filehandler):
-        """Debug purpose only.
-
-        TO BE REMOVED
-        """
-        self.log.debug('____ debug content of file %s ____' % filehandler)
-        for chunk in filehandler:
-            self.log.debug(chunk)
-
-    def deposit_put(self, external_id, in_progress):
+    def _deposit_put(self, external_id, in_progress):
         """Save/Update a deposit in db.
 
-        Params:
+        Args:
             external_id (str): The external identifier to associate to
               the deposit
             in_progress (dict): The deposit's status
@@ -192,10 +183,10 @@ class SWHDeposit(SWHView, APIView):
 
         return deposit
 
-    def deposit_request_put(self, deposit, metadata):
+    def _deposit_request_put(self, deposit, metadata):
         """Save a deposit request with metadata attached to a deposit.
 
-        Params:
+        Args:
             deposit (Deposit): The deposit concerned by the request
             metadata (dict): The metadata to associate to the deposit
 
@@ -211,13 +202,13 @@ class SWHDeposit(SWHView, APIView):
 
         return deposit_request
 
-    def archive_put(self, file):
+    def _archive_put(self, file):
         """Store archive file in objstorage.
 
-        PARAMS:
+        Args:
             file (InMemoryUploadedFile): archive's memory representation
 
-        RETURNS
+        Returns:
             dict representing metadata to store about the archive.
 
         """
@@ -235,19 +226,7 @@ class SWHDeposit(SWHView, APIView):
         """Binary upload routine.
 
         """
-        self.log.debug('binary upload as per sword 2.0 spec')
         headers = self._read_headers(req)
-
-        self.log.debug('____ debug headers output ____')
-        self.log.debug('headers: %s' % headers)
-
-        self.log.debug('____ debug file output ____')
-        self.log.debug('FILES: %s' % req.FILES)
-
-        self.log.debug('data: %s' % req.data)
-        self.log.debug('stream: %s' % req.stream)
-
-        self.log.debug(req.data)
 
         # binary_upload_headers_rule = {
         #     'MUST': ['Content-Disposition'],
@@ -256,7 +235,6 @@ class SWHDeposit(SWHView, APIView):
         # }
 
         filehandler = req.FILES['file']
-        self._debug_raw_content(filehandler)
 
         if 'content-length' in headers:
             if headers['content-length'] > self.config['max_upload_size']:
@@ -267,16 +245,12 @@ class SWHDeposit(SWHView, APIView):
                     'multiple steps.' % self.config['max_upload_size'])
 
             length = self._compute_length(filehandler)
-            self.log.debug('content_length: %s == %s' % (
-                length, headers['content-length']))
             if length != headers['content-length']:
                 return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
                                     content='Wrong length')
 
         if 'content-md5sum' in headers:
             md5sum = self._compute_md5(filehandler)
-            self.log.debug('md5sum: %s == %s' % (
-                md5sum, headers['content-md5sum']))
             if md5sum != headers['content-md5sum']:
                 return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
                                     content='Wrong md5 hash')
@@ -288,19 +262,11 @@ class SWHDeposit(SWHView, APIView):
                 content='You need to provide an unique external identifier')
 
         # actual storage of data
-        metadata = self.archive_put(filehandler)
-        deposit = self.deposit_put(external_id, headers['in-progress'])
-        deposit_request = self.deposit_request_put(deposit, metadata)
+        metadata = self._archive_put(filehandler)
+        deposit = self._deposit_put(external_id, headers['in-progress'])
+        deposit_request = self._deposit_request_put(deposit, metadata)
 
-        context = {
-            'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata['archive'],
-        }
-        return render(req, 'deposit/deposit_receipt.xml',
-                      context,
-                      content_type='application/xml',
-                      status=status.HTTP_201_CREATED)
+        return deposit_request
 
     def _multipart_upload(self, req, client_name):
         """Multipart supported with at most:
@@ -310,12 +276,6 @@ class SWHDeposit(SWHView, APIView):
         Other than such, a 415 response is returned.
 
         """
-        self.log.debug('multipart upload... or something')
-        self.log.debug('stream: %s' % req.stream)
-
-        self.log.debug('req.FILES holds files:')
-        self.log.debug(req.FILES)
-
         headers = self._read_headers(req)
 
         external_id = headers.get('slug')
@@ -330,10 +290,6 @@ class SWHDeposit(SWHView, APIView):
             'application/atom+xml': None,
         }
         for key, value in req.FILES.items():
-            # req.data.pop(key)
-            self.log.debug('key: %s' % key)
-            self.log.debug('value: %s' % value)
-
             fh = value
             if fh.content_type in content_types_present:
                 return HttpResponse(
@@ -342,17 +298,7 @@ class SWHDeposit(SWHView, APIView):
                     'atom+xml entry is supported.')
 
             content_types_present.add(fh.content_type)
-            self.log.debug(
-                'size: %s\ncontent_type: %s\n'
-                'charset: %s\ncontent_type_extra: %s' % (
-                    fh.size,
-                    fh.content_type,
-                    fh.charset,
-                    fh.content_type_extra))
-
             data[fh.content_type] = fh
-            self.log.debug('############### content_type %s' % fh.content_type)
-            self.log.debug('############### filehandler %s' % fh)
 
         if len(content_types_present) != 2:
             return HttpResponse(
@@ -361,21 +307,13 @@ class SWHDeposit(SWHView, APIView):
                 'and 1 atom+xml entry for multipart deposit.')
 
         # actual storage of data
-        metadata = self.archive_put(data['application/zip'])
+        metadata = self._archive_put(data['application/zip'])
         atom_metadata = XMLParser().parse(data['application/atom+xml'])
         metadata.update(atom_metadata)
-        deposit = self.deposit_put(external_id, headers['in-progress'])
-        deposit_request = self.deposit_request_put(deposit, metadata)
+        deposit = self._deposit_put(external_id, headers['in-progress'])
+        deposit_request = self._deposit_request_put(deposit, metadata)
 
-        context = {
-            'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata['archive'],
-        }
-        return render(req, 'deposit/deposit_receipt.xml',
-                      context,
-                      content_type='application/xml',
-                      status=status.HTTP_201_CREATED)
+        return deposit_request
 
     def _atom_entry(self, req, client_name, format=None):
         """Atom entry deposit.
@@ -391,32 +329,20 @@ class SWHDeposit(SWHView, APIView):
         external_id = req.data.get(
             '{http://www.w3.org/2005/Atom}external_identifier',
             headers.get('slug'))
-        self.log.debug('external_id: %s' % external_id)
         if not external_id:
             return HttpResponse(
                 status=status.HTTP_400_BAD_REQUEST,
                 content='You need to provide an unique external identifier')
 
-        deposit = self.deposit_put(external_id, headers['in-progress'])
-        deposit_request = self.deposit_request_put(deposit, metadata=req.data)
+        deposit = self._deposit_put(external_id, headers['in-progress'])
+        deposit_request = self._deposit_request_put(deposit, metadata=req.data)
 
-        context = {
-            'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata,
-        }
-        return render(req, 'deposit/deposit_receipt.xml',
-                      context,
-                      content_type='application/xml',
-                      status=status.HTTP_201_CREATED)
+        return deposit_request
 
     def post(self, req, client_name, format=None):
         """Upload a file.
 
         """
-        self.log.debug('Posting Deposit')
-        self.log.debug('content_type: %s' % req.content_type)
-
         try:
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
@@ -427,13 +353,25 @@ class SWHDeposit(SWHView, APIView):
 
         content_disposition = req._request.META.get('HTTP_CONTENT_DISPOSITION')
         if content_disposition:  # binary upload according to sword 2.0 spec
-            return self._binary_upload(req, client_name)
+            r = self._binary_upload(req, client_name)
+        elif req.content_type.startswith('multipart/'):
+            r = self._multipart_upload(req, client_name)
+        else:
+            r = self._atom_entry(req, client_name)
 
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, client_name)
+        if isinstance(r, HttpResponse):
+            return r
 
-        return self._atom_entry(req, client_name)
+        deposit_request = r
+        context = {
+            'deposit_id': deposit_request.deposit.id,
+            'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata,
+        }
+        return render(req, 'deposit/deposit_receipt.xml',
+                      context,
+                      content_type='application/xml',
+                      status=status.HTTP_201_CREATED)
 
     def put(self, req, client_name, format=None):
-        self.log.debug('Putting Deposit')
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
