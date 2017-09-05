@@ -238,7 +238,7 @@ class SWHDeposit(SWHView, APIView):
 
         metadata = {
             'id': hash_to_hex(id),
-            'name': filehandler.name
+            'name': filehandler.name,
         }
 
         self.log.debug('metadata: %s' % metadata)
@@ -344,13 +344,6 @@ class SWHDeposit(SWHView, APIView):
         try:
             deposit = Deposit.objects.get(external_id=external_id)
         except Deposit.DoesNotExist:
-            # client_name = req.data.get('{http://www.w3.org/2005/Atom}client')
-            # if not client_name:
-            #     return HttpResponse(
-            #         status=status.HTTP_400_BAD_REQUEST,
-            #         content='You need to provide the client name')
-            # self.log.debug('client: %s' % client_name)
-
             deposit = Deposit(type=self._type,
                               external_id=external_id,
                               complete_date=complete_date,
@@ -380,7 +373,6 @@ class SWHDeposit(SWHView, APIView):
 
         """
         self.log.debug('Posting Deposit')
-        # self.log.debug('Triggering data parsing: %s' % req.data)
         self.log.debug('content_type: %s' % req.content_type)
 
         try:
