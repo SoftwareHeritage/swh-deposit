@@ -167,8 +167,10 @@ and other stuff</description>
         self.assertIsNotNone(deposit_request)
         self.assertEquals(deposit_request.deposit, deposit)
         self.assertEquals(deposit_request.metadata, {
-            'id': id,
-            'name': 'filename0'
+            'archive': {
+                'id': id,
+                'name': 'filename0',
+            },
         })
 
     def test_post_deposit_binary_upload_2_steps(self):
@@ -213,8 +215,10 @@ and other stuff</description>
         self.assertIsNotNone(deposit_request)
         self.assertEquals(deposit_request.deposit, deposit)
         self.assertEquals(deposit_request.metadata, {
-            'id': id0,
-            'name': 'filename0'
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
         })
 
         # 2nd archive to upload
@@ -248,13 +252,17 @@ and other stuff</description>
         self.assertEquals(len(deposit_requests), 2)
         self.assertEquals(deposit_requests[0].deposit, deposit)
         self.assertEquals(deposit_requests[0].metadata, {
-            'id': id0,
-            'name': 'filename0'
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
         })
         self.assertEquals(deposit_requests[1].deposit, deposit)
         self.assertEquals(deposit_requests[1].metadata, {
-            'id': id1,
-            'name': 'filename1'
+            'archive': {
+                'id': id1,
+                'name': 'filename1',
+            },
         })
 
     def test_post_deposit_binary_upload_only_supports_zip(self):
@@ -325,7 +333,7 @@ and other stuff</description>
 
     # FIXME: Test this scenario (need a way to override the default
     # size limit in test scenario)
-    #
+
     # def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
     #         self):
     #     """Binary upload must not exceed the limit set up...
@@ -335,7 +343,7 @@ and other stuff</description>
     #     url = reverse('upload', args=['hal'])
     #     data_text = b'some content'
     #     md5sum = hashlib.md5(data_text).hexdigest()
-    #
+
     #     external_id = 'some-external-id'
 
     #     # when
@@ -396,19 +404,24 @@ and other stuff</description>
 </entry>"""
 
         archive_content = b'some content representing archive'
-        archive = InMemoryUploadedFile(BytesIO(archive_content),
-                                       field_name='archive0',
-                                       name='archive0',
-                                       content_type='application/zip',
-                                       size=len(archive_content),
-                                       charset=None)
+        archive = InMemoryUploadedFile(
+            BytesIO(archive_content),
+            field_name='archive0',
+            name='archive0',
+            content_type='application/zip',
+            size=len(archive_content),
+            charset=None)
 
-        atom_entry = InMemoryUploadedFile(BytesIO(data_atom_entry),
-                                          field_name='atom0',
-                                          name='atom0',
-                                          content_type='application/atom+xml',
-                                          size=len(data_atom_entry),
-                                          charset='utf-8')
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(data_atom_entry),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(data_atom_entry),
+            charset='utf-8')
+
+        external_id = 'external-id'
+        id1 = hashlib.sha1(archive_content).hexdigest()
 
         # when
         response = self.client.post(
@@ -420,10 +433,26 @@ and other stuff</description>
             },
             # + headers
             HTTP_IN_PROGRESS='false',
-            HTTP_SLUG='external-id')
+            HTTP_SLUG=external_id)
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        deposit = Deposit.objects.get(external_id=external_id)
+        self.assertIsNotNone(deposit)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertIsNotNone(deposit_request)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata['archive'], {
+            'id': id1,
+            'name': 'archive0',
+        })
 
     def test_post_deposit_multipart_only_archive_and_atom_entry(self):
         """Multipart deposit only accepts one archive and one atom+xml"""
@@ -544,8 +573,10 @@ and other stuff</description>
         self.assertEqual(deposit.client, self.user)
 
         # one associated request to a deposit
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEqual(len(deposit_requests), 1)
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        actual_metadata = deposit_request.metadata
+        self.assertIsNotNone(actual_metadata)
+        self.assertIsNone(actual_metadata.get('archive'))
 
     def test_post_deposit_atom_entry_multiple_step(self):
         """Test one deposit upload."""
@@ -602,3 +633,8 @@ and other stuff</description>
         # now 2 associated requests to a same deposit
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
         self.assertEqual(len(deposit_requests), 2)
+
+        for deposit_request in deposit_requests:
+            actual_metadata = deposit_request.metadata
+            self.assertIsNotNone(actual_metadata)
+            self.assertIsNone(actual_metadata.get('archive'))

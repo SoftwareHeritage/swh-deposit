@@ -14,6 +14,7 @@ from django.views import View
 from django.views.generic import ListView
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework_xml.parsers import XMLParser
 
 from swh.core.config import SWHConfig
 from swh.objstorage import get_objstorage
@@ -156,6 +157,80 @@ class SWHDeposit(SWHView, APIView):
         for chunk in filehandler:
             self.log.debug(chunk)
 
+    def deposit_put(self, external_id, in_progress):
+        """Save/Update a deposit in db.
+
+        Params:
+            external_id (str): The external identifier to associate to
+              the deposit
+            in_progress (dict): The deposit's status
+
+        Returns:
+            The Deposit instance.
+
+        """
+        if in_progress is False:
+            complete_date = timezone.now()
+            status_type = 'ready'
+        else:
+            complete_date = None
+            status_type = 'partial'
+
+        try:
+            deposit = Deposit.objects.get(external_id=external_id)
+        except Deposit.DoesNotExist:
+            deposit = Deposit(type=self._type,
+                              external_id=external_id,
+                              complete_date=complete_date,
+                              status=status_type,
+                              client=self._user)
+        else:
+            deposit.complete_date = complete_date
+            deposit.status = status_type
+
+        deposit.save()
+
+        return deposit
+
+    def deposit_request_put(self, deposit, metadata):
+        """Save a deposit request with metadata attached to a deposit.
+
+        Params:
+            deposit (Deposit): The deposit concerned by the request
+            metadata (dict): The metadata to associate to the deposit
+
+        Returns:
+            The DepositRequest instance.
+
+        """
+        deposit_request = DepositRequest(
+            deposit=deposit,
+            metadata=metadata)
+
+        deposit_request.save()
+
+        return deposit_request
+
+    def archive_put(self, file):
+        """Store archive file in objstorage.
+
+        PARAMS:
+            file (InMemoryUploadedFile): archive's memory representation
+
+        RETURNS
+            dict representing metadata to store about the archive.
+
+        """
+        raw_content = b''.join(file.chunks())
+        id = self.objstorage.add(content=raw_content)
+
+        return {
+            'archive': {
+                'id': hash_to_hex(id),
+                'name': file.name,
+            }
+        }
+
     def _binary_upload(self, req, client_name):
         """Binary upload routine.
 
@@ -212,46 +287,15 @@ class SWHDeposit(SWHView, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
                 content='You need to provide an unique external identifier')
 
-        if headers['in-progress'] is False:
-            complete_date = timezone.now()
-            status_type = 'ready'
-        else:
-            complete_date = None
-            status_type = 'partial'
-
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            deposit = Deposit(type=self._type,
-                              external_id=external_id,
-                              complete_date=complete_date,
-                              status=status_type,
-                              client=self._user)
-        else:
-            deposit.complete_date = complete_date
-            deposit.status = status_type
-
-        deposit.save()
-
-        raw_content = b''.join(filehandler.chunks())
-        id = self.objstorage.add(content=raw_content)
-
-        metadata = {
-            'id': hash_to_hex(id),
-            'name': filehandler.name,
-        }
-
-        self.log.debug('metadata: %s' % metadata)
-
-        deposit_request = DepositRequest(
-            deposit=deposit,
-            metadata=metadata)
-
-        deposit_request.save()
+        # actual storage of data
+        metadata = self.archive_put(filehandler)
+        deposit = self.deposit_put(external_id, headers['in-progress'])
+        deposit_request = self.deposit_request_put(deposit, metadata)
 
         context = {
             'deposit_id': deposit.id,
             'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata['archive'],
         }
         return render(req, 'deposit/deposit_receipt.xml',
                       context,
@@ -272,8 +316,19 @@ class SWHDeposit(SWHView, APIView):
         self.log.debug('req.FILES holds files:')
         self.log.debug(req.FILES)
 
+        headers = self._read_headers(req)
+
+        external_id = headers.get('slug')
+        if not external_id:
+            return HttpResponse(
+                status=status.HTTP_400_BAD_REQUEST,
+                content='You need to provide an unique external identifier')
         content_types_present = set()
 
+        data = {
+            'application/zip': None,  # expected archive
+            'application/atom+xml': None,
+        }
         for key, value in req.FILES.items():
             # req.data.pop(key)
             self.log.debug('key: %s' % key)
@@ -295,7 +350,9 @@ class SWHDeposit(SWHView, APIView):
                     fh.charset,
                     fh.content_type_extra))
 
-            self._debug_raw_content(fh)
+            data[fh.content_type] = fh
+            self.log.debug('############### content_type %s' % fh.content_type)
+            self.log.debug('############### filehandler %s' % fh)
 
         if len(content_types_present) != 2:
             return HttpResponse(
@@ -303,11 +360,17 @@ class SWHDeposit(SWHView, APIView):
                 content='You must provide both 1 application/zip '
                 'and 1 atom+xml entry for multipart deposit.')
 
+        # actual storage of data
+        metadata = self.archive_put(data['application/zip'])
+        atom_metadata = XMLParser().parse(data['application/atom+xml'])
+        metadata.update(atom_metadata)
+        deposit = self.deposit_put(external_id, headers['in-progress'])
+        deposit_request = self.deposit_request_put(deposit, metadata)
+
         context = {
-            'title': '',
-            'id': '',
-            'deposit_date': '',
-            'summary': '',
+            'deposit_id': deposit.id,
+            'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata['archive'],
         }
         return render(req, 'deposit/deposit_receipt.xml',
                       context,
@@ -334,34 +397,13 @@ class SWHDeposit(SWHView, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
                 content='You need to provide an unique external identifier')
 
-        if headers['in-progress'] is False:
-            complete_date = timezone.now()
-            status_type = 'ready'
-        else:
-            complete_date = None
-            status_type = 'partial'
-
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            deposit = Deposit(type=self._type,
-                              external_id=external_id,
-                              complete_date=complete_date,
-                              status=status_type,
-                              client=self._user)
-        else:
-            deposit.complete_date = complete_date
-            deposit.status = status_type
-
-        deposit.save()
-
-        deposit_request = DepositRequest(deposit=deposit,
-                                         metadata=req.data)
-        deposit_request.save()
+        deposit = self.deposit_put(external_id, headers['in-progress'])
+        deposit_request = self.deposit_request_put(deposit, metadata=req.data)
 
         context = {
             'deposit_id': deposit.id,
             'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata,
         }
         return render(req, 'deposit/deposit_receipt.xml',
                       context,
