@@ -1,36 +1,7 @@
 <entry xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/">
-    <deposit_id>{{ deposit_id }} </deposit_id>
+    <deposit_id>{{ deposit_id }}</deposit_id>
     <deposit_date>{{ deposit_date }}</deposit_date>
-
-    <!-- the item's metadata -->
-    <dcterms:abstract>The abstract</dcterms:abstract>
-    <!-- something something -->
-    <sword:verboseDescription>Verbose description</sword:verboseDescription>
-    <sword:treatment>Unpacked. JPEG contents converted to JPEG2000.</sword:treatment>
-
-    <link rel="alternate" href="http://www.swordserver.ac.uk/col1/mydeposit.html"/>
-    <content type="application/zip" src="http://www.swordserver.ac.uk/col1/mydeposit"/>
-    <link rel="edit-media" href="http://www.swordserver.ac.uk/col1/mydeposit"/>
-    <link rel="edit" href="http://www.swordserver.ac.uk/col1/mydeposit.atom" />
-    <link rel="http://purl.org/net/sword/terms/add" href="http://www.swordserver.ac.uk/col1/mydeposit.atom" />
-    <sword:packaging>http://purl.org/net/sword/package/BagIt</sword:packaging>
-
-    <link rel="http://purl.org/net/sword/terms/originalDeposit"
-          type="application/zip"
-          href="http://www.swordserver.ac.uk/col1/mydeposit/package.zip"/>
-    <link rel="http://purl.org/net/sword/terms/derivedResource"
-          type="application/pdf"
-          href="http://www.swordserver.ac.uk/col1/mydeposit/file1.pdf"/>
-    <link rel="http://purl.org/net/sword/terms/derivedResource"
-          type="application/pdf"
-          href="http://www.swordserver.ac.uk/col1/mydeposit/file2.pdf"/>
-
-    <link rel="http://purl.org/net/sword/terms/statement"
-          type="application/atom+xml;type=feed"
-          href="http://www.swordserver.ac.uk/col1/mydeposit.feed"/>
-    <link rel="http://purl.org/net/sword/terms/statement"
-          type="application/rdf+xml"
-          href="http://www.swordserver.ac.uk/col1/mydeposit.rdf"/>
+    <deposit_archive>{{ archive }}</deposit_archive>
 </entry>

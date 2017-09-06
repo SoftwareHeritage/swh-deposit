@@ -32,3 +32,16 @@ class SWHMultiPartParser(MultiPartParser):
 
     """
     media_type = 'multipart/*; *'
+
+
+def parse_xml(raw_content):
+    """Parse xml body.
+
+    Args:
+        raw_content (bytes): The content to parse
+
+    Returns:
+        content parsed as dict.
+
+    """
+    return XMLParser().parse(raw_content)

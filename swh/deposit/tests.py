@@ -14,6 +14,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DepositType, DepositRequest
+from .parsers import parse_xml
+
 # from swh.deposit.views import SWHDeposit
 
 
@@ -172,6 +174,14 @@ and other stuff</description>
                 'name': 'filename0',
             },
         })
+
+        response_content = parse_xml(BytesIO(response.content))
+        self.assertEqual(
+            response_content['{http://www.w3.org/2005/Atom}deposit_archive'],
+            'filename0')
+        self.assertEqual(
+            response_content['{http://www.w3.org/2005/Atom}deposit_id'],
+            deposit.id)
 
     def test_post_deposit_binary_upload_2_steps(self):
         """Binary upload should be accepted

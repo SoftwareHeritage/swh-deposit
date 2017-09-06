@@ -14,7 +14,6 @@ from django.views import View
 from django.views.generic import ListView
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework_xml.parsers import XMLParser
 
 from swh.core.config import SWHConfig
 from swh.objstorage import get_objstorage
@@ -22,7 +21,7 @@ from swh.model.hashutil import hash_to_hex
 
 from .models import Deposit, DepositRequest, DepositType
 from .parsers import SWHFileUploadParser, SWHAtomEntryParser
-from .parsers import SWHMultiPartParser
+from .parsers import SWHMultiPartParser, parse_xml
 
 
 def index(req):
@@ -266,7 +265,11 @@ class SWHDeposit(SWHView, APIView):
         deposit = self._deposit_put(external_id, headers['in-progress'])
         deposit_request = self._deposit_request_put(deposit, metadata)
 
-        return deposit_request
+        return {
+            'deposit_id': deposit.id,
+            'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata['archive']['name'],
+        }
 
     def _multipart_upload(self, req, client_name):
         """Multipart supported with at most:
@@ -308,12 +311,16 @@ class SWHDeposit(SWHView, APIView):
 
         # actual storage of data
         metadata = self._archive_put(data['application/zip'])
-        atom_metadata = XMLParser().parse(data['application/atom+xml'])
+        atom_metadata = parse_xml(data['application/atom+xml'])
         metadata.update(atom_metadata)
         deposit = self._deposit_put(external_id, headers['in-progress'])
         deposit_request = self._deposit_request_put(deposit, metadata)
 
-        return deposit_request
+        return {
+            'deposit_id': deposit.id,
+            'deposit_date': deposit_request.date,
+            'archive': deposit_request.metadata['archive']['name'],
+        }
 
     def _atom_entry(self, req, client_name, format=None):
         """Atom entry deposit.
@@ -337,7 +344,11 @@ class SWHDeposit(SWHView, APIView):
         deposit = self._deposit_put(external_id, headers['in-progress'])
         deposit_request = self._deposit_request_put(deposit, metadata=req.data)
 
-        return deposit_request
+        return {
+            'deposit_id': deposit.id,
+            'deposit_date': deposit_request.date,
+            'archive': None,
+        }
 
     def post(self, req, client_name, format=None):
         """Upload a file.
@@ -353,23 +364,17 @@ class SWHDeposit(SWHView, APIView):
 
         content_disposition = req._request.META.get('HTTP_CONTENT_DISPOSITION')
         if content_disposition:  # binary upload according to sword 2.0 spec
-            r = self._binary_upload(req, client_name)
+            response_or_data = self._binary_upload(req, client_name)
         elif req.content_type.startswith('multipart/'):
-            r = self._multipart_upload(req, client_name)
+            response_or_data = self._multipart_upload(req, client_name)
         else:
-            r = self._atom_entry(req, client_name)
+            response_or_data = self._atom_entry(req, client_name)
 
-        if isinstance(r, HttpResponse):
-            return r
+        if isinstance(response_or_data, HttpResponse):
+            return response_or_data
 
-        deposit_request = r
-        context = {
-            'deposit_id': deposit_request.deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata,
-        }
         return render(req, 'deposit/deposit_receipt.xml',
-                      context,
+                      context=response_or_data,
                       content_type='application/xml',
                       status=status.HTTP_201_CREATED)
 
