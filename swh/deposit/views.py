@@ -68,8 +68,11 @@ class SWHUser(ListView, SWHView):
 
 
 class SWHDeposit(SWHView, APIView):
-    """This class defines the create behavior of our rest api."""
-    parser_classes = (SWHMultiPartParser, SWHFileUploadParser,
+    """Deposit request class defining api endpoints for sword deposit.
+
+    """
+    parser_classes = (SWHMultiPartParser,
+                      SWHFileUploadParser,
                       SWHAtomEntryParser)
 
     ADDITIONAL_CONFIG = {
@@ -87,11 +90,22 @@ class SWHDeposit(SWHView, APIView):
         self.log = logging.getLogger('swh.deposit')
 
     def _read_headers(self, req):
-        """Read the necessary headers from the request.
+        """Read and unify the necessary headers from the request (those are
+           not stored in the same location or not properly formatted).
 
-        # Content-Type, Content-Disposition, Packaging required header
-        # if no Content-Type header, assume 'application/octet-stream'
-        # source: https://www.w3.org/Protocols/rfc2616/rfc2616-sec7.html#sec7.2.1  # noqa
+        Args:
+            req (Request): Input request
+
+        Returns:
+            Dictionary with the following keys (some associated values may be
+              None):
+                - content-type
+                - content-length
+                - in-progress
+                - content-disposition
+                - packaging
+                - slug
+
         """
         # for k, v in req._request.META.items():
         #     key = k.lower()
@@ -129,8 +143,12 @@ class SWHDeposit(SWHView, APIView):
     def _compute_md5(self, filehandler):
         """Compute uploaded file's md5 sum.
 
+        Args:
+            filehandler (InMemoryUploadedFile): the file to compute the md5
+                hash
+
         Returns:
-            md5 checksum
+            the md5 checksum (str)
 
         """
         h = hashlib.md5()
@@ -140,6 +158,12 @@ class SWHDeposit(SWHView, APIView):
 
     def _compute_length(self, filehandler):
         """Compute uploaded file's length.
+
+        Args:
+            filehandler (InMemoryUploadedFile): the file to compute the length
+
+        Returns:
+            The file's length (int).
 
         """
         content_length = 0
@@ -156,7 +180,7 @@ class SWHDeposit(SWHView, APIView):
             in_progress (dict): The deposit's status
 
         Returns:
-            The Deposit instance.
+            The Deposit instance saved or updated.
 
         """
         if in_progress is False:
@@ -190,7 +214,7 @@ class SWHDeposit(SWHView, APIView):
             metadata (dict): The metadata to associate to the deposit
 
         Returns:
-            The DepositRequest instance.
+            The DepositRequest instance saved.
 
         """
         deposit_request = DepositRequest(
@@ -202,13 +226,13 @@ class SWHDeposit(SWHView, APIView):
         return deposit_request
 
     def _archive_put(self, file):
-        """Store archive file in objstorage.
+        """Store archive file in objstorage and returns metadata about it.
 
         Args:
             file (InMemoryUploadedFile): archive's memory representation
 
         Returns:
-            dict representing metadata to store about the archive.
+            dict representing metadata about the archive
 
         """
         raw_content = b''.join(file.chunks())
@@ -223,6 +247,29 @@ class SWHDeposit(SWHView, APIView):
 
     def _binary_upload(self, req, client_name):
         """Binary upload routine.
+
+        Other than such a request, a 415 response is returned.
+
+        Args:
+            req (Request): the request holding information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            In the optimal case a dict with the following keys:
+                - deposit_id (int): Deposit identifier
+                - deposit_date (date): Deposit date
+                - archive: None (no archive is provided here)
+
+            Otherwise, an http response (HttpResponse) if a problem occurred:
+
+            - 400 (bad request) if the request is not providing an external
+              identifier
+            - 403 (forbidden) if the length of the archive exceeds the
+              max size configured
+            - 412 (precondition failed) if the length or hash provided
+              mismatch the reality of the archive.
+            - 415 (unsupported media type) if a wrong media type is provided
 
         """
         headers = self._read_headers(req)
@@ -272,11 +319,28 @@ class SWHDeposit(SWHView, APIView):
         }
 
     def _multipart_upload(self, req, client_name):
-        """Multipart supported with at most:
-        - 1 archive
+        """Multipart upload supported with exactly:
+        - 1 archive (zip)
         - 1 atom entry
 
-        Other than such, a 415 response is returned.
+        Other than such a request, a 415 response is returned.
+
+        Args:
+            req (Request): the request holding the information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            In the optimal case a dict with the following keys:
+                - deposit_id (int): Deposit identifier
+                - deposit_date (date): Deposit date
+                - archive: None (no archive is provided here)
+
+            Otherwise, an http response (HttpResponse) if a problem occurred:
+
+            - 400 (bad request) if the request is not providing an external
+              identifier
+            - 415 (unsupported media type) if a wrong media type is provided
 
         """
         headers = self._read_headers(req)
@@ -325,6 +389,24 @@ class SWHDeposit(SWHView, APIView):
     def _atom_entry(self, req, client_name, format=None):
         """Atom entry deposit.
 
+        Args:
+            req (Request): the request holding the information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            In the optimal case a dict with the following keys:
+                - deposit_id: deposit id associated to the deposit
+                - deposit_date: date of the deposit
+                - archive: None (no archive is provided here)
+
+            Otherwise, an http response (HttpResponse) if a problem occurred:
+
+            - 400 (bad request) if the request is not providing an external
+              identifier
+            - 400 (bad request) if the request's body is empty
+            - 415 (unsupported media type) if a wrong media type is provided
+
         """
         headers = self._read_headers(req)
 
@@ -351,7 +433,47 @@ class SWHDeposit(SWHView, APIView):
         }
 
     def post(self, req, client_name, format=None):
-        """Upload a file.
+        """Upload a file through possible request as:
+
+        - multipart (1 zip + 1 atom entry)
+        - binary (1 zip)
+        - atom entry
+
+        Args:
+            req (Request): the request holding the information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            An http response (HttpResponse) according to the situation.
+
+            If everything is ok, a 201 response (created) with a
+            deposit receipt.
+
+            Otherwise, depending on the upload, the following errors
+            can be referenced:
+            - archive deposit:
+                - 400 (bad request) if the request is not providing an external
+                  identifier
+                - 403 (forbidden) if the length of the archive exceeds the
+                  max size configured
+                - 412 (precondition failed) if the length or hash provided
+                  mismatch the reality of the archive.
+                - 415 (unsupported media type) if a wrong media type is
+                  provided
+
+            - multipart deposit:
+                - 400 (bad request) if the request is not providing an external
+                  identifier
+                - 415 (unsupported media type) if a wrong media type is
+                  provided
+
+            - Atom entry deposit:
+                - 400 (bad request) if the request is not providing an external
+                  identifier
+                - 400 (bad request) if the request's body is empty
+                - 415 (unsupported media type) if a wrong media type is
+                  provided
 
         """
         try:
@@ -381,6 +503,14 @@ class SWHDeposit(SWHView, APIView):
     def put(self, req, client_name, format=None):
         """Update an archive (not allowed).
 
+        Args:
+            req (Request): the request holding the information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            HttpResponse 405 (not allowed)
+
         """
         return HttpResponse(
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -389,6 +519,14 @@ class SWHDeposit(SWHView, APIView):
 
     def delete(self, req, client_name, format=None):
         """Delete an archive (not allowed).
+
+        Args:
+            req (Request): the request holding the information to parse
+                and inject in db
+            client_name (str): the associated client
+
+        Returns:
+            HttpResponse 405 (not allowed)
 
         """
         return HttpResponse(
