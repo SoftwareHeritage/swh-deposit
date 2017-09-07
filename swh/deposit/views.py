@@ -286,7 +286,7 @@ class SWHDeposit(SWHView, APIView):
 
         return None
 
-    def _binary_upload(self, req, client_name):
+    def _binary_upload(self, req, headers, client_name):
         """Binary upload routine.
 
         Other than such a request, a 415 response is returned.
@@ -314,8 +314,6 @@ class SWHDeposit(SWHView, APIView):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        headers = self._read_headers(req)
-
         # binary_upload_headers_rule = {
         #     'MUST': ['Content-Disposition'],
         #     'SHOULD': ['Content-Type', 'Content-MD5', 'Packaging'],
@@ -349,7 +347,7 @@ class SWHDeposit(SWHView, APIView):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _multipart_upload(self, req, client_name):
+    def _multipart_upload(self, req, headers, client_name):
         """Multipart upload supported with exactly:
         - 1 archive (zip)
         - 1 atom entry
@@ -377,8 +375,6 @@ class SWHDeposit(SWHView, APIView):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        headers = self._read_headers(req)
-
         external_id = headers.get('slug')
         if not external_id:
             return self._error(
@@ -428,7 +424,7 @@ class SWHDeposit(SWHView, APIView):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _atom_entry(self, req, client_name, format=None):
+    def _atom_entry(self, req, headers, client_name):
         """Atom entry deposit.
 
         Args:
@@ -451,8 +447,6 @@ class SWHDeposit(SWHView, APIView):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        headers = self._read_headers(req)
-
         if not req.data:
             return self._error(
                 status.HTTP_400_BAD_REQUEST,
@@ -530,13 +524,18 @@ class SWHDeposit(SWHView, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
                 content='Unknown client %s' % client_name)
 
-        content_disposition = req._request.META.get('HTTP_CONTENT_DISPOSITION')
+        headers = self._read_headers(req)
+
+        content_disposition = headers['content-disposition']
         if content_disposition:  # binary upload according to sword 2.0 spec
-            response_or_data = self._binary_upload(req, client_name)
+            response_or_data = self._binary_upload(
+                req, headers, client_name)
         elif req.content_type.startswith('multipart/'):
-            response_or_data = self._multipart_upload(req, client_name)
+            response_or_data = self._multipart_upload(
+                req, headers, client_name)
         else:
-            response_or_data = self._atom_entry(req, client_name)
+            response_or_data = self._atom_entry(
+                req, headers, client_name)
 
         error = response_or_data.get('error')
         if error:
