@@ -230,6 +230,30 @@ class SWHDeposit(SWHView, APIView):
             }
         }
 
+    def _check_preconditions_on(self, filehandler, md5sum,
+                                content_length=None):
+        """Check the preconditions on the file are respected"""
+        if content_length:
+            if content_length > self.config['max_upload_size']:
+                return HttpResponse(
+                    status=status.HTTP_403_FORBIDDEN,
+                    content='Upload size limit of %s exceeded. '
+                    'Please consider sending the archive in '
+                    'multiple steps.' % self.config['max_upload_size'])
+
+            length = filehandler.size
+            if length != content_length:
+                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
+                                    content='Wrong length')
+
+        if md5sum:
+            _md5sum = self._compute_md5(filehandler)
+            if _md5sum != md5sum:
+                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
+                                    content='Wrong md5 hash')
+
+        return None
+
     def _binary_upload(self, req, client_name):
         """Binary upload routine.
 
@@ -252,8 +276,8 @@ class SWHDeposit(SWHView, APIView):
               identifier
             - 403 (forbidden) if the length of the archive exceeds the
               max size configured
-            - 412 (precondition failed) if the length or hash provided
-              mismatch the reality of the archive.
+            - 412 (precondition failed) if the length or md5 hash provided
+              mismatch the reality of the archive
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
@@ -267,24 +291,13 @@ class SWHDeposit(SWHView, APIView):
 
         filehandler = req.FILES['file']
 
-        if 'content-length' in headers:
-            if headers['content-length'] > self.config['max_upload_size']:
-                return HttpResponse(
-                    status=status.HTTP_403_FORBIDDEN,
-                    content='Upload size limit of %s exceeded. '
-                    'Please consider sending the archive in '
-                    'multiple steps.' % self.config['max_upload_size'])
+        precondition_status_response = self._check_preconditions_on(
+            filehandler,
+            headers.get('content-md5sum'),
+            headers.get('content-length'))
 
-            length = filehandler.size
-            if length != headers['content-length']:
-                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
-                                    content='Wrong length')
-
-        if 'content-md5sum' in headers:
-            md5sum = self._compute_md5(filehandler)
-            if md5sum != headers['content-md5sum']:
-                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
-                                    content='Wrong md5 hash')
+        if precondition_status_response:
+            return precondition_status_response
 
         external_id = headers.get('slug')
         if not external_id:
@@ -325,6 +338,8 @@ class SWHDeposit(SWHView, APIView):
 
             - 400 (bad request) if the request is not providing an external
               identifier
+            - 412 (precondition failed) if the potentially md5 hash provided
+              mismatch the reality of the archive
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
@@ -358,8 +373,16 @@ class SWHDeposit(SWHView, APIView):
                 content='You must provide both 1 application/zip '
                 'and 1 atom+xml entry for multipart deposit.')
 
+        filehandler = data['application/zip']
+        precondition_status_response = self._check_preconditions_on(
+            filehandler,
+            headers.get('content-md5sum'))
+
+        if precondition_status_response:
+            return precondition_status_response
+
         # actual storage of data
-        metadata = self._archive_put(data['application/zip'])
+        metadata = self._archive_put(filehandler)
         atom_metadata = parse_xml(data['application/atom+xml'])
         metadata.update(atom_metadata)
         deposit = self._deposit_put(external_id, headers['in-progress'])
@@ -450,6 +473,8 @@ class SWHDeposit(SWHView, APIView):
             - multipart deposit:
                 - 400 (bad request) if the request is not providing an external
                   identifier
+                - 412 (precondition failed) if the potentially md5 hash
+                  provided mismatch the reality of the archive
                 - 415 (unsupported media type) if a wrong media type is
                   provided
 

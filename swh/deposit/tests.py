@@ -129,6 +129,36 @@ and other stuff</description>
     <something>something</something>
 </entry>"""
 
+        self.data_atom_entry_ok = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <title>Title</title>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2005-10-07T17:17:08Z</updated>
+    <author><name>Contributor</name></author>
+    <summary type="text">The abstract</summary>
+
+    <!-- some embedded metadata -->
+    <dcterms:abstract>The abstract</dcterms:abstract>
+    <dcterms:accessRights>Access Rights</dcterms:accessRights>
+    <dcterms:alternative>Alternative Title</dcterms:alternative>
+    <dcterms:available>Date Available</dcterms:available>
+    <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
+    <dcterms:contributor>Contributor</dcterms:contributor>
+    <dcterms:description>Description</dcterms:description>
+    <dcterms:hasPart>Has Part</dcterms:hasPart>
+    <dcterms:hasVersion>Has Version</dcterms:hasVersion>
+    <dcterms:identifier>Identifier</dcterms:identifier>
+    <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
+    <dcterms:publisher>Publisher</dcterms:publisher>
+    <dcterms:references>References</dcterms:references>
+    <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
+    <dcterms:source>Source</dcterms:source>
+    <dcterms:title>Title</dcterms:title>
+    <dcterms:type>Type</dcterms:type>
+
+</entry>"""
+
     def test_post_deposit_binary_upload_final(self):
         """Binary upload should be accepted
 
@@ -383,35 +413,7 @@ and other stuff</description>
         url = reverse('upload', args=['hal'])
 
         # from django.core.files import uploadedfile
-        data_atom_entry = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom"
-        xmlns:dcterms="http://purl.org/dc/terms/">
-    <title>Title</title>
-    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-    <updated>2005-10-07T17:17:08Z</updated>
-    <author><name>Contributor</name></author>
-    <summary type="text">The abstract</summary>
-
-    <!-- some embedded metadata -->
-    <dcterms:abstract>The abstract</dcterms:abstract>
-    <dcterms:accessRights>Access Rights</dcterms:accessRights>
-    <dcterms:alternative>Alternative Title</dcterms:alternative>
-    <dcterms:available>Date Available</dcterms:available>
-    <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
-    <dcterms:contributor>Contributor</dcterms:contributor>
-    <dcterms:description>Description</dcterms:description>
-    <dcterms:hasPart>Has Part</dcterms:hasPart>
-    <dcterms:hasVersion>Has Version</dcterms:hasVersion>
-    <dcterms:identifier>Identifier</dcterms:identifier>
-    <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
-    <dcterms:publisher>Publisher</dcterms:publisher>
-    <dcterms:references>References</dcterms:references>
-    <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
-    <dcterms:source>Source</dcterms:source>
-    <dcterms:title>Title</dcterms:title>
-    <dcterms:type>Type</dcterms:type>
-
-</entry>"""
+        data_atom_entry = self.data_atom_entry_ok
 
         archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
@@ -444,6 +446,25 @@ and other stuff</description>
             # + headers
             HTTP_IN_PROGRESS='false',
             HTTP_SLUG=external_id)
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        deposit = Deposit.objects.get(external_id=external_id)
+        self.assertIsNotNone(deposit)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertIsNotNone(deposit_request)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata['archive'], {
+            'id': id1,
+            'name': 'archive0',
+        })
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
