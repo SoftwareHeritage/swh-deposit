@@ -156,21 +156,6 @@ class SWHDeposit(SWHView, APIView):
             h.update(chunk)
         return h.digest()
 
-    def _compute_length(self, filehandler):
-        """Compute uploaded file's length.
-
-        Args:
-            filehandler (InMemoryUploadedFile): the file to compute the length
-
-        Returns:
-            The file's length (int).
-
-        """
-        content_length = 0
-        for chunk in filehandler:
-            content_length += len(chunk)
-        return content_length
-
     def _deposit_put(self, external_id, in_progress):
         """Save/Update a deposit in db.
 
@@ -290,7 +275,7 @@ class SWHDeposit(SWHView, APIView):
                     'Please consider sending the archive in '
                     'multiple steps.' % self.config['max_upload_size'])
 
-            length = self._compute_length(filehandler)
+            length = filehandler.size
             if length != headers['content-length']:
                 return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
                                     content='Wrong length')
