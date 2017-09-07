@@ -326,7 +326,7 @@ class SWHDeposit(SWHView, APIView):
         #     'MAY': ['In-Progress', 'On-Behalf-Of', 'Slug'],
         # }
 
-        content_disposition = headers.get('content-disposition')
+        content_disposition = headers['content-disposition']
         if not content_disposition:
             return self._error(status.HTTP_400_BAD_REQUEST,
                                'CONTENT_DISPOSITION header is mandatory')
@@ -341,13 +341,13 @@ class SWHDeposit(SWHView, APIView):
 
         precondition_status_response = self._check_preconditions_on(
             filehandler,
-            headers.get('content-md5sum'),
-            headers.get('content-length'))
+            headers['content-md5sum'],
+            headers['content-length'])
 
         if precondition_status_response:
             return precondition_status_response
 
-        external_id = headers.get('slug')
+        external_id = headers['slug']
         if not external_id:
             return self._error(
                 status.HTTP_400_BAD_REQUEST,
@@ -392,7 +392,7 @@ class SWHDeposit(SWHView, APIView):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        external_id = headers.get('slug')
+        external_id = headers['slug']
         if not external_id:
             return self._error(
                 status.HTTP_400_BAD_REQUEST,
@@ -423,7 +423,7 @@ class SWHDeposit(SWHView, APIView):
         filehandler = data['application/zip']
         precondition_status_response = self._check_preconditions_on(
             filehandler,
-            headers.get('content-md5sum'))
+            headers['content-md5sum'])
 
         if precondition_status_response:
             return precondition_status_response
@@ -471,7 +471,7 @@ class SWHDeposit(SWHView, APIView):
 
         external_id = req.data.get(
             '{http://www.w3.org/2005/Atom}external_identifier',
-            headers.get('slug'))
+            headers['slug'])
         if not external_id:
             return self._error(
                 status.HTTP_400_BAD_REQUEST,
