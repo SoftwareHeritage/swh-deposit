@@ -107,11 +107,11 @@ class SWHDeposit(SWHView, APIView):
                 - slug
 
         """
-        # for k, v in req._request.META.items():
+        meta = req._request.META
+        # for k, v in meta.items():
         #     key = k.lower()
         #     if 'http_' in key:
         #         self.log.debug('%s: %s' % (k, v))
-        meta = req._request.META
         content_type = req.content_type
         content_length = meta['CONTENT_LENGTH']
         if isinstance(content_length, str):
@@ -320,6 +320,11 @@ class SWHDeposit(SWHView, APIView):
         #     'MAY': ['In-Progress', 'On-Behalf-Of', 'Slug'],
         # }
 
+        content_disposition = headers.get('content-disposition')
+        if not content_disposition:
+            return self._error(status.HTTP_400_BAD_REQUEST,
+                               'CONTENT_DISPOSITION header is mandatory')
+
         filehandler = req.FILES['file']
 
         precondition_status_response = self._check_preconditions_on(
@@ -526,8 +531,8 @@ class SWHDeposit(SWHView, APIView):
 
         headers = self._read_headers(req)
 
-        content_disposition = headers['content-disposition']
-        if content_disposition:  # binary upload according to sword 2.0 spec
+        # binary upload according to sword 2.0 spec
+        if req.content_type == 'application/zip':
             response_or_data = self._binary_upload(
                 req, headers, client_name)
         elif req.content_type.startswith('multipart/'):

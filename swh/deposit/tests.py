@@ -365,7 +365,8 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-
+        self.assertEqual(response.content,
+                         b'CONTENT_DISPOSITION header is mandatory')
         try:
             Deposit.objects.get(external_id=external_id)
         except Deposit.DoesNotExist:
