@@ -379,4 +379,18 @@ class SWHDeposit(SWHView, APIView):
                       status=status.HTTP_201_CREATED)
 
     def put(self, req, client_name, format=None):
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        """Update an archive (not allowed).
+
+        """
+        return HttpResponse(
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            content='Archive are immutable, please post a new deposit'
+            ' instead.')
+
+    def delete(self, req, client_name, format=None):
+        """Delete an archive (not allowed).
+
+        """
+        return HttpResponse(
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            content='Archive are immutable, delete is not supported.')
