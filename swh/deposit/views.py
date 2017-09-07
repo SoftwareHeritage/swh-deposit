@@ -531,23 +531,22 @@ class SWHDeposit(SWHView, APIView):
 
         headers = self._read_headers(req)
 
-        # binary upload according to sword 2.0 spec
         if req.content_type == 'application/zip':
-            response_or_data = self._binary_upload(
+            data = self._binary_upload(
                 req, headers, client_name)
         elif req.content_type.startswith('multipart/'):
-            response_or_data = self._multipart_upload(
+            data = self._multipart_upload(
                 req, headers, client_name)
         else:
-            response_or_data = self._atom_entry(
+            data = self._atom_entry(
                 req, headers, client_name)
 
-        error = response_or_data.get('error')
+        error = data.get('error')
         if error:
             return HttpResponse(**error)
 
         return render(req, 'deposit/deposit_receipt.xml',
-                      context=response_or_data,
+                      context=data,
                       content_type='application/xml',
                       status=status.HTTP_201_CREATED)
 
