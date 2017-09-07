@@ -230,27 +230,59 @@ class SWHDeposit(SWHView, APIView):
             }
         }
 
+    def _error(self, status, message):
+        """Utility function to factorize error message dictionary.
+
+        Args:
+            status (status): Error status,
+            message (str): Error message clarifying the status
+
+        Returns:
+
+            Dictionary with key 'error' detailing the 'status' and
+            associated 'message'
+
+        """
+        return {
+            'error': {
+                'status': status,
+                'content': message,
+            },
+        }
+
     def _check_preconditions_on(self, filehandler, md5sum,
                                 content_length=None):
-        """Check the preconditions on the file are respected"""
+        """Check preconditions on provided file are respected. That is the
+           length and/or the md5sum hash match the file's content.
+
+        Args:
+            filehandler (InMemoryUploadedFile): The file to check
+            md5sum (hex str): md5 hash expected from the file's content
+            content_length (int): the expected length if provided.
+
+        Returns:
+            Either none if no error or a dictionary with a key error
+            detailing the problem.
+
+        """
         if content_length:
             if content_length > self.config['max_upload_size']:
-                return HttpResponse(
-                    status=status.HTTP_403_FORBIDDEN,
-                    content='Upload size limit of %s exceeded. '
+                return self._error(
+                    status.HTTP_403_FORBIDDEN,
+                    'Upload size limit of %s exceeded. '
                     'Please consider sending the archive in '
                     'multiple steps.' % self.config['max_upload_size'])
 
             length = filehandler.size
             if length != content_length:
-                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
-                                    content='Wrong length')
+                return self._error(status.HTTP_412_PRECONDITION_FAILED,
+                                   'Wrong length')
 
         if md5sum:
             _md5sum = self._compute_md5(filehandler)
             if _md5sum != md5sum:
-                return HttpResponse(status=status.HTTP_412_PRECONDITION_FAILED,
-                                    content='Wrong md5 hash')
+                return self._error(status.HTTP_412_PRECONDITION_FAILED,
+                                   'Wrong md5 hash')
 
         return None
 
@@ -270,7 +302,8 @@ class SWHDeposit(SWHView, APIView):
                 - deposit_date (date): Deposit date
                 - archive: None (no archive is provided here)
 
-            Otherwise, an http response (HttpResponse) if a problem occurred:
+            Otherwise, a dictionary with the key error and the
+            associated failures, either:
 
             - 400 (bad request) if the request is not providing an external
               identifier
@@ -301,9 +334,9 @@ class SWHDeposit(SWHView, APIView):
 
         external_id = headers.get('slug')
         if not external_id:
-            return HttpResponse(
-                status=status.HTTP_400_BAD_REQUEST,
-                content='You need to provide an unique external identifier')
+            return self._error(
+                status.HTTP_400_BAD_REQUEST,
+                'You need to provide an unique external identifier')
 
         # actual storage of data
         metadata = self._archive_put(filehandler)
@@ -334,7 +367,8 @@ class SWHDeposit(SWHView, APIView):
                 - deposit_date (date): Deposit date
                 - archive: None (no archive is provided here)
 
-            Otherwise, an http response (HttpResponse) if a problem occurred:
+            Otherwise, a dictionary with the key error and the
+            associated failures, either:
 
             - 400 (bad request) if the request is not providing an external
               identifier
@@ -347,9 +381,9 @@ class SWHDeposit(SWHView, APIView):
 
         external_id = headers.get('slug')
         if not external_id:
-            return HttpResponse(
-                status=status.HTTP_400_BAD_REQUEST,
-                content='You need to provide an unique external identifier')
+            return self._error(
+                status.HTTP_400_BAD_REQUEST,
+                'You need to provide an unique external identifier')
         content_types_present = set()
 
         data = {
@@ -359,18 +393,18 @@ class SWHDeposit(SWHView, APIView):
         for key, value in req.FILES.items():
             fh = value
             if fh.content_type in content_types_present:
-                return HttpResponse(
-                    status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                    content='Only 1 application/zip archive and 1 '
+                return self._error(
+                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    'Only 1 application/zip archive and 1 '
                     'atom+xml entry is supported.')
 
             content_types_present.add(fh.content_type)
             data[fh.content_type] = fh
 
         if len(content_types_present) != 2:
-            return HttpResponse(
-                status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                content='You must provide both 1 application/zip '
+            return self._error(
+                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                'You must provide both 1 application/zip '
                 'and 1 atom+xml entry for multipart deposit.')
 
         filehandler = data['application/zip']
@@ -408,7 +442,8 @@ class SWHDeposit(SWHView, APIView):
                 - deposit_date: date of the deposit
                 - archive: None (no archive is provided here)
 
-            Otherwise, an http response (HttpResponse) if a problem occurred:
+            Otherwise, a dictionary with the key error and the
+            associated failures, either:
 
             - 400 (bad request) if the request is not providing an external
               identifier
@@ -419,17 +454,17 @@ class SWHDeposit(SWHView, APIView):
         headers = self._read_headers(req)
 
         if not req.data:
-            return HttpResponse(
-                status=status.HTTP_400_BAD_REQUEST,
-                content='Empty body request is not supported')
+            return self._error(
+                status.HTTP_400_BAD_REQUEST,
+                'Empty body request is not supported')
 
         external_id = req.data.get(
             '{http://www.w3.org/2005/Atom}external_identifier',
             headers.get('slug'))
         if not external_id:
-            return HttpResponse(
-                status=status.HTTP_400_BAD_REQUEST,
-                content='You need to provide an unique external identifier')
+            return self._error(
+                status.HTTP_400_BAD_REQUEST,
+                'You need to provide an unique external identifier')
 
         deposit = self._deposit_put(external_id, headers['in-progress'])
         deposit_request = self._deposit_request_put(deposit, metadata=req.data)
@@ -443,8 +478,8 @@ class SWHDeposit(SWHView, APIView):
     def post(self, req, client_name, format=None):
         """Upload a file through possible request as:
 
+        - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
-        - binary (1 zip)
         - atom entry
 
         Args:
@@ -459,7 +494,8 @@ class SWHDeposit(SWHView, APIView):
             deposit receipt.
 
             Otherwise, depending on the upload, the following errors
-            can be referenced:
+            can be returned:
+
             - archive deposit:
                 - 400 (bad request) if the request is not providing an external
                   identifier
@@ -502,8 +538,9 @@ class SWHDeposit(SWHView, APIView):
         else:
             response_or_data = self._atom_entry(req, client_name)
 
-        if isinstance(response_or_data, HttpResponse):
-            return response_or_data
+        error = response_or_data.get('error')
+        if error:
+            return HttpResponse(**error)
 
         return render(req, 'deposit/deposit_receipt.xml',
                       context=response_or_data,
