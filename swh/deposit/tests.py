@@ -14,7 +14,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DepositType, DepositRequest
-from swh.deposit.views import ACCEPT_PACKAGINGS
 from swh.deposit.parsers import parse_xml
 
 
@@ -364,10 +363,6 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.content,
-            ('Only packaging %s is supported' % ACCEPT_PACKAGINGS).encode(
-                'utf-8'))
         try:
             Deposit.objects.get(external_id=external_id)
         except Deposit.DoesNotExist:
@@ -400,8 +395,40 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content,
-                         b'CONTENT_DISPOSITION header is mandatory')
+        try:
+            Deposit.objects.get(external_id=external_id)
+        except Deposit.DoesNotExist:
+            pass
+
+    def test_post_deposit_mediation_not_supported(self):
+        """Binary upload only supports application/zip (for now)...
+
+        """
+        # given
+        url = reverse('upload', args=['hal'])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+
+        external_id = 'some-external-id-1'
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',
+            data=data_text,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_ON_BEHALF_OF='someone',
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_412_PRECONDITION_FAILED)
+
         try:
             Deposit.objects.get(external_id=external_id)
         except Deposit.DoesNotExist:
@@ -559,10 +586,6 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-        self.assertEqual(response.content,
-                         b'Only 1 application/zip archive and 1 '
-                         b'atom+xml entry is supported.')
-
         # when
         archive.seek(0)
         response = self.client.post(
@@ -578,9 +601,6 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-        self.assertEqual(response.content,
-                         b'You must provide both 1 application/zip and'
-                         b' 1 atom+xml entry for multipart deposit.')
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
@@ -588,8 +608,6 @@ and other stuff</description>
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content,
-                         b'Empty body request is not supported')
 
     def test_post_deposit_atom_unknown_no_external_id(self):
         response = self.client.post(
@@ -597,8 +615,6 @@ and other stuff</description>
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data3)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content,
-                         b'You need to provide an unique external identifier')
 
     def test_post_deposit_atom_unknown_client(self):
         response = self.client.post(
@@ -607,7 +623,6 @@ and other stuff</description>
             data=self.atom_entry_data3,
             HTTP_SLUG='something')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content, b'Unknown client unknown-one')
 
     def test_post_deposit_atom_entry_initial(self):
         """One deposit upload as atom entry

@@ -22,6 +22,9 @@ from swh.model.hashutil import hash_to_hex
 from .models import Deposit, DepositRequest, DepositType
 from .parsers import SWHFileUploadParser, SWHAtomEntryParser
 from .parsers import SWHMultiPartParser, parse_xml
+from .errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
+from .errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
+from .errors import METHOD_NOT_ALLOWED, make_error, make_error_response
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -111,6 +114,7 @@ class SWHDeposit(SWHView, APIView):
                 - content-disposition
                 - packaging
                 - slug
+                - on-behalf-of
 
         """
         meta = req._request.META
@@ -135,6 +139,7 @@ class SWHDeposit(SWHView, APIView):
 
         packaging = meta.get('HTTP_PACKAGING')
         slug = meta.get('HTTP_SLUG')
+        on_behalf_of = meta.get('HTTP_ON_BEHALF_OF')
 
         return {
             'content-type': content_type,
@@ -144,6 +149,7 @@ class SWHDeposit(SWHView, APIView):
             'content-md5sum': content_md5sum,
             'packaging': packaging,
             'slug': slug,
+            'on-behalf-of': on_behalf_of,
         }
 
     def _compute_md5(self, filehandler):
@@ -236,26 +242,6 @@ class SWHDeposit(SWHView, APIView):
             }
         }
 
-    def _error(self, status, message):
-        """Utility function to factorize error message dictionary.
-
-        Args:
-            status (status): Error status,
-            message (str): Error message clarifying the status
-
-        Returns:
-
-            Dictionary with key 'error' detailing the 'status' and
-            associated 'message'
-
-        """
-        return {
-            'error': {
-                'status': status,
-                'content': message,
-            },
-        }
-
     def _check_preconditions_on(self, filehandler, md5sum,
                                 content_length=None):
         """Check preconditions on provided file are respected. That is the
@@ -273,22 +259,26 @@ class SWHDeposit(SWHView, APIView):
         """
         if content_length:
             if content_length > self.config['max_upload_size']:
-                return self._error(
-                    status.HTTP_403_FORBIDDEN,
-                    'Upload size limit of %s exceeded. '
+                return make_error(
+                    MAX_UPLOAD_SIZE_EXCEEDED,
+                    'Upload size limit exceeded (max %s bytes).' %
+                    self.config['max_upload_size'],
                     'Please consider sending the archive in '
-                    'multiple steps.' % self.config['max_upload_size'])
+                    'multiple steps.')
 
             length = filehandler.size
             if length != content_length:
-                return self._error(status.HTTP_412_PRECONDITION_FAILED,
-                                   'Wrong length')
+                return make_error(status.HTTP_412_PRECONDITION_FAILED,
+                                  'Wrong length')
 
         if md5sum:
             _md5sum = self._compute_md5(filehandler)
             if _md5sum != md5sum:
-                return self._error(status.HTTP_412_PRECONDITION_FAILED,
-                                   'Wrong md5 hash')
+                return make_error(
+                    CHECKSUM_MISMATCH,
+                    'Wrong md5 hash',
+                    'The checksum sent %s and the actual checksum '
+                    '%s does not match.' % (md5sum, _md5sum))
 
         return None
 
@@ -328,14 +318,19 @@ class SWHDeposit(SWHView, APIView):
 
         content_disposition = headers['content-disposition']
         if not content_disposition:
-            return self._error(status.HTTP_400_BAD_REQUEST,
-                               'CONTENT_DISPOSITION header is mandatory')
+            return make_error(
+                BAD_REQUEST,
+                'CONTENT_DISPOSITION header is mandatory',
+                'For a single archive deposit, the '
+                'CONTENT_DISPOSITION header must be sent.')
 
         packaging = headers['packaging']
         if packaging and packaging not in ACCEPT_PACKAGINGS:
-            return self._error(status.HTTP_400_BAD_REQUEST,
-                               'Only packaging %s is supported' %
-                               ACCEPT_PACKAGINGS)
+            return make_error(
+                BAD_REQUEST,
+                'Only packaging %s is supported' %
+                ACCEPT_PACKAGINGS,
+                'The packaging provided %s is not supported' % packaging)
 
         filehandler = req.FILES['file']
 
@@ -349,9 +344,12 @@ class SWHDeposit(SWHView, APIView):
 
         external_id = headers['slug']
         if not external_id:
-            return self._error(
-                status.HTTP_400_BAD_REQUEST,
-                'You need to provide an unique external identifier')
+            return make_error(
+                BAD_REQUEST,
+                'You need to provide an unique external identifier',
+                'The external identifier could be for example the identifier '
+                'you use in your system.'
+            )
 
         # actual storage of data
         metadata = self._archive_put(filehandler)
@@ -394,9 +392,12 @@ class SWHDeposit(SWHView, APIView):
         """
         external_id = headers['slug']
         if not external_id:
-            return self._error(
-                status.HTTP_400_BAD_REQUEST,
-                'You need to provide an unique external identifier')
+            return make_error(
+                BAD_REQUEST,
+                'You need to provide an unique external identifier',
+                'The external identifier could be for example the identifier '
+                'you use in your system.')
+
         content_types_present = set()
 
         data = {
@@ -406,19 +407,26 @@ class SWHDeposit(SWHView, APIView):
         for key, value in req.FILES.items():
             fh = value
             if fh.content_type in content_types_present:
-                return self._error(
-                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                return make_error(
+                    ERROR_CONTENT,
                     'Only 1 application/zip archive and 1 '
-                    'atom+xml entry is supported.')
+                    'atom+xml entry is supported (as per sword2.0 '
+                    'specification)',
+                    'You provided more than 1 application/zip '
+                    'or more than 1 application/atom+xml content-disposition '
+                    'header in the multipart deposit')
 
             content_types_present.add(fh.content_type)
             data[fh.content_type] = fh
 
         if len(content_types_present) != 2:
-            return self._error(
-                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            return make_error(
+                ERROR_CONTENT,
                 'You must provide both 1 application/zip '
-                'and 1 atom+xml entry for multipart deposit.')
+                'and 1 atom+xml entry for multipart deposit',
+                'You need to provide only 1 application/zip '
+                'and 1 application/atom+xml content-disposition header '
+                'in the multipart deposit')
 
         filehandler = data['application/zip']
         precondition_status_response = self._check_preconditions_on(
@@ -465,17 +473,21 @@ class SWHDeposit(SWHView, APIView):
 
         """
         if not req.data:
-            return self._error(
-                status.HTTP_400_BAD_REQUEST,
-                'Empty body request is not supported')
+            return make_error(
+                BAD_REQUEST,
+                'Empty body request is not supported',
+                'Atom entry deposit is supposed to send for metadata. '
+                'If the body is empty, there is no metadata.')
 
         external_id = req.data.get(
             '{http://www.w3.org/2005/Atom}external_identifier',
             headers['slug'])
         if not external_id:
-            return self._error(
-                status.HTTP_400_BAD_REQUEST,
-                'You need to provide an unique external identifier')
+            return make_error(
+                BAD_REQUEST,
+                'You need to provide an unique external identifier',
+                'The external identifier could be for example the identifier '
+                'you use in your system.')
 
         deposit = self._deposit_put(external_id, headers['in-progress'])
         deposit_request = self._deposit_request_put(deposit, metadata=req.data)
@@ -537,11 +549,16 @@ class SWHDeposit(SWHView, APIView):
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
         except (DepositType.DoesNotExist, User.DoesNotExist):
-            return HttpResponse(
-                status=status.HTTP_400_BAD_REQUEST,
-                content='Unknown client %s' % client_name)
+            error = make_error(BAD_REQUEST,
+                               'Unknown client name %s' % client_name)
+            return make_error_response(req, error['error'])
 
         headers = self._read_headers(req)
+
+        if headers['on-behalf-of']:
+            error = make_error(MEDIATION_NOT_ALLOWED,
+                               'Mediation is not supported.')
+            return make_error_response(req, error['error'])
 
         if req.content_type == 'application/zip':
             data = self._binary_upload(
@@ -555,7 +572,7 @@ class SWHDeposit(SWHView, APIView):
 
         error = data.get('error')
         if error:
-            return HttpResponse(**error)
+            return make_error_response(req, error)
 
         return render(req, 'deposit/deposit_receipt.xml',
                       context=data,
@@ -574,10 +591,12 @@ class SWHDeposit(SWHView, APIView):
             HttpResponse 405 (not allowed)
 
         """
-        return HttpResponse(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            content='Archive are immutable, please post a new deposit'
-            ' instead.')
+        error = make_error(
+            METHOD_NOT_ALLOWED,
+            'Archive are immutable, please post a new deposit instead',
+            'A new deposit will create a new version with the latest '
+            'metadata.')
+        return make_error_response(req, error['error'])
 
     def delete(self, req, client_name, format=None):
         """Delete an archive (not allowed).
@@ -591,6 +610,7 @@ class SWHDeposit(SWHView, APIView):
             HttpResponse 405 (not allowed)
 
         """
-        return HttpResponse(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            content='Archive are immutable, delete is not supported.')
+        error = make_error(
+            METHOD_NOT_ALLOWED,
+            'Archive are immutable, delete is not supported')
+        return make_error_response(req, error['error'])
