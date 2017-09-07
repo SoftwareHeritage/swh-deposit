@@ -14,9 +14,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DepositType, DepositRequest
-from .parsers import parse_xml
-
-# from swh.deposit.views import SWHDeposit
+from swh.deposit.views import ACCEPT_PACKAGINGS
+from swh.deposit.parsers import parse_xml
 
 
 class BasicTestCase(TestCase):
@@ -179,7 +178,7 @@ and other stuff</description>
             # + headers
             HTTP_SLUG=external_id,
             HTTP_CONTENT_MD5=md5sum,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -235,7 +234,7 @@ and other stuff</description>
             # + headers
             HTTP_SLUG=external_id,
             HTTP_CONTENT_MD5=md5sum0,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='true',
             HTTP_CONTENT_LENGTH=len(data_text0),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -273,7 +272,7 @@ and other stuff</description>
             # + headers
             HTTP_SLUG=external_id,
             HTTP_CONTENT_MD5=md5sum1,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
@@ -324,7 +323,7 @@ and other stuff</description>
             # + headers
             HTTP_SLUG=external_id,
             HTTP_CONTENT_MD5=md5sum,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -333,6 +332,42 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+        try:
+            Deposit.objects.get(external_id=external_id)
+        except Deposit.DoesNotExist:
+            pass
+
+    def test_post_deposit_binary_fails_if_unsupported_packaging_header(
+            self):
+        """Binary upload must have content_disposition header provided...
+
+        """
+        # given
+        url = reverse('upload', args=['hal'])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+
+        external_id = 'some-external-id'
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',
+            data=data_text,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='something-unsupported',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.content,
+            ('Only packaging %s is supported' % ACCEPT_PACKAGINGS).encode(
+                'utf-8'))
         try:
             Deposit.objects.get(external_id=external_id)
         except Deposit.DoesNotExist:
@@ -358,7 +393,7 @@ and other stuff</description>
             # + headers
             HTTP_SLUG=external_id,
             HTTP_CONTENT_MD5=md5sum,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_LENGTH=len(data_text))
 
@@ -395,7 +430,7 @@ and other stuff</description>
     #         # + headers
     #         HTTP_SLUG=external_id,
     #         HTTP_CONTENT_MD5=md5sum,
-    #         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZIP',
+    #         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
     #         HTTP_IN_PROGRESS='false',
     #         CONTENT_LENGTH=len(data_text),
     #         HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')

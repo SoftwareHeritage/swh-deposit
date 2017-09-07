@@ -24,6 +24,10 @@ from .parsers import SWHFileUploadParser, SWHAtomEntryParser
 from .parsers import SWHMultiPartParser, parse_xml
 
 
+ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
+ACCEPT_CONTENT_TYPES = ['application/zip']
+
+
 def index(req):
     return HttpResponse('SWH Deposit API - WIP')
 
@@ -49,6 +53,8 @@ class SWHServiceDocument(SWHView):
             'max_upload_size': self.config['max_upload_size'],
             'verbose': self.config['verbose'],
             'noop': self.config['noop'],
+            'accept_packagings': ACCEPT_PACKAGINGS,
+            'accept_content_types': ACCEPT_CONTENT_TYPES,
         }
         return render(req, 'deposit/service_document.xml',
                       context, content_type='application/xml')
@@ -324,6 +330,12 @@ class SWHDeposit(SWHView, APIView):
         if not content_disposition:
             return self._error(status.HTTP_400_BAD_REQUEST,
                                'CONTENT_DISPOSITION header is mandatory')
+
+        packaging = headers['packaging']
+        if packaging and packaging not in ACCEPT_PACKAGINGS:
+            return self._error(status.HTTP_400_BAD_REQUEST,
+                               'Only packaging %s is supported' %
+                               ACCEPT_PACKAGINGS)
 
         filehandler = req.FILES['file']
 

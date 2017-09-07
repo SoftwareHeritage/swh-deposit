@@ -14,12 +14,15 @@
 
         <collection href="https://sword.softwareherigage.org/v1/deposit/">
             <atom:title>SWH Software Archive</atom:title>
-            <accept>application/gzip</accept>
-            <accept alternate="multipart-related">application/gzip</accept>
+            {% for accept_content_type in accept_content_types %}
+            <accept>{{ accept_content_type }}</accept>
+            {% endfor %}
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:mediation>false</sword:mediation>
-            <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
+            {% for accept_packaging in accept_packagings %}
+            <sword:acceptPackaging>{{ accept_packaging }}</sword:acceptPackaging>
+            {% endfor %}
             <sword:service>https://sword.softwareheritage.org/v1/deposit/</sword:service>
         </collection>
     </workspace>
