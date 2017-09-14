@@ -18,6 +18,7 @@ import sys
 from django.core.wsgi import get_wsgi_application
 
 sys.path.append('/etc/softwareheritage')
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "deposit.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+                      "swh.deposit.settings.production")
 
 application = get_wsgi_application()

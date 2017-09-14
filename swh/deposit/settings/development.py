@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
-import django
+from .common import *  # noqa
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swh.web.settings.development")
-django.setup()
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'development-key'
