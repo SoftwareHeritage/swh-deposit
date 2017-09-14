@@ -27,10 +27,13 @@ from .views import SWHDeposit
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),
-    url(r'^deposit/clients[/]+$', SWHUser.as_view()),
-    url(r'^deposit/clients/(?P<client_id>[0-9]+)', SWHUser.as_view()),
-    url(r'^deposit/sd', SWHServiceDocument.as_view()),
-    url(r'^deposit/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),
+    url(r'^1/clients[/]+$', SWHUser.as_view(),
+        name='clients'),
+    url(r'^1/clients/(?P<client_id>[0-9]+)', SWHUser.as_view(),
+        name='client'),
+    url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
+        name='servicedocument'),
+    url(r'^1/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),
         name='upload'),
 ]
 
