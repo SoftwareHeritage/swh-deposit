@@ -7,75 +7,22 @@ import hashlib
 import logging
 
 from django.contrib.auth.models import User
-from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
-from django.views import View
-from django.views.generic import ListView
 from rest_framework import status
 from rest_framework.views import APIView
 
-from swh.core.config import SWHConfig
 from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
-from .models import Deposit, DepositRequest, DepositType
-from .parsers import SWHFileUploadParser, SWHAtomEntryParser
-from .parsers import SWHMultiPartParser, parse_xml
-from .errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from .errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
-from .errors import METHOD_NOT_ALLOWED, make_error, make_error_response
+from ..models import Deposit, DepositRequest, DepositType
+from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
+from ..parsers import SWHMultiPartParser, parse_xml
+from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
+from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
+from ..errors import METHOD_NOT_ALLOWED, make_error, make_error_response
 
-
-ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
-ACCEPT_CONTENT_TYPES = ['application/zip']
-
-
-def index(req):
-    return HttpResponse('SWH Deposit API - WIP')
-
-
-class SWHView(SWHConfig, View):
-    CONFIG_BASE_FILENAME = 'deposit/server'
-
-    DEFAULT_CONFIG = {
-        'max_upload_size': ('int', 209715200),
-        'verbose': ('bool', False),
-        'noop': ('bool', False),
-    }
-
-    def __init__(self, **config):
-        super().__init__()
-        self.config = self.parse_config_file()
-        self.config.update(config)
-
-
-class SWHServiceDocument(SWHView):
-    def get(self, req, *args, **kwargs):
-        user = User.objects.get(username=req.user)
-        context = {
-            'max_upload_size': self.config['max_upload_size'],
-            'verbose': self.config['verbose'],
-            'noop': self.config['noop'],
-            'accept_packagings': ACCEPT_PACKAGINGS,
-            'accept_content_types': ACCEPT_CONTENT_TYPES,
-            'collection': user.username,
-        }
-        return render(req, 'deposit/service_document.xml',
-                      context, content_type='application/xml')
-
-
-class SWHUser(ListView, SWHView):
-    model = User
-
-    def get(self, *args, **kwargs):
-        if 'client_id' in kwargs:
-            msg = 'Client '
-            cs = self.get_queryset().filter(pk=kwargs['client_id'])
-        else:
-            msg = 'Clients'
-            cs = self.get_queryset().all()
-        return HttpResponse('%s: %s' % (msg, ','.join((str(c) for c in cs))))
+from .common import SWHView, ACCEPT_PACKAGINGS
 
 
 class SWHDeposit(SWHView, APIView):

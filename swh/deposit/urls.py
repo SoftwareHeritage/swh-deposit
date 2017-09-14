@@ -22,8 +22,9 @@ from django.conf.urls import url
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import SWHServiceDocument, SWHUser
-from .views import SWHDeposit
+from .api.service_document import SWHServiceDocument
+from .api.user import SWHUser
+from .api.deposit import SWHDeposit
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),

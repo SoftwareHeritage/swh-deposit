@@ -7,134 +7,14 @@ import hashlib
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
-from django.test import TestCase
 from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.models import Deposit, DepositType, DepositRequest
+from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
-
-class BasicTestCase(TestCase):
-    """Mixin to create a user and to permit authentication.
-
-    """
-    def setUp(self, auth=False):
-        super().setUp()
-        """Define the test client and other test variables."""
-        _name = 'hal'
-        _type = DepositType(name=_name)
-        _type.save()
-        _user = User.objects.create_user(username=_name, password=_name)
-        self.type = _type
-        self.user = _user
-        self.user_name = _name
-        self.user_pass = _name
-        self.maxDiff = None
-
-
-class ModelTestCase(BasicTestCase):
-    """Basic test to demonstrate the model use.
-
-    """
-    def setUp(self):
-        super().setUp()
-        """Define the test client and other test variables."""
-        deposit = {
-            'type': self.type,
-            'external_id': 'some-external-id',
-            'client': self.user,
-        }
-        self.deposit = Deposit(**deposit)
-
-    def test_model_can_create_a_deposit(self):
-        """Test the deposit model can create a deposit.
-
-        """
-        old_count = Deposit.objects.count()
-        self.deposit.save()
-        new_count = Deposit.objects.count()
-        self.assertNotEqual(old_count, new_count)
-
-
-class WithAuthTestCase(TestCase):
-    """Mixin intended for checking authentication.
-
-    """
-    def setUp(self):
-        super().setUp()
-        r = self.client.login(username=self.user_name, password=self.user_pass)
-        if not r:
-            raise ValueError(
-                'Dev error - test misconfiguration. Bad credential provided!')
-
-    def tearDown(self):
-        super().tearDown()
-        self.client.logout()
-
-
-class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
-    """Service document endpoints are protected with basic authentication.
-
-    """
-
-    def test_service_document(self):
-        """Without authentication, the service document endpoint is refused"""
-        url = reverse('servicedocument')
-
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
-class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
-    def setUp(self):
-        super().setUp()
-        # Add another user
-        self.user2 = User.objects.create_user(first_name='user',
-                                              last_name='user',
-                                              username='user')
-
-    def test_service_document(self):
-        """With authentication, service document list user's collection
-
-        """
-        url = reverse('servicedocument')
-
-        # when
-        response = self.client.get(url)
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.content.decode('utf-8'),
-                          '''<?xml version="1.0" ?>
-<service xmlns:dcterms="http://purl.org/dc/terms/"
-    xmlns:sword="http://purl.org/net/sword/terms/"
-    xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns="http://www.w3.org/2007/app">
-
-    <sword:version>2.0</sword:version>
-    <sword:maxUploadSize>209715200</sword:maxUploadSize>
-    <sword:verbose>False</sword:verbose>
-    <sword:noOp>False</sword:noOp>
-
-    <workspace>
-        <atom:title>The Software Heritage (SWH) Archive</atom:title>
-        <collection href="https://deposit.softwareheritage.org/1/%s/">
-            <atom:title>%s Software Collection</atom:title>
-            <accept>application/zip</accept>
-            <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
-            <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
-            <sword:treatment>Collect, Preserve, Share</sword:treatment>
-            <sword:mediation>false</sword:mediation>
-            <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-            <sword:service>https://deposit.softwareheritage.org/1/%s/</sword:service>
-        </collection>
-    </workspace>
-</service>
-''' % (self.user_name, self.user_name, self.user_name))
+from .common import BasicTestCase, WithAuthTestCase
 
 
 class DepositNoAuthCase(APITestCase, BasicTestCase):
