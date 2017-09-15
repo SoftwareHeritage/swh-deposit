@@ -21,7 +21,7 @@ run-dev:
 	$(MANAGE) runserver
 
 run:
-	DJANGO_SECRET_KEY='production' gunicorn3 swh.deposit.wsgi
+	gunicorn3 swh.deposit.wsgi
 
 # .PHONY: test
 # test:
