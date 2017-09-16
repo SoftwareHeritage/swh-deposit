@@ -11,3 +11,4 @@ version.txt
 /swh/deposit.json
 /test.json
 /swh/test
+db.sqlite3
