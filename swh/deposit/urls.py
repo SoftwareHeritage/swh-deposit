@@ -1,3 +1,8 @@
+# Copyright (C) 2017  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
 """swh URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -15,13 +20,22 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from rest_framework.urlpatterns import format_suffix_patterns
 
-from swh.deposit.views import index, clients, client, SWHDepositAPI
+from .api.service_document import SWHServiceDocument
+from .api.user import SWHUser
+from .api.deposit import SWHDeposit
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),
-    url(r'^deposit[/]+$', index),
-    url(r'^deposit/clients[/]+$', clients),
-    url(r'^deposit/client/(?P<client_id>[0-9]+)', client),
-    url(r'^deposit/sd', SWHDepositAPI().service_document)
+    url(r'^1/clients[/]+$', SWHUser.as_view(),
+        name='clients'),
+    url(r'^1/clients/(?P<client_id>[0-9]+)', SWHUser.as_view(),
+        name='client'),
+    url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
+        name='servicedocument'),
+    url(r'^1/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),
+        name='upload'),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
