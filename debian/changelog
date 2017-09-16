@@ -1,8 +1,21 @@
-swh-deposit (0.0.3-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.4-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.4
+  * README: Update spec documentation according to latest development
+  * README-dev: Initiate a development readme to explicit the local
+  * dev/production mode
+  * swh.deposit.settings: Split profile configuration per deployment
+  * platform (dev, production)
+  * swh.deposit.views:
+  * Adapt returned errors to be sword compliant
+  * Change starting api route endpoints
+  * Improve deposit request headers checks
+  * swh.deposit.tests:
+  * Inhibit side-effects in tests (objstorage, configuration loading,
+    etc...)
+  * Add authentication in tests
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 01 Aug 2017 12:36:22 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Sat, 16 Sep 2017 15:38:44 +0200
 
 swh-deposit (0.0.3-1~swh1) unstable-swh; urgency=medium
 

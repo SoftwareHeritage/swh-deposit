@@ -12,10 +12,57 @@ tarballs.
 In this document, we will refer to a client (e.g. HAL server) and a
 server (SWH's).
 
-
 == Use cases ==
 
+=== Service document ===
+
+Endpoint: /1/servicedocument/
+
+This is the endpoint from which the initial collection a user can act
+upon is located.
+
+This:
+- describes the server's abilities
+- list the connected user's collection
+
+Current abilities for example for the [hal
+people](https://hal.archives-ouvertes.fr/).
+
+```
+<?xml version="1.0" ?>
+<service xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:sword="http://purl.org/net/sword/terms/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns="http://www.w3.org/2007/app">
+
+    <sword:version>2.0</sword:version>
+    <sword:maxUploadSize>209715200</sword:maxUploadSize>
+    <sword:verbose>False</sword:verbose>
+    <sword:noOp>False</sword:noOp>
+
+    <workspace>
+        <atom:title>The Software Heritage (SWH) archive</atom:title>
+        <collection href="https://deposit.softwareherigage.org/1/hal/">
+            <atom:title>SWH Software Archive</atom:title>
+            <accept>application/zip</accept>
+            <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
+            <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
+            <sword:mediation>false</sword:mediation>
+            <sword:treatment>Collect, Preserve, Share</sword:treatment>
+            <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
+            <sword:service>https://deposit.softwareheritage.org/1/hal/</sword:service>
+        </collection>
+    </workspace>
+</service>
+```
+
+HTTP verbs supported: GET
+
+Also known as: SD-IRI - The Service Document IRI.
+
 === First deposit ===
+
+Endpoint: /1/<user>/
 
 From client's deposit repository server to SWH's repository server
 (aka deposit).
@@ -55,15 +102,7 @@ NOTE: add specifictions about operation status and injection
 API access is over HTTPS.
 
 service document accessible at:
-https://archive.softwareheritage.org/api/1/servicedocument/
-
-API endpoints:
-
-  - without a specific collection, are rooted at
-      https://archive.softwareheritage.org/api/1/deposit/.
-
-  - with a specific and unique collection dubbed 'software', are rooted at
-      https://archive.softwareheritage.org/api/1/software/.
+https://deposit.softwareheritage.org/1/servicedocument/
 
 
 IMPORTANT: Determine which one of those solutions according to sword possibilities
@@ -85,7 +124,7 @@ shortcomings during the first iteration:
 
 == Unclear points ==
 
-- SWORD defines a 'collection' concpet. should we apply the 'collection' concept
+- SWORD defines a 'collection' concept. should we apply the 'collection' concept
    even thought SWH is software archive having one 'software' collection?
    - option A:
       The collection refers to a group of documents to which the document sent
@@ -187,12 +226,14 @@ a deposit:
 
 === [3] client request  ===
 
-The client can send a deposit through one request deposit or multiple requests deposit.
+The client can send a deposit through one request deposit or multiple
+requests deposit.
 
 The deposit can contain:
-- an archive holding the software source code,
-- an envelop with metadata describing information regarding a deposit,
-- or both (Multipart deposit).
+- an archive holding the software source code (binary upload)
+- an envelop with metadata describing information regarding a deposit
+  (atom entry deposit)
+- or both (multipart deposit, exactly one archive and one envelop).
 
 the client can deposit a binary file, supplying the following headers:
 - Content-Type (text): accepted mimetype
@@ -205,19 +246,44 @@ the client can deposit a binary file, supplying the following headers:
   to specify it's a final request and the server can go on with
   processing the request's information.
 
-WARNING: if In-Progress is not present the  server MUST assume that it is false
+WARNING: if In-Progress is not present the server MUST assume that it is false
 
 ==== API endpoint ====
 
-POST /api/1/deposit/
+POST /api/1/deposit/<client-name>
 
-==== One request deposit ====
+=== Archive deposit ===
 
-The one request deposit is a single request containing both the metadata (body)
-and the archive (attachment).
+This is a single zip archive deposit. Almost no metadata is associated
+with the archive except for the unique external identifier.
 
-A Multipart deposit is a request of an archive along with metadata about
-that archive (can be applied in a one request deposit or multiple requests).
+Note: This kind of deposit should be partial (In-Progress: True) as
+almost no metadata can be associated with the uploaded archive.
+
+==== sample request for binary upload deposit ====
+
+```
+curl -i --data-binary @swh/deposit.zip \
+    -H 'In-Progress: false' -H 'Content-MD5: 0faa1ecbf9224b9bf48a7c691b8c2b6f' \
+    -H 'Content-Disposition: attachment; filename=[deposit.zip]' \
+    -H 'Slug: some-external-id' \
+    -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
+    -H 'Content-type: application/zip' \
+    -XPOST http://127.0.0.1:8000/deposit/hal
+```
+
+=== Atom entry deposit ===
+
+TBD
+
+Note: This kind of deposit should be partial (In-Progress: True) since
+no archive will be associated to those metadata.
+
+==== One request deposit / Multipart deposit ====
+
+The one request deposit is a single request containing both the
+metadata (as atom entry attachment) and the archive (as payload
+attachment). Thus, it is a multipart deposit.
 
 Client provides:
 - Content-Disposition (text): header of type 'attachment' on the Entry
@@ -231,7 +297,6 @@ Client provides:
 - In-Progress (bool): true|false; true means partial upload and we can expect
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
-
 
 ==== sample request for multipart deposit: ====
 
@@ -552,41 +617,44 @@ translated_metadata                     jsonb                 // with codemeta s
 SWORD uses IRI. This means Internationalized Resource Identifier. In
 this chapter, we will describe SWH's IRI.
 
-=== SD-IRI - The Service Document IRI ===
-
-This is the IRI from which the root service document can be
-located.
-
 === Col-IRI - The Collection IRI ===
 
-Only one collection of software is used in this repository.
+The software collection associated to one user.
 
-NOTE:
-This is the IRI to which the initial deposit will take place, and
-which are listed in the Service Document.
-Discuss to check if we want to implement this or not.
+The SWORD Collection IRI is the IRI to which the initial deposit will
+take place, and which is listed in the Service Document.
+
+Following our previous example, this is:
+https://deposit.softwareheritage.org/1/hal/.
+
+HTTP verbs supported: POST, PUT (not implemented), DELETE (not implemented)
 
 === Cont-IRI - The Content IRI ===
 
 This is the IRI from which the client will be able to retrieve
 representations of the object as it resides in the SWORD server.
 
+This will display information about the content and its associated
+metadata.
+
+HTTP verbs supported: GET
+
 === EM-IRI - The Atom Edit Media IRI ===
 
-To simplify, this is the same as the Cont-IRI.
+In our implementation, this is the same as the Cont-IRI.
 
 === Edit-IRI - The Atom Entry Edit IRI ===
 
-This is the IRI of the Atom Entry of the object, and therefore also of
-the container within the SWORD server.
+This is the Atom Entry object IRI.
+
+HTTP verbs supported: GET, PUT, DELETE
 
 === SE-IRI - The SWORD Edit IRI ===
 
 This is the IRI to which clients may POST additional content to an
-Atom Entry Resource. This MAY be the same as the Edit-IRI, but is
-defined separately as it supports HTTP POST explicitly while the
-Edit-IRI is defined by [AtomPub] as limited to GET, PUT and DELETE
-operations.
+Atom Entry Resource. This is the same as Edit-IRI.
+
+HTTP verbs supported: POST
 
 === State-IRI - The SWORD Statement IRI ===
 
@@ -594,6 +662,8 @@ This is the one of the IRIs which can be used to retrieve a
 description of the object from the sword server, including the
 structure of the object and its state. This will be used as the
 operation status endpoint.
+
+HTTP verbs supported: GET
 
 == Sources ==
 

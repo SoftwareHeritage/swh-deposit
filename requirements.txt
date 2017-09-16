@@ -2,4 +2,5 @@ vcversioner
 
 retrying
 click
-django
+Django
+djangorestframework
