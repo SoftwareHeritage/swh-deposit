@@ -1,5 +1,6 @@
+Django
 click
-django
+djangorestframework
 retrying
 swh.core>=0.0.14
 vcversioner

@@ -6,3 +6,9 @@
 __pycache__
 *.egg-info/
 version.txt
+/analysis.org
+/swh/deposit/fixtures/private_data.yaml
+/swh/deposit.json
+/test.json
+/swh/test
+db.sqlite3
