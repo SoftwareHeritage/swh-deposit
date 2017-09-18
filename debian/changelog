@@ -1,8 +1,10 @@
-swh-deposit (0.0.5-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.6-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.6
+  * Make the packages include all that's needed (templates, fixtures)
+  * Fix typo in production settings file
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 18 Sep 2017 15:10:01 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 18 Sep 2017 16:17:53 +0200
 
 swh-deposit (0.0.5-1~swh1) unstable-swh; urgency=medium
 
