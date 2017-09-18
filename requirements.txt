@@ -4,3 +4,4 @@ retrying
 click
 Django
 djangorestframework
+djangorestframework-xml

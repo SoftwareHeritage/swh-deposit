@@ -1,6 +1,7 @@
 Django
 click
 djangorestframework
+djangorestframework-xml
 retrying
 swh.core>=0.0.14
 vcversioner
