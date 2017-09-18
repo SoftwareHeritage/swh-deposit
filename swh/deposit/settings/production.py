@@ -34,7 +34,7 @@ if db_user:
     db['USER'] = db_user
 
 
-db_pass = db_conf.get('pass')
+db_pass = db_conf.get('password')
 if db_pass:
     db['PASSWORD'] = db_pass
 
