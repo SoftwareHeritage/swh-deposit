@@ -23,6 +23,5 @@ run-dev:
 run:
 	gunicorn3 swh.deposit.wsgi
 
-# .PHONY: test
-# test:
-# 	cd swh && python3 manage.py test
+test:
+	cd swh && python3 -m manage test

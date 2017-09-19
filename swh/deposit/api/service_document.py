@@ -6,12 +6,14 @@
 from django.contrib.auth.models import User
 from django.shortcuts import render
 
-from .common import SWHView, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
+from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
+from .common import ACCEPT_CONTENT_TYPES
 
 
-class SWHServiceDocument(SWHView):
+class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):
     def get(self, req, *args, **kwargs):
         user = User.objects.get(username=req.user)
+
         context = {
             'max_upload_size': self.config['max_upload_size'],
             'verbose': self.config['verbose'],

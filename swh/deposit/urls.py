@@ -23,15 +23,10 @@ from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .api.service_document import SWHServiceDocument
-from .api.user import SWHUser
 from .api.deposit import SWHDeposit
 
 urlpatterns = [
     url(r'^admin', admin.site.urls),
-    url(r'^1/clients[/]+$', SWHUser.as_view(),
-        name='clients'),
-    url(r'^1/clients/(?P<client_id>[0-9]+)', SWHUser.as_view(),
-        name='client'),
     url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
         name='servicedocument'),
     url(r'^1/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),

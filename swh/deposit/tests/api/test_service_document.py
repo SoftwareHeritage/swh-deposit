@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .common import BasicTestCase, WithAuthTestCase
+from ..common import BasicTestCase, WithAuthTestCase
 
 
 class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
@@ -16,8 +16,8 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
     """
 
-    def test_service_document(self):
-        """Without authentication, the service document endpoint is refused"""
+    def test_service_document_no_authentication_fails(self):
+        """Without authentication, service document endpoint is unauthorized"""
         url = reverse('servicedocument')
 
         response = self.client.get(url)

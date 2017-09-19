@@ -13,7 +13,7 @@ class BasicTestCase(TestCase):
     """Mixin intended for adding a specific user
 
     """
-    def setUp(self, auth=False):
+    def setUp(self):
         super().setUp()
         """Define the test client and other test variables."""
         _name = 'hal'
