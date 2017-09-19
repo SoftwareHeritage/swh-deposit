@@ -7,8 +7,6 @@ import logging
 
 from django.http import HttpResponse
 from rest_framework.views import APIView
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.authentication import SessionAuthentication
 
 from swh.core.config import SWHConfig
 
@@ -45,4 +43,4 @@ class SWHAPIView(APIView):
        authentication check
 
     """
-    authentication_classes = (SessionAuthentication, BasicAuthentication, )
+    pass
