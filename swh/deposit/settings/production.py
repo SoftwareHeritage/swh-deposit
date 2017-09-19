@@ -22,6 +22,34 @@ if not private_conf:
 
 SECRET_KEY = private_conf['secret_key']
 
+# https://docs.djangoproject.com/en/1.10/ref/settings/#logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",  # noqa
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# database
+
 db_conf = private_conf['db']
 
 db = {
@@ -46,6 +74,7 @@ db_port = db_conf.get('port')
 if db_port:
     db['PORT'] = db_port
 
+# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 DATABASES = {
     'default': db,
 }

@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
-from .common import BasicTestCase, WithAuthTestCase
+from ..common import BasicTestCase, WithAuthTestCase
 
 
 class DepositNoAuthCase(APITestCase, BasicTestCase):
