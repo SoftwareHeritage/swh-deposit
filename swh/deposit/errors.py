@@ -11,6 +11,8 @@ from rest_framework import status
 from django.shortcuts import render
 
 
+UNAUTHORIZED = 'unauthorized'
+NOT_FOUND = 'unknown'
 BAD_REQUEST = 'bad-request'
 ERROR_CONTENT = 'error-content'
 CHECKSUM_MISMATCH = 'checksum-mismatch'
@@ -20,6 +22,16 @@ MAX_UPLOAD_SIZE_EXCEEDED = 'max_upload_size_exceeded'
 
 
 ERRORS = {
+    UNAUTHORIZED: {
+        'status': status.HTTP_401_UNAUTHORIZED,
+        'iri': 'http://purl.org/net/sword/error/ErrorUnauthorized',
+        'tag': 'sword:ErrorUnauthorized',
+    },
+    NOT_FOUND: {
+        'status': status.HTTP_404_NOT_FOUND,
+        'iri': 'http://purl.org/net/sword/error/ErrorNotFound',
+        'tag': 'sword:ErrorNotFound',
+    },
     ERROR_CONTENT: {
         'status': status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         'iri': 'http://purl.org/net/sword/error/ErrorContent',

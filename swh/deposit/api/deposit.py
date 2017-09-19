@@ -6,6 +6,7 @@
 import hashlib
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
@@ -14,13 +15,37 @@ from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
 from ..models import Deposit, DepositRequest, DepositType
+from ..models import DEPOSIT_STATUS_DETAIL
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser, parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
+from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED, NOT_FOUND
 from ..errors import METHOD_NOT_ALLOWED, make_error, make_error_response
 
 from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
+
+
+class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
+    """Deposit status"""
+    def get(self, req, deposit_id):
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            err = make_error(
+                NOT_FOUND,
+                'deposit %s does not exist' % deposit_id)
+            return make_error_response(req, err['error'])
+
+        context = {
+            'deposit_id': deposit.id,
+            'status': deposit.status,
+            'status_detail': DEPOSIT_STATUS_DETAIL[deposit.status],
+        }
+
+        return render(req, 'deposit/status.xml',
+                      context=context,
+                      content_type='application/xml',
+                      status=status.HTTP_200_OK)
 
 
 class SWHDeposit(SWHDefaultConfig, SWHAPIView):
@@ -520,10 +545,14 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
         if error:
             return make_error_response(req, error)
 
-        return render(req, 'deposit/deposit_receipt.xml',
-                      context=data,
-                      content_type='application/xml',
-                      status=status.HTTP_201_CREATED)
+        response = render(req, 'deposit/deposit_receipt.xml',
+                          context=data,
+                          content_type='application/xml',
+                          status=status.HTTP_201_CREATED)
+        response._headers['location'] = ('Location', reverse(
+            'deposit_status', args=[data['deposit_id']]))
+
+        return response
 
     def put(self, req, client_name, format=None):
         """Update an archive (not allowed).
