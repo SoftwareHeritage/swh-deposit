@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 import hashlib
-import logging
 
 from django.contrib.auth.models import User
 from django.shortcuts import render
@@ -45,7 +44,6 @@ class SWHDeposit(SWHView, APIView):
     def __init__(self):
         super().__init__()
         self.objstorage = get_objstorage(**self.config['objstorage'])
-        self.log = logging.getLogger('swh.deposit')
 
     def _read_headers(self, req):
         """Read and unify the necessary headers from the request (those are

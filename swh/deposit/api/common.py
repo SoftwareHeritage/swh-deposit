@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import logging
+
 from django.http import HttpResponse
 from django.views import View
 
@@ -30,3 +32,4 @@ class SWHView(SWHConfig, View):
         super().__init__()
         self.config = self.parse_config_file()
         self.config.update(config)
+        self.log = logging.getLogger('swh.deposit')
