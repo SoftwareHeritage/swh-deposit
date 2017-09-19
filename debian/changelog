@@ -1,8 +1,9 @@
-swh-deposit (0.0.6-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.7-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.7
+  * Add swh.deposit.create_user routine to setup user information
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 18 Sep 2017 16:17:53 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 19 Sep 2017 10:44:59 +0200
 
 swh-deposit (0.0.6-1~swh1) unstable-swh; urgency=medium
 

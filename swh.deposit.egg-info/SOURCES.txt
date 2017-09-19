@@ -28,6 +28,7 @@ swh/deposit/__init__.py
 swh/deposit/admin.py
 swh/deposit/apps.py
 swh/deposit/auth.py
+swh/deposit/create_user.py
 swh/deposit/errors.py
 swh/deposit/models.py
 swh/deposit/parsers.py
