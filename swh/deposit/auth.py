@@ -49,6 +49,10 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
 
 
 class HttpBasicAuthMiddleware(SWHConfig):
+    """Middleware to install or not the basic authentication layer
+       according to swh's yaml configuration.
+
+    """
     CONFIG_BASE_FILENAME = 'deposit/server'
 
     DEFAULT_CONFIG = {
