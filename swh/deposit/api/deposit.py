@@ -20,10 +20,10 @@ from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
 from ..errors import METHOD_NOT_ALLOWED, make_error, make_error_response
 
-from .common import SWHView, SWHAPIView, ACCEPT_PACKAGINGS
+from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
 
 
-class SWHDeposit(SWHView, SWHAPIView):
+class SWHDeposit(SWHDefaultConfig, SWHAPIView):
     """Deposit request class defining api endpoints for sword deposit.
 
     """

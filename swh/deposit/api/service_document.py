@@ -6,11 +6,11 @@
 from django.contrib.auth.models import User
 from django.shortcuts import render
 
-from .common import SWHView, SWHAPIView, ACCEPT_PACKAGINGS
+from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
 from .common import ACCEPT_CONTENT_TYPES
 
 
-class SWHServiceDocument(SWHView, SWHAPIView):
+class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):
     def get(self, req, *args, **kwargs):
         user = User.objects.get(username=req.user)
 

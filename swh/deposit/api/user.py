@@ -8,10 +8,10 @@ from django.http import HttpResponse
 
 from django.views.generic import ListView
 
-from .common import SWHView
+from .common import SWHDefaultConfig
 
 
-class SWHUser(ListView, SWHView):
+class SWHUser(SWHDefaultConfig, ListView):
     model = User
 
     def get(self, *args, **kwargs):

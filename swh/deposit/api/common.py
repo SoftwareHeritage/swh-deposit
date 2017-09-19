@@ -19,7 +19,7 @@ def index(req):
     return HttpResponse('SWH Deposit API - WIP')
 
 
-class SWHView(SWHConfig):
+class SWHDefaultConfig(SWHConfig):
     """Mixin intended to enrich views with SWH configuration.
 
     """
