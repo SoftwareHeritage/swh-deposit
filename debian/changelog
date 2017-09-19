@@ -1,3 +1,15 @@
+swh-deposit (0.0.8-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.8
+  * swh.deposit.settings: Split logging configuration per platform
+  * swh.deposit.settings.common: Prefer configuration over code
+  * swh.deposit.api: Enforce basic authentication
+  * swh.deposit: Clarify SWHDefaultConfig class's intent
+  * clean up: Removing user test api endpoints
+  * doc: Update docstrings
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 19 Sep 2017 14:23:05 +0200
+
 swh-deposit (0.0.7-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.7
