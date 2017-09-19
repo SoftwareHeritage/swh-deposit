@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.views import APIView
 
 from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
@@ -21,10 +20,10 @@ from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED
 from ..errors import METHOD_NOT_ALLOWED, make_error, make_error_response
 
-from .common import SWHView, ACCEPT_PACKAGINGS
+from .common import SWHView, SWHAPIView, ACCEPT_PACKAGINGS
 
 
-class SWHDeposit(SWHView, APIView):
+class SWHDeposit(SWHView, SWHAPIView):
     """Deposit request class defining api endpoints for sword deposit.
 
     """

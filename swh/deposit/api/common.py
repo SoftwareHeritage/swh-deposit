@@ -6,7 +6,9 @@
 import logging
 
 from django.http import HttpResponse
-from django.views import View
+from rest_framework.views import APIView
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import SessionAuthentication
 
 from swh.core.config import SWHConfig
 
@@ -19,7 +21,10 @@ def index(req):
     return HttpResponse('SWH Deposit API - WIP')
 
 
-class SWHView(SWHConfig, View):
+class SWHView(SWHConfig):
+    """Mixin intended to enrich views with SWH configuration.
+
+    """
     CONFIG_BASE_FILENAME = 'deposit/server'
 
     DEFAULT_CONFIG = {
@@ -33,3 +38,11 @@ class SWHView(SWHConfig, View):
         self.config = self.parse_config_file()
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
+
+
+class SWHAPIView(APIView):
+    """Mixin intended as a based API view to enforce the basic
+       authentication check
+
+    """
+    authentication_classes = (SessionAuthentication, BasicAuthentication, )

@@ -16,8 +16,8 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
     """
 
-    def test_service_document(self):
-        """Without authentication, the service document endpoint is refused"""
+    def test_service_document_no_authentication_fails(self):
+        """Without authentication, service document endpoint is unauthorized"""
         url = reverse('servicedocument')
 
         response = self.client.get(url)
