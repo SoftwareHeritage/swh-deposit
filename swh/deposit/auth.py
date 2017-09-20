@@ -53,6 +53,7 @@ class HttpBasicAuthMiddleware(SWHConfig):
     """Middleware to install or not the basic authentication layer
        according to swh's yaml configuration.
 
+       Note: / is white-listed from authentication
     """
     CONFIG_BASE_FILENAME = 'deposit/server'
 
@@ -66,6 +67,10 @@ class HttpBasicAuthMiddleware(SWHConfig):
         self.config = self.parse_config_file()
 
     def __call__(self, request):
+        # white-list /
+        if request.method == 'GET' and request.path == '/':
+            return self.get_response(request)
+
         if self.config['authentication']:
             r = view_or_basicauth(view=self.get_response,
                                   request=request,

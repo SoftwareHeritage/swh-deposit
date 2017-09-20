@@ -22,13 +22,15 @@ from django.conf.urls import url
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .api.service_document import SWHServiceDocument
+from .api.common import index
 from .api.deposit import SWHDeposit, SWHDepositStatus
 from .api.deposit import SWHUpdateMetadataDeposit, SWHUpdateArchiveDeposit
+from .api.service_document import SWHServiceDocument
+
 
 urlpatterns = [
-    url(r'^admin', admin.site.urls,
-        name='admin'),
+    url(r'^$', index, name='home'),
+    url(r'^admin', admin.site.urls, name='admin'),
     # SD IRI - Service Document IRI
     # -> GET
     url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
