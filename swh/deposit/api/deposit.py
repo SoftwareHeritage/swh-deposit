@@ -281,12 +281,6 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        # binary_upload_headers_rule = {
-        #     'MUST': ['Content-Disposition'],
-        #     'SHOULD': ['Content-Type', 'Content-MD5', 'Packaging'],
-        #     'MAY': ['In-Progress', 'On-Behalf-Of', 'Slug'],
-        # }
-
         content_disposition = headers['content-disposition']
         if not content_disposition:
             return make_error(
