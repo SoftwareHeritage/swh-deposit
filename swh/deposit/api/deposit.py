@@ -26,14 +26,25 @@ from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
 
 
 class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
-    """Deposit status"""
-    def get(self, req, deposit_id):
+    """Deposit status.
+
+    What's known as 'State IRI' in the sword specification.
+
+    HTTP verbs supported: GET
+
+    """
+    def get(self, req, client_name, deposit_id, format=None):
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
+            # FIXME: Find why Deposit.objects.get(pk=deposit_id,
+            # client=User(username=client_name)) does not work
+            if deposit.client.username != client_name:
+                raise Deposit.DoesNotExist
         except Deposit.DoesNotExist:
             err = make_error(
                 NOT_FOUND,
-                'deposit %s does not exist' % deposit_id)
+                'deposit %s for client %s does not exist' % (
+                    deposit_id, client_name))
             return make_error_response(req, err['error'])
 
         context = {
@@ -586,8 +597,9 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
                           context=data,
                           content_type='application/xml',
                           status=status.HTTP_201_CREATED)
-        response._headers['location'] = ('Location', reverse(
-            'deposit_status', args=[data['deposit_id']]))
+        response._headers['location'] = (
+            'Location',
+            reverse('status', args=[client_name, data['deposit_id']]))
 
         return response
 

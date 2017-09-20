@@ -49,12 +49,11 @@ urlpatterns = [
     url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/$',
         SWHUpdateMetadataDeposit.as_view(),
         name='edit_se_iri'),
-
     # State IRI
     # -> GET
-    url(r'^1/status/(?P<deposit_id>[^/]+)/$', SWHDepositStatus.as_view(),
-        name='deposit_status'),
-
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
+        SWHDepositStatus.as_view(),
+        name='status')
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

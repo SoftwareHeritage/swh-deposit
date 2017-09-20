@@ -70,4 +70,4 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
         </collection>
     </workspace>
 </service>
-''' % (self.user_name, self.user_name, self.user_name))
+''' % (self.username, self.username, self.username))
