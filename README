@@ -627,11 +627,11 @@ take place, and which is listed in the Service Document.
 Following our previous example, this is:
 https://deposit.softwareheritage.org/1/hal/.
 
-HTTP verbs supported: POST, PUT (not implemented), DELETE (not implemented)
+HTTP verbs supported: POST
 
 === Cont-IRI - The Content IRI ===
 
-This is the IRI from which the client will be able to retrieve
+This is the endpoint which permits the client to retrieve
 representations of the object as it resides in the SWORD server.
 
 This will display information about the content and its associated
@@ -641,13 +641,23 @@ HTTP verbs supported: GET
 
 === EM-IRI - The Atom Edit Media IRI ===
 
-In our implementation, this is the same as the Cont-IRI.
+This is the endpoint to upload other related archives for the same
+deposit.
+
+Typically, if  a first archive  is too big,  the client can  split it.
+Post  the first  partial  archive in  the  Col-IRI (with  In-Progress:
+True).  Then  other archives needs  to be  uploaded to this  IRI.  The
+last  one mentioning  the  In-Progress  flag to  False  to notify  the
+deposit is done.
+
+HTTP verbs supported: PUT
 
 === Edit-IRI - The Atom Entry Edit IRI ===
 
-This is the Atom Entry object IRI.
+This is the endpoint to update metadata for a previous incomplete
+deposit.
 
-HTTP verbs supported: GET, PUT, DELETE
+HTTP verbs supported: PUT
 
 === SE-IRI - The SWORD Edit IRI ===
 
