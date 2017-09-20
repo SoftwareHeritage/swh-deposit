@@ -1,8 +1,14 @@
-swh-deposit (0.0.8-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.9-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.9
+  * swh.deposit.api: white list / from authentication
+  * swh.deposit.api: Update state iri endpoint
+  * swh.deposit.api: Update new IRI endpoints to deal with update
+  * swh.deposit.api.deposit: Clean up dead code
+  * README: Update specification on IRIs
+  * swh.deposit.urls: Fix endpoints to finish with trailing /
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 19 Sep 2017 14:23:05 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 20 Sep 2017 18:12:33 +0200
 
 swh-deposit (0.0.8-1~swh1) unstable-swh; urgency=medium
 

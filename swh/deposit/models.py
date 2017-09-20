@@ -32,17 +32,31 @@ class Dbversion(models.Model):
         })
 
 
+"""Possible status"""
 DEPOSIT_STATUS = [
-    ('partial', 'partial'),      # the deposit is new or partially received
-                                 # since it can be done in multiple requests
-    ('expired', 'expired'),      # deposit has been there too long and is now
-                                 # deemed ready to be garbage collected
-    ('ready', 'ready'),          # deposit is fully received and ready for
-                                 # injection
-    ('injecting', 'injecting'),  # injection is ongoing on swh's side
-    ('success', 'success'),      # injection successful
-    ('failure', 'failure'),      # injection failure
+    ('partial', 'partial'),
+
+    ('expired', 'expired'),
+
+    ('ready', 'ready'),
+
+    ('injecting', 'injecting'),
+    ('success', 'success'),
+    ('failure', 'failure'),
 ]
+
+
+"""Possible status and the detailed meaning."""
+DEPOSIT_STATUS_DETAIL = {
+    'partial': 'the deposit is new or partially received since it can be'
+               ' done in multiple requests',
+    'expired': 'deposit has been there too long and is now '
+               'deemed ready to be garbage collected',
+    'ready': 'deposit is fully received and ready for injection',
+    'injecting': "injection is ongoing on swh's side",
+    'success': 'Injection is successful',
+    'failure': 'Injection is a failure',
+}
 
 
 class Deposit(models.Model):

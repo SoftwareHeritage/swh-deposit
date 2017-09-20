@@ -54,9 +54,11 @@ swh/deposit/templates/deposit/__init__.py
 swh/deposit/templates/deposit/deposit_receipt.xml
 swh/deposit/templates/deposit/error.xml
 swh/deposit/templates/deposit/service_document.xml
+swh/deposit/templates/deposit/status.xml
 swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
 swh/deposit/tests/objstorage.py
 swh/deposit/tests/api/__init__.py
+swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_service_document.py

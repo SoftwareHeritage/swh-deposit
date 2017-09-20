@@ -25,7 +25,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
         """Without authentication, endpoint refuses access with 401 response
 
         """
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -150,12 +150,12 @@ and other stuff</description>
 
 </entry>"""
 
-    def test_post_deposit_binary_upload_final(self):
+    def test_post_deposit_binary_upload_final_and_status_check(self):
         """Binary upload should be accepted
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
         id = hashlib.sha1(data_text).hexdigest()
@@ -204,12 +204,31 @@ and other stuff</description>
             response_content['{http://www.w3.org/2005/Atom}deposit_id'],
             deposit.id)
 
+        status_url = reverse('status',
+                             args=[self.username, deposit.id])
+
+        self.assertEqual(response._headers['location'],
+                         ('Location', status_url))
+
+        # check status
+        status_response = self.client.get(status_url)
+
+        self.assertEqual(status_response.status_code, status.HTTP_200_OK)
+        r = parse_xml(BytesIO(status_response.content))
+
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
+                         deposit.id)
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}status'],
+                         'ready')
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
+                         'deposit is fully received and ready for injection')
+
     def test_post_deposit_binary_upload_2_steps(self):
         """Binary upload should be accepted
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
 
         external_id = 'some-external-id-1'
 
@@ -301,7 +320,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -335,7 +354,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -367,7 +386,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -398,7 +417,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -436,7 +455,7 @@ and other stuff</description>
 
     #     """
     #     # given
-    #     url = reverse('upload', args=['hal'])
+    #     url = reverse('upload', args=[self.username])
     #     data_text = b'some content'
     #     md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -466,7 +485,7 @@ and other stuff</description>
     def test_post_deposit_multipart(self):
         """Test one deposit upload."""
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
 
         # from django.core.files import uploadedfile
         data_atom_entry = self.data_atom_entry_ok
@@ -544,7 +563,7 @@ and other stuff</description>
     def test_post_deposit_multipart_only_archive_and_atom_entry(self):
         """Multipart deposit only accepts one archive and one atom+xml"""
         # given
-        url = reverse('upload', args=['hal'])
+        url = reverse('upload', args=[self.username])
 
         # from django.core.files import uploadedfile
 
@@ -597,14 +616,14 @@ and other stuff</description>
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
-            reverse('upload', args=['hal']),
+            reverse('upload', args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_deposit_atom_unknown_no_external_id(self):
         response = self.client.post(
-            reverse('upload', args=['hal']),
+            reverse('upload', args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data3)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -633,7 +652,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=['hal']),
+            reverse('upload', args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='false')
@@ -665,7 +684,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=['hal']),
+            reverse('upload', args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data1,
             HTTP_IN_PROGRESS='True',
@@ -688,7 +707,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=['hal']),
+            reverse('upload', args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='False',

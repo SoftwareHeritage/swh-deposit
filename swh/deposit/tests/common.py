@@ -22,8 +22,8 @@ class BasicTestCase(TestCase):
         _user = User.objects.create_user(username=_name, password=_name)
         self.type = _type
         self.user = _user
-        self.user_name = _name
-        self.user_pass = _name
+        self.username = _name
+        self.userpass = _name
         self.maxDiff = None
 
 
@@ -34,7 +34,7 @@ class WithAuthTestCase(TestCase):
     """
     def setUp(self):
         super().setUp()
-        r = self.client.login(username=self.user_name, password=self.user_pass)
+        r = self.client.login(username=self.username, password=self.userpass)
         if not r:
             raise ValueError(
                 'Dev error - test misconfiguration. Bad credential provided!')
