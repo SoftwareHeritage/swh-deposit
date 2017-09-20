@@ -48,12 +48,25 @@ This expects the same file describes in the previous chapter.  Plus,
 an additional private settings.yml file containing secret information
 that is not in the source code repository.
 
-In ~/.config/swh/deposit/private.yml, something like:
+In ~/.config/swh/deposit/private.yml, a development configuration file
+would look like:
 
 ``` YAML
 secret_key: production-local
 db:
   name: swh-deposit-dev
+```
+
+A production configuration file would look like:
+
+``` YAML
+secret_key: production-secret-key
+db:
+  name: swh-deposit-dev
+  host: db
+  port: 5467
+  user: user
+  password: user-password
 ```
 
 ## Run
@@ -62,8 +75,7 @@ db:
 make run
 ```
 
-Note: This expects gunicorn3 package installed on the system.
-
+Note: This expects gunicorn3 package installed on the system
 
 ## Tests
 

@@ -1,0 +1,7 @@
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>{{ deposit_id }}</deposit_id>
+    <status>{{ status }}</status>
+    <detail>{{ status_detail }}</detail>
+</entry>
