@@ -30,9 +30,9 @@ urlpatterns = [
     url(r'^admin', admin.site.urls),
     url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
         name='servicedocument'),
-    url(r'^1/(?P<client_name>[^/]+)$', SWHDeposit.as_view(),
+    url(r'^1/(?P<client_name>[^/]+)/$', SWHDeposit.as_view(),
         name='upload'),
-    url(r'^1/status/(?P<deposit_id>[^/]+)$', SWHDepositStatus.as_view(),
+    url(r'^1/status/(?P<deposit_id>[^/]+)/$', SWHDepositStatus.as_view(),
         name='deposit_status')
 ]
 
