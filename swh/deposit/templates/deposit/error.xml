@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sword:error xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/">
-    <!-- <author> -->
-    <!--     <name>Example repository</name> -->
-    <!-- </author> -->
-    <!-- <title>ERROR</title> -->
-    <!-- <updated>2008-02-19T09:34:27Z</updated> -->
-
-    <!-- <generator uri="https://example.org/sword-app/" -->
-    <!--            version="0.9">sword@example.org</generator> -->
-
     <summary>{{ summary }}</summary>
     <sword:treatment>processing failed</sword:treatment>
     {% if verboseDescription is not None %}
@@ -17,5 +8,4 @@
         {{ verboseDescription }}
     </sword:verboseDescription>
     {% endif %}
-    <!-- <link rel="alternate" href="https://sword.softwareheritage.org/deposit/help" type="text/html"/> -->
 </sword:error>

@@ -16,7 +16,7 @@ ACCEPT_CONTENT_TYPES = ['application/zip']
 
 
 def index(req):
-    return HttpResponse('SWH Deposit API - WIP')
+    return HttpResponse('SWH Deposit API')
 
 
 class SWHDefaultConfig(SWHConfig):
