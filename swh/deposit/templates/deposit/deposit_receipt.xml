@@ -4,4 +4,14 @@
     <deposit_id>{{ deposit_id }}</deposit_id>
     <deposit_date>{{ deposit_date }}</deposit_date>
     <deposit_archive>{{ archive }}</deposit_archive>
+
+    <!-- Edit-IRI -->
+    <link rel="edit" href="{{ edit_se_iri }}" />
+    <!-- EM-IRI -->
+    <link rel="edit-media" href="{{ em_iri }}"/>
+    <!-- SE-IRI -->
+    <link rel="http://purl.org/net/sword/terms/add" href="{{ edit_se_iri }}" />
+
+    {% for packaging in packagings %}<sword:packaging>{{ packaging }}</sword:packaging>{% endfor %}
+
 </entry>

@@ -48,8 +48,39 @@ class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
                       status=status.HTTP_200_OK)
 
 
+class SWHUpdateArchiveDeposit(SWHDefaultConfig, SWHAPIView):
+    """Deposit request class defining api endpoints for sword deposit.
+
+    What's known as 'EM IRI' in the sword specification.
+
+    HTTP verbs supported: PUT
+
+    """
+    def put(self, req, client_name, deposit_name, format=None):
+        pass
+
+
+class SWHUpdateMetadataDeposit(SWHDefaultConfig, SWHAPIView):
+    """Deposit request class defining api endpoints for sword deposit.
+
+    What's known as 'Edit IRI' (and SE IRI) in the sword specification.
+
+    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI)
+
+    """
+    def post(self, req, client_name, deposit_name, format=None):
+        pass
+
+    def put(self, req, client_name, deposit_name, format=None):
+        pass
+
+
 class SWHDeposit(SWHDefaultConfig, SWHAPIView):
     """Deposit request class defining api endpoints for sword deposit.
+
+    What's known as 'Col IRI' in the sword specification.
+
+    HTTP verbs supported: POST
 
     """
     parser_classes = (SWHMultiPartParser,
@@ -538,6 +569,18 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
         error = data.get('error')
         if error:
             return make_error_response(req, error)
+
+        # FIXME: where does the name is coming from? (did not find it yet)
+        data['deposit_name'] = 'something'
+        data.update({
+            'packagings': ACCEPT_PACKAGINGS,
+            'em_iri': reverse(
+                'em_iri',
+                args=[client_name, data['deposit_name']]),
+            'edit_se_iri': reverse(
+                'edit_se_iri',
+                args=[client_name, data['deposit_name']]),
+        })
 
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
