@@ -520,24 +520,29 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
         if error:
             return make_error_response(req, error)
 
-        # FIXME: where does the name is coming from? (did not find it yet)
-        data['deposit_name'] = 'something'
-        data.update({
-            'packagings': ACCEPT_PACKAGINGS,
-            'em_iri': reverse(
-                'em_iri',
-                args=[client_name, data['deposit_name']]),
-            'edit_se_iri': reverse(
-                'edit_se_iri',
-                args=[client_name, data['deposit_name']]),
-        })
+        iris = self._make_iris(client_name, data['deposit_id'])
+
+        data['packagings'] = ACCEPT_PACKAGINGS
+        data['em_iri'] = iris['em_iri']
+        data['edit_se_iri'] = iris['edit_se_iri']
 
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
                           content_type='application/xml',
                           status=status.HTTP_201_CREATED)
-        response._headers['location'] = (
-            'Location',
-            reverse('status', args=[client_name, data['deposit_id']]))
+        response._headers['location'] = 'Location', data['edit_se_iri']
 
         return response
+
+    def _make_iris(self, client_name, deposit_id):
+        """Define the endpoints iri
+
+        """
+        return {
+            'em_iri': reverse(
+                'em_iri',
+                args=[client_name, deposit_id]),
+            'edit_se_iri': reverse(
+                'edit_se_iri',
+                args=[client_name, deposit_id])
+        }

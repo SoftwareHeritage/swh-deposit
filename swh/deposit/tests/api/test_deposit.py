@@ -204,11 +204,11 @@ and other stuff</description>
             response_content['{http://www.w3.org/2005/Atom}deposit_id'],
             deposit.id)
 
-        status_url = reverse('status',
-                             args=[self.username, deposit.id])
+        edit_se_iri = reverse('edit_se_iri',
+                              args=[self.username, deposit.id])
 
         self.assertEqual(response._headers['location'],
-                         ('Location', status_url))
+                         ('Location', edit_se_iri))
 
     def test_post_deposit_binary_upload_2_steps(self):
         """Binary upload should be accepted

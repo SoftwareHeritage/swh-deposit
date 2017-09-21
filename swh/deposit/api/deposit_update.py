@@ -15,7 +15,7 @@ class SWHUpdateArchiveDeposit(SWHDefaultConfig, SWHAPIView):
     HTTP verbs supported: PUT
 
     """
-    def put(self, req, client_name, deposit_name, format=None):
+    def put(self, req, client_name, deposit_id, format=None):
         pass
 
 
@@ -27,8 +27,8 @@ class SWHUpdateMetadataDeposit(SWHDefaultConfig, SWHAPIView):
     HTTP verbs supported: POST (SE IRI), PUT (Edit IRI)
 
     """
-    def post(self, req, client_name, deposit_name, format=None):
+    def post(self, req, client_name, deposit_id, format=None):
         pass
 
-    def put(self, req, client_name, deposit_name, format=None):
+    def put(self, req, client_name, deposit_id, format=None):
         pass
