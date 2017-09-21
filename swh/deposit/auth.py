@@ -53,25 +53,34 @@ class HttpBasicAuthMiddleware(SWHConfig):
     """Middleware to install or not the basic authentication layer
        according to swh's yaml configuration.
 
-       Note: / is white-listed from authentication
+       Note: white-list authentication is supported (cf. DEFAULT_CONFIG)
     """
     CONFIG_BASE_FILENAME = 'deposit/server'
 
     DEFAULT_CONFIG = {
-        'authentication': ('bool', True),
+        # sample authentication
+        # 'authentication': ('dict', {
+        #     'white-list': {
+        #         # 'GET': ['/'],
+        #     }
+        # })
     }
 
     def __init__(self, get_response):
         super().__init__()
         self.get_response = get_response
         self.config = self.parse_config_file()
+        # if not provided, no authentication
+        self.auth = self.config.get('authentication')
+        if self.auth:
+            self.whitelist = self.auth.get('white-list', {})
 
     def __call__(self, request):
-        # white-list /
-        if request.method == 'GET' and request.path == '/':
-            return self.get_response(request)
+        if self.auth:
+            whitelist = self.whitelist.get(request.method)
+            if whitelist and request.path in whitelist:
+                return self.get_response(request)
 
-        if self.config['authentication']:
             r = view_or_basicauth(view=self.get_response,
                                   request=request,
                                   test_func=lambda u: u.is_authenticated())
