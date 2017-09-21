@@ -6,8 +6,8 @@
 from django.contrib.auth.models import User
 from django.shortcuts import render
 
-from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
-from .common import ACCEPT_CONTENT_TYPES
+from ..config import SWHDefaultConfig
+from .common import SWHAPIView, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
 
 
 class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):

@@ -28,6 +28,7 @@ swh/deposit/__init__.py
 swh/deposit/admin.py
 swh/deposit/apps.py
 swh/deposit/auth.py
+swh/deposit/config.py
 swh/deposit/create_user.py
 swh/deposit/errors.py
 swh/deposit/models.py
@@ -36,6 +37,8 @@ swh/deposit/urls.py
 swh/deposit/wsgi.py
 swh/deposit/api/common.py
 swh/deposit/api/deposit.py
+swh/deposit/api/deposit_status.py
+swh/deposit/api/deposit_update.py
 swh/deposit/api/service_document.py
 swh/deposit/fixtures/__init__.py
 swh/deposit/fixtures/deposit_data.yaml
@@ -61,4 +64,5 @@ swh/deposit/tests/objstorage.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py
+swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_service_document.py
