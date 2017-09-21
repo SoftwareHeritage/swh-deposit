@@ -24,6 +24,7 @@ TEST_CONFIG = {
     'verbose': False,
     'noop': False,
     'authentication': {
+        'activated': 'true',
         'white-list': {
             'GET': ['/'],
         },
@@ -38,16 +39,11 @@ def parse_config_file(base_filename=None, config_filename=None,
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swh.web.settings.development")
 
-from swh.deposit.auth import HttpBasicAuthMiddleware  # noqa
-from swh.deposit.api.common import SWHDefaultConfig  # noqa
-from swh.deposit.api.deposit import SWHDeposit  # noqa
-from swh.deposit.api.deposit_status import SWHDepositStatus  # noqa
-from swh.deposit.api.service_document import SWHServiceDocument  # noqa
+from swh.deposit.config import SWHDefaultConfig  # noqa
 
-# monkey patch :\
-SWHServiceDocument.parse_config_file = parse_config_file
-SWHDeposit.parse_config_file = parse_config_file
-SWHDepositStatus.parse_config_file = parse_config_file
-HttpBasicAuthMiddleware.parse_config_file = parse_config_file
+# monkey patch this class method permits to override, for tests
+# purposes, the default configuration without side-effect, i.e do not
+# load the configuration from disk
+SWHDefaultConfig.parse_config_file = parse_config_file
 
 django.setup()

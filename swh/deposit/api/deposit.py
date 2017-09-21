@@ -14,6 +14,7 @@ from rest_framework import status
 from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
+from ..config import SWHDefaultConfig
 from ..models import Deposit, DepositRequest, DepositType
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser, parse_xml
@@ -21,7 +22,7 @@ from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED, make_error
 from ..errors import METHOD_NOT_ALLOWED, make_error_response
 
-from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
+from .common import SWHAPIView, ACCEPT_PACKAGINGS
 
 
 class SWHDeposit(SWHDefaultConfig, SWHAPIView):

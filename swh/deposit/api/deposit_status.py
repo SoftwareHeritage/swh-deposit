@@ -6,10 +6,11 @@
 from django.shortcuts import render
 from rest_framework import status
 
+from ..config import SWHDefaultConfig
+from ..errors import NOT_FOUND, make_error, make_error_response
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 
-from .common import SWHDefaultConfig, SWHAPIView
-from ..errors import NOT_FOUND, make_error, make_error_response
+from .common import SWHAPIView
 
 
 class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):

@@ -3,7 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from .common import SWHDefaultConfig, SWHAPIView
+from ..config import SWHDefaultConfig
+from .common import SWHAPIView
 
 
 class SWHUpdateArchiveDeposit(SWHDefaultConfig, SWHAPIView):
