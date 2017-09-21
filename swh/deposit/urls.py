@@ -43,15 +43,16 @@ urlpatterns = [
     url(r'^1/(?P<client_name>[^/]+)/$', SWHDeposit.as_view(),
         name='upload'),
     # EM IRI - Atom Edit Media IRI (update archive IRI)
-    # -> PUT
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/$',
+    # -> PUT (update-in-place existing archive)
+    # -> POST (add new archive)
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$',
         SWHUpdateArchiveDeposit.as_view(),
         name='em_iri'),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
-    # -> PUT
-    # SE IRI - Sword Edit IRI (update metadata IRI) ;; same as Edit IRI
-    # -> POST
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/$',
+    # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
+    # -> PUT (update in place)
+    # -> POST (add new metadata)
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$',
         SWHUpdateMetadataDeposit.as_view(),
         name='edit_se_iri'),
     # State IRI
@@ -59,7 +60,7 @@ urlpatterns = [
     url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
         SWHDepositStatus.as_view(),
         name='status'),
-    # Cont IRI
+    # Cont/File IRI
     # -> GET
     url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$',
         SWHDepositContent.as_view(),

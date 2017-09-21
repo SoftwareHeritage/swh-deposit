@@ -58,7 +58,8 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
                                'Only application/zip is supported!')
             return make_error_response(req, error['error'])
 
-        data = self._binary_upload(req, headers, client_name, update=True)
+        data = self._binary_upload(req, headers, client_name,
+                                   deposit_id=deposit_id, update=True)
 
         error = data.get('error')
         if error:
@@ -97,10 +98,10 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
 
         if req.content_type == 'application/zip':
             data = self._binary_upload(
-                req, headers, client_name)
+                req, headers, client_name, deposit_id)
         elif req.content_type.startswith('multipart/'):
             data = self._multipart_upload(
-                req, headers, client_name)
+                req, headers, client_name, deposit_id)
         else:
             data = self._atom_entry(
                 req, headers, client_name)
@@ -109,17 +110,15 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
         if error:
             return make_error_response(req, error)
 
-        iris = self._make_iris(client_name, data['deposit_id'])
-
         data['packagings'] = ACCEPT_PACKAGINGS
-        data['cont_file_iri'] = iris['cont_file_iri']
+        iris = self._make_iris(client_name, data['deposit_id'])
+        data.update(iris)
 
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
                           content_type='application/xml',
                           status=status.HTTP_201_CREATED)
-        response._headers['location'] = 'Location', data['cont_file_iri']
-
+        response._headers['location'] = 'Location', iris['cont_file_iri']
         return response
 
 
@@ -161,10 +160,10 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         if req.content_type.startswith('multipart/'):
             data = self._multipart_upload(
-                req, headers, client_name, update=True)
+                req, headers, client_name, deposit_id=deposit_id, update=True)
         else:
             data = self._atom_entry(
-                req, headers, client_name, update=True)
+                req, headers, client_name, deposit_id=deposit_id, update=True)
 
         error = data.get('error')
         if error:
@@ -203,10 +202,10 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         if req.content_type.startswith('multipart/'):
             data = self._multipart_upload(
-                req, headers, client_name)
+                req, headers, client_name, deposit_id=deposit_id)
         else:
             data = self._atom_entry(
-                req, headers, client_name)
+                req, headers, client_name, deposit_id=deposit_id)
 
         error = data.get('error')
         if error:
@@ -215,8 +214,8 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         iris = self._make_iris(client_name, data['deposit_id'])
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        data['em_iri'] = iris['em_iri']
-        data['edit_se_iri'] = iris['edit_se_iri']
+        iris = self._make_iris(client_name, data['deposit_id'])
+        data.update(iris)
 
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,

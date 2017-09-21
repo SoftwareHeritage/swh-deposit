@@ -106,8 +106,8 @@ class SWHDeposit(SWHBaseDeposit):
         iris = self._make_iris(client_name, data['deposit_id'])
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        data['em_iri'] = iris['em_iri']
-        data['edit_se_iri'] = iris['edit_se_iri']
+        iris = self._make_iris(client_name, data['deposit_id'])
+        data.update(iris)
 
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,

@@ -178,7 +178,11 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        deposit = Deposit.objects.get(external_id=external_id)
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
@@ -240,8 +244,11 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'partial')
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.type, self.type)
@@ -249,7 +256,6 @@ and other stuff</description>
         self.assertIsNone(deposit.swh_id)
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertIsNotNone(deposit_request)
         self.assertEquals(deposit_request.deposit, deposit)
         self.assertEquals(deposit_request.metadata, {
             'archive': {
@@ -263,8 +269,11 @@ and other stuff</description>
         md5sum1 = hashlib.md5(data_text).hexdigest()
         id1 = hashlib.sha1(data_text).hexdigest()
 
+        # uri to update the content
+        update_uri = reverse('em_iri', args=[self.username, deposit_id])
+
         response = self.client.post(
-            url,
+            update_uri,
             content_type='application/zip',  # as zip
             data=data_text,
             # + headers
@@ -275,7 +284,7 @@ and other stuff</description>
             HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
 
-        deposit = Deposit.objects.get(external_id=external_id)
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
@@ -512,7 +521,11 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        deposit = Deposit.objects.get(external_id=external_id)
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
@@ -530,8 +543,11 @@ and other stuff</description>
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
 
-        deposit = Deposit.objects.get(external_id=external_id)
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
@@ -608,13 +624,6 @@ and other stuff</description>
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_unknown_no_external_id(self):
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data3)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_post_deposit_atom_unknown_client(self):
         response = self.client.post(
             reverse('upload', args=['unknown-one']),
@@ -646,7 +655,12 @@ and other stuff</description>
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.type, self.type)
         self.assertEqual(deposit.external_id, external_id)
@@ -679,7 +693,12 @@ and other stuff</description>
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.type, self.type)
         self.assertEqual(deposit.external_id, external_id)
@@ -692,9 +711,11 @@ and other stuff</description>
 
         atom_entry_data = self.atom_entry_data2 % external_id.encode('utf-8')
 
-        # when
+        update_uri = response._headers['location'][1]
+
+        # when updating the first deposit post
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            update_uri,
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='False',
@@ -702,7 +723,12 @@ and other stuff</description>
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
         self.assertEqual(deposit.type, self.type)
         self.assertEqual(deposit.external_id, external_id)

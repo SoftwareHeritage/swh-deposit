@@ -126,13 +126,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
             h.update(chunk)
         return h.digest()
 
-    def _deposit_put(self, external_id, in_progress):
+    def _deposit_put(self, deposit_id=None, in_progress=False,
+                     external_id=None):
         """Save/Update a deposit in db.
 
         Args:
+            deposit_id (int): deposit identifier
+            in_progress (dict): The deposit's status
             external_id (str): The external identifier to associate to
               the deposit
-            in_progress (dict): The deposit's status
 
         Returns:
             The Deposit instance saved or updated.
@@ -145,15 +147,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
             complete_date = None
             status_type = 'partial'
 
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
+        if not deposit_id:
             deposit = Deposit(type=self._type,
                               external_id=external_id,
                               complete_date=complete_date,
                               status=status_type,
                               client=self._user)
         else:
+            deposit = Deposit.objects.get(pk=deposit_id)
+
+            # update metadata
             deposit.complete_date = complete_date
             deposit.status = status_type
 
@@ -161,10 +164,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
 
         return deposit
 
-    def _deposit_request_put(self, deposit, metadata):
+    def _deposit_request_put(self, update, deposit, metadata):
         """Save a deposit request with metadata attached to a deposit.
 
         Args:
+            update (bool): Flag defining if we add or update existing metadata.
             deposit (Deposit): The deposit concerned by the request
             metadata (dict): The metadata to associate to the deposit
 
@@ -172,12 +176,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
             The DepositRequest instance saved.
 
         """
+        if update:
+            DepositRequest.objects.filter(deposit=deposit).delete()
+
         deposit_request = DepositRequest(
             deposit=deposit,
             metadata=metadata)
 
         deposit_request.save()
-
         return deposit_request
 
     def _archive_put(self, file):
@@ -240,7 +246,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
 
         return None
 
-    def _binary_upload(self, req, headers, client_name, update=False):
+    def _binary_upload(self, req, headers, client_name,
+                       deposit_id=None, update=False):
         """Binary upload routine.
 
         Other than such a request, a 415 response is returned.
@@ -248,7 +255,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
         Args:
             req (Request): the request holding information to parse
                 and inject in db
+            headers (dict): request headers formatted
             client_name (str): the associated client
+            deposit_id (id): deposit identifier if provided
             update (bool): Update or add request to existing deposit
               request. Default to False, this adds request to existing ones
 
@@ -300,8 +309,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
 
         # actual storage of data
         metadata = self._archive_put(filehandler)
-        deposit = self._deposit_put(external_id, headers['in-progress'])
-        deposit_request = self._deposit_request_put(deposit, metadata)
+        deposit = self._deposit_put(deposit_id=deposit_id,
+                                    in_progress=headers['in-progress'],
+                                    external_id=external_id)
+        deposit_request = self._deposit_request_put(update, deposit, metadata)
 
         return {
             'deposit_id': deposit.id,
@@ -309,7 +320,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _multipart_upload(self, req, headers, client_name, update=False):
+    def _multipart_upload(self, req, headers, client_name,
+                          deposit_id=None, update=False):
         """Multipart upload supported with exactly:
         - 1 archive (zip)
         - 1 atom entry
@@ -317,9 +329,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
         Other than such a request, a 415 response is returned.
 
         Args:
-            req (Request): the request holding the information to parse
+            req (Request): the request holding information to parse
                 and inject in db
+            headers (dict): request headers formatted
             client_name (str): the associated client
+            deposit_id (id): deposit identifier if provided
             update (bool): Update or add request to existing deposit
               request. Default to False, this adds request to existing ones
 
@@ -340,12 +354,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
 
         """
         external_id = headers['slug']
-        if not external_id:
-            return make_error(
-                BAD_REQUEST,
-                'You need to provide an unique external identifier',
-                'The external identifier could be for example the identifier '
-                'you use in your system.')
 
         content_types_present = set()
 
@@ -389,8 +397,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
         metadata = self._archive_put(filehandler)
         atom_metadata = parse_xml(data['application/atom+xml'])
         metadata.update(atom_metadata)
-        deposit = self._deposit_put(external_id, headers['in-progress'])
-        deposit_request = self._deposit_request_put(deposit, metadata)
+        deposit = self._deposit_put(deposit_id=deposit_id,
+                                    in_progress=headers['in-progress'],
+                                    external_id=external_id)
+        deposit_request = self._deposit_request_put(update, deposit, metadata)
 
         return {
             'deposit_id': deposit.id,
@@ -398,13 +408,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _atom_entry(self, req, headers, client_name, update=False):
+    def _atom_entry(self, req, headers, client_name,
+                    deposit_id=None, update=False):
         """Atom entry deposit.
 
         Args:
-            req (Request): the request holding the information to parse
+            req (Request): the request holding information to parse
                 and inject in db
+            headers (dict): request headers formatted
             client_name (str): the associated client
+            deposit_id (id): deposit identifier if provided
             update (bool): Update or add request to existing deposit
               request. Default to False, this adds request to existing ones
 
@@ -433,15 +446,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
         external_id = req.data.get(
             '{http://www.w3.org/2005/Atom}external_identifier',
             headers['slug'])
-        if not external_id:
-            return make_error(
-                BAD_REQUEST,
-                'You need to provide an unique external identifier',
-                'The external identifier could be for example the identifier '
-                'you use in your system.')
 
-        deposit = self._deposit_put(external_id, headers['in-progress'])
-        deposit_request = self._deposit_request_put(deposit, metadata=req.data)
+        deposit = self._deposit_put(deposit_id=deposit_id,
+                                    in_progress=headers['in-progress'],
+                                    external_id=external_id)
+        deposit_request = self._deposit_request_put(
+            update, deposit, metadata=req.data)
 
         return {
             'deposit_id': deposit.id,

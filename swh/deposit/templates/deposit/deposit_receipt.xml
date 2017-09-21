@@ -13,5 +13,4 @@
     <link rel="http://purl.org/net/sword/terms/add" href="{{ edit_se_iri }}" />
 
     {% for packaging in packagings %}<sword:packaging>{{ packaging }}</sword:packaging>{% endfor %}
-
 </entry>
