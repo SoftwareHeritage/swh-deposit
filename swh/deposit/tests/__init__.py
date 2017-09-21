@@ -39,12 +39,15 @@ def parse_config_file(base_filename=None, config_filename=None,
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swh.web.settings.development")
 
 from swh.deposit.auth import HttpBasicAuthMiddleware  # noqa
+from swh.deposit.api.common import SWHDefaultConfig  # noqa
 from swh.deposit.api.deposit import SWHDeposit  # noqa
+from swh.deposit.api.deposit_status import SWHDepositStatus  # noqa
 from swh.deposit.api.service_document import SWHServiceDocument  # noqa
 
 # monkey patch :\
 SWHServiceDocument.parse_config_file = parse_config_file
 SWHDeposit.parse_config_file = parse_config_file
+SWHDepositStatus.parse_config_file = parse_config_file
 HttpBasicAuthMiddleware.parse_config_file = parse_config_file
 
 django.setup()

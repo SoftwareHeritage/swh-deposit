@@ -15,75 +15,13 @@ from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
 from ..models import Deposit, DepositRequest, DepositType
-from ..models import DEPOSIT_STATUS_DETAIL
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser, parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED, NOT_FOUND
-from ..errors import METHOD_NOT_ALLOWED, make_error, make_error_response
+from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED, make_error
+from ..errors import METHOD_NOT_ALLOWED, make_error_response
 
 from .common import SWHDefaultConfig, SWHAPIView, ACCEPT_PACKAGINGS
-
-
-class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
-    """Deposit status.
-
-    What's known as 'State IRI' in the sword specification.
-
-    HTTP verbs supported: GET
-
-    """
-    def get(self, req, client_name, deposit_id, format=None):
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-            # FIXME: Find why Deposit.objects.get(pk=deposit_id,
-            # client=User(username=client_name)) does not work
-            if deposit.client.username != client_name:
-                raise Deposit.DoesNotExist
-        except Deposit.DoesNotExist:
-            err = make_error(
-                NOT_FOUND,
-                'deposit %s for client %s does not exist' % (
-                    deposit_id, client_name))
-            return make_error_response(req, err['error'])
-
-        context = {
-            'deposit_id': deposit.id,
-            'status': deposit.status,
-            'status_detail': DEPOSIT_STATUS_DETAIL[deposit.status],
-        }
-
-        return render(req, 'deposit/status.xml',
-                      context=context,
-                      content_type='application/xml',
-                      status=status.HTTP_200_OK)
-
-
-class SWHUpdateArchiveDeposit(SWHDefaultConfig, SWHAPIView):
-    """Deposit request class defining api endpoints for sword deposit.
-
-    What's known as 'EM IRI' in the sword specification.
-
-    HTTP verbs supported: PUT
-
-    """
-    def put(self, req, client_name, deposit_name, format=None):
-        pass
-
-
-class SWHUpdateMetadataDeposit(SWHDefaultConfig, SWHAPIView):
-    """Deposit request class defining api endpoints for sword deposit.
-
-    What's known as 'Edit IRI' (and SE IRI) in the sword specification.
-
-    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI)
-
-    """
-    def post(self, req, client_name, deposit_name, format=None):
-        pass
-
-    def put(self, req, client_name, deposit_name, format=None):
-        pass
 
 
 class SWHDeposit(SWHDefaultConfig, SWHAPIView):
