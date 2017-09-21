@@ -1,3 +1,12 @@
+swh-deposit (0.0.10-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.10
+  * swh.deposit.config: Centralize default config in .config module
+  * swh.deposit.api: Split api module definition
+  * swh.deposit.auth: Improve white-listing mechanism
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 21 Sep 2017 10:41:04 +0200
+
 swh-deposit (0.0.9-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.9
