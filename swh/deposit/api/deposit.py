@@ -20,7 +20,7 @@ from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser, parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, MEDIATION_NOT_ALLOWED, make_error
-from ..errors import METHOD_NOT_ALLOWED, make_error_response
+from ..errors import make_error_response
 
 from .common import SWHAPIView, ACCEPT_PACKAGINGS
 
@@ -541,39 +541,3 @@ class SWHDeposit(SWHDefaultConfig, SWHAPIView):
             reverse('status', args=[client_name, data['deposit_id']]))
 
         return response
-
-    def put(self, req, client_name, format=None):
-        """Update an archive (not allowed).
-
-        Args:
-            req (Request): the request holding the information to parse
-                and inject in db
-            client_name (str): the associated client
-
-        Returns:
-            HttpResponse 405 (not allowed)
-
-        """
-        error = make_error(
-            METHOD_NOT_ALLOWED,
-            'Archive are immutable, please post a new deposit instead',
-            'A new deposit will create a new version with the latest '
-            'metadata.')
-        return make_error_response(req, error['error'])
-
-    def delete(self, req, client_name, format=None):
-        """Delete an archive (not allowed).
-
-        Args:
-            req (Request): the request holding the information to parse
-                and inject in db
-            client_name (str): the associated client
-
-        Returns:
-            HttpResponse 405 (not allowed)
-
-        """
-        error = make_error(
-            METHOD_NOT_ALLOWED,
-            'Archive are immutable, delete is not supported')
-        return make_error_response(req, error['error'])
