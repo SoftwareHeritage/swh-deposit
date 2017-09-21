@@ -5,10 +5,9 @@
 
 import base64
 
-from swh.core.config import SWHConfig
-
 from django.contrib.auth import authenticate, login
 
+from .config import SWHDefaultConfig
 from .errors import UNAUTHORIZED, make_error, make_error_response
 
 
@@ -49,29 +48,36 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
     return response
 
 
-class HttpBasicAuthMiddleware(SWHConfig):
+class HttpBasicAuthMiddleware(SWHDefaultConfig):
     """Middleware to install or not the basic authentication layer
        according to swh's yaml configuration.
 
-       Note: / is white-listed from authentication
-    """
-    CONFIG_BASE_FILENAME = 'deposit/server'
+       Note: white-list authentication is supported (cf. DEFAULT_CONFIG)
 
-    DEFAULT_CONFIG = {
-        'authentication': ('bool', True),
+    """
+    ADDITIONAL_CONFIG = {
+        'authentication': ('dict', {
+            'activated': 'true',
+            'white-list': {
+                'GET': ['/'],
+            }
+        })
     }
 
     def __init__(self, get_response):
         super().__init__()
         self.get_response = get_response
-        self.config = self.parse_config_file()
+        self.auth = self.config['authentication']
+        self.auth_activated = self.auth['activated']
+        if self.auth_activated:
+            self.whitelist = self.auth.get('white-list', {})
 
     def __call__(self, request):
-        # white-list /
-        if request.method == 'GET' and request.path == '/':
-            return self.get_response(request)
+        if self.auth_activated:
+            whitelist = self.whitelist.get(request.method)
+            if whitelist and request.path in whitelist:
+                return self.get_response(request)
 
-        if self.config['authentication']:
             r = view_or_basicauth(view=self.get_response,
                                   request=request,
                                   test_func=lambda u: u.is_authenticated())

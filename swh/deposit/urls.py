@@ -23,8 +23,10 @@ from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .api.common import index
-from .api.deposit import SWHDeposit, SWHDepositStatus
-from .api.deposit import SWHUpdateMetadataDeposit, SWHUpdateArchiveDeposit
+from .api.deposit import SWHDeposit
+from .api.deposit_status import SWHDepositStatus
+from .api.deposit_update import SWHUpdateMetadataDeposit
+from .api.deposit_update import SWHUpdateArchiveDeposit
 from .api.service_document import SWHServiceDocument
 
 

@@ -210,19 +210,6 @@ and other stuff</description>
         self.assertEqual(response._headers['location'],
                          ('Location', status_url))
 
-        # check status
-        status_response = self.client.get(status_url)
-
-        self.assertEqual(status_response.status_code, status.HTTP_200_OK)
-        r = parse_xml(BytesIO(status_response.content))
-
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
-                         deposit.id)
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}status'],
-                         'ready')
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
-                         'deposit is fully received and ready for injection')
-
     def test_post_deposit_binary_upload_2_steps(self):
         """Binary upload should be accepted
 
