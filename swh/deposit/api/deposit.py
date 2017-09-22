@@ -3,17 +3,12 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.contrib.auth.models import User
-from django.shortcuts import render
-from rest_framework import status
-
-from ..models import DepositType
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
-from ..errors import BAD_REQUEST, MEDIATION_NOT_ALLOWED, make_error
-from ..errors import make_error_response
 
-from .common import SWHBaseDeposit, ACCEPT_PACKAGINGS
+from .common import SWHBaseDeposit
+from ..errors import make_error, make_error_response
+from ..errors import METHOD_NOT_ALLOWED
 
 
 class SWHDeposit(SWHBaseDeposit):
@@ -28,7 +23,8 @@ class SWHDeposit(SWHBaseDeposit):
                       SWHFileUploadParser,
                       SWHAtomEntryParser)
 
-    def post(self, req, client_name, format=None):
+    def process_post(self, req, headers, client_name, deposit_id=None,
+                     format=None):
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
@@ -74,45 +70,22 @@ class SWHDeposit(SWHBaseDeposit):
                   provided
 
         """
-        try:
-            self._type = DepositType.objects.get(name=client_name)
-            self._user = User.objects.get(username=client_name)
-        except (DepositType.DoesNotExist, User.DoesNotExist):
-            error = make_error(BAD_REQUEST,
-                               'Unknown client name %s' % client_name)
-            return make_error_response(req, error['error'])
-
-        headers = self._read_headers(req)
-
-        if headers['on-behalf-of']:
-            error = make_error(MEDIATION_NOT_ALLOWED,
-                               'Mediation is not supported.')
-            return make_error_response(req, error['error'])
-
+        assert deposit_id is None
         if req.content_type == 'application/zip':
-            data = self._binary_upload(
-                req, headers, client_name)
-        elif req.content_type.startswith('multipart/'):
-            data = self._multipart_upload(
-                req, headers, client_name)
-        else:
-            data = self._atom_entry(
-                req, headers, client_name)
+            return self._binary_upload(req, headers, client_name)
+        if req.content_type.startswith('multipart/'):
+            return self._multipart_upload(req, headers, client_name)
+        return self._atom_entry(req, headers, client_name)
 
-        error = data.get('error')
-        if error:
-            return make_error_response(req, error)
+    def update_post_response(self, response, data):
+        """Update response with header location.
 
-        iris = self._make_iris(client_name, data['deposit_id'])
-
-        data['packagings'] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(client_name, data['deposit_id'])
-        data.update(iris)
-
-        response = render(req, 'deposit/deposit_receipt.xml',
-                          context=data,
-                          content_type='application/xml',
-                          status=status.HTTP_201_CREATED)
+        """
         response._headers['location'] = 'Location', data['edit_se_iri']
-
         return response
+
+    def put(self, req, client_name, deposit_id=None, format=None):
+        """This endpoint only supports POST.
+
+        """
+        return make_error_response(make_error(METHOD_NOT_ALLOWED)['error'])

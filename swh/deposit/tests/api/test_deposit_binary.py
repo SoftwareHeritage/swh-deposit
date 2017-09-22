@@ -5,6 +5,7 @@
 
 import hashlib
 
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
 from rest_framework import status
@@ -540,3 +541,156 @@ and other stuff</description>
         # only 1 deposit in db
         deposits = Deposit.objects.all()
         self.assertEqual(len(deposits), 1)
+
+    def test_post_deposit_then_post_or_put_is_refused_when_status_ready(self):
+        """When a deposit is complete, updating/adding new data to it is forbidden.
+
+        """
+        url = reverse('upload', args=[self.username])
+
+        external_id = 'some-external-id-1'
+
+        # 1st archive to upload
+        data_text0 = b'some other content'
+        md5sum0 = hashlib.md5(data_text0).hexdigest()
+        id0 = hashlib.sha1(data_text0).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text0,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata, {
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
+        })
+
+        # updating/adding is forbidden
+
+        # uri to update the content
+        edit_se_iri = reverse(
+            'edit_se_iri', args=[self.username, deposit_id])
+        em_iri = reverse(
+            'em_iri', args=[self.username, deposit_id])
+
+        # Testing all update/add endpoint should fail
+        # since the status is ready
+
+        # replacing file is no longer possible since the deposit's
+        # status is ready
+        r = self.client.put(
+            em_iri,
+            content_type='application/zip',
+            data=data_text0,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # adding file is no longer possible since the deposit's status
+        # is ready
+        r = self.client.post(
+            em_iri,
+            content_type='application/zip',
+            data=data_text0,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # replacing metadata is no longer possible since the deposit's
+        # status is ready
+        r = self.client.put(
+            edit_se_iri,
+            content_type='application/atom+xml;type=entry',
+            data=self.data_atom_entry_ok,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_LENGTH=len(self.data_atom_entry_ok))
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # adding new metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.post(
+            edit_se_iri,
+            content_type='application/atom+xml;type=entry',
+            data=self.data_atom_entry_ok,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_LENGTH=len(self.data_atom_entry_ok))
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(
+            BytesIO(archive_content),
+            field_name='archive0',
+            name='archive0',
+            content_type='application/zip',
+            size=len(archive_content),
+            charset=None)
+
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(self.data_atom_entry_ok),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(self.data_atom_entry_ok),
+            charset='utf-8')
+
+        # replacing multipart metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.put(
+            edit_se_iri,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            })
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # adding new metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.post(
+            edit_se_iri,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            })
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)

@@ -5,8 +5,13 @@
 
 import hashlib
 
+from abc import ABCMeta, abstractmethod
+
+
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
@@ -15,10 +20,11 @@ from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
 from ..config import SWHDefaultConfig
-from ..models import Deposit, DepositRequest
+from ..models import Deposit, DepositRequest, DepositType
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, make_error
+from ..errors import CHECKSUM_MISMATCH, make_error, MEDIATION_NOT_ALLOWED
+from ..errors import make_error_response
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -37,7 +43,7 @@ class SWHAPIView(APIView):
     pass
 
 
-class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
+class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
@@ -474,3 +480,100 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView):
                 'cont_file_iri',
                 args=[client_name, deposit_id]),
         }
+
+    def post(self, req, client_name, deposit_id=None, format=None):
+        try:
+            self._type = DepositType.objects.get(name=client_name)
+            self._user = User.objects.get(username=client_name)
+        except (DepositType.DoesNotExist, User.DoesNotExist):
+            error = make_error(BAD_REQUEST,
+                               'Unknown client name %s' % client_name)
+            return make_error_response(req, error['error'])
+
+        if deposit_id:
+            deposit = Deposit.objects.get(pk=deposit_id)
+            if deposit.status != 'partial':
+                error = make_error(
+                    BAD_REQUEST,
+                    'You cannot update a deposit in status ready.')
+                return make_error_response(req, error['error'])
+
+        headers = self._read_headers(req)
+
+        if headers['on-behalf-of']:
+            error = make_error(MEDIATION_NOT_ALLOWED,
+                               'Mediation is not supported.')
+            return make_error_response(req, error['error'])
+
+        data = self.process_post(req, headers, client_name, deposit_id)
+
+        error = data.get('error')
+        if error:
+            return make_error_response(req, error)
+
+        iris = self._make_iris(client_name, data['deposit_id'])
+
+        data['packagings'] = ACCEPT_PACKAGINGS
+        iris = self._make_iris(client_name, data['deposit_id'])
+        data.update(iris)
+
+        response = render(req, 'deposit/deposit_receipt.xml',
+                          context=data,
+                          content_type='application/xml',
+                          status=status.HTTP_201_CREATED)
+        response = self.update_post_response(response, data)
+        return response
+
+    @abstractmethod
+    def update_post_response(self, response, data):
+        """Routine to permit the post response override (e.g add some headers
+           in the response.)
+
+        """
+        pass
+
+    @abstractmethod
+    def process_post(self, req, client_name, deposit_id=None, format=None):
+        """Routine to permit the post processing to occur.
+
+        """
+        pass
+
+    def put(self, req, client_name, deposit_id=None, format=None):
+        try:
+            self._type = DepositType.objects.get(name=client_name)
+            self._user = User.objects.get(username=client_name)
+        except (DepositType.DoesNotExist, User.DoesNotExist):
+            error = make_error(BAD_REQUEST,
+                               'Unknown client name %s' % client_name)
+            return make_error_response(req, error['error'])
+
+        if deposit_id:
+            deposit = Deposit.objects.get(pk=deposit_id)
+            if deposit.status != 'partial':
+                error = make_error(
+                    BAD_REQUEST,
+                    'You cannot update a deposit in status ready.')
+                return make_error_response(req, error['error'])
+
+        headers = self._read_headers(req)
+
+        if headers['on-behalf-of']:
+            error = make_error(MEDIATION_NOT_ALLOWED,
+                               'Mediation is not supported.')
+            return make_error_response(req, error['error'])
+
+        data = self.process_put(req, headers, client_name, deposit_id)
+
+        error = data.get('error')
+        if error:
+            return make_error_response(req, error)
+
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+    def process_put(self, req, client_name, deposit_id=None, update=False,
+                    format=None):
+        """Routine to permit the put processing to occur.
+
+        """
+        pass
