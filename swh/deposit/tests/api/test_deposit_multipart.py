@@ -54,8 +54,18 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
 </entry>"""
 
+        self.data_atom_entry_update_in_place = """<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b</id>
+    <dcterms:title>Title</dcterms:title>
+    <dcterms:type>Type</dcterms:type>
+</entry>"""
+
     def test_post_deposit_multipart(self):
-        """Test one deposit upload."""
+        """one multipart deposit should be accepted
+
+        """
         # given
         url = reverse('upload', args=[self.username])
 
@@ -114,6 +124,100 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
             'id': id1,
             'name': 'archive0',
         })
+
+    def test_post_deposit_multipart_put_to_replace_metadata(self):
+        """One multipart deposit followed by a metadata update should be
+           accepted
+
+        """
+        # given
+        url = reverse('upload', args=[self.username])
+
+        # from django.core.files import uploadedfile
+        data_atom_entry = self.data_atom_entry_ok
+
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(
+            BytesIO(archive_content),
+            field_name='archive0',
+            name='archive0',
+            content_type='application/zip',
+            size=len(archive_content),
+            charset=None)
+
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(data_atom_entry),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(data_atom_entry),
+            charset='utf-8')
+
+        external_id = 'external-id'
+        id1 = hashlib.sha1(archive_content).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='true',
+            HTTP_SLUG=external_id)
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'partial')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata['archive'], {
+            'id': id1,
+            'name': 'archive0',
+        })
+        self.assertEquals(
+            deposit_request.metadata['{http://www.w3.org/2005/Atom}id'],
+            'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+
+        update_metadata_uri = response._headers['location'][1]
+        response = self.client.put(
+            update_metadata_uri,
+            content_type='application/atom+xml;type=entry',
+            data=self.data_atom_entry_update_in_place,
+            HTTP_IN_PROGRESS='false')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # deposit_id did not change
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertEquals(deposit_request.deposit, deposit)
+        # reference to prior archive is gone
+        self.assertIsNone(deposit_request.metadata.get('archive'))
+        self.assertEquals(
+            deposit_request.metadata['{http://www.w3.org/2005/Atom}id'],
+            'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
+
+    # FAILURE scenarios
 
     def test_post_deposit_multipart_only_archive_and_atom_entry(self):
         """Multipart deposit only accepts one archive and one atom+xml"""
