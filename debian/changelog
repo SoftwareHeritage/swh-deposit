@@ -1,3 +1,11 @@
+swh-deposit (0.0.12-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.12
+  * swh.deposit.api: Separate the replace metadata from the replace
+  * archive routine
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 22 Sep 2017 18:59:48 +0200
+
 swh-deposit (0.0.11-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.11
