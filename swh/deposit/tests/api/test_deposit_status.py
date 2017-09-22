@@ -53,9 +53,6 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         status_url = reverse('status',
                              args=[self.username, deposit.id])
 
-        self.assertEqual(response._headers['location'],
-                         ('Location', status_url))
-
         # check status
         status_response = self.client.get(status_url)
 

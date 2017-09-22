@@ -27,6 +27,7 @@ from .api.deposit import SWHDeposit
 from .api.deposit_status import SWHDepositStatus
 from .api.deposit_update import SWHUpdateMetadataDeposit
 from .api.deposit_update import SWHUpdateArchiveDeposit
+from .api.deposit_content import SWHDepositContent
 from .api.service_document import SWHServiceDocument
 
 
@@ -42,22 +43,30 @@ urlpatterns = [
     url(r'^1/(?P<client_name>[^/]+)/$', SWHDeposit.as_view(),
         name='upload'),
     # EM IRI - Atom Edit Media IRI (update archive IRI)
-    # -> PUT
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/$',
+    # -> PUT (update-in-place existing archive)
+    # -> POST (add new archive)
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$',
         SWHUpdateArchiveDeposit.as_view(),
         name='em_iri'),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
-    # -> PUT
-    # SE IRI - Sword Edit IRI (update metadata IRI) ;; same as Edit IRI
-    # -> POST
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/$',
+    # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
+    # -> PUT (update in place)
+    # -> POST (add new metadata)
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$',
         SWHUpdateMetadataDeposit.as_view(),
         name='edit_se_iri'),
     # State IRI
     # -> GET
     url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
         SWHDepositStatus.as_view(),
-        name='status')
+        name='status'),
+    # Cont/File IRI
+    # -> GET
+    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$',
+        SWHDepositContent.as_view(),
+        name='cont_file_iri'),  # specification is not clear about
+                                # FILE-IRI, we assume it's the same as
+                                # the CONT-IRI one
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
