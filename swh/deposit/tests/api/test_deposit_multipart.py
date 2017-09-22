@@ -118,12 +118,20 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata['archive'], {
-            'id': id1,
-            'name': 'archive0',
-        })
+        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+        self.assertEquals(len(deposit_requests), 2)
+        for deposit_request in deposit_requests:
+            self.assertEquals(deposit_request.deposit, deposit)
+            if deposit_request.type.name == 'archive':
+                self.assertEquals(deposit_request.metadata['archive'], {
+                    'id': id1,
+                    'name': 'archive0',
+                })
+            else:
+                self.assertEquals(
+                    deposit_request.metadata[
+                        '{http://www.w3.org/2005/Atom}id'],
+                    'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
 
     def test_post_deposit_multipart_put_to_replace_metadata(self):
         """One multipart deposit followed by a metadata update should be
@@ -133,7 +141,6 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         # given
         url = reverse('upload', args=[self.username])
 
-        # from django.core.files import uploadedfile
         data_atom_entry = self.data_atom_entry_ok
 
         archive_content = b'some content representing archive'
@@ -182,19 +189,25 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata['archive'], {
-            'id': id1,
-            'name': 'archive0',
-        })
-        self.assertEquals(
-            deposit_request.metadata['{http://www.w3.org/2005/Atom}id'],
-            'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
-        update_metadata_uri = response._headers['location'][1]
+        self.assertEquals(len(deposit_requests), 2)
+        for deposit_request in deposit_requests:
+            self.assertEquals(deposit_request.deposit, deposit)
+            if deposit_request.type.name == 'archive':
+                self.assertEquals(deposit_request.metadata['archive'], {
+                    'id': id1,
+                    'name': 'archive0',
+                })
+            else:
+                self.assertEquals(
+                    deposit_request.metadata[
+                        '{http://www.w3.org/2005/Atom}id'],
+                    'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+
+        replace_metadata_uri = response._headers['location'][1]
         response = self.client.put(
-            update_metadata_uri,
+            replace_metadata_uri,
             content_type='application/atom+xml;type=entry',
             data=self.data_atom_entry_update_in_place,
             HTTP_IN_PROGRESS='false')
@@ -209,13 +222,22 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
-        # reference to prior archive is gone
-        self.assertIsNone(deposit_request.metadata.get('archive'))
-        self.assertEquals(
-            deposit_request.metadata['{http://www.w3.org/2005/Atom}id'],
-            'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
+        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+        self.assertEquals(len(deposit_requests), 2)
+        for deposit_request in deposit_requests:
+            self.assertEquals(deposit_request.deposit, deposit)
+            if deposit_request.type.name == 'archive':
+                self.assertEquals(deposit_request.metadata, {
+                    'archive': {
+                        'id': id1,
+                        'name': 'archive0',
+                    },
+                })
+            else:
+                self.assertEquals(
+                    deposit_request.metadata[
+                        '{http://www.w3.org/2005/Atom}id'],
+                    'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
 
     # FAILURE scenarios
 

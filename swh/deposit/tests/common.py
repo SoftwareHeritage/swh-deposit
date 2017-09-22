@@ -6,7 +6,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from swh.deposit.models import DepositType
+from swh.deposit.models import DepositType, DepositRequestType
 
 
 class BasicTestCase(TestCase):
@@ -16,6 +16,9 @@ class BasicTestCase(TestCase):
     def setUp(self):
         super().setUp()
         """Define the test client and other test variables."""
+        for deposit_request_type in ['archive', 'metadata']:
+            drt = DepositRequestType(name=deposit_request_type)
+            drt.save()
         _name = 'hal'
         _type = DepositType(name=_name)
         _type.save()

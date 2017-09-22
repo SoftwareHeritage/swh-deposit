@@ -48,6 +48,7 @@ swh/deposit/migrations/0002_auto_20170809_1256.py
 swh/deposit/migrations/0003_delete_dbversion.py
 swh/deposit/migrations/0004_dbversion.py
 swh/deposit/migrations/0005_auto_20170818_1331.py
+swh/deposit/migrations/0006_auto_20170922_1507.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py

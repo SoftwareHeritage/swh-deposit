@@ -20,7 +20,7 @@ from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
 from ..config import SWHDefaultConfig
-from ..models import Deposit, DepositRequest, DepositType
+from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error, MEDIATION_NOT_ALLOWED
@@ -59,6 +59,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
     def __init__(self):
         super().__init__()
         self.objstorage = get_objstorage(**self.config['objstorage'])
+        deposit_request_types = DepositRequestType.objects.all()
+        self.deposit_request_types = {
+            type.name: type for type in deposit_request_types
+        }
 
     def _read_headers(self, req):
         """Read and unify the necessary headers from the request (those are
@@ -170,26 +174,39 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return deposit
 
-    def _deposit_request_put(self, update, deposit, metadata):
+    def _deposit_request_put(self, deposit, deposit_request_data,
+                             replace_metadata=False, replace_archives=False):
         """Save a deposit request with metadata attached to a deposit.
 
         Args:
-            update (bool): Flag defining if we add or update existing metadata.
             deposit (Deposit): The deposit concerned by the request
-            metadata (dict): The metadata to associate to the deposit
+            deposit_request_data (dict): The dictionary with at most 2 deposit
+            request types (archive, metadata) to associate to the deposit
+            replace_metadata (bool): Flag defining if we add or update
+              existing metadata to the deposit
+            replace_archives (bool): Flag defining if we add or update
+              archives to existing deposit
 
         Returns:
             The DepositRequest instance saved.
 
         """
-        if update:
-            DepositRequest.objects.filter(deposit=deposit).delete()
+        if replace_metadata:
+            DepositRequest.objects.filter(
+                deposit=deposit,
+                type=self.deposit_request_types['metadata']).delete()
+        if replace_archives:
+            DepositRequest.objects.filter(
+                deposit=deposit,
+                type=self.deposit_request_types['archives']).delete()
 
-        deposit_request = DepositRequest(
-            deposit=deposit,
-            metadata=metadata)
+        for type, metadata in deposit_request_data.items():
+            deposit_request = DepositRequest(
+                type=self.deposit_request_types[type],
+                deposit=deposit,
+                metadata=metadata)
+            deposit_request.save()
 
-        deposit_request.save()
         return deposit_request
 
     def _archive_put(self, file):
@@ -264,8 +281,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             headers (dict): request headers formatted
             client_name (str): the associated client
             deposit_id (id): deposit identifier if provided
-            update (bool): Update or add request to existing deposit
-              request. Default to False, this adds request to existing ones
+            replace_metadata (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new metadata request to
+              existing ones
+            replace_archives (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new archives to existing
+              ones.
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -314,11 +335,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         external_id = headers['slug']
 
         # actual storage of data
-        metadata = self._archive_put(filehandler)
+        archive_metadata = self._archive_put(filehandler)
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
-        deposit_request = self._deposit_request_put(update, deposit, metadata)
+        deposit_request = self._deposit_request_put(
+            deposit, {'archive': archive_metadata})
 
         return {
             'deposit_id': deposit.id,
@@ -327,7 +349,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         }
 
     def _multipart_upload(self, req, headers, client_name,
-                          deposit_id=None, update=False):
+                          deposit_id=None, replace_metadata=False,
+                          replace_archives=False):
         """Multipart upload supported with exactly:
         - 1 archive (zip)
         - 1 atom entry
@@ -340,8 +363,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             headers (dict): request headers formatted
             client_name (str): the associated client
             deposit_id (id): deposit identifier if provided
-            update (bool): Update or add request to existing deposit
-              request. Default to False, this adds request to existing ones
+            replace_metadata (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new metadata request to
+              existing ones
+            replace_archives (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new archives to existing
+              ones.
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -400,22 +427,28 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return precondition_status_response
 
         # actual storage of data
-        metadata = self._archive_put(filehandler)
+        archive_metadata = self._archive_put(filehandler)
         atom_metadata = parse_xml(data['application/atom+xml'])
-        metadata.update(atom_metadata)
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
-        deposit_request = self._deposit_request_put(update, deposit, metadata)
+        deposit_request_data = {
+            'archive': archive_metadata,
+            'metadata': atom_metadata,
+        }
+        deposit_request = self._deposit_request_put(
+            deposit, deposit_request_data, replace_metadata, replace_archives)
 
         return {
             'deposit_id': deposit.id,
             'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata['archive']['name'],
+            'archive': archive_metadata['archive']['name'],
         }
 
     def _atom_entry(self, req, headers, client_name,
-                    deposit_id=None, update=False):
+                    deposit_id=None,
+                    replace_metadata=False,
+                    replace_archives=False):
         """Atom entry deposit.
 
         Args:
@@ -424,8 +457,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             headers (dict): request headers formatted
             client_name (str): the associated client
             deposit_id (id): deposit identifier if provided
-            update (bool): Update or add request to existing deposit
-              request. Default to False, this adds request to existing ones
+            replace_metadata (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new metadata request to
+              existing ones
+            replace_archives (bool): 'Update or add' request to existing
+              deposit. Default to False, this adds new archives to existing
+              ones.
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -457,7 +494,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
         deposit_request = self._deposit_request_put(
-            update, deposit, metadata=req.data)
+            deposit, {'metadata': req.data},
+            replace_metadata, replace_archives)
 
         return {
             'deposit_id': deposit.id,
