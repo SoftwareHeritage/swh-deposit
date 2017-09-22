@@ -1,3 +1,15 @@
+swh-deposit (0.0.11-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.11
+  * swh.deposit.static: Add static folder
+  * swh.deposit.api: Accept modifications to deposit only in partial
+    status
+  * swh.deposit.api: Update/Add new deposit metadata/archive
+  * swh.deposit.api.tests: Tests new use cases
+  * README: Update and simplify documentation
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 22 Sep 2017 16:24:25 +0200
+
 swh-deposit (0.0.10-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.10
