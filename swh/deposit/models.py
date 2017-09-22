@@ -98,17 +98,32 @@ class Deposit(models.Model):
         })
 
 
-class DepositRequest(models.Model):
-    """Deposit request made by clients
+class DepositRequestType(models.Model):
+    """Deposit request type made by clients (either archive or metadata)
 
     """
+    id = models.BigAutoField(primary_key=True)
+    name = models.TextField()
 
+    class Meta:
+        db_table = 'deposit_request_type'
+
+    def __str__(self):
+        return str({'id': self.id, 'name': self.name})
+
+
+class DepositRequest(models.Model):
+    """Deposit request associated to one deposit.
+
+    """
     id = models.BigAutoField(primary_key=True)
     # Deposit concerned by the request
     deposit = models.ForeignKey(Deposit, models.DO_NOTHING)
     date = models.DateTimeField(auto_now_add=True)
     # Deposit request information on the data to inject
     metadata = JSONField(null=True)
+    type = models.ForeignKey(
+        'DepositRequestType', models.DO_NOTHING, db_column='type')
 
     class Meta:
         db_table = 'deposit_request'

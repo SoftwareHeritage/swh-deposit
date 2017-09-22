@@ -39,7 +39,8 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             return make_error_response(req, error['error'])
 
         return self._binary_upload(req, headers, client_name,
-                                   deposit_id=deposit_id, update=True)
+                                   deposit_id=deposit_id,
+                                   replace_archives=True)
 
     def process_post(self, req, headers, client_name, deposit_id, format=None):
         """Add new content to the existing deposit.
@@ -93,9 +94,11 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         """
         if req.content_type.startswith('multipart/'):
             return self._multipart_upload(req, headers, client_name,
-                                          deposit_id=deposit_id, update=True)
+                                          deposit_id=deposit_id,
+                                          replace_archives=True,
+                                          replace_metadata=True)
         return self._atom_entry(req, headers, client_name,
-                                deposit_id=deposit_id, update=True)
+                                deposit_id=deposit_id, replace_metadata=True)
 
     def process_post(self, req, headers, client_name, deposit_id, format=None):
         """Add new metadata/archive to existing deposit.
