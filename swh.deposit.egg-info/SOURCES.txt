@@ -4,8 +4,8 @@ LICENSE
 MANIFEST.in
 Makefile
 Makefile.local
-README
 README-dev.md
+README.md
 requirements-swh.txt
 requirements.txt
 setup.py
@@ -37,6 +37,7 @@ swh/deposit/urls.py
 swh/deposit/wsgi.py
 swh/deposit/api/common.py
 swh/deposit/api/deposit.py
+swh/deposit/api/deposit_content.py
 swh/deposit/api/deposit_status.py
 swh/deposit/api/deposit_update.py
 swh/deposit/api/service_document.py
@@ -52,8 +53,10 @@ swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
 swh/deposit/settings/development.py
 swh/deposit/settings/production.py
+swh/deposit/static/robots.txt
 swh/deposit/templates/__init__.py
 swh/deposit/templates/deposit/__init__.py
+swh/deposit/templates/deposit/content.xml
 swh/deposit/templates/deposit/deposit_receipt.xml
 swh/deposit/templates/deposit/error.xml
 swh/deposit/templates/deposit/service_document.xml
@@ -63,6 +66,8 @@ swh/deposit/tests/common.py
 swh/deposit/tests/objstorage.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
-swh/deposit/tests/api/test_deposit.py
+swh/deposit/tests/api/test_deposit_atom.py
+swh/deposit/tests/api/test_deposit_binary.py
+swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_service_document.py

@@ -73,7 +73,7 @@ class Deposit(models.Model):
     type = models.ForeignKey(
         'DepositType', models.DO_NOTHING, db_column='type')
     # Deposit's unique external identifier
-    external_id = models.TextField(unique=True)
+    external_id = models.TextField(unique=True)  # unique? is this still true?
     # Deposit client
     client = models.ForeignKey(
         'auth.User', models.DO_NOTHING)

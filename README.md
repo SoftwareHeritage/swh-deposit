@@ -14,21 +14,120 @@ server (SWH's).
 
 == Use cases ==
 
+=== First deposit ===
+
+Endpoint: /1/<user-or-collection>/
+
+From client's deposit repository server to SWH's repository server
+(aka deposit).
+
+1. The client requests for the server's abilities.
+(GET query to the *service document uri*)
+
+2. The server answers the client with the service document
+
+3. The client sends the deposit (an archive -> .zip) through the
+deposit *creation uri*
+
+This can be done in:
+- one POST request to the creation uri (metadata + archive).
+- one POST request to the creation uri + other PUT request to the *update uri*
+
+4. The server notifies the client it acknowledged the client's
+request. An 'http 201 Created' response with a deposit receipt is sent
+back.  That deposit receipt will hold the necessary information to
+eventually complete the deposit if it was partial.
+
+=== Updating an existing archive ===
+
+5. Client updates existing archive through the deposit *update uri*
+(one or more PUT requests).
+
+This would be the case for example if:
+- the client initially posted only metadata (with no archive)
+- the client initially posted only one archive (without metadata)
+
+And that client would like to complete its deposit with another
+archive (or other metadata)
+
+=== Deleting an existing archive ===
+
+6. Document deletion will not be implemented, cf. limitation paragraph
+for detail
+
+
+== Limitations ==
+
+Applying the SWORD protocol procedure will result with voluntary implementation
+shortcomings during the first iteration:
+
+- upload limitation of 20Mib
+- only tarballs (.zip) will be accepted
+- no removal (implementation-wise, this will possibly be a means
+  to hide the origin).
+- basic http authentication enforced at the application layer
+  on a per client basis (authentication:
+  http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#authenticationmediateddeposit)
+- no mediation (we do not know the other system's users)
+
+== Collection ==
+
+SWORD defines a 'collection' concept.  The collection refers to a
+group of documents to which the document uploaded (a.k.a deposit) is
+part of.
+
+For example, we will start the collaboration with HAL, thus we define a HAL collection to which hal clients will deposit new document.
+
+=== Client asks for operation status and repository id ===
+
+A state endpoint is defined in the sword specification to provide such information.
+
+
+== API overview ==
+
+API access is over HTTPS.
+
+service document accessible at:
+https://deposit.softwareheritage.org/1/
+
 === Service document ===
 
 Endpoint: /1/servicedocument/
 
-This is the endpoint from which the initial collection a user can act
-upon is located.
+This is the starting endpoint from which the user will access its
+initial collection information.
 
 This:
 - describes the server's abilities
-- list the connected user's collection
+- list the connected user's collection information.
 
-Current abilities for example for the [hal
-people](https://hal.archives-ouvertes.fr/).
+HTTP verbs supported: GET
 
+Also known as: SD-IRI - The Service Document IRI.
+
+==== Sample request:====
+
+``` Shell
+GET https://deposit.softwareheritage.org/1/servicedocument/ HTTP/1.1
+Host: deposit.softwareheritage.org
 ```
+
+The server returns its abilities with the service document in xml format:
+- protocol sword version v2
+- accepted mime types: application/zip, application/gzip
+- upload max size accepted, beyond that, it's expected the client
+  chunk the tarball into multiple ones
+- the collection the client can act upon (swh supports only one
+  software collection per client)
+- mediation is not supported
+
+==== Sample answer:====
+
+``` XML
+The current answer for example for the [hal
+archive](https://hal.archives-ouvertes.fr/) is:
+
+``` xml
 <?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
@@ -36,7 +135,7 @@ people](https://hal.archives-ouvertes.fr/).
     xmlns="http://www.w3.org/2007/app">
 
     <sword:version>2.0</sword:version>
-    <sword:maxUploadSize>209715200</sword:maxUploadSize>
+    <sword:maxUploadSize>20971520</sword:maxUploadSize>
     <sword:verbose>False</sword:verbose>
     <sword:noOp>False</sword:noOp>
 
@@ -56,153 +155,6 @@ people](https://hal.archives-ouvertes.fr/).
 </service>
 ```
 
-HTTP verbs supported: GET
-
-Also known as: SD-IRI - The Service Document IRI.
-
-=== First deposit ===
-
-Endpoint: /1/<user>/
-
-From client's deposit repository server to SWH's repository server
-(aka deposit).
-
-1. The client requests for the server's abilities.
-(GET query to the *service document uri*)
-
-2. The server answers the client with the service document
-
-3. The client sends the deposit (an archive -> .zip, .tar.gz)
-through the deposit *creation uri*.
-(one or more POST requests since the archive and metadata can be sent
-in multiple requests)
-
-
-4. The server notifies the client it acknowledged the
-client's request. ('http 201 Created' with a deposit receipt id in
-the Location header of the response)
-
-
-=== Updating an existing archive ===
-
-5. Client updates existing archive through the deposit *update uri*
-(one or more PUT requests, in effect chunking the artifact to deposit)
-
-=== Deleting an existing archive ===
-
-6. Document deletion will not be implemented,
-cf. limitation paragraph for detail
-
-=== Client asks for operation status and repository id ===
-
-NOTE: add specifictions about operation status and injection
-
-== API overview ==
-
-API access is over HTTPS.
-
-service document accessible at:
-https://deposit.softwareheritage.org/1/servicedocument/
-
-
-IMPORTANT: Determine which one of those solutions according to sword possibilities
-(cf. 'unclear points' chapter below)
-
-== Limitations ==
-
-Applying the SWORD protocol procedure will result with voluntary implementation
-shortcomings during the first iteration:
-
-- upload limitation of 200Mib
-- only tarballs (.zip, .tar.gz) will be accepted
-- no removal (implementation-wise, this will possibly be a means
-  to hide the origin).
-- no mediation (we do not know the other system's users)
-- basic http authentication enforced at the application layer
-  on a per client basis (authentication:
-  http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#authenticationmediateddeposit)
-
-== Unclear points ==
-
-- SWORD defines a 'collection' concept. should we apply the 'collection' concept
-   even thought SWH is software archive having one 'software' collection?
-   - option A:
-      The collection refers to a group of documents to which the document sent
-      (aka deposit) is part of. In this process with HAL, HAL is the collection,
-      maybe tomorrow we will do the same with MIT and MIT could be
-      the collection (the logic of the answer above is a result of this
-      link: https://hal.inria.fr/USPC  for the USPC collection)
-
-      **result**: 1 client being equivalent as 1 collection in this case.
-        The is client pushes us software in 'their' one collection.
-        The collection name could show up in the uri endpoint.
-
-    - option B:
-      Define none? (is it possible? i don't think it is due to the service
-      document part listing the collection to act upon...)
-
-      **result**: the deposited software has no other entry point via
-      collection name
-
-
-== <a name="scenarios"> Scenarios ==
-=== 1. Client request for Service Document ===
-
-This is the endpoint permitting the client to ask the server's abilities.
-
-
-==== API endpoint ====
-
-GET api/1/servicedocument/
-
-Answer:
-> 200, Content-Type: application/atomserv+xml: OK, with the body
-  described below
-
-==== Sample request:====
-
-```lang=shell
-GET https://archive.softwareheritage.org/api/1/servicedocument HTTP/1.1
-Host: archive.softwareheritage.org
-```
-
-=== 2. Sever respond for Service Document ===
-
-The server returns its abilities with the service document in xml format:
-- protocol sword version v2
-- accepted mime types: application/zip, application/gzip
-- upload max size accepted, beyond that, it's expected the client
-  chunk the tarball into multiple ones
-- the collections the client can act upon (swh supports only one software collection)
-- mediation not supported
-
-==== Sample answer:====
-``` lang=xml
-<?xml version="1.0" ?>
-<service xmlns:dcterms="http://purl.org/dc/terms/"
-    xmlns:sword="http://purl.org/net/sword/terms/"
-    xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns="http://www.w3.org/2007/app">
-
-    <sword:version>2.0</sword:version>
-    <sword:maxUploadSize>${max_upload_size}</sword:maxUploadSize>
-
-    <workspace>
-        <atom:title>The SWH archive</atom:title>
-
-        <collection href="https://archive.softwareherigage.org/api/1/deposit/">
-            <atom:title>SWH Collection</atom:title>
-            <accept>application/gzip</accept>
-            <accept alternate="multipart-related">application/gzip</accept>
-            <dcterms:abstract>Software Heritage Archive Deposit</dcterms:abstract>
-            <sword:mediation>false</sword:mediation>
-            <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-        </collection>
-    </workspace>
-</service>
-```
-
-
 == Deposit Creation: client point of view ==
 
 Process of deposit creation:
@@ -216,12 +168,13 @@ Process of deposit creation:
 <- [4] server returns deposit receipt id
 
 
-NOTE: [3.3] Asynchronously, the server will inject the archive uploaded and the
-associated metadata. The operation status mentioned
+NOTE: [3.3] Asynchronously, the server will inject the archive
+uploaded and the associated metadata. The operation status mentioned
 earlier is a reference to that injection operation.
 
 The image bellow represent only the communication and creation of
 a deposit:
+
 {F2403754}
 
 === [3] client request  ===
@@ -250,7 +203,7 @@ WARNING: if In-Progress is not present the server MUST assume that it is false
 
 ==== API endpoint ====
 
-POST /api/1/deposit/<client-name>
+POST /1/<client-or-collection-name>/
 
 === Archive deposit ===
 
@@ -269,12 +222,42 @@ curl -i --data-binary @swh/deposit.zip \
     -H 'Slug: some-external-id' \
     -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
     -H 'Content-type: application/zip' \
-    -XPOST http://127.0.0.1:8000/deposit/hal
+    -XPOST http://127.0.0.1:8000/1/hal/
 ```
 
 === Atom entry deposit ===
 
-TBD
+Sample atom entry:
+``` XML
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <title>Title</title>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2005-10-07T17:17:08Z</updated>
+    <author><name>Contributor</name></author>
+    <summary type="text">The abstract</summary>
+
+    <!-- some embedded metadata -->
+    <dcterms:abstract>The abstract</dcterms:abstract>
+    <dcterms:accessRights>Access Rights</dcterms:accessRights>
+    <dcterms:alternative>Alternative Title</dcterms:alternative>
+    <dcterms:available>Date Available</dcterms:available>
+    <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
+    <dcterms:contributor>Contributor</dcterms:contributor>
+    <dcterms:description>Description</dcterms:description>
+    <dcterms:hasPart>Has Part</dcterms:hasPart>
+    <dcterms:hasVersion>Has Version</dcterms:hasVersion>
+    <dcterms:identifier>Identifier</dcterms:identifier>
+    <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
+    <dcterms:publisher>Publisher</dcterms:publisher>
+    <dcterms:references>References</dcterms:references>
+    <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
+    <dcterms:source>Source</dcterms:source>
+    <dcterms:title>Title</dcterms:title>
+    <dcterms:type>Type</dcterms:type>
+
+</entry>
+```
 
 Note: This kind of deposit should be partial (In-Progress: True) since
 no archive will be associated to those metadata.
@@ -300,9 +283,9 @@ Client provides:
 
 ==== sample request for multipart deposit: ====
 
-``` lang=xml
+``` XML
 POST deposit HTTP/1.1
-Host: archive.softwareheritage.org
+Host: deposit.softwareheritage.org
 Content-Length: [content length]
 Content-Type: multipart/related;
             boundary="===============1605871705==";
@@ -324,8 +307,24 @@ MIME-Version: 1.0
     <updated>2005-10-07T17:17:08Z</updated>
     <author><name>Contributor</name></author>
 
-    <!-- some embedded metadata TO BE DEFINED -->
-
+    <!-- some embedded metadata ... -->
+    <dcterms:abstract>The abstract</dcterms:abstract>
+    <dcterms:accessRights>Access Rights</dcterms:accessRights>
+    <dcterms:alternative>Alternative Title</dcterms:alternative>
+    <dcterms:available>Date Available</dcterms:available>
+    <dcterms:bibliographicCitation>Bibliographic Citation</dcterms:bibliographicCitation>  # noqa
+    <dcterms:contributor>Contributor</dcterms:contributor>
+    <dcterms:description>Description</dcterms:description>
+    <dcterms:hasPart>Has Part</dcterms:hasPart>
+    <dcterms:hasVersion>Has Version</dcterms:hasVersion>
+    <dcterms:identifier>Identifier</dcterms:identifier>
+    <dcterms:isPartOf>Is Part Of</dcterms:isPartOf>
+    <dcterms:publisher>Publisher</dcterms:publisher>
+    <dcterms:references>References</dcterms:references>
+    <dcterms:rightsHolder>Rights Holder</dcterms:rightsHolder>
+    <dcterms:source>Source</dcterms:source>
+    <dcterms:title>Title</dcterms:title>
+    <dcterms:type>Type</dcterms:type>
 </entry>
 --===============1605871705==
 Content-Type: application/zip
@@ -344,37 +343,72 @@ The server receives the request and:
 
 === [3.1] Validation of the header and body request ===
 
+Any kind of errors can happen, here is the list depending on the situation:
+
+- archive deposit:
+  - 400 (bad request) if the request is not providing an external
+    identifier
+  - 403 (forbidden) if the length of the archive exceeds the
+    max size configured
+  - 412 (precondition failed) if the length or hash provided
+    mismatch the reality of the archive.
+  - 415 (unsupported media type) if a wrong media type is
+    provided
+
+- multipart deposit:
+  - 400 (bad request) if the request is not providing an external
+    identifier
+  - 412 (precondition failed) if the potentially md5 hash
+    provided mismatch the reality of the archive
+  - 415 (unsupported media type) if a wrong media type is
+    provided
+
+- Atom entry deposit:
+  - 400 (bad request) if the request is not providing an external
+    identifier
+  - 400 (bad request) if the request's body is empty
+  - 415 (unsupported media type) if a wrong media type is
+    provided
 
 === [3.2] Server uploads the content in a temporary location ==
-(deposit table in a separated DB).
-- saves the archives in a temporary location
-- executes a md5 checksum on that archive and check it against the
-  same header information
-- adds a deposit entry and retrieves the associated id
 
+Using an objstorage, the server stores the archive in a temporary
+location, the time the deposit is completed.
+
+Store those information as metadata associated to the request.
 
 === [4] Servers answers the client ===
-an 'http 201 Created' with a deposit receipt id in the Location header of
-the response.
+
+If everything went well, an 'http 201 Created' response is returned.
+The body holds the deposit receipt.
+The headers holds the EDIT-IRI in the Location header of the response.
 
 The server possible answers are:
-- OK: '201 created' + one header 'Location' holding the deposit receipt
-  id
+- OK: '201 created' + one header 'Location' holding the EDIT IRI
 - KO: with the error status code and associated message
   (cf. [possible errors paragraph](#possible errors)).
 
 
 === [5] Deposit Update ===
 
-The client previously uploaded an archive and wants to add either new
-metadata information or a new version for that previous deposit
-(possibly in multiple steps as well).  The important thing to note
-here is that for swh, this will result in a new version of the
-previous deposit in any case.
+The client previously deposited a partial document (through an
+archive, or metadata). The client wants to update new metadata
+information or other archives for that previous deposit (possibly in
+multiple steps as well).
 
-Providing the identifier of the previous version deposit received from
-the status URI, the client executes a PUT request on the same URI as
-the deposit one.
+The important thing to note here is that for swh, as long as the
+deposit is in status 'partial', the injection did not start.  So the
+user can update information (new archive, new metadata) for that same
+partial deposit. The aggregation of all those information will then be
+used when the injection starts (when the deposit is complete).
+
+However, as soon as the deposit is in another state (different than
+'partial'), the update will refuse to continue. It is then expected
+that the client will create a new deposit (for a new version).
+
+Providing the identifier of the previous deposit id received from the
+status URI, the client executes a PUT request on the same URI as the
+deposit one.
 
 After validation of the body request, the server:
 - uploads such content in a temporary location (to be defined).
@@ -388,7 +422,7 @@ After validation of the body request, the server:
   reference to that injection operation. The fact that the version is
   a new one is dealt with at the injection level.
 
-  URL: PUT /1/deposit/<previous-swh-id>
+  URL: PUT /1/<collection-name>/<deposit-id>/
 
 === [6] Deposit Removal ===
 
@@ -399,16 +433,10 @@ The server answers a '405 Method not allowed' error.
 
 === Operation Status ===
 
-Providing a deposit receipt id, the client asks the operation status
-of a prior upload.
+Providing a collection name and a deposit receipt id, the client asks
+the operation status of a prior deposit.
 
-  URL: GET /1/collection/{deposit_receipt}
-
-or
-
-  GET /1/deposit/{deposit_receipt}
-
-NOTE: depends of the decision taken about collections
+  URL: GET /1/<collection-name>/<deposit_id>/status/
 
 ## <a name="errors"> Possible errors
 
