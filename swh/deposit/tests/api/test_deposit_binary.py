@@ -178,8 +178,11 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.type, self.type)
@@ -187,7 +190,6 @@ and other stuff</description>
         self.assertIsNone(deposit.swh_id)
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertIsNotNone(deposit_request)
         self.assertEquals(deposit_request.deposit, deposit)
         self.assertEquals(deposit_request.metadata, {
             'archive': {
@@ -204,103 +206,11 @@ and other stuff</description>
             response_content['{http://www.w3.org/2005/Atom}deposit_id'],
             deposit.id)
 
-        status_url = reverse('status',
-                             args=[self.username, deposit.id])
+        edit_se_iri = reverse('edit_se_iri',
+                              args=[self.username, deposit.id])
 
         self.assertEqual(response._headers['location'],
-                         ('Location', status_url))
-
-    def test_post_deposit_binary_upload_2_steps(self):
-        """Binary upload should be accepted
-
-        """
-        # given
-        url = reverse('upload', args=[self.username])
-
-        external_id = 'some-external-id-1'
-
-        # 1st archive to upload
-        data_text0 = b'some other content'
-        md5sum0 = hashlib.md5(data_text0).hexdigest()
-        id0 = hashlib.sha1(data_text0).hexdigest()
-
-        # when
-        response = self.client.post(
-            url,
-            content_type='application/zip',  # as zip
-            data=data_text0,
-            # + headers
-            HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum0,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-            HTTP_IN_PROGRESS='true',
-            HTTP_CONTENT_LENGTH=len(data_text0),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.status, 'partial')
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.client, self.user)
-        self.assertIsNone(deposit.swh_id)
-
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertIsNotNone(deposit_request)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata, {
-            'archive': {
-                'id': id0,
-                'name': 'filename0',
-            },
-        })
-
-        # 2nd archive to upload
-        data_text = b'second archive uploaded'
-        md5sum1 = hashlib.md5(data_text).hexdigest()
-        id1 = hashlib.sha1(data_text).hexdigest()
-
-        response = self.client.post(
-            url,
-            content_type='application/zip',  # as zip
-            data=data_text,
-            # + headers
-            HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum1,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-            HTTP_IN_PROGRESS='false',
-            HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
-
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.status, 'ready')
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.client, self.user)
-        self.assertIsNone(deposit.swh_id)
-
-        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
-
-        self.assertIsNotNone(deposit_requests)
-        self.assertEquals(len(deposit_requests), 2)
-        self.assertEquals(deposit_requests[0].deposit, deposit)
-        self.assertEquals(deposit_requests[0].metadata, {
-            'archive': {
-                'id': id0,
-                'name': 'filename0',
-            },
-        })
-        self.assertEquals(deposit_requests[1].deposit, deposit)
-        self.assertEquals(deposit_requests[1].metadata, {
-            'archive': {
-                'id': id1,
-                'name': 'filename1',
-            },
-        })
+                         ('Location', edit_se_iri))
 
     def test_post_deposit_binary_upload_only_supports_zip(self):
         """Binary upload only supports application/zip (for now)...
@@ -469,13 +379,280 @@ and other stuff</description>
     #     except Deposit.DoesNotExist:
     #         pass
 
-    def test_post_deposit_multipart(self):
-        """Test one deposit upload."""
+    def test_post_deposit_2_post_2_different_deposits(self):
+        """Making 2 post requests result in 2 different deposit
+
+        """
+        url = reverse('upload', args=[self.username])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG='some-external-id-1',
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+
+        deposits = Deposit.objects.all()
+        self.assertEqual(len(deposits), 1)
+        self.assertEqual(deposits[0], deposit)
+
+        # second post
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG='another-external-id',
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id2 = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit2 = Deposit.objects.get(pk=deposit_id2)
+
+        self.assertNotEqual(deposit, deposit2)
+
+        deposits = Deposit.objects.all().order_by('id')
+        self.assertEqual(len(deposits), 2)
+        self.assertEqual(list(deposits), [deposit, deposit2])
+
+    def test_post_deposit_binary_and_post_to_add_another_archive(self):
+        """One post to post a binary deposit, One other post to update the
+        first deposit.
+
+        """
         # given
         url = reverse('upload', args=[self.username])
 
-        # from django.core.files import uploadedfile
-        data_atom_entry = self.data_atom_entry_ok
+        external_id = 'some-external-id-1'
+
+        # 1st archive to upload
+        data_text0 = b'some other content'
+        md5sum0 = hashlib.md5(data_text0).hexdigest()
+        id0 = hashlib.sha1(data_text0).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text0,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='true',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'partial')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata, {
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
+        })
+
+        # 2nd archive to upload
+        data_text = b'second archive uploaded'
+        md5sum1 = hashlib.md5(data_text).hexdigest()
+        id1 = hashlib.sha1(data_text).hexdigest()
+
+        # uri to update the content
+        update_uri = reverse('em_iri', args=[self.username, deposit_id])
+
+        # adding another archive for the deposit
+        response = self.client.post(
+            update_uri,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum1,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
+
+        # 2 deposit requests for the same deposit
+        self.assertEquals(len(deposit_requests), 2)
+        self.assertEquals(deposit_requests[0].deposit, deposit)
+        self.assertEquals(deposit_requests[0].metadata, {
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
+        })
+        self.assertEquals(deposit_requests[1].deposit, deposit)
+        self.assertEquals(deposit_requests[1].metadata, {
+            'archive': {
+                'id': id1,
+                'name': 'filename1',
+            },
+        })
+
+        # only 1 deposit in db
+        deposits = Deposit.objects.all()
+        self.assertEqual(len(deposits), 1)
+
+    def test_post_deposit_then_post_or_put_is_refused_when_status_ready(self):
+        """When a deposit is complete, updating/adding new data to it is forbidden.
+
+        """
+        url = reverse('upload', args=[self.username])
+
+        external_id = 'some-external-id-1'
+
+        # 1st archive to upload
+        data_text0 = b'some other content'
+        md5sum0 = hashlib.md5(data_text0).hexdigest()
+        id0 = hashlib.sha1(data_text0).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text0,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEquals(deposit_request.metadata, {
+            'archive': {
+                'id': id0,
+                'name': 'filename0',
+            },
+        })
+
+        # updating/adding is forbidden
+
+        # uri to update the content
+        edit_se_iri = reverse(
+            'edit_se_iri', args=[self.username, deposit_id])
+        em_iri = reverse(
+            'em_iri', args=[self.username, deposit_id])
+
+        # Testing all update/add endpoint should fail
+        # since the status is ready
+
+        # replacing file is no longer possible since the deposit's
+        # status is ready
+        r = self.client.put(
+            em_iri,
+            content_type='application/zip',
+            data=data_text0,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # adding file is no longer possible since the deposit's status
+        # is ready
+        r = self.client.post(
+            em_iri,
+            content_type='application/zip',
+            data=data_text0,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text0),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # replacing metadata is no longer possible since the deposit's
+        # status is ready
+        r = self.client.put(
+            edit_se_iri,
+            content_type='application/atom+xml;type=entry',
+            data=self.data_atom_entry_ok,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_LENGTH=len(self.data_atom_entry_ok))
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # adding new metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.post(
+            edit_se_iri,
+            content_type='application/atom+xml;type=entry',
+            data=self.data_atom_entry_ok,
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_LENGTH=len(self.data_atom_entry_ok))
+
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
@@ -487,235 +664,33 @@ and other stuff</description>
             charset=None)
 
         atom_entry = InMemoryUploadedFile(
-            BytesIO(data_atom_entry),
+            BytesIO(self.data_atom_entry_ok),
             field_name='atom0',
             name='atom0',
             content_type='application/atom+xml; charset="utf-8"',
-            size=len(data_atom_entry),
+            size=len(self.data_atom_entry_ok),
             charset='utf-8')
 
-        external_id = 'external-id'
-        id1 = hashlib.sha1(archive_content).hexdigest()
-
-        # when
-        response = self.client.post(
-            url,
+        # replacing multipart metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.put(
+            edit_se_iri,
             format='multipart',
             data={
                 'archive': archive,
                 'atom_entry': atom_entry,
-            },
-            # + headers
-            HTTP_IN_PROGRESS='false',
-            HTTP_SLUG=external_id)
+            })
 
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
 
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.status, 'ready')
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.client, self.user)
-        self.assertIsNone(deposit.swh_id)
-
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertIsNotNone(deposit_request)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata['archive'], {
-            'id': id1,
-            'name': 'archive0',
-        })
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.status, 'ready')
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.client, self.user)
-        self.assertIsNone(deposit.swh_id)
-
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertIsNotNone(deposit_request)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata['archive'], {
-            'id': id1,
-            'name': 'archive0',
-        })
-
-    def test_post_deposit_multipart_only_archive_and_atom_entry(self):
-        """Multipart deposit only accepts one archive and one atom+xml"""
-        # given
-        url = reverse('upload', args=[self.username])
-
-        # from django.core.files import uploadedfile
-
-        archive_content = b'some content representing archive'
-        archive = InMemoryUploadedFile(BytesIO(archive_content),
-                                       field_name='archive0',
-                                       name='archive0',
-                                       content_type='application/zip',
-                                       size=len(archive_content),
-                                       charset=None)
-
-        other_archive_content = b"some-other-content"
-        other_archive = InMemoryUploadedFile(BytesIO(other_archive_content),
-                                             field_name='atom0',
-                                             name='atom0',
-                                             content_type='application/zip',
-                                             size=len(other_archive_content),
-                                             charset='utf-8')
-
-        # when
-        response = self.client.post(
-            url,
+        # adding new metadata is no longer possible since the
+        # deposit's status is ready
+        r = self.client.post(
+            edit_se_iri,
             format='multipart',
             data={
                 'archive': archive,
-                'atom_entry': other_archive,
-            },
-            # + headers
-            HTTP_IN_PROGRESS='false',
-            HTTP_SLUG='external-id')
+                'atom_entry': atom_entry,
+            })
 
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-        # when
-        archive.seek(0)
-        response = self.client.post(
-            url,
-            format='multipart',
-            data={
-                'archive': archive,
-            },
-            # + headers
-            HTTP_IN_PROGRESS='false',
-            HTTP_SLUG='external-id')
-
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    def test_post_deposit_atom_empty_body_request(self):
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data_empty_body)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_post_deposit_atom_unknown_no_external_id(self):
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data3)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_post_deposit_atom_unknown_client(self):
-        response = self.client.post(
-            reverse('upload', args=['unknown-one']),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data3,
-            HTTP_SLUG='something')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_post_deposit_atom_entry_initial(self):
-        """One deposit upload as atom entry
-
-        """
-        # given
-        external_id = 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
-
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            assert True
-
-        atom_entry_data = self.atom_entry_data0 % external_id.encode('utf-8')
-
-        # when
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=atom_entry_data,
-            HTTP_IN_PROGRESS='false')
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, 'ready')
-        self.assertEqual(deposit.client, self.user)
-
-        # one associated request to a deposit
-        deposit_request = DepositRequest.objects.get(deposit=deposit)
-        actual_metadata = deposit_request.metadata
-        self.assertIsNotNone(actual_metadata)
-        self.assertIsNone(actual_metadata.get('archive'))
-
-    def test_post_deposit_atom_entry_multiple_step(self):
-        """Test one deposit upload."""
-        # given
-        external_id = 'urn:uuid:2225c695-cfb8-4ebb-aaaa-80da344efa6a'
-
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            assert True
-
-        # when
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data1,
-            HTTP_IN_PROGRESS='True',
-            HTTP_SLUG=external_id)
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, 'partial')
-        self.assertEqual(deposit.client, self.user)
-
-        # one associated request to a deposit
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEqual(len(deposit_requests), 1)
-
-        atom_entry_data = self.atom_entry_data2 % external_id.encode('utf-8')
-
-        # when
-        response = self.client.post(
-            reverse('upload', args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=atom_entry_data,
-            HTTP_IN_PROGRESS='False',
-            HTTP_SLUG=external_id)
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit = Deposit.objects.get(external_id=external_id)
-        self.assertIsNotNone(deposit)
-        self.assertEqual(deposit.type, self.type)
-        self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, 'ready')
-        self.assertEqual(deposit.client, self.user)
-
-        self.assertEqual(len(Deposit.objects.all()), 1)
-
-        # now 2 associated requests to a same deposit
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEqual(len(deposit_requests), 2)
-
-        for deposit_request in deposit_requests:
-            actual_metadata = deposit_request.metadata
-            self.assertIsNotNone(actual_metadata)
-            self.assertIsNone(actual_metadata.get('archive'))
+        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)

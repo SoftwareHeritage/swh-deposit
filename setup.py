@@ -24,6 +24,7 @@ setup(
               'swh.deposit.fixtures',
               'swh.deposit.migrations',
               'swh.deposit.settings',
+              'swh.deposit.static',
               'swh.deposit.templates',
               'swh.deposit.templates.deposit',
               'swh.deposit.tests'],

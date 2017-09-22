@@ -2,5 +2,6 @@ include Makefile
 include requirements.txt
 include requirements-swh.txt
 include version.txt
+recursive-include swh/deposit/static *
 recursive-include swh/deposit/fixtures *
 recursive-include swh/deposit/templates *
