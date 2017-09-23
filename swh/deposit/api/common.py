@@ -25,7 +25,7 @@ from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
 from ..errors import make_error_response, make_error_response_from_dict
-from ..errors import NOT_FOUND
+from ..errors import NOT_FOUND, METHOD_NOT_ALLOWED
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -197,9 +197,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 deposit=deposit,
                 type=self.deposit_request_types['metadata']).delete()
         if replace_archives:
+            # FIXME: delete in the objstorage?
+            # For now, we only remove the reference from the db.
+            # In effect dangling file will exist in the objstorage.
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types['archives']).delete()
+                type=self.deposit_request_types['archive']).delete()
 
         for type, metadata in deposit_request_data.items():
             deposit_request = DepositRequest(
@@ -209,6 +212,24 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             deposit_request.save()
 
         return deposit_request
+
+    def _delete_archives(self, client_name, deposit_id):
+        """Delete archives reference from the deposit id.
+
+        """
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            return make_error_dict(
+                NOT_FOUND,
+                'The deposit %s does not exist' % deposit_id)
+        # FIXME: delete in the objstorage?
+        # For now, we only remove the reference from the db.
+        # In effect dangling file will exist in the objstorage.
+        DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive']).delete()
+        return {}
 
     def _archive_put(self, file):
         """Store archive file in objstorage and returns metadata about it.
@@ -667,3 +688,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         pass
+
+    def delete(self, req, client_name, deposit_id=None):
+        """Routine to delete a resource.
+
+        This is mostly not allowed except for the
+        EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
+
+        """
+        return make_error_response(req, METHOD_NOT_ALLOWED)
