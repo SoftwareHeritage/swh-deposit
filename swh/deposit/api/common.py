@@ -503,6 +503,34 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': None,
         }
 
+    def _empty_post(self, req, headers, client_name, deposit_id):
+        """Empty post to finalize an empty deposit.
+
+        Args:
+            req (Request): the request holding information to parse
+                and inject in db
+            headers (dict): request headers formatted
+            client_name (str): the associated client
+            deposit_id (id): deposit identifier
+
+        Returns:
+            in the optimal case a 200 response with a deposit receipt.
+            200 OK
+            Location: [Edit-IRI]
+
+            [optional Deposit Receipt]
+        """
+        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit.complete_date = timezone.now()
+        deposit.status = 'ready'
+        deposit.save()
+
+        return {
+            'deposit_id': deposit_id,
+            'deposit_date': deposit.complete_date,
+            'archive': None
+        }
+
     def _make_iris(self, client_name, deposit_id):
         """Define the IRI endpoints
 

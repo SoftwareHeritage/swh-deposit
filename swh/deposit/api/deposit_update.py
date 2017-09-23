@@ -3,12 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-
-from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
-from ..parsers import SWHMultiPartParser
+from .common import SWHBaseDeposit
 
 from ..errors import make_error, make_error_response, BAD_REQUEST
-from .common import SWHBaseDeposit
+from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
+from ..parsers import SWHMultiPartParser
 
 
 class SWHUpdateArchiveDeposit(SWHBaseDeposit):
@@ -109,16 +108,27 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         #protocoloperations_addingcontent_multipart
 
-        Returns:
-            201 Created
-            Location: [EM-IRI]
+        This also deals with an empty post corner case to finalize a
+        deposit.
 
-            [optional Deposit Receipt]
+        Returns:
+            In optimal case for a multipart and atom-entry update, a
+            201 Created response. The body response will hold a
+            deposit. And the response headers will contain an entry
+            'Location' with the EM-IRI.
+
+            For the empty post case, this returns a 200.
 
         """
         if req.content_type.startswith('multipart/'):
             return self._multipart_upload(req, headers, client_name,
                                           deposit_id=deposit_id)
+        # check for final empty post
+        # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+        # #continueddeposit_complete
+        if headers['content-length'] == 0 and headers['in-progress'] is False:
+            return self._empty_post(req, headers, client_name, deposit_id)
+
         return self._atom_entry(req, headers, client_name,
                                 deposit_id=deposit_id)
 
