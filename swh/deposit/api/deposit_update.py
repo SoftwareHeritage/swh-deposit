@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from rest_framework import status
 from .common import SWHBaseDeposit
 
 from ..errors import make_error, make_error_response, BAD_REQUEST
@@ -56,16 +57,13 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             Body: [optional Deposit Receipt]
 
         """
-        if req.content_type == 'application/zip':
-            return self._binary_upload(req, headers, client_name, deposit_id)
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
-                                          deposit_id)
-        return self._atom_entry(req, headers, client_name)
+        if req.content_type != 'application/zip':
+            error = make_error(BAD_REQUEST,
+                               'Only application/zip is supported!')
+            return make_error_response(req, error['error'])
 
-    def update_post_response(self, response, data):
-        response._headers['location'] = 'Location', data['cont_file_iri']
-        return response
+        return (status.HTTP_201_CREATED, 'cont_file_iri',
+                self._binary_upload(req, headers, client_name, deposit_id))
 
 
 class SWHUpdateMetadataDeposit(SWHBaseDeposit):
@@ -121,17 +119,16 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         """
         if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
-                                          deposit_id=deposit_id)
+            return (status.HTTP_201_CREATED, 'em_iri',
+                    self._multipart_upload(req, headers, client_name,
+                                           deposit_id=deposit_id))
         # check for final empty post
         # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         # #continueddeposit_complete
         if headers['content-length'] == 0 and headers['in-progress'] is False:
-            return self._empty_post(req, headers, client_name, deposit_id)
+            return (status.HTTP_200_OK, 'edit_se_iri',
+                    self._empty_post(req, headers, client_name, deposit_id))
 
-        return self._atom_entry(req, headers, client_name,
-                                deposit_id=deposit_id)
-
-    def update_post_response(self, response, data):
-        response._headers['location'] = 'Location', data['em_iri']
-        return response
+        return (status.HTTP_201_CREATED, 'em_iri',
+                self._atom_entry(req, headers, client_name,
+                                 deposit_id=deposit_id))

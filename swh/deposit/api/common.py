@@ -578,7 +578,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                                'Mediation is not supported.')
             return make_error_response(req, error['error'])
 
-        data = self.process_post(req, headers, client_name, deposit_id)
+        _status, _iri_key, data = self.process_post(
+            req, headers, client_name, deposit_id)
 
         error = data.get('error')
         if error:
@@ -593,17 +594,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
                           content_type='application/xml',
-                          status=status.HTTP_201_CREATED)
-        response = self.update_post_response(response, data)
+                          status=_status)
+        response._headers['location'] = 'Location', data[_iri_key]
         return response
-
-    @abstractmethod
-    def update_post_response(self, response, data):
-        """Routine to permit the post response override (e.g add some headers
-           in the response.)
-
-        """
-        pass
 
     @abstractmethod
     def process_post(self, req, client_name, deposit_id=None, format=None):

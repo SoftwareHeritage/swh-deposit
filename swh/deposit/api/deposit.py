@@ -3,12 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
-from ..parsers import SWHMultiPartParser
+from rest_framework import status
 
 from .common import SWHBaseDeposit
 from ..errors import make_error, make_error_response
 from ..errors import METHOD_NOT_ALLOWED
+from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
+from ..parsers import SWHMultiPartParser
 
 
 class SWHDeposit(SWHBaseDeposit):
@@ -72,17 +73,13 @@ class SWHDeposit(SWHBaseDeposit):
         """
         assert deposit_id is None
         if req.content_type == 'application/zip':
-            return self._binary_upload(req, headers, client_name)
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name)
-        return self._atom_entry(req, headers, client_name)
+            data = self._binary_upload(req, headers, client_name)
+        elif req.content_type.startswith('multipart/'):
+            data = self._multipart_upload(req, headers, client_name)
+        else:
+            data = self._atom_entry(req, headers, client_name)
 
-    def update_post_response(self, response, data):
-        """Update response with header location.
-
-        """
-        response._headers['location'] = 'Location', data['edit_se_iri']
-        return response
+        return status.HTTP_201_CREATED, 'edit_se_iri', data
 
     def put(self, req, client_name, deposit_id=None, format=None):
         """This endpoint only supports POST.
