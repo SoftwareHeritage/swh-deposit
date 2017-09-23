@@ -584,7 +584,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
-    def put(self, req, client_name, deposit_id=None, format=None):
+    def put(self, req, client_name, deposit_id, format=None):
         try:
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
