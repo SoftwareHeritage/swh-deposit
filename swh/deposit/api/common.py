@@ -23,8 +23,9 @@ from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, make_error, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response, NOT_FOUND
+from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
+from ..errors import make_error_response, make_error_response_from_dict
+from ..errors import NOT_FOUND
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -246,7 +247,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if content_length:
             if content_length > self.config['max_upload_size']:
-                return make_error(
+                return make_error_dict(
                     MAX_UPLOAD_SIZE_EXCEEDED,
                     'Upload size limit exceeded (max %s bytes).' %
                     self.config['max_upload_size'],
@@ -255,13 +256,13 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
             length = filehandler.size
             if length != content_length:
-                return make_error(status.HTTP_412_PRECONDITION_FAILED,
-                                  'Wrong length')
+                return make_error_dict(status.HTTP_412_PRECONDITION_FAILED,
+                                       'Wrong length')
 
         if md5sum:
             _md5sum = self._compute_md5(filehandler)
             if _md5sum != md5sum:
-                return make_error(
+                return make_error_dict(
                     CHECKSUM_MISMATCH,
                     'Wrong md5 hash',
                     'The checksum sent %s and the actual checksum '
@@ -308,7 +309,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         content_disposition = headers['content-disposition']
         if not content_disposition:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'CONTENT_DISPOSITION header is mandatory',
                 'For a single archive deposit, the '
@@ -316,7 +317,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         packaging = headers['packaging']
         if packaging and packaging not in ACCEPT_PACKAGINGS:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'Only packaging %s is supported' %
                 ACCEPT_PACKAGINGS,
@@ -397,7 +398,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         for key, value in req.FILES.items():
             fh = value
             if fh.content_type in content_types_present:
-                return make_error(
+                return make_error_dict(
                     ERROR_CONTENT,
                     'Only 1 application/zip archive and 1 '
                     'atom+xml entry is supported (as per sword2.0 '
@@ -410,7 +411,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             data[fh.content_type] = fh
 
         if len(content_types_present) != 2:
-            return make_error(
+            return make_error_dict(
                 ERROR_CONTENT,
                 'You must provide both 1 application/zip '
                 'and 1 atom+xml entry for multipart deposit',
@@ -480,7 +481,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         if not req.data:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'Empty body request is not supported',
                 'Atom entry deposit is supposed to send for metadata. '
@@ -552,38 +553,36 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
         except (DepositType.DoesNotExist, User.DoesNotExist):
-            error = make_error(BAD_REQUEST,
-                               'Unknown client name %s' % client_name)
-            return make_error_response(req, error['error'])
+            return make_error_response(req, BAD_REQUEST,
+                                       'Unknown client name %s' % client_name)
 
         if deposit_id:
             try:
                 deposit = Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
-                error = make_error(NOT_FOUND,
-                                   'Deposit with id %s does not exist' %
-                                   deposit_id)
-                return make_error_response(req, error['error'])
+                return make_error_response(
+                    req, NOT_FOUND,
+                    'Deposit with id %s does not exist' %
+                    deposit_id)
 
             if deposit.status != 'partial':
-                error = make_error(
+                return make_error_response(
+                    req,
                     BAD_REQUEST,
                     'You cannot update a deposit in status ready.')
-                return make_error_response(req, error['error'])
 
         headers = self._read_headers(req)
 
         if headers['on-behalf-of']:
-            error = make_error(MEDIATION_NOT_ALLOWED,
-                               'Mediation is not supported.')
-            return make_error_response(req, error['error'])
+            return make_error_response(req, MEDIATION_NOT_ALLOWED,
+                                       'Mediation is not supported.')
 
         _status, _iri_key, data = self.process_post(
             req, headers, client_name, deposit_id)
 
         error = data.get('error')
         if error:
-            return make_error_response(req, error)
+            return make_error_response_from_dict(req, error)
 
         iris = self._make_iris(client_name, data['deposit_id'])
 
@@ -610,37 +609,34 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
         except (DepositType.DoesNotExist, User.DoesNotExist):
-            error = make_error(BAD_REQUEST,
-                               'Unknown client name %s' % client_name)
-            return make_error_response(req, error['error'])
+            return make_error_response(req, BAD_REQUEST,
+                                       'Unknown client name %s' % client_name)
 
         if deposit_id:
             try:
                 deposit = Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
-                error = make_error(NOT_FOUND,
-                                   'Deposit with id %s does not exist' %
-                                   deposit_id)
-                return make_error_response(req, error['error'])
+                return make_error_response(
+                    req, NOT_FOUND,
+                    'Deposit with id %s does not exist' % deposit_id)
 
             if deposit.status != 'partial':
-                error = make_error(
+                return make_error_response(
+                    req,
                     BAD_REQUEST,
                     'You cannot update a deposit in status ready.')
-                return make_error_response(req, error['error'])
 
         headers = self._read_headers(req)
 
         if headers['on-behalf-of']:
-            error = make_error(MEDIATION_NOT_ALLOWED,
-                               'Mediation is not supported.')
-            return make_error_response(req, error['error'])
+            return make_error_response(req, MEDIATION_NOT_ALLOWED,
+                                       'Mediation is not supported.')
 
         data = self.process_put(req, headers, client_name, deposit_id)
 
         error = data.get('error')
         if error:
-            return make_error_response(req, error)
+            return make_error_response_from_dict(req, error)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 

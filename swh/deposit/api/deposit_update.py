@@ -7,7 +7,7 @@ from rest_framework import status
 
 from .common import SWHBaseDeposit
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
-from ..errors import make_error, make_error_response, BAD_REQUEST
+from ..errors import make_error_response, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
@@ -35,9 +35,8 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
 
         """
         if req.content_type != 'application/zip':
-            error = make_error(BAD_REQUEST,
-                               'Only application/zip is supported!')
-            return make_error_response(req, error['error'])
+            return make_error_response(req, BAD_REQUEST,
+                                       'Only application/zip is supported!')
 
         return self._binary_upload(req, headers, client_name,
                                    deposit_id=deposit_id,
@@ -59,9 +58,8 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
 
         """
         if req.content_type != 'application/zip':
-            error = make_error(BAD_REQUEST,
-                               'Only application/zip is supported!')
-            return make_error_response(req, error['error'])
+            return make_error_response(req, BAD_REQUEST,
+                                       'Only application/zip is supported!')
 
         return (status.HTTP_201_CREATED, CONT_FILE_IRI,
                 self._binary_upload(req, headers, client_name, deposit_id))

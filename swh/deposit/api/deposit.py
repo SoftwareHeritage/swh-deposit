@@ -7,7 +7,7 @@ from rest_framework import status
 
 from .common import SWHBaseDeposit
 from ..config import EDIT_SE_IRI
-from ..errors import make_error, make_error_response
+from ..errors import make_error_response
 from ..errors import METHOD_NOT_ALLOWED
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
@@ -86,4 +86,4 @@ class SWHDeposit(SWHBaseDeposit):
         """This endpoint only supports POST.
 
         """
-        return make_error_response(make_error(METHOD_NOT_ALLOWED)['error'])
+        return make_error_response(req, METHOD_NOT_ALLOWED)

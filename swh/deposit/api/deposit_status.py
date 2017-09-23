@@ -7,7 +7,7 @@ from django.shortcuts import render
 from rest_framework import status
 
 from ..config import SWHDefaultConfig
-from ..errors import NOT_FOUND, make_error, make_error_response
+from ..errors import NOT_FOUND, make_error_response
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 
 from .common import SWHAPIView
@@ -29,11 +29,10 @@ class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
             if deposit.client.username != client_name:
                 raise Deposit.DoesNotExist
         except Deposit.DoesNotExist:
-            err = make_error(
-                NOT_FOUND,
+            return make_error_response(
+                req, NOT_FOUND,
                 'deposit %s for client %s does not exist' % (
                     deposit_id, client_name))
-            return make_error_response(req, err['error'])
 
         context = {
             'deposit_id': deposit.id,
