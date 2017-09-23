@@ -15,6 +15,7 @@ from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
+from ...config import COL_IRI, EM_IRI
 
 
 class DepositNoAuthCase(APITestCase, BasicTestCase):
@@ -25,7 +26,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
         """Without authentication, endpoint refuses access with 401 response
 
         """
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -155,7 +156,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
         id = hashlib.sha1(data_text).hexdigest()
@@ -217,7 +218,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -251,7 +252,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -283,7 +284,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -314,7 +315,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -352,7 +353,7 @@ and other stuff</description>
 
     #     """
     #     # given
-    #     url = reverse('upload', args=[self.username])
+    #     url = reverse(COL_IRI, args=[self.username])
     #     data_text = b'some content'
     #     md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -383,7 +384,7 @@ and other stuff</description>
         """Making 2 post requests result in 2 different deposit
 
         """
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -446,7 +447,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
 
         external_id = 'some-external-id-1'
 
@@ -497,7 +498,7 @@ and other stuff</description>
         id1 = hashlib.sha1(data_text).hexdigest()
 
         # uri to update the content
-        update_uri = reverse('em_iri', args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
 
         # adding another archive for the deposit
         response = self.client.post(
@@ -546,7 +547,7 @@ and other stuff</description>
         """When a deposit is complete, updating/adding new data to it is forbidden.
 
         """
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
 
         external_id = 'some-external-id-1'
 

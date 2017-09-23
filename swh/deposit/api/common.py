@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
-from ..config import SWHDefaultConfig
+from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
@@ -536,14 +536,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         return {
-            'em_iri': reverse(
-                'em_iri',
+            EM_IRI: reverse(
+                EM_IRI,
                 args=[client_name, deposit_id]),
-            'edit_se_iri': reverse(
-                'edit_se_iri',
+            EDIT_SE_IRI: reverse(
+                EDIT_SE_IRI,
                 args=[client_name, deposit_id]),
-            'cont_file_iri': reverse(
-                'cont_file_iri',
+            CONT_FILE_IRI: reverse(
+                CONT_FILE_IRI,
                 args=[client_name, deposit_id]),
         }
 

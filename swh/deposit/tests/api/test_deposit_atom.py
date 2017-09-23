@@ -12,6 +12,7 @@ from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
+from ...config import COL_IRI
 
 
 class DepositAtomEntryTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
@@ -88,14 +89,14 @@ and other stuff</description>
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_deposit_atom_unknown_client(self):
         response = self.client.post(
-            reverse('upload', args=['unknown-one']),
+            reverse(COL_IRI, args=['unknown-one']),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data3,
             HTTP_SLUG='something')
@@ -117,7 +118,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='false')
@@ -152,7 +153,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data1,
             HTTP_IN_PROGRESS='True',

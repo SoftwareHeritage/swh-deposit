@@ -6,6 +6,7 @@
 from rest_framework import status
 
 from .common import SWHBaseDeposit
+from ..config import EDIT_SE_IRI
 from ..errors import make_error, make_error_response
 from ..errors import METHOD_NOT_ALLOWED
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
@@ -79,7 +80,7 @@ class SWHDeposit(SWHBaseDeposit):
         else:
             data = self._atom_entry(req, headers, client_name)
 
-        return status.HTTP_201_CREATED, 'edit_se_iri', data
+        return status.HTTP_201_CREATED, EDIT_SE_IRI, data
 
     def put(self, req, client_name, deposit_id=None, format=None):
         """This endpoint only supports POST.

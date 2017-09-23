@@ -7,6 +7,14 @@ import logging
 
 from swh.core.config import SWHConfig
 
+# IRIs (Internationalized Resource identifier) sword 2.0 specified
+EDIT_SE_IRI = 'edit_se_iri'
+EM_IRI = 'em_iri'
+CONT_FILE_IRI = 'cont_file_iri'
+SD_IRI = 'servicedocument'
+COL_IRI = 'upload'
+STATE_IRI = 'status'
+
 
 class SWHDefaultConfig(SWHConfig):
     """Mixin intended to enrich views with SWH configuration.

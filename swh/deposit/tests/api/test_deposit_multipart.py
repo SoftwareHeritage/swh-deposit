@@ -15,6 +15,7 @@ from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
+from ...config import COL_IRI
 
 
 class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
@@ -67,7 +68,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
 
         # from django.core.files import uploadedfile
         data_atom_entry = self.data_atom_entry_ok
@@ -139,7 +140,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
 
         data_atom_entry = self.data_atom_entry_ok
 
@@ -244,7 +245,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     def test_post_deposit_multipart_only_archive_and_atom_entry(self):
         """Multipart deposit only accepts one archive and one atom+xml"""
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
 
         # from django.core.files import uploadedfile
 

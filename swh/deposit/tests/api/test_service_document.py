@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from ..common import BasicTestCase, WithAuthTestCase
+from ...config import SD_IRI
 
 
 class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
@@ -18,7 +19,7 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
     def test_service_document_no_authentication_fails(self):
         """Without authentication, service document endpoint is unauthorized"""
-        url = reverse('servicedocument')
+        url = reverse(SD_IRI)
 
         response = self.client.get(url)
 
@@ -37,7 +38,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
         """With authentication, service document list user's collection
 
         """
-        url = reverse('servicedocument')
+        url = reverse(SD_IRI)
 
         # when
         response = self.client.get(url)

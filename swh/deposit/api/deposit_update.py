@@ -4,8 +4,9 @@
 # See top-level LICENSE file for more information
 
 from rest_framework import status
-from .common import SWHBaseDeposit
 
+from .common import SWHBaseDeposit
+from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
 from ..errors import make_error, make_error_response, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
@@ -62,7 +63,7 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
                                'Only application/zip is supported!')
             return make_error_response(req, error['error'])
 
-        return (status.HTTP_201_CREATED, 'cont_file_iri',
+        return (status.HTTP_201_CREATED, CONT_FILE_IRI,
                 self._binary_upload(req, headers, client_name, deposit_id))
 
 
@@ -119,16 +120,16 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         """
         if req.content_type.startswith('multipart/'):
-            return (status.HTTP_201_CREATED, 'em_iri',
+            return (status.HTTP_201_CREATED, EM_IRI,
                     self._multipart_upload(req, headers, client_name,
                                            deposit_id=deposit_id))
         # check for final empty post
         # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         # #continueddeposit_complete
         if headers['content-length'] == 0 and headers['in-progress'] is False:
-            return (status.HTTP_200_OK, 'edit_se_iri',
+            return (status.HTTP_200_OK, EDIT_SE_IRI,
                     self._empty_post(req, headers, client_name, deposit_id))
 
-        return (status.HTTP_201_CREATED, 'em_iri',
+        return (status.HTTP_201_CREATED, EM_IRI,
                 self._atom_entry(req, headers, client_name,
                                  deposit_id=deposit_id))
