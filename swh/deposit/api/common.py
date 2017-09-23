@@ -515,11 +515,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             deposit_id (id): deposit identifier
 
         Returns:
-            in the optimal case a 200 response with a deposit receipt.
-            200 OK
-            Location: [Edit-IRI]
+            Dictionary of result with the deposit's id, the date
+            it was completed and no archive.
 
-            [optional Deposit Receipt]
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
@@ -529,11 +527,17 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             'deposit_id': deposit_id,
             'deposit_date': deposit.complete_date,
-            'archive': None
         }
 
     def _make_iris(self, client_name, deposit_id):
         """Define the IRI endpoints
+
+        Args:
+            client_name (str): client/collection's name
+            deposit_id (id): Deposit identifier
+
+        Returns:
+            Dictionary of keys with the iris' urls.
 
         """
         return {
@@ -549,6 +553,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         }
 
     def post(self, req, client_name, deposit_id=None, format=None):
+        """Main post processing of a deposit.
+
+        """
         try:
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
@@ -599,12 +606,21 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
     @abstractmethod
     def process_post(self, req, client_name, deposit_id=None, format=None):
-        """Routine to permit the post processing to occur.
+        """Routine to deal with the deposit's processing.
+
+        Returns
+            Tuple of:
+            - response status code (200, 201, etc...)
+            - key iri (EM_IRI, EDIT_SE_IRI, etc...)
+            - dictionary of the processing result
 
         """
         pass
 
     def put(self, req, client_name, deposit_id, format=None):
+        """Main put processing of a deposit.
+
+        """
         try:
             self._type = DepositType.objects.get(name=client_name)
             self._user = User.objects.get(username=client_name)
@@ -642,7 +658,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
     def process_put(self, req, client_name, deposit_id=None, update=False,
                     format=None):
-        """Routine to permit the put processing to occur.
+        """Routine to deal with the deposit's processing.
+
+        Note: This one is not @abstractmethod since it may be undefined.
+
+        Returns
+            dictionary of the processing result
 
         """
         pass
