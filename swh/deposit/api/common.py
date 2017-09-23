@@ -24,7 +24,7 @@ from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response
+from ..errors import make_error_response, NOT_FOUND
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -529,7 +529,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_response(req, error['error'])
 
         if deposit_id:
-            deposit = Deposit.objects.get(pk=deposit_id)
+            try:
+                deposit = Deposit.objects.get(pk=deposit_id)
+            except Deposit.DoesNotExist:
+                error = make_error(NOT_FOUND,
+                                   'Deposit with id %s does not exist' %
+                                   deposit_id)
+                return make_error_response(req, error['error'])
+
             if deposit.status != 'partial':
                 error = make_error(
                     BAD_REQUEST,
@@ -587,7 +594,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_response(req, error['error'])
 
         if deposit_id:
-            deposit = Deposit.objects.get(pk=deposit_id)
+            try:
+                deposit = Deposit.objects.get(pk=deposit_id)
+            except Deposit.DoesNotExist:
+                error = make_error(NOT_FOUND,
+                                   'Deposit with id %s does not exist' %
+                                   deposit_id)
+                return make_error_response(req, error['error'])
+
             if deposit.status != 'partial':
                 error = make_error(
                     BAD_REQUEST,
