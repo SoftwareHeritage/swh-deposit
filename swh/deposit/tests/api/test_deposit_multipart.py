@@ -11,11 +11,10 @@ from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.config import COL_IRI
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-
 from ..common import BasicTestCase, WithAuthTestCase
-from ...config import COL_IRI
 
 
 class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
@@ -115,7 +114,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
@@ -186,7 +185,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'partial')
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
@@ -219,7 +218,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 

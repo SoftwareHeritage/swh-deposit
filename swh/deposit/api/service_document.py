@@ -3,16 +3,21 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.contrib.auth.models import User
 from django.shortcuts import render
 
+from ..models import DepositClient, DepositCollection
 from ..config import SWHDefaultConfig
 from .common import SWHAPIView, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
 
 
 class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):
     def get(self, req, *args, **kwargs):
-        user = User.objects.get(username=req.user)
+        client = DepositClient.objects.get(username=req.user)
+
+        collections = []
+        for col_id in client.collections:
+            col = DepositCollection.objects.get(pk=col_id)
+            collections.append(col)
 
         context = {
             'max_upload_size': self.config['max_upload_size'],
@@ -20,7 +25,7 @@ class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):
             'noop': self.config['noop'],
             'accept_packagings': ACCEPT_PACKAGINGS,
             'accept_content_types': ACCEPT_CONTENT_TYPES,
-            'collection': user.username,
+            'collections': collections,
         }
         return render(req, 'deposit/service_document.xml',
                       context, content_type='application/xml')

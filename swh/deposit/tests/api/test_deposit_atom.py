@@ -8,11 +8,11 @@ from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.config import COL_IRI
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
-from ...config import COL_IRI
 
 
 class DepositAtomEntryTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
@@ -131,7 +131,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.client, self.user)
@@ -167,7 +167,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'partial')
         self.assertEqual(deposit.client, self.user)
@@ -196,7 +196,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.client, self.user)

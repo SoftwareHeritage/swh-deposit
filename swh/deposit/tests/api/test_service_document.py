@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.config import SD_IRI
 from ..common import BasicTestCase, WithAuthTestCase
-from ...config import SD_IRI
 
 
 class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):

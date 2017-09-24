@@ -8,7 +8,8 @@
 #    python3 -m manage inspectdb
 
 
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.timezone import now
 
@@ -59,6 +60,24 @@ DEPOSIT_STATUS_DETAIL = {
 }
 
 
+class DepositClient(User):
+    """Deposit client
+
+    """
+    collections = ArrayField(models.IntegerField(), null=True)
+    objects = UserManager()
+
+    class Meta:
+        db_table = 'deposit_client'
+
+    def __str__(self):
+        return str({
+            'id': self.id,
+            'collections': self.collections,
+            'username': super().username,
+        })
+
+
 class Deposit(models.Model):
     """Deposit reception table
 
@@ -69,14 +88,13 @@ class Deposit(models.Model):
     reception_date = models.DateTimeField(auto_now_add=True)
     # Date when the deposit is deemed complete and ready for injection
     complete_date = models.DateTimeField(null=True)
-    # Deposit reception source type
-    type = models.ForeignKey(
-        'DepositType', models.DO_NOTHING, db_column='type')
-    # Deposit's unique external identifier
+    # collection concerned by the deposit
+    collection = models.ForeignKey(
+        'DepositCollection', models.DO_NOTHING)
+    # Deposit's external identifier
     external_id = models.TextField()
     # Deposit client
-    client = models.ForeignKey(
-        'auth.User', models.DO_NOTHING)
+    client = models.ForeignKey('DepositClient', models.DO_NOTHING)
     # SWH's injection result identifier
     swh_id = models.TextField(blank=True, null=True)
     # Deposit's status regarding injection
@@ -91,9 +109,9 @@ class Deposit(models.Model):
         return str({
             'id': self.id,
             'reception_date': self.reception_date,
-            'type': self.type,
+            'collection': self.collection.name,
             'external_id': self.external_id,
-            'client_id': self.client_id,
+            'client': self.client.username,
             'status': self.status
         })
 
@@ -123,7 +141,7 @@ class DepositRequest(models.Model):
     # Deposit request information on the data to inject
     metadata = JSONField(null=True)
     type = models.ForeignKey(
-        'DepositRequestType', models.DO_NOTHING, db_column='type')
+        'DepositRequestType', models.DO_NOTHING)
 
     class Meta:
         db_table = 'deposit_request'
@@ -137,13 +155,13 @@ class DepositRequest(models.Model):
         })
 
 
-class DepositType(models.Model):
+class DepositCollection(models.Model):
     id = models.BigAutoField(primary_key=True)
-    # Human readable name for the deposit type e.g HAL, arXiv, etc...
+    # Human readable name for the collection type e.g HAL, arXiv, etc...
     name = models.TextField()
 
     class Meta:
-        db_table = 'deposit_type'
+        db_table = 'deposit_collection'
 
     def __str__(self):
         return str({'id': self.id, 'name': self.name})

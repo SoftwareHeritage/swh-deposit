@@ -8,7 +8,6 @@ import hashlib
 from abc import ABCMeta, abstractmethod
 
 
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -20,7 +19,8 @@ from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
+from ..models import Deposit, DepositRequest, DepositCollection
+from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
@@ -159,11 +159,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             status_type = 'partial'
 
         if not deposit_id:
-            deposit = Deposit(type=self._type,
+            deposit = Deposit(collection=self._collection,
                               external_id=external_id,
                               complete_date=complete_date,
                               status=status_type,
-                              client=self._user)
+                              client=self._client)
         else:
             deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -548,6 +548,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             'deposit_id': deposit_id,
             'deposit_date': deposit.complete_date,
+            'archive': None,
         }
 
     def _make_iris(self, client_name, deposit_id):
@@ -578,9 +579,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         try:
-            self._type = DepositType.objects.get(name=client_name)
-            self._user = User.objects.get(username=client_name)
-        except (DepositType.DoesNotExist, User.DoesNotExist):
+            self._collection = DepositCollection.objects.get(name=client_name)
+            self._client = DepositClient.objects.get(username=client_name)
+        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
             return make_error_response(req, BAD_REQUEST,
                                        'Unknown client name %s' % client_name)
 
@@ -643,9 +644,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         try:
-            self._type = DepositType.objects.get(name=client_name)
-            self._user = User.objects.get(username=client_name)
-        except (DepositType.DoesNotExist, User.DoesNotExist):
+            self._collection = DepositCollection.objects.get(name=client_name)
+            self._client = DepositClient.objects.get(username=client_name)
+        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
             return make_error_response(req, BAD_REQUEST,
                                        'Unknown client name %s' % client_name)
 
