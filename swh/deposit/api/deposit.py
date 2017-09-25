@@ -3,15 +3,15 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from rest_framework import status
+
+from .common import SWHPostDepositAPI
+from ..config import EDIT_SE_IRI
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
-from .common import SWHBaseDeposit
-from ..errors import make_error, make_error_response
-from ..errors import METHOD_NOT_ALLOWED
 
-
-class SWHDeposit(SWHBaseDeposit):
+class SWHDeposit(SWHPostDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Col IRI' in the sword specification.
@@ -23,8 +23,7 @@ class SWHDeposit(SWHBaseDeposit):
                       SWHFileUploadParser,
                       SWHAtomEntryParser)
 
-    def process_post(self, req, headers, client_name, deposit_id=None,
-                     format=None):
+    def process_post(self, req, headers, collection_name, deposit_id=None):
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
@@ -33,7 +32,7 @@ class SWHDeposit(SWHBaseDeposit):
         Args:
             req (Request): the request holding the information to parse
                 and inject in db
-            client_name (str): the associated client
+            collection_name (str): the associated client
 
         Returns:
             An http response (HttpResponse) according to the situation.
@@ -72,20 +71,10 @@ class SWHDeposit(SWHBaseDeposit):
         """
         assert deposit_id is None
         if req.content_type == 'application/zip':
-            return self._binary_upload(req, headers, client_name)
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name)
-        return self._atom_entry(req, headers, client_name)
+            data = self._binary_upload(req, headers, collection_name)
+        elif req.content_type.startswith('multipart/'):
+            data = self._multipart_upload(req, headers, collection_name)
+        else:
+            data = self._atom_entry(req, headers, collection_name)
 
-    def update_post_response(self, response, data):
-        """Update response with header location.
-
-        """
-        response._headers['location'] = 'Location', data['edit_se_iri']
-        return response
-
-    def put(self, req, client_name, deposit_id=None, format=None):
-        """This endpoint only supports POST.
-
-        """
-        return make_error_response(make_error(METHOD_NOT_ALLOWED)['error'])
+        return status.HTTP_201_CREATED, EDIT_SE_IRI, data

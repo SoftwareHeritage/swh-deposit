@@ -3,28 +3,37 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.contrib.auth.models import User
 from django.test import TestCase
 
-from swh.deposit.models import DepositType, DepositRequestType
+from swh.deposit.models import DepositClient, DepositCollection
+from swh.deposit.models import DepositRequestType
 
 
 class BasicTestCase(TestCase):
-    """Mixin intended for adding a specific user
+    """Mixin intended for data setup purposes (user, collection, etc...)
 
     """
     def setUp(self):
-        super().setUp()
         """Define the test client and other test variables."""
+        super().setUp()
+
+        # Add deposit request types
         for deposit_request_type in ['archive', 'metadata']:
             drt = DepositRequestType(name=deposit_request_type)
             drt.save()
+
         _name = 'hal'
-        _type = DepositType(name=_name)
-        _type.save()
-        _user = User.objects.create_user(username=_name, password=_name)
-        self.type = _type
-        self.user = _user
+        # set collection up
+        _collection = DepositCollection(name=_name)
+        _collection.save()
+        # set user/client up
+        _client = DepositClient.objects.create_user(username=_name,
+                                                    password=_name)
+        _client.collections = [_collection.id]
+        _client.save()
+
+        self.collection = _collection
+        self.user = _client
         self.username = _name
         self.userpass = _name
         self.maxDiff = None
@@ -40,7 +49,7 @@ class WithAuthTestCase(TestCase):
         r = self.client.login(username=self.username, password=self.userpass)
         if not r:
             raise ValueError(
-                'Dev error - test misconfiguration. Bad credential provided!')
+                'Dev error - test misconfiguration. Bad credentials provided!')
 
     def tearDown(self):
         super().tearDown()

@@ -12,7 +12,8 @@ import os
 AUTHORIZED_PLATFORMS = ['development', 'production']
 
 
-@click.command(help='Create a basic user with some needed information')
+@click.command(
+    help='Create a user with some needed information (password, collection)')
 @click.option('--platform', default='development',
               help='development or production platform')
 @click.option('--username', required=True, help="User's name")
@@ -20,7 +21,8 @@ AUTHORIZED_PLATFORMS = ['development', 'production']
 @click.option('--firstname', default='', help="User's first name")
 @click.option('--lastname', default='', help="User's last name")
 @click.option('--email', default='', help="User's email")
-def main(platform, username, password, firstname, lastname, email):
+@click.option('--collection', help="User's collection")
+def main(platform, username, password, firstname, lastname, email, collection):
 
     if platform not in AUTHORIZED_PLATFORMS:
         raise ValueError('Platform should either be one of %s' %
@@ -32,19 +34,26 @@ def main(platform, username, password, firstname, lastname, email):
     import django
     django.setup()
 
-    from django.contrib.auth.models import User
+    from swh.deposit.models import DepositClient, DepositCollection
+
+    try:
+        collection = DepositCollection.objects.get(name=collection)
+    except DepositCollection.DoesNotExist:
+        raise ValueError(
+            'Collection %s does not exist, skipping' % collection)
 
     # user create/update
     try:
-        user = User.objects.get(username=username)
+        user = DepositClient.objects.get(username=username)
         print('User %s exists, updating information.' % user)
         user.set_password(password)
-    except User.DoesNotExist:
+    except DepositClient.DoesNotExist:
         print('Create new user %s' % username)
-        user = User.objects.create_user(
+        user = DepositClient.objects.create_user(
             username=username,
             password=password)
 
+    user.collections = [collection]
     user.first_name = firstname
     user.last_name = lastname
     user.email = email

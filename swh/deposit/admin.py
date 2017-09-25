@@ -5,8 +5,10 @@
 
 from django.contrib import admin
 
-from .models import DepositType, Deposit, DepositRequest
+from .models import Deposit, DepositCollection, DepositRequestType
+from .models import DepositClient
 
-admin.site.register(DepositType)
+admin.site.register(DepositClient)
 admin.site.register(Deposit)
-admin.site.register(DepositRequest)
+admin.site.register(DepositCollection)
+admin.site.register(DepositRequestType)

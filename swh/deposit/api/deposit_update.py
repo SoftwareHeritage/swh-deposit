@@ -3,25 +3,27 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from rest_framework import status
 
+from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
+from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
+from ..errors import make_error_response, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
-from ..errors import make_error, make_error_response, BAD_REQUEST
-from .common import SWHBaseDeposit
 
-
-class SWHUpdateArchiveDeposit(SWHBaseDeposit):
+class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
+                              SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'EM IRI' in the sword specification.
 
-    HTTP verbs supported: PUT
+    HTTP verbs supported: PUT, POST, DELETE
 
     """
     parser_classes = (SWHFileUploadParser, )
 
-    def process_put(self, req, headers, client_name, deposit_id, format=None):
+    def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
 
         +header: Metadata-relevant (to extract metadata from the archive)
@@ -34,15 +36,14 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
 
         """
         if req.content_type != 'application/zip':
-            error = make_error(BAD_REQUEST,
-                               'Only application/zip is supported!')
-            return make_error_response(req, error['error'])
+            return make_error_response(req, BAD_REQUEST,
+                                       'Only application/zip is supported!')
 
-        return self._binary_upload(req, headers, client_name,
+        return self._binary_upload(req, headers, collection_name,
                                    deposit_id=deposit_id,
                                    replace_archives=True)
 
-    def process_post(self, req, headers, client_name, deposit_id, format=None):
+    def process_post(self, req, headers, collection_name, deposit_id):
         """Add new content to the existing deposit.
 
         +header: Metadata-relevant (to extract metadata from the archive)
@@ -57,29 +58,38 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             Body: [optional Deposit Receipt]
 
         """
-        if req.content_type == 'application/zip':
-            return self._binary_upload(req, headers, client_name, deposit_id)
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
-                                          deposit_id)
-        return self._atom_entry(req, headers, client_name)
+        if req.content_type != 'application/zip':
+            return make_error_response(req, BAD_REQUEST,
+                                       'Only application/zip is supported!')
 
-    def update_post_response(self, response, data):
-        response._headers['location'] = 'Location', data['cont_file_iri']
-        return response
+        return (status.HTTP_201_CREATED, CONT_FILE_IRI,
+                self._binary_upload(req, headers, collection_name, deposit_id))
+
+    def process_delete(self, req, collection_name, deposit_id):
+        """Delete content (archives) from existing deposit.
+
+        source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+        #protocoloperations_deletingcontent
+
+        Returns:
+            204 Created
+
+        """
+        return self._delete_archives(collection_name, deposit_id)
 
 
-class SWHUpdateMetadataDeposit(SWHBaseDeposit):
+class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
+                               SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Edit IRI' (and SE IRI) in the sword specification.
 
-    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI)
+    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
 
     """
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
 
-    def process_put(self, req, headers, client_name, deposit_id, format=None):
+    def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing deposit's metadata/archive with new ones.
 
         source:
@@ -93,14 +103,14 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         """
         if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
+            return self._multipart_upload(req, headers, collection_name,
                                           deposit_id=deposit_id,
                                           replace_archives=True,
                                           replace_metadata=True)
-        return self._atom_entry(req, headers, client_name,
+        return self._atom_entry(req, headers, collection_name,
                                 deposit_id=deposit_id, replace_metadata=True)
 
-    def process_post(self, req, headers, client_name, deposit_id, format=None):
+    def process_post(self, req, headers, collection_name, deposit_id):
         """Add new metadata/archive to existing deposit.
 
         source:
@@ -109,19 +119,37 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         #protocoloperations_addingcontent_multipart
 
-        Returns:
-            201 Created
-            Location: [EM-IRI]
+        This also deals with an empty post corner case to finalize a
+        deposit.
 
-            [optional Deposit Receipt]
+        Returns:
+            In optimal case for a multipart and atom-entry update, a
+            201 Created response. The body response will hold a
+            deposit. And the response headers will contain an entry
+            'Location' with the EM-IRI.
+
+            For the empty post case, this returns a 200.
 
         """
         if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
-                                          deposit_id=deposit_id)
-        return self._atom_entry(req, headers, client_name,
-                                deposit_id=deposit_id)
+            return (status.HTTP_201_CREATED, EM_IRI,
+                    self._multipart_upload(req, headers, collection_name,
+                                           deposit_id=deposit_id))
+        # check for final empty post
+        # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+        # #continueddeposit_complete
+        if headers['content-length'] == 0 and headers['in-progress'] is False:
+            data = self._empty_post(req, headers, collection_name, deposit_id)
+            return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 
-    def update_post_response(self, response, data):
-        response._headers['location'] = 'Location', data['em_iri']
-        return response
+        return (status.HTTP_201_CREATED, EM_IRI,
+                self._atom_entry(req, headers, collection_name,
+                                 deposit_id=deposit_id))
+
+    def process_delete(self, req, collection_name, deposit_id):
+        """Delete the container (deposit).
+
+        Source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+        #protocoloperations_deleteconteiner
+        """
+        return self._delete_deposit(collection_name, deposit_id)

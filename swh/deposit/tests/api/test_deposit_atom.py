@@ -8,6 +8,7 @@ from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.config import COL_IRI
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
@@ -88,18 +89,18 @@ and other stuff</description>
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_unknown_client(self):
+    def test_post_deposit_atom_unknown_collection(self):
         response = self.client.post(
-            reverse('upload', args=['unknown-one']),
+            reverse(COL_IRI, args=['unknown-one']),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data3,
             HTTP_SLUG='something')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_deposit_atom_entry_initial(self):
         """One deposit upload as atom entry
@@ -117,7 +118,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='false')
@@ -130,7 +131,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.client, self.user)
@@ -152,7 +153,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse('upload', args=[self.username]),
+            reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data1,
             HTTP_IN_PROGRESS='True',
@@ -166,7 +167,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'partial')
         self.assertEqual(deposit.client, self.user)
@@ -195,7 +196,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.type, self.type)
+        self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.status, 'ready')
         self.assertEqual(deposit.client, self.user)

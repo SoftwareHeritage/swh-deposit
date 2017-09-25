@@ -8,7 +8,7 @@ import base64
 from django.contrib.auth import authenticate, login
 
 from .config import SWHDefaultConfig
-from .errors import UNAUTHORIZED, make_error, make_error_response
+from .errors import UNAUTHORIZED, make_error_response
 
 
 def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
@@ -42,8 +42,8 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
     # Either they did not provide an authorization header or
     # something in the authorization attempt failed. Send a 401
     # back to them to ask them to authenticate.
-    err = make_error(UNAUTHORIZED, 'Access to this api needs authentication')
-    response = make_error_response(request, err['error'])
+    response = make_error_response(request, UNAUTHORIZED,
+                                   'Access to this api needs authentication')
     response['WWW-Authenticate'] = 'Basic realm="%s"' % realm
     return response
 
