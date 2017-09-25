@@ -25,7 +25,7 @@ from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
 from ..errors import make_error_response, make_error_response_from_dict
-from ..errors import NOT_FOUND, METHOD_NOT_ALLOWED
+from ..errors import NOT_FOUND
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -225,6 +225,39 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         DepositRequest.objects.filter(
             deposit=deposit,
             type=self.deposit_request_types['archive']).delete()
+        return {}
+
+    def _delete_deposit(self, client_name, deposit_id):
+        """Delete deposit reference.
+
+        Args:
+            client_name (str): Client's name
+            deposit_id (id): The deposit to delete
+
+        Returns
+            Empty dict when ok.
+            Dict with error key to describe the failure.
+
+        """
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            return make_error_dict(
+                NOT_FOUND,
+                'The deposit %s does not exist' % deposit_id)
+
+        if deposit.collection.name != client_name:
+            summary = 'Cannot delete a deposit from another collection'
+            description = "Deposit %s does not belong to the collection %s" % (
+                deposit_id, client_name)
+            return make_error_dict(
+                BAD_REQUEST,
+                summary=summary,
+                verbose_description=description)
+
+        DepositRequest.objects.filter(deposit=deposit).delete()
+        deposit.delete()
+
         return {}
 
     def _archive_put(self, file):
@@ -591,10 +624,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     deposit_id)
 
             if deposit.status != 'partial':
+                summary = "You can only update deposit with status 'partial'"
+                description = "This deposit has status '%s'" % deposit.status
                 return make_error_response(
-                    req,
-                    BAD_REQUEST,
-                    'You cannot update a deposit in status ready.')
+                    req, BAD_REQUEST, summary=summary,
+                    verbose_description=description)
 
         headers = self._read_headers(req)
 
@@ -655,10 +689,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     'Deposit with id %s does not exist' % deposit_id)
 
             if deposit.status != 'partial':
+                summary = "You can only update deposit with status 'partial'"
+                description = "This deposit has status '%s'" % deposit.status
                 return make_error_response(
-                    req,
-                    BAD_REQUEST,
-                    'You cannot update a deposit in status ready.')
+                    req, BAD_REQUEST, summary=summary,
+                    verbose_description=description)
 
         headers = self._read_headers(req)
 
@@ -686,11 +721,55 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
-    def delete(self, req, client_name, deposit_id=None):
+    def delete(self, req, client_name, deposit_id):
+        """Routine to delete some resource (archives, deposit).
+
+        Returns:
+            In the optimal deletion case, a 204 response.
+
+        """
+        try:
+            self._collection = DepositCollection.objects.get(name=client_name)
+            self._client = DepositClient.objects.get(username=client_name)
+        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
+            return make_error_response(req, BAD_REQUEST,
+                                       'Unknown client name %s' % client_name)
+
+        # FIXME: make sure the client is permitted to deal with the collection
+        # FIXME: factorize checks
+
+        on_behalf_of = req._request.META.get('HTTP_ON_BEHALF_OF')
+
+        if on_behalf_of:
+            return make_error_response(req, MEDIATION_NOT_ALLOWED,
+                                       'Mediation is not supported.')
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            return make_error_response(
+                req, NOT_FOUND,
+                'Deposit with id %s does not exist' % deposit_id)
+
+        if deposit.status != 'partial':
+            summary = "You can only delete deposit with status 'partial'"
+            description = "This deposit has status '%s'" % deposit.status
+            return make_error_response(
+                req, BAD_REQUEST, summary=summary,
+                verbose_description=description)
+
+        data = self.process_delete(req, client_name, deposit_id)
+
+        error = data.get('error')
+        if error:
+            return make_error_response_from_dict(req, error)
+
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+    def process_delete(self, req, client_name, deposit_id):
         """Routine to delete a resource.
 
         This is mostly not allowed except for the
         EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
 
         """
-        return make_error_response(req, METHOD_NOT_ALLOWED)
+        pass

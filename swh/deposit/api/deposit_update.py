@@ -3,13 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.http import HttpResponse
 from rest_framework import status
 
 from .common import SWHBaseDeposit
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
 from ..errors import make_error_response, BAD_REQUEST
-from ..errors import make_error_response_from_dict
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
@@ -66,7 +64,7 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
         return (status.HTTP_201_CREATED, CONT_FILE_IRI,
                 self._binary_upload(req, headers, client_name, deposit_id))
 
-    def delete(self, req, client_name, deposit_id):
+    def process_delete(self, req, client_name, deposit_id):
         """Delete content (archives) from existing deposit.
 
         source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
@@ -76,13 +74,7 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             204 Created
 
         """
-        data = self._delete_archives(client_name, deposit_id)
-
-        error = data.get('error')
-        if error:
-            return make_error_response_from_dict(req, error)
-
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        return self._delete_archives(client_name, deposit_id)
 
 
 class SWHUpdateMetadataDeposit(SWHBaseDeposit):
@@ -151,3 +143,11 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         return (status.HTTP_201_CREATED, EM_IRI,
                 self._atom_entry(req, headers, client_name,
                                  deposit_id=deposit_id))
+
+    def process_delete(self, req, client_name, deposit_id):
+        """Delete the container (deposit).
+
+        Source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+        #protocoloperations_deleteconteiner
+        """
+        return self._delete_deposit(client_name, deposit_id)

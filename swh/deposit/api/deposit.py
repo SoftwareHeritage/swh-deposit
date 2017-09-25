@@ -82,6 +82,15 @@ class SWHDeposit(SWHBaseDeposit):
 
         return status.HTTP_201_CREATED, EDIT_SE_IRI, data
 
+    def delete(self, req, client_name, deposit_id=None):
+        """Routine to delete a resource.
+
+        This is mostly not allowed except for the
+        EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
+
+        """
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
     def put(self, req, client_name, deposit_id=None, format=None):
         """This endpoint only supports POST.
 

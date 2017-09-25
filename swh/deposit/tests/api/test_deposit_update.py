@@ -17,8 +17,7 @@ from ...config import EM_IRI, EDIT_SE_IRI, COL_IRI
 
 
 class CommonData:
-    def _create_deposit(self):
-        """Creating a deposit"""
+    def _create_deposit_partial(self):
         response = self.client.post(
             reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
@@ -26,11 +25,13 @@ class CommonData:
             HTTP_IN_PROGRESS='true')
 
         # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
         deposit_id = response_content[
             '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
 
+    def _update_deposit_with_status(self, deposit_id, status_partial=False):
         # add an archive
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
@@ -43,13 +44,25 @@ class CommonData:
             # + headers
             HTTP_CONTENT_MD5=md5sum,
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-            HTTP_IN_PROGRESS='false',
+            HTTP_IN_PROGRESS=status_partial,
             HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         # then
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        assert response.status_code == status.HTTP_201_CREATED
+        return deposit_id
 
+    def _create_deposit_ready(self):
+        """Creating a deposit"""
+        deposit_id = self._create_deposit_partial()
+        deposit_id = self._update_deposit_with_status(deposit_id)
+        return deposit_id
+
+    def _create_deposit_complex_partial(self):
+        """Creating a deposit"""
+        deposit_id = self._create_deposit_partial()
+        deposit_id = self._update_deposit_with_status(
+            deposit_id, status_partial=True)
         return deposit_id
 
 
@@ -108,8 +121,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_metadata_to_em_iri_failure(self):
-        """Post query with wrong content type should return a 400 response"""
-        deposit_id = self._create_deposit()
+        """Add archive with wrong content type should return a 400 response"""
+        deposit_id = self._create_deposit_ready()
 
         update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
         response = self.client.put(
@@ -119,9 +132,9 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_put_metadata_to_em_iri_failure(self):
-        """Put query with wrong content type should return a 400 response"""
+        """Update archive with wrong content type should return 400 response"""
         # given
-        deposit_id = self._create_deposit()
+        deposit_id = self._create_deposit_ready()
         # when
         update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
         response = self.client.put(
@@ -142,10 +155,12 @@ class DepositUpdateTest(APITestCase, WithAuthTestCase, BasicTestCase,
     <external_identifier>%s</external_identifier>
 </entry>"""
 
-    def test_delete_archive_to_em_iri(self):
-        """Put query with wrong content type should return a 400 response"""
+    def test_delete_archive_on_partial_deposit_works(self):
+        """Removing partial deposit's archive should return a 204 response
+
+        """
         # given
-        deposit_id = self._create_deposit()
+        deposit_id = self._create_deposit_complex_partial()
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
@@ -171,10 +186,64 @@ class DepositUpdateTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEquals(len(requests), 1)
         self.assertEquals(requests[0].type.name, 'metadata')
 
-    def test_delete_archive_to_em_iri_failure_since_not_found(self):
-        """Put query with wrong content type should return a 400 response"""
+    def test_delete_archive_on_undefined_deposit_fails(self):
+        """Delete undefined deposit returns a 404 response
+
+        """
         # when
         update_uri = reverse(EM_IRI, args=[self.username, 999])
         response = self.client.delete(update_uri)
         # then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_archive_on_non_partial_deposit_fails(self):
+        """Delete !partial status deposit should return a 400 response"""
+        deposit_id = self._create_deposit_ready()
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit.status == 'ready'
+
+        # when
+        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        response = self.client.delete(update_uri)
+        # then
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertIsNotNone(deposit)
+
+    def test_delete_partial_deposit_works(self):
+        """Delete deposit should return a 204 response
+
+        """
+        # given
+        deposit_id = self._create_deposit_partial()
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit.id == deposit_id
+
+        # when
+        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        response = self.client.delete(url)
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_204_NO_CONTENT)
+        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
+        self.assertEquals(deposit_requests, [])
+        deposits = list(Deposit.objects.filter(pk=deposit_id))
+        self.assertEquals(deposits, [])
+
+    def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
+        """Delete !partial deposit should return a 400 response
+
+        """
+        # given
+        deposit_id = self._create_deposit_ready()
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit.id == deposit_id
+
+        # when
+        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        response = self.client.delete(url)
+        # then
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertIsNotNone(deposit)

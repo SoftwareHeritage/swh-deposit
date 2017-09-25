@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.config import COL_IRI, EDIT_SE_IRI
+from swh.deposit.config import COL_IRI
 
 from ..common import BasicTestCase, WithAuthTestCase
 
@@ -21,15 +21,6 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase):
 
         """
         url = reverse(COL_IRI, args=[self.username])
-        response = self.client.delete(url)
-        self.assertEqual(response.status_code,
-                         status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_delete_on_edit_se_iri_not_supported(self):
-        """Delete on col iri should return a 405 response
-
-        """
-        url = reverse(EDIT_SE_IRI, args=[self.username, 1])
         response = self.client.delete(url)
         self.assertEqual(response.status_code,
                          status.HTTP_405_METHOD_NOT_ALLOWED)
