@@ -1,3 +1,17 @@
+swh-deposit (0.0.13-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.13
+  * swh.deposit.api: Restrict access to one's own collection
+  * swh.deposit.api: Unify checks on all endpoints
+  * swh.deposit: Separate the collection from the client notion
+  * swh.deposit.api: Add delete deposit endpoint
+  * swh.deposit.api: Add delete content (archives) from deposit
+  * swh.deposit.api: Empty post on EDIT-IRI can finalize a deposit
+  * swh.deposit.model: Relax unicity constraint on external id
+  * swh.deposit.api: PUT does not permit to have the deposit_id None
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 25 Sep 2017 18:02:46 +0200
+
 swh-deposit (0.0.12-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.12
