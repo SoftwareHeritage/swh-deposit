@@ -663,12 +663,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if error:
             return make_error_response_from_dict(req, error)
 
-        iris = self._make_iris(client_name, data['deposit_id'])
-
         data['packagings'] = ACCEPT_PACKAGINGS
         iris = self._make_iris(client_name, data['deposit_id'])
         data.update(iris)
-
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
                           content_type='application/xml',
