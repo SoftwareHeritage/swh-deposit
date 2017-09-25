@@ -22,7 +22,7 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
     """
     parser_classes = (SWHFileUploadParser, )
 
-    def process_put(self, req, headers, client_name, deposit_id, format=None):
+    def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
 
         +header: Metadata-relevant (to extract metadata from the archive)
@@ -38,11 +38,11 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             return make_error_response(req, BAD_REQUEST,
                                        'Only application/zip is supported!')
 
-        return self._binary_upload(req, headers, client_name,
+        return self._binary_upload(req, headers, collection_name,
                                    deposit_id=deposit_id,
                                    replace_archives=True)
 
-    def process_post(self, req, headers, client_name, deposit_id, format=None):
+    def process_post(self, req, headers, collection_name, deposit_id):
         """Add new content to the existing deposit.
 
         +header: Metadata-relevant (to extract metadata from the archive)
@@ -62,9 +62,9 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
                                        'Only application/zip is supported!')
 
         return (status.HTTP_201_CREATED, CONT_FILE_IRI,
-                self._binary_upload(req, headers, client_name, deposit_id))
+                self._binary_upload(req, headers, collection_name, deposit_id))
 
-    def process_delete(self, req, client_name, deposit_id):
+    def process_delete(self, req, collection_name, deposit_id):
         """Delete content (archives) from existing deposit.
 
         source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
@@ -74,7 +74,7 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
             204 Created
 
         """
-        return self._delete_archives(client_name, deposit_id)
+        return self._delete_archives(collection_name, deposit_id)
 
 
 class SWHUpdateMetadataDeposit(SWHBaseDeposit):
@@ -87,7 +87,7 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
     """
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
 
-    def process_put(self, req, headers, client_name, deposit_id, format=None):
+    def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing deposit's metadata/archive with new ones.
 
         source:
@@ -101,14 +101,14 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
 
         """
         if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, client_name,
+            return self._multipart_upload(req, headers, collection_name,
                                           deposit_id=deposit_id,
                                           replace_archives=True,
                                           replace_metadata=True)
-        return self._atom_entry(req, headers, client_name,
+        return self._atom_entry(req, headers, collection_name,
                                 deposit_id=deposit_id, replace_metadata=True)
 
-    def process_post(self, req, headers, client_name, deposit_id, format=None):
+    def process_post(self, req, headers, collection_name, deposit_id):
         """Add new metadata/archive to existing deposit.
 
         source:
@@ -131,23 +131,23 @@ class SWHUpdateMetadataDeposit(SWHBaseDeposit):
         """
         if req.content_type.startswith('multipart/'):
             return (status.HTTP_201_CREATED, EM_IRI,
-                    self._multipart_upload(req, headers, client_name,
+                    self._multipart_upload(req, headers, collection_name,
                                            deposit_id=deposit_id))
         # check for final empty post
         # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         # #continueddeposit_complete
         if headers['content-length'] == 0 and headers['in-progress'] is False:
-            return (status.HTTP_200_OK, EDIT_SE_IRI,
-                    self._empty_post(req, headers, client_name, deposit_id))
+            data = self._empty_post(req, headers, collection_name, deposit_id)
+            return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 
         return (status.HTTP_201_CREATED, EM_IRI,
-                self._atom_entry(req, headers, client_name,
+                self._atom_entry(req, headers, collection_name,
                                  deposit_id=deposit_id))
 
-    def process_delete(self, req, client_name, deposit_id):
+    def process_delete(self, req, collection_name, deposit_id):
         """Delete the container (deposit).
 
         Source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         #protocoloperations_deleteconteiner
         """
-        return self._delete_deposit(client_name, deposit_id)
+        return self._delete_deposit(collection_name, deposit_id)

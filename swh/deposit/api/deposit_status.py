@@ -21,18 +21,16 @@ class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
     HTTP verbs supported: GET
 
     """
-    def get(self, req, client_name, deposit_id, format=None):
+    def get(self, req, collection_name, deposit_id, format=None):
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
-            # FIXME: Find why Deposit.objects.get(pk=deposit_id,
-            # client=User(username=client_name)) does not work
-            if deposit.client.username != client_name:
+            if deposit.collection.name != collection_name:
                 raise Deposit.DoesNotExist
         except Deposit.DoesNotExist:
             return make_error_response(
                 req, NOT_FOUND,
-                'deposit %s for client %s does not exist' % (
-                    deposit_id, client_name))
+                'deposit %s does not belong to collection %s' % (
+                    deposit_id, collection_name))
 
         context = {
             'deposit_id': deposit.id,

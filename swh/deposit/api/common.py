@@ -209,7 +209,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return deposit_request
 
-    def _delete_archives(self, client_name, deposit_id):
+    def _delete_archives(self, collection_name, deposit_id):
         """Delete archives reference from the deposit id.
 
         """
@@ -227,11 +227,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             type=self.deposit_request_types['archive']).delete()
         return {}
 
-    def _delete_deposit(self, client_name, deposit_id):
+    def _delete_deposit(self, collection_name, deposit_id):
         """Delete deposit reference.
 
         Args:
-            client_name (str): Client's name
+            collection_name (str): Client's name
             deposit_id (id): The deposit to delete
 
         Returns
@@ -246,10 +246,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 NOT_FOUND,
                 'The deposit %s does not exist' % deposit_id)
 
-        if deposit.collection.name != client_name:
+        if deposit.collection.name != collection_name:
             summary = 'Cannot delete a deposit from another collection'
             description = "Deposit %s does not belong to the collection %s" % (
-                deposit_id, client_name)
+                deposit_id, collection_name)
             return make_error_dict(
                 BAD_REQUEST,
                 summary=summary,
@@ -320,7 +320,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return None
 
-    def _binary_upload(self, req, headers, client_name,
+    def _binary_upload(self, req, headers, collection_name,
                        deposit_id=None, update=False):
         """Binary upload routine.
 
@@ -330,7 +330,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -405,7 +405,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _multipart_upload(self, req, headers, client_name,
+    def _multipart_upload(self, req, headers, collection_name,
                           deposit_id=None, replace_metadata=False,
                           replace_archives=False):
         """Multipart upload supported with exactly:
@@ -418,7 +418,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -502,7 +502,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': archive_metadata['archive']['name'],
         }
 
-    def _atom_entry(self, req, headers, client_name,
+    def _atom_entry(self, req, headers, collection_name,
                     deposit_id=None,
                     replace_metadata=False,
                     replace_archives=False):
@@ -512,7 +512,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -560,14 +560,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': None,
         }
 
-    def _empty_post(self, req, headers, client_name, deposit_id):
+    def _empty_post(self, req, headers, collection_name, deposit_id):
         """Empty post to finalize an empty deposit.
 
         Args:
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier
 
         Returns:
@@ -586,11 +586,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': None,
         }
 
-    def _make_iris(self, client_name, deposit_id):
+    def _make_iris(self, collection_name, deposit_id):
         """Define the IRI endpoints
 
         Args:
-            client_name (str): client/collection's name
+            collection_name (str): client/collection's name
             deposit_id (id): Deposit identifier
 
         Returns:
@@ -600,27 +600,30 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             EM_IRI: reverse(
                 EM_IRI,
-                args=[client_name, deposit_id]),
+                args=[collection_name, deposit_id]),
             EDIT_SE_IRI: reverse(
                 EDIT_SE_IRI,
-                args=[client_name, deposit_id]),
+                args=[collection_name, deposit_id]),
             CONT_FILE_IRI: reverse(
                 CONT_FILE_IRI,
-                args=[client_name, deposit_id]),
+                args=[collection_name, deposit_id]),
         }
 
-    def _primary_input_checks(self, req, client_name, deposit_id=None):
+    def _primary_input_checks(self, req, collection_name, deposit_id=None):
         try:
-            self._collection = DepositCollection.objects.get(name=client_name)
+            self._collection = DepositCollection.objects.get(
+                name=collection_name)
         except DepositCollection.DoesNotExist:
-            return make_error_dict(BAD_REQUEST,
-                                   'Unknown client name %s' % client_name)
+            return make_error_dict(
+                BAD_REQUEST,
+                'Unknown collection name %s' % collection_name)
 
         try:
-            self._client = DepositClient.objects.get(username=client_name)
+            username = req.user.username
+            self._client = DepositClient.objects.get(username=username)
         except DepositClient.DoesNotExist:
             return make_error_dict(BAD_REQUEST,
-                                   'Unknown client name %s' % client_name)
+                                   'Unknown client name %s' % username)
 
         # FIXME: make sure the client is permitted to deal with the collection
 
@@ -647,24 +650,24 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return {'headers': headers}
 
-    def post(self, req, client_name, deposit_id=None, format=None):
+    def post(self, req, collection_name, deposit_id=None, format=None):
         """Main post processing of a deposit.
 
         """
-        checks = self._primary_input_checks(req, client_name, deposit_id)
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
         headers = checks['headers']
         _status, _iri_key, data = self.process_post(
-            req, headers, client_name, deposit_id)
+            req, headers, collection_name, deposit_id)
 
         error = data.get('error')
         if error:
             return make_error_response_from_dict(req, error)
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(client_name, data['deposit_id'])
+        iris = self._make_iris(collection_name, data['deposit_id'])
         data.update(iris)
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
@@ -674,7 +677,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return response
 
     @abstractmethod
-    def process_post(self, req, client_name, deposit_id=None, format=None):
+    def process_post(self, req, collection_name, deposit_id=None, format=None):
         """Routine to deal with the deposit's processing.
 
         Returns
@@ -686,16 +689,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
-    def put(self, req, client_name, deposit_id, format=None):
+    def put(self, req, collection_name, deposit_id, format=None):
         """Main put processing of a deposit.
 
         """
-        checks = self._primary_input_checks(req, client_name, deposit_id)
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
         headers = checks['headers']
-        data = self.process_put(req, headers, client_name, deposit_id)
+        data = self.process_put(req, headers, collection_name, deposit_id)
 
         error = data.get('error')
         if error:
@@ -703,7 +706,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
-    def process_put(self, req, client_name, deposit_id=None, update=False,
+    def process_put(self, req, collection_name, deposit_id=None, update=False,
                     format=None):
         """Routine to deal with the deposit's processing.
 
@@ -715,7 +718,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
-    def delete(self, req, client_name, deposit_id):
+    def delete(self, req, collection_name, deposit_id):
         """Routine to delete some resource (archives, deposit).
 
         Returns:
@@ -725,18 +728,18 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
 
         """
-        checks = self._primary_input_checks(req, client_name, deposit_id)
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
-        data = self.process_delete(req, client_name, deposit_id)
+        data = self.process_delete(req, collection_name, deposit_id)
         error = data.get('error')
         if error:
             return make_error_response_from_dict(req, error)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
-    def process_delete(self, req, client_name, deposit_id):
+    def process_delete(self, req, collection_name, deposit_id):
         """Routine to delete a resource.
 
         This is mostly not allowed except for the

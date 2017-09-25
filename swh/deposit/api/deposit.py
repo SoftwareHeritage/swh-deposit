@@ -25,7 +25,7 @@ class SWHDeposit(SWHBaseDeposit):
                       SWHFileUploadParser,
                       SWHAtomEntryParser)
 
-    def process_post(self, req, headers, client_name, deposit_id=None,
+    def process_post(self, req, headers, collection_name, deposit_id=None,
                      format=None):
         """Create a first deposit as:
         - archive deposit (1 zip)
@@ -35,7 +35,7 @@ class SWHDeposit(SWHBaseDeposit):
         Args:
             req (Request): the request holding the information to parse
                 and inject in db
-            client_name (str): the associated client
+            collection_name (str): the associated client
 
         Returns:
             An http response (HttpResponse) according to the situation.
@@ -74,15 +74,15 @@ class SWHDeposit(SWHBaseDeposit):
         """
         assert deposit_id is None
         if req.content_type == 'application/zip':
-            data = self._binary_upload(req, headers, client_name)
+            data = self._binary_upload(req, headers, collection_name)
         elif req.content_type.startswith('multipart/'):
-            data = self._multipart_upload(req, headers, client_name)
+            data = self._multipart_upload(req, headers, collection_name)
         else:
-            data = self._atom_entry(req, headers, client_name)
+            data = self._atom_entry(req, headers, collection_name)
 
         return status.HTTP_201_CREATED, EDIT_SE_IRI, data
 
-    def delete(self, req, client_name, deposit_id=None):
+    def delete(self, req, collection_name, deposit_id=None):
         """Routine to delete a resource.
 
         This is mostly not allowed except for the
@@ -91,7 +91,7 @@ class SWHDeposit(SWHBaseDeposit):
         """
         return make_error_response(req, METHOD_NOT_ALLOWED)
 
-    def put(self, req, client_name, deposit_id=None, format=None):
+    def put(self, req, collection_name, deposit_id=None, format=None):
         """This endpoint only supports POST.
 
         """
