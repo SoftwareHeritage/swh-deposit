@@ -489,7 +489,21 @@ which exceeds the server's maximum upload size limit
 
 Associated HTTP Status: 413 (Request Entity Too Large)
 
----------------
+### sword:Unauthorized
+
+IRI: http://purl.org/net/sword/error/ErrorUnauthorized
+
+The access to the api is through authentication.
+
+Associated HTTP status: 401
+
+### sword:Forbidden
+
+IRI: http://purl.org/net/sword/error/ErrorForbidden
+
+The action is forbidden (access to another collection for example).
+
+Associated HTTP status: 403
 
 == Tarball Injection ==
 
@@ -678,21 +692,21 @@ True).  Then  other archives needs  to be  uploaded to this  IRI.  The
 last  one mentioning  the  In-Progress  flag to  False  to notify  the
 deposit is done.
 
-HTTP verbs supported: PUT
+HTTP verbs supported: PUT, DELETE
 
 === Edit-IRI - The Atom Entry Edit IRI ===
 
 This is the endpoint to update metadata for a previous incomplete
 deposit.
 
-HTTP verbs supported: PUT
+HTTP verbs supported: PUT, DELETE
 
 === SE-IRI - The SWORD Edit IRI ===
 
 This is the IRI to which clients may POST additional content to an
 Atom Entry Resource. This is the same as Edit-IRI.
 
-HTTP verbs supported: POST
+HTTP verbs supported: POST, DELETE
 
 === State-IRI - The SWORD Statement IRI ===
 

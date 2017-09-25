@@ -30,13 +30,13 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
-    'swh.deposit.apps.DepositConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.postgres',     # for JSONField
+    'django.contrib.postgres',     # for JSONField, ArrayField
+    'swh.deposit.apps.DepositConfig',
 ]
 
 MIDDLEWARE = [
