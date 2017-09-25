@@ -18,7 +18,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
 
     What's known as 'EM IRI' in the sword specification.
 
-    HTTP verbs supported: PUT
+    HTTP verbs supported: PUT, POST, DELETE
 
     """
     parser_classes = (SWHFileUploadParser, )
@@ -84,7 +84,7 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
 
     What's known as 'Edit IRI' (and SE IRI) in the sword specification.
 
-    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI)
+    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
 
     """
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
