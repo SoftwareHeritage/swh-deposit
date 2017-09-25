@@ -24,7 +24,7 @@ from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response_from_dict
+from ..errors import make_error_response_from_dict, FORBIDDEN
 from ..errors import NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
 
 
@@ -625,7 +625,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_dict(BAD_REQUEST,
                                    'Unknown client name %s' % username)
 
-        # FIXME: make sure the client is permitted to deal with the collection
+        if self._collection.id not in self._client.collections:
+            return make_error_dict(FORBIDDEN,
+                                   'Client %s cannot access collection %s' % (
+                                       username, collection_name))
 
         if deposit_id:
             try:

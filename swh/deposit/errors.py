@@ -11,6 +11,7 @@ from rest_framework import status
 from django.shortcuts import render
 
 
+FORBIDDEN = 'forbidden'
 UNAUTHORIZED = 'unauthorized'
 NOT_FOUND = 'unknown'
 BAD_REQUEST = 'bad-request'
@@ -22,6 +23,11 @@ MAX_UPLOAD_SIZE_EXCEEDED = 'max_upload_size_exceeded'
 
 
 ERRORS = {
+    FORBIDDEN: {
+        'status': status.HTTP_403_FORBIDDEN,
+        'iri': 'http://purl.org/net/sword/error/ErrorForbidden',
+        'tag': 'sword:ErrorForbidden',
+    },
     UNAUTHORIZED: {
         'status': status.HTTP_401_UNAUTHORIZED,
         'iri': 'http://purl.org/net/sword/error/ErrorUnauthorized',

@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -16,7 +15,6 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
     """Service document endpoints are protected with basic authentication.
 
     """
-
     def test_service_document_no_authentication_fails(self):
         """Without authentication, service document endpoint is unauthorized"""
         url = reverse(SD_IRI)
@@ -27,13 +25,6 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
 
 class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
-    def setUp(self):
-        super().setUp()
-        # Add another user
-        self.user2 = User.objects.create_user(first_name='user',
-                                              last_name='user',
-                                              username='user')
-
     def test_service_document(self):
         """With authentication, service document list user's collection
 
