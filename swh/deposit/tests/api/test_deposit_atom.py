@@ -94,13 +94,13 @@ and other stuff</description>
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_unknown_client(self):
+    def test_post_deposit_atom_unknown_collection(self):
         response = self.client.post(
             reverse(COL_IRI, args=['unknown-one']),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data3,
             HTTP_SLUG='something')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_deposit_atom_entry_initial(self):
         """One deposit upload as atom entry

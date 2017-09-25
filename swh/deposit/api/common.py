@@ -615,14 +615,14 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 name=collection_name)
         except DepositCollection.DoesNotExist:
             return make_error_dict(
-                BAD_REQUEST,
+                NOT_FOUND,
                 'Unknown collection name %s' % collection_name)
 
         try:
             username = req.user.username
             self._client = DepositClient.objects.get(username=username)
         except DepositClient.DoesNotExist:
-            return make_error_dict(BAD_REQUEST,
+            return make_error_dict(NOT_FOUND,
                                    'Unknown client name %s' % username)
 
         if self._collection.id not in self._client.collections:
@@ -667,6 +667,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
 
 class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support DELETE method.
+
+    """
     def post(self, req, collection_name, deposit_id=None, format=None):
         """Endpoint to create/add resources to deposit.
 
@@ -714,6 +717,9 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
 
 
 class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support PUT method.
+
+    """
     def put(self, req, collection_name, deposit_id, format=None):
         """Endpoint to update deposit resources.
 
@@ -747,6 +753,9 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
 
 
 class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support DELETE method.
+
+    """
     def delete(self, req, collection_name, deposit_id):
         """Endpoint to delete some deposit's resources (archives, deposit).
 

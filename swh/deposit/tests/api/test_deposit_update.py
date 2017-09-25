@@ -78,6 +78,18 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
     <external_identifier>%s</external_identifier>
 </entry>"""
 
+    def test_add_metadata_to_unknown_collection(self):
+        """Replacing metadata to unknown deposit should return a 404 response
+
+        """
+        url = reverse(EDIT_SE_IRI,
+                      args=['unknown', 999]),
+        response = self.client.post(
+            url,
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_entry_data0)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_add_metadata_to_unknown_deposit(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
