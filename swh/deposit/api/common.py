@@ -25,7 +25,7 @@ from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
 from ..errors import make_error_response_from_dict
-from ..errors import NOT_FOUND
+from ..errors import NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -636,7 +636,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     'Deposit with id %s does not exist' %
                     deposit_id)
 
-            if deposit.status != 'partial':
+            if req.method != 'GET' and deposit.status != 'partial':
                 summary = "You can only act on deposit with status 'partial'"
                 description = "This deposit has status '%s'" % deposit.status
                 return make_error_dict(
@@ -650,8 +650,28 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return {'headers': headers}
 
+    def get(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def post(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def put(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def delete(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+
+class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
     def post(self, req, collection_name, deposit_id=None, format=None):
-        """Main post processing of a deposit.
+        """Endpoint to create/add resources to deposit.
+
+        Returns:
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
+
 
         """
         checks = self._primary_input_checks(req, collection_name, deposit_id)
@@ -677,7 +697,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return response
 
     @abstractmethod
-    def process_post(self, req, collection_name, deposit_id=None, format=None):
+    def process_post(self, req, headers, collection_name, deposit_id=None):
         """Routine to deal with the deposit's processing.
 
         Returns
@@ -689,9 +709,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
-    def put(self, req, collection_name, deposit_id, format=None):
-        """Main put processing of a deposit.
 
+class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    def put(self, req, collection_name, deposit_id, format=None):
+        """Endpoint to update deposit resources.
+
+        Returns:
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
         """
         checks = self._primary_input_checks(req, collection_name, deposit_id)
         if 'error' in checks:
@@ -706,11 +732,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
-    def process_put(self, req, collection_name, deposit_id=None, update=False,
-                    format=None):
-        """Routine to deal with the deposit's processing.
-
-        Note: This one is not @abstractmethod since it may be undefined.
+    @abstractmethod
+    def process_put(self, req, headers, collection_name, deposit_id):
+        """Routine to deal with updating a deposit in some way.
 
         Returns
             dictionary of the processing result
@@ -718,14 +742,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         pass
 
+
+class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
     def delete(self, req, collection_name, deposit_id):
-        """Routine to delete some resource (archives, deposit).
+        """Endpoint to delete some deposit's resources (archives, deposit).
 
         Returns:
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
             404 if the deposit does not exist
-
 
         """
         checks = self._primary_input_checks(req, collection_name, deposit_id)
@@ -739,6 +764,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
+    @abstractmethod
     def process_delete(self, req, collection_name, deposit_id):
         """Routine to delete a resource.
 

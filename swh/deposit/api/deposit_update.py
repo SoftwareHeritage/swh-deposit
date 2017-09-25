@@ -5,14 +5,15 @@
 
 from rest_framework import status
 
-from .common import SWHBaseDeposit
+from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
 from ..errors import make_error_response, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
-class SWHUpdateArchiveDeposit(SWHBaseDeposit):
+class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
+                              SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'EM IRI' in the sword specification.
@@ -77,7 +78,8 @@ class SWHUpdateArchiveDeposit(SWHBaseDeposit):
         return self._delete_archives(collection_name, deposit_id)
 
 
-class SWHUpdateMetadataDeposit(SWHBaseDeposit):
+class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
+                               SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Edit IRI' (and SE IRI) in the sword specification.

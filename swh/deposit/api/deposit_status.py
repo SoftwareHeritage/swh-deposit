@@ -6,14 +6,13 @@
 from django.shortcuts import render
 from rest_framework import status
 
-from ..config import SWHDefaultConfig
+from .common import SWHBaseDeposit
 from ..errors import NOT_FOUND, make_error_response
+from ..errors import make_error_response_from_dict
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 
-from .common import SWHAPIView
 
-
-class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
+class SWHDepositStatus(SWHBaseDeposit):
     """Deposit status.
 
     What's known as 'State IRI' in the sword specification.
@@ -22,6 +21,10 @@ class SWHDepositStatus(SWHDefaultConfig, SWHAPIView):
 
     """
     def get(self, req, collection_name, deposit_id, format=None):
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
             if deposit.collection.name != collection_name:

@@ -5,12 +5,11 @@
 
 from django.shortcuts import render
 
+from .common import SWHBaseDeposit, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
 from ..models import DepositClient, DepositCollection
-from ..config import SWHDefaultConfig
-from .common import SWHAPIView, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
 
 
-class SWHServiceDocument(SWHDefaultConfig, SWHAPIView):
+class SWHServiceDocument(SWHBaseDeposit):
     def get(self, req, *args, **kwargs):
         client = DepositClient.objects.get(username=req.user)
 

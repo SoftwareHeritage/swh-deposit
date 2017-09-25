@@ -5,15 +5,13 @@
 
 from rest_framework import status
 
-from .common import SWHBaseDeposit
+from .common import SWHPostDepositAPI
 from ..config import EDIT_SE_IRI
-from ..errors import make_error_response
-from ..errors import METHOD_NOT_ALLOWED
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
-class SWHDeposit(SWHBaseDeposit):
+class SWHDeposit(SWHPostDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Col IRI' in the sword specification.
@@ -25,8 +23,7 @@ class SWHDeposit(SWHBaseDeposit):
                       SWHFileUploadParser,
                       SWHAtomEntryParser)
 
-    def process_post(self, req, headers, collection_name, deposit_id=None,
-                     format=None):
+    def process_post(self, req, headers, collection_name, deposit_id=None):
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
@@ -81,18 +78,3 @@ class SWHDeposit(SWHBaseDeposit):
             data = self._atom_entry(req, headers, collection_name)
 
         return status.HTTP_201_CREATED, EDIT_SE_IRI, data
-
-    def delete(self, req, collection_name, deposit_id=None):
-        """Routine to delete a resource.
-
-        This is mostly not allowed except for the
-        EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
-
-        """
-        return make_error_response(req, METHOD_NOT_ALLOWED)
-
-    def put(self, req, collection_name, deposit_id=None, format=None):
-        """This endpoint only supports POST.
-
-        """
-        return make_error_response(req, METHOD_NOT_ALLOWED)
