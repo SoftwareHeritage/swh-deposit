@@ -11,6 +11,7 @@ from rest_framework import status
 from django.shortcuts import render
 
 
+FORBIDDEN = 'forbidden'
 UNAUTHORIZED = 'unauthorized'
 NOT_FOUND = 'unknown'
 BAD_REQUEST = 'bad-request'
@@ -22,6 +23,11 @@ MAX_UPLOAD_SIZE_EXCEEDED = 'max_upload_size_exceeded'
 
 
 ERRORS = {
+    FORBIDDEN: {
+        'status': status.HTTP_403_FORBIDDEN,
+        'iri': 'http://purl.org/net/sword/error/ErrorForbidden',
+        'tag': 'sword:ErrorForbidden',
+    },
     UNAUTHORIZED: {
         'status': status.HTTP_401_UNAUTHORIZED,
         'iri': 'http://purl.org/net/sword/error/ErrorUnauthorized',
@@ -65,13 +71,13 @@ ERRORS = {
 }
 
 
-def make_error(key, summary, verbose_description=None):
+def make_error_dict(key, summary=None, verbose_description=None):
     """Utility function to factorize error message dictionary.
 
     Args:
         key (str): Error status key referenced in swh.deposit.errors module
-        summary (str): Error message clarifying the status
-        verbose_description (str / None): A more verbose
+        summary (str/None): Error message clarifying the status
+        verbose_description (str/None): A more verbose
           description or work around a potential problem.
 
     Returns:
@@ -88,7 +94,18 @@ def make_error(key, summary, verbose_description=None):
     }
 
 
-def make_error_response(req, error):
+def make_error_response_from_dict(req, error):
+    """Utility function to return an http response with error detail.
+
+    Args:
+        req (Request): original request
+        error (dict): Error described as dict, typically generated
+        from the make_error_dict function.
+
+    Returns:
+        HttpResponse with detailed error.
+
+    """
     error_information = ERRORS[error['key']]
     context = error
     context.update(error_information)
@@ -96,3 +113,22 @@ def make_error_response(req, error):
                   context=error,
                   content_type='application/xml',
                   status=error_information['status'])
+
+
+def make_error_response(req, key, summary=None, verbose_description=None):
+    """Utility function to create an http response with detailed error.
+
+    Args:
+        req (Request): original request
+        key (str): Error status key referenced in swh.deposit.errors module
+        summary (str): Error message clarifying the status
+        verbose_description (str / None): A more verbose
+          description or work around a potential problem.
+
+    Returns:
+        Dictionary with key 'error' detailing the 'status' and
+        associated 'message'
+
+    """
+    error = make_error_dict(key, summary, verbose_description)
+    return make_error_response_from_dict(req, error['error'])

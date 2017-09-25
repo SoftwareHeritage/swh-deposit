@@ -11,15 +11,15 @@
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>
-        <collection href="https://deposit.softwareheritage.org/1/{{ collection }}/">
-            <atom:title>{{ collection }} Software Collection</atom:title>
+        {% for collection in collections %}<collection href="https://deposit.softwareheritage.org/1/{{ collection.name }}/">
+            <atom:title>{{ collection.name }} Software Collection</atom:title>
             {% for accept_content_type in accept_content_types %}<accept>{{ accept_content_type }}</accept>{% endfor %}
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>
             <sword:mediation>false</sword:mediation>
             {% for accept_packaging in accept_packagings %}<sword:acceptPackaging>{{ accept_packaging }}</sword:acceptPackaging>{% endfor %}
-            <sword:service>https://deposit.softwareheritage.org/1/{{ collection }}/</sword:service>
-        </collection>
+            <sword:service>https://deposit.softwareheritage.org/1/{{ collection.name }}/</sword:service>
+        </collection>{% endfor %}
     </workspace>
 </service>

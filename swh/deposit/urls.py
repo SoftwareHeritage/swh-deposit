@@ -22,6 +22,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from .config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
+from .config import SD_IRI, COL_IRI, STATE_IRI
 from .api.common import index
 from .api.deposit import SWHDeposit
 from .api.deposit_status import SWHDepositStatus
@@ -37,36 +39,36 @@ urlpatterns = [
     # SD IRI - Service Document IRI
     # -> GET
     url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
-        name='servicedocument'),
+        name=SD_IRI),
     # Col IRI - Collection IRI
     # -> POST
-    url(r'^1/(?P<client_name>[^/]+)/$', SWHDeposit.as_view(),
-        name='upload'),
+    url(r'^1/(?P<collection_name>[^/]+)/$', SWHDeposit.as_view(),
+        name=COL_IRI),
     # EM IRI - Atom Edit Media IRI (update archive IRI)
     # -> PUT (update-in-place existing archive)
     # -> POST (add new archive)
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$',
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$',
         SWHUpdateArchiveDeposit.as_view(),
-        name='em_iri'),
+        name=EM_IRI),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
     # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
     # -> PUT (update in place)
     # -> POST (add new metadata)
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$',
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$',
         SWHUpdateMetadataDeposit.as_view(),
-        name='edit_se_iri'),
+        name=EDIT_SE_IRI),
     # State IRI
     # -> GET
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
         SWHDepositStatus.as_view(),
-        name='status'),
+        name=STATE_IRI),
     # Cont/File IRI
     # -> GET
-    url(r'^1/(?P<client_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$',
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$',
         SWHDepositContent.as_view(),
-        name='cont_file_iri'),  # specification is not clear about
-                                # FILE-IRI, we assume it's the same as
-                                # the CONT-IRI one
+        name=CONT_FILE_IRI),  # specification is not clear about
+                              # FILE-IRI, we assume it's the same as
+                              # the CONT-IRI one
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

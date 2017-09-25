@@ -8,7 +8,6 @@ import hashlib
 from abc import ABCMeta, abstractmethod
 
 
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -19,12 +18,14 @@ from rest_framework.views import APIView
 from swh.objstorage import get_objstorage
 from swh.model.hashutil import hash_to_hex
 
-from ..config import SWHDefaultConfig
-from ..models import Deposit, DepositRequest, DepositType, DepositRequestType
+from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
+from ..models import Deposit, DepositRequest, DepositCollection
+from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, make_error, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response
+from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
+from ..errors import make_error_response_from_dict, FORBIDDEN
+from ..errors import NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -84,13 +85,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         meta = req._request.META
-        # for k, v in meta.items():
-        #     key = k.lower()
-        #     if 'http_' in key:
-        #         self.log.debug('%s: %s' % (k, v))
         content_type = req.content_type
-        content_length = meta['CONTENT_LENGTH']
-        if isinstance(content_length, str):
+        content_length = meta.get('CONTENT_LENGTH')
+        if content_length and isinstance(content_length, str):
             content_length = int(content_length)
 
         # final deposit if not provided
@@ -158,11 +155,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             status_type = 'partial'
 
         if not deposit_id:
-            deposit = Deposit(type=self._type,
+            deposit = Deposit(collection=self._collection,
                               external_id=external_id,
                               complete_date=complete_date,
                               status=status_type,
-                              client=self._user)
+                              client=self._client)
         else:
             deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -196,9 +193,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 deposit=deposit,
                 type=self.deposit_request_types['metadata']).delete()
         if replace_archives:
+            # FIXME: delete in the objstorage?
+            # For now, we only remove the reference from the db.
+            # In effect, dangling files will exist in the objstorage.
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types['archives']).delete()
+                type=self.deposit_request_types['archive']).delete()
 
         for type, metadata in deposit_request_data.items():
             deposit_request = DepositRequest(
@@ -208,6 +208,57 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             deposit_request.save()
 
         return deposit_request
+
+    def _delete_archives(self, collection_name, deposit_id):
+        """Delete archives reference from the deposit id.
+
+        """
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            return make_error_dict(
+                NOT_FOUND,
+                'The deposit %s does not exist' % deposit_id)
+        # FIXME: delete in the objstorage?
+        # For now, we only remove the reference from the db.
+        # In effect, dangling files will exist in the objstorage.
+        DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive']).delete()
+        return {}
+
+    def _delete_deposit(self, collection_name, deposit_id):
+        """Delete deposit reference.
+
+        Args:
+            collection_name (str): Client's name
+            deposit_id (id): The deposit to delete
+
+        Returns
+            Empty dict when ok.
+            Dict with error key to describe the failure.
+
+        """
+        try:
+            deposit = Deposit.objects.get(pk=deposit_id)
+        except Deposit.DoesNotExist:
+            return make_error_dict(
+                NOT_FOUND,
+                'The deposit %s does not exist' % deposit_id)
+
+        if deposit.collection.name != collection_name:
+            summary = 'Cannot delete a deposit from another collection'
+            description = "Deposit %s does not belong to the collection %s" % (
+                deposit_id, collection_name)
+            return make_error_dict(
+                BAD_REQUEST,
+                summary=summary,
+                verbose_description=description)
+
+        DepositRequest.objects.filter(deposit=deposit).delete()
+        deposit.delete()
+
+        return {}
 
     def _archive_put(self, file):
         """Store archive file in objstorage and returns metadata about it.
@@ -246,7 +297,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if content_length:
             if content_length > self.config['max_upload_size']:
-                return make_error(
+                return make_error_dict(
                     MAX_UPLOAD_SIZE_EXCEEDED,
                     'Upload size limit exceeded (max %s bytes).' %
                     self.config['max_upload_size'],
@@ -255,13 +306,13 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
             length = filehandler.size
             if length != content_length:
-                return make_error(status.HTTP_412_PRECONDITION_FAILED,
-                                  'Wrong length')
+                return make_error_dict(status.HTTP_412_PRECONDITION_FAILED,
+                                       'Wrong length')
 
         if md5sum:
             _md5sum = self._compute_md5(filehandler)
             if _md5sum != md5sum:
-                return make_error(
+                return make_error_dict(
                     CHECKSUM_MISMATCH,
                     'Wrong md5 hash',
                     'The checksum sent %s and the actual checksum '
@@ -269,7 +320,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return None
 
-    def _binary_upload(self, req, headers, client_name,
+    def _binary_upload(self, req, headers, collection_name,
                        deposit_id=None, update=False):
         """Binary upload routine.
 
@@ -279,7 +330,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -306,17 +357,25 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
+        content_length = headers['content-length']
+        if not content_length:
+            return make_error_dict(
+                BAD_REQUEST,
+                'CONTENT_LENGTH header is mandatory',
+                'For archive deposit, the '
+                'CONTENT_LENGTH header must be sent.')
+
         content_disposition = headers['content-disposition']
         if not content_disposition:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'CONTENT_DISPOSITION header is mandatory',
-                'For a single archive deposit, the '
+                'For archive deposit, the '
                 'CONTENT_DISPOSITION header must be sent.')
 
         packaging = headers['packaging']
         if packaging and packaging not in ACCEPT_PACKAGINGS:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'Only packaging %s is supported' %
                 ACCEPT_PACKAGINGS,
@@ -325,9 +384,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         filehandler = req.FILES['file']
 
         precondition_status_response = self._check_preconditions_on(
-            filehandler,
-            headers['content-md5sum'],
-            headers['content-length'])
+            filehandler, headers['content-md5sum'], content_length)
 
         if precondition_status_response:
             return precondition_status_response
@@ -348,7 +405,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': deposit_request.metadata['archive']['name'],
         }
 
-    def _multipart_upload(self, req, headers, client_name,
+    def _multipart_upload(self, req, headers, collection_name,
                           deposit_id=None, replace_metadata=False,
                           replace_archives=False):
         """Multipart upload supported with exactly:
@@ -361,7 +418,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -397,7 +454,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         for key, value in req.FILES.items():
             fh = value
             if fh.content_type in content_types_present:
-                return make_error(
+                return make_error_dict(
                     ERROR_CONTENT,
                     'Only 1 application/zip archive and 1 '
                     'atom+xml entry is supported (as per sword2.0 '
@@ -410,7 +467,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             data[fh.content_type] = fh
 
         if len(content_types_present) != 2:
-            return make_error(
+            return make_error_dict(
                 ERROR_CONTENT,
                 'You must provide both 1 application/zip '
                 'and 1 atom+xml entry for multipart deposit',
@@ -445,7 +502,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': archive_metadata['archive']['name'],
         }
 
-    def _atom_entry(self, req, headers, client_name,
+    def _atom_entry(self, req, headers, collection_name,
                     deposit_id=None,
                     replace_metadata=False,
                     replace_archives=False):
@@ -455,7 +512,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             req (Request): the request holding information to parse
                 and inject in db
             headers (dict): request headers formatted
-            client_name (str): the associated client
+            collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
               deposit. Default to False, this adds new metadata request to
@@ -480,7 +537,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         if not req.data:
-            return make_error(
+            return make_error_dict(
                 BAD_REQUEST,
                 'Empty body request is not supported',
                 'Atom entry deposit is supposed to send for metadata. '
@@ -503,115 +560,228 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': None,
         }
 
-    def _make_iris(self, client_name, deposit_id):
+    def _empty_post(self, req, headers, collection_name, deposit_id):
+        """Empty post to finalize an empty deposit.
+
+        Args:
+            req (Request): the request holding information to parse
+                and inject in db
+            headers (dict): request headers formatted
+            collection_name (str): the associated client
+            deposit_id (id): deposit identifier
+
+        Returns:
+            Dictionary of result with the deposit's id, the date
+            it was completed and no archive.
+
+        """
+        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit.complete_date = timezone.now()
+        deposit.status = 'ready'
+        deposit.save()
+
+        return {
+            'deposit_id': deposit_id,
+            'deposit_date': deposit.complete_date,
+            'archive': None,
+        }
+
+    def _make_iris(self, collection_name, deposit_id):
         """Define the IRI endpoints
+
+        Args:
+            collection_name (str): client/collection's name
+            deposit_id (id): Deposit identifier
+
+        Returns:
+            Dictionary of keys with the iris' urls.
 
         """
         return {
-            'em_iri': reverse(
-                'em_iri',
-                args=[client_name, deposit_id]),
-            'edit_se_iri': reverse(
-                'edit_se_iri',
-                args=[client_name, deposit_id]),
-            'cont_file_iri': reverse(
-                'cont_file_iri',
-                args=[client_name, deposit_id]),
+            EM_IRI: reverse(
+                EM_IRI,
+                args=[collection_name, deposit_id]),
+            EDIT_SE_IRI: reverse(
+                EDIT_SE_IRI,
+                args=[collection_name, deposit_id]),
+            CONT_FILE_IRI: reverse(
+                CONT_FILE_IRI,
+                args=[collection_name, deposit_id]),
         }
 
-    def post(self, req, client_name, deposit_id=None, format=None):
+    def _primary_input_checks(self, req, collection_name, deposit_id=None):
         try:
-            self._type = DepositType.objects.get(name=client_name)
-            self._user = User.objects.get(username=client_name)
-        except (DepositType.DoesNotExist, User.DoesNotExist):
-            error = make_error(BAD_REQUEST,
-                               'Unknown client name %s' % client_name)
-            return make_error_response(req, error['error'])
+            self._collection = DepositCollection.objects.get(
+                name=collection_name)
+        except DepositCollection.DoesNotExist:
+            return make_error_dict(
+                NOT_FOUND,
+                'Unknown collection name %s' % collection_name)
+
+        try:
+            username = req.user.username
+            self._client = DepositClient.objects.get(username=username)
+        except DepositClient.DoesNotExist:
+            return make_error_dict(NOT_FOUND,
+                                   'Unknown client name %s' % username)
+
+        if self._collection.id not in self._client.collections:
+            return make_error_dict(FORBIDDEN,
+                                   'Client %s cannot access collection %s' % (
+                                       username, collection_name))
 
         if deposit_id:
-            deposit = Deposit.objects.get(pk=deposit_id)
-            if deposit.status != 'partial':
-                error = make_error(
-                    BAD_REQUEST,
-                    'You cannot update a deposit in status ready.')
-                return make_error_response(req, error['error'])
+            try:
+                deposit = Deposit.objects.get(pk=deposit_id)
+            except Deposit.DoesNotExist:
+                return make_error_dict(
+                    NOT_FOUND,
+                    'Deposit with id %s does not exist' %
+                    deposit_id)
+
+            if req.method != 'GET' and deposit.status != 'partial':
+                summary = "You can only act on deposit with status 'partial'"
+                description = "This deposit has status '%s'" % deposit.status
+                return make_error_dict(
+                    BAD_REQUEST, summary=summary,
+                    verbose_description=description)
 
         headers = self._read_headers(req)
-
         if headers['on-behalf-of']:
-            error = make_error(MEDIATION_NOT_ALLOWED,
-                               'Mediation is not supported.')
-            return make_error_response(req, error['error'])
+            return make_error_dict(MEDIATION_NOT_ALLOWED,
+                                   'Mediation is not supported.')
 
-        data = self.process_post(req, headers, client_name, deposit_id)
+        return {'headers': headers}
+
+    def get(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def post(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def put(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+    def delete(self, req, *args, **kwargs):
+        return make_error_response(req, METHOD_NOT_ALLOWED)
+
+
+class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support DELETE method.
+
+    """
+    def post(self, req, collection_name, deposit_id=None, format=None):
+        """Endpoint to create/add resources to deposit.
+
+        Returns:
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
+
+
+        """
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
+        headers = checks['headers']
+        _status, _iri_key, data = self.process_post(
+            req, headers, collection_name, deposit_id)
 
         error = data.get('error')
         if error:
-            return make_error_response(req, error)
-
-        iris = self._make_iris(client_name, data['deposit_id'])
+            return make_error_response_from_dict(req, error)
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(client_name, data['deposit_id'])
+        iris = self._make_iris(collection_name, data['deposit_id'])
         data.update(iris)
-
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
                           content_type='application/xml',
-                          status=status.HTTP_201_CREATED)
-        response = self.update_post_response(response, data)
+                          status=_status)
+        response._headers['location'] = 'Location', data[_iri_key]
         return response
 
     @abstractmethod
-    def update_post_response(self, response, data):
-        """Routine to permit the post response override (e.g add some headers
-           in the response.)
+    def process_post(self, req, headers, collection_name, deposit_id=None):
+        """Routine to deal with the deposit's processing.
+
+        Returns
+            Tuple of:
+            - response status code (200, 201, etc...)
+            - key iri (EM_IRI, EDIT_SE_IRI, etc...)
+            - dictionary of the processing result
 
         """
         pass
 
-    @abstractmethod
-    def process_post(self, req, client_name, deposit_id=None, format=None):
-        """Routine to permit the post processing to occur.
 
+class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support PUT method.
+
+    """
+    def put(self, req, collection_name, deposit_id, format=None):
+        """Endpoint to update deposit resources.
+
+        Returns:
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
         """
-        pass
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
 
-    def put(self, req, client_name, deposit_id=None, format=None):
-        try:
-            self._type = DepositType.objects.get(name=client_name)
-            self._user = User.objects.get(username=client_name)
-        except (DepositType.DoesNotExist, User.DoesNotExist):
-            error = make_error(BAD_REQUEST,
-                               'Unknown client name %s' % client_name)
-            return make_error_response(req, error['error'])
-
-        if deposit_id:
-            deposit = Deposit.objects.get(pk=deposit_id)
-            if deposit.status != 'partial':
-                error = make_error(
-                    BAD_REQUEST,
-                    'You cannot update a deposit in status ready.')
-                return make_error_response(req, error['error'])
-
-        headers = self._read_headers(req)
-
-        if headers['on-behalf-of']:
-            error = make_error(MEDIATION_NOT_ALLOWED,
-                               'Mediation is not supported.')
-            return make_error_response(req, error['error'])
-
-        data = self.process_put(req, headers, client_name, deposit_id)
+        headers = checks['headers']
+        data = self.process_put(req, headers, collection_name, deposit_id)
 
         error = data.get('error')
         if error:
-            return make_error_response(req, error)
+            return make_error_response_from_dict(req, error)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
-    def process_put(self, req, client_name, deposit_id=None, update=False,
-                    format=None):
-        """Routine to permit the put processing to occur.
+    @abstractmethod
+    def process_put(self, req, headers, collection_name, deposit_id):
+        """Routine to deal with updating a deposit in some way.
+
+        Returns
+            dictionary of the processing result
+
+        """
+        pass
+
+
+class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support DELETE method.
+
+    """
+    def delete(self, req, collection_name, deposit_id):
+        """Endpoint to delete some deposit's resources (archives, deposit).
+
+        Returns:
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
+
+        """
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
+        data = self.process_delete(req, collection_name, deposit_id)
+        error = data.get('error')
+        if error:
+            return make_error_response_from_dict(req, error)
+
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+    @abstractmethod
+    def process_delete(self, req, collection_name, deposit_id):
+        """Routine to delete a resource.
+
+        This is mostly not allowed except for the
+        EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
 
         """
         pass

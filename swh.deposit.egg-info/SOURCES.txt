@@ -44,11 +44,6 @@ swh/deposit/api/service_document.py
 swh/deposit/fixtures/__init__.py
 swh/deposit/fixtures/deposit_data.yaml
 swh/deposit/migrations/0001_initial.py
-swh/deposit/migrations/0002_auto_20170809_1256.py
-swh/deposit/migrations/0003_delete_dbversion.py
-swh/deposit/migrations/0004_dbversion.py
-swh/deposit/migrations/0005_auto_20170818_1331.py
-swh/deposit/migrations/0006_auto_20170922_1507.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
@@ -67,8 +62,10 @@ swh/deposit/tests/common.py
 swh/deposit/tests/objstorage.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
+swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
 swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_status.py
+swh/deposit/tests/api/test_deposit_update.py
 swh/deposit/tests/api/test_service_document.py

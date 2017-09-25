@@ -14,19 +14,19 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
+from ...config import COL_IRI, STATE_IRI
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     """Status on deposit
 
     """
-
     def test_post_deposit_with_status_check(self):
         """Binary upload should be accepted
 
         """
         # given
-        url = reverse('upload', args=[self.username])
+        url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -50,7 +50,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         deposit = Deposit.objects.get(external_id=external_id)
 
-        status_url = reverse('status',
+        status_url = reverse(STATE_IRI,
                              args=[self.username, deposit.id])
 
         # check status
@@ -65,3 +65,10 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
                          'ready')
         self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
                          'deposit is fully received and ready for injection')
+
+    def test_status_on_unknown_deposit(self):
+        """Asking for the status of unknown deposit returns 404 response"""
+        status_url = reverse(STATE_IRI, args=[self.username, 999])
+        status_response = self.client.get(status_url)
+        self.assertEqual(status_response.status_code,
+                         status.HTTP_404_NOT_FOUND)
