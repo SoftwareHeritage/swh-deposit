@@ -85,10 +85,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         """
         meta = req._request.META
-        # for k, v in meta.items():
-        #     key = k.lower()
-        #     if 'http_' in key:
-        #         self.log.debug('%s: %s' % (k, v))
         content_type = req.content_type
         content_length = meta['CONTENT_LENGTH']
         if isinstance(content_length, str):
@@ -199,7 +195,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if replace_archives:
             # FIXME: delete in the objstorage?
             # For now, we only remove the reference from the db.
-            # In effect dangling file will exist in the objstorage.
+            # In effect, dangling files will exist in the objstorage.
             DepositRequest.objects.filter(
                 deposit=deposit,
                 type=self.deposit_request_types['archive']).delete()
@@ -225,7 +221,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 'The deposit %s does not exist' % deposit_id)
         # FIXME: delete in the objstorage?
         # For now, we only remove the reference from the db.
-        # In effect dangling file will exist in the objstorage.
+        # In effect, dangling files will exist in the objstorage.
         DepositRequest.objects.filter(
             deposit=deposit,
             type=self.deposit_request_types['archive']).delete()
