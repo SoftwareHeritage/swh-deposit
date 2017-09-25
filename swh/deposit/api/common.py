@@ -24,7 +24,7 @@ from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response, make_error_response_from_dict
+from ..errors import make_error_response_from_dict
 from ..errors import NOT_FOUND
 
 
@@ -86,8 +86,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         meta = req._request.META
         content_type = req.content_type
-        content_length = meta['CONTENT_LENGTH']
-        if isinstance(content_length, str):
+        content_length = meta.get('CONTENT_LENGTH')
+        if content_length and isinstance(content_length, str):
             content_length = int(content_length)
 
         # final deposit if not provided
@@ -357,12 +357,20 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
+        content_length = headers['content-length']
+        if not content_length:
+            return make_error_dict(
+                BAD_REQUEST,
+                'CONTENT_LENGTH header is mandatory',
+                'For archive deposit, the '
+                'CONTENT_LENGTH header must be sent.')
+
         content_disposition = headers['content-disposition']
         if not content_disposition:
             return make_error_dict(
                 BAD_REQUEST,
                 'CONTENT_DISPOSITION header is mandatory',
-                'For a single archive deposit, the '
+                'For archive deposit, the '
                 'CONTENT_DISPOSITION header must be sent.')
 
         packaging = headers['packaging']
@@ -376,9 +384,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         filehandler = req.FILES['file']
 
         precondition_status_response = self._check_preconditions_on(
-            filehandler,
-            headers['content-md5sum'],
-            headers['content-length'])
+            filehandler, headers['content-md5sum'], content_length)
 
         if precondition_status_response:
             return precondition_status_response
@@ -603,39 +609,53 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 args=[client_name, deposit_id]),
         }
 
-    def post(self, req, client_name, deposit_id=None, format=None):
-        """Main post processing of a deposit.
-
-        """
+    def _primary_input_checks(self, req, client_name, deposit_id=None):
         try:
             self._collection = DepositCollection.objects.get(name=client_name)
+        except DepositCollection.DoesNotExist:
+            return make_error_dict(BAD_REQUEST,
+                                   'Unknown client name %s' % client_name)
+
+        try:
             self._client = DepositClient.objects.get(username=client_name)
-        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
-            return make_error_response(req, BAD_REQUEST,
-                                       'Unknown client name %s' % client_name)
+        except DepositClient.DoesNotExist:
+            return make_error_dict(BAD_REQUEST,
+                                   'Unknown client name %s' % client_name)
+
+        # FIXME: make sure the client is permitted to deal with the collection
 
         if deposit_id:
             try:
                 deposit = Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
-                return make_error_response(
-                    req, NOT_FOUND,
+                return make_error_dict(
+                    NOT_FOUND,
                     'Deposit with id %s does not exist' %
                     deposit_id)
 
             if deposit.status != 'partial':
-                summary = "You can only update deposit with status 'partial'"
+                summary = "You can only act on deposit with status 'partial'"
                 description = "This deposit has status '%s'" % deposit.status
-                return make_error_response(
-                    req, BAD_REQUEST, summary=summary,
+                return make_error_dict(
+                    BAD_REQUEST, summary=summary,
                     verbose_description=description)
 
         headers = self._read_headers(req)
-
         if headers['on-behalf-of']:
-            return make_error_response(req, MEDIATION_NOT_ALLOWED,
-                                       'Mediation is not supported.')
+            return make_error_dict(MEDIATION_NOT_ALLOWED,
+                                   'Mediation is not supported.')
 
+        return {'headers': headers}
+
+    def post(self, req, client_name, deposit_id=None, format=None):
+        """Main post processing of a deposit.
+
+        """
+        checks = self._primary_input_checks(req, client_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
+        headers = checks['headers']
         _status, _iri_key, data = self.process_post(
             req, headers, client_name, deposit_id)
 
@@ -673,34 +693,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """Main put processing of a deposit.
 
         """
-        try:
-            self._collection = DepositCollection.objects.get(name=client_name)
-            self._client = DepositClient.objects.get(username=client_name)
-        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
-            return make_error_response(req, BAD_REQUEST,
-                                       'Unknown client name %s' % client_name)
+        checks = self._primary_input_checks(req, client_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
 
-        if deposit_id:
-            try:
-                deposit = Deposit.objects.get(pk=deposit_id)
-            except Deposit.DoesNotExist:
-                return make_error_response(
-                    req, NOT_FOUND,
-                    'Deposit with id %s does not exist' % deposit_id)
-
-            if deposit.status != 'partial':
-                summary = "You can only update deposit with status 'partial'"
-                description = "This deposit has status '%s'" % deposit.status
-                return make_error_response(
-                    req, BAD_REQUEST, summary=summary,
-                    verbose_description=description)
-
-        headers = self._read_headers(req)
-
-        if headers['on-behalf-of']:
-            return make_error_response(req, MEDIATION_NOT_ALLOWED,
-                                       'Mediation is not supported.')
-
+        headers = checks['headers']
         data = self.process_put(req, headers, client_name, deposit_id)
 
         error = data.get('error')
@@ -725,40 +722,17 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """Routine to delete some resource (archives, deposit).
 
         Returns:
-            In the optimal deletion case, a 204 response.
+            204 response when no error during routine occurred.
+            400 if the deposit does not belong to the collection
+            404 if the deposit does not exist
+
 
         """
-        try:
-            self._collection = DepositCollection.objects.get(name=client_name)
-            self._client = DepositClient.objects.get(username=client_name)
-        except (DepositCollection.DoesNotExist, DepositClient.DoesNotExist):
-            return make_error_response(req, BAD_REQUEST,
-                                       'Unknown client name %s' % client_name)
-
-        # FIXME: make sure the client is permitted to deal with the collection
-        # FIXME: factorize checks
-
-        on_behalf_of = req._request.META.get('HTTP_ON_BEHALF_OF')
-
-        if on_behalf_of:
-            return make_error_response(req, MEDIATION_NOT_ALLOWED,
-                                       'Mediation is not supported.')
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-        except Deposit.DoesNotExist:
-            return make_error_response(
-                req, NOT_FOUND,
-                'Deposit with id %s does not exist' % deposit_id)
-
-        if deposit.status != 'partial':
-            summary = "You can only delete deposit with status 'partial'"
-            description = "This deposit has status '%s'" % deposit.status
-            return make_error_response(
-                req, BAD_REQUEST, summary=summary,
-                verbose_description=description)
+        checks = self._primary_input_checks(req, client_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
 
         data = self.process_delete(req, client_name, deposit_id)
-
         error = data.get('error')
         if error:
             return make_error_response_from_dict(req, error)
