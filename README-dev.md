@@ -1,7 +1,9 @@
 swh-deposit
 ==============
 
-There are 2 modes.
+There are 2 modes to run and test the server locally:
+- development like (automatic reloading when code changes)
+- production like (no reloading)
 
 # Development like
 
