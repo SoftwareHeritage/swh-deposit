@@ -272,7 +272,7 @@ POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata to deposit
 Sample query:
 
 ``` Shell
-curl -i -u hal:<pass> --data-binary @../atom-entry.xml \
+curl -i -u hal:<pass> --data-binary @atom-entry.xml \
 -H 'In-Progress: false' \
 -H 'Slug: some-external-id' \
 -H 'Content-Type: application/atom+xml;type=entry' \
