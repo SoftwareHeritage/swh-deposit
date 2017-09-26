@@ -1,22 +1,20 @@
-= swh-deposit (draft) =
+swh-deposit
+==============
 
-This is SWH's SWORD Server implementation.
+This is Software Heritage's SWORD Server implementation.
 
 SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
 
 This protocol will be used to interact between a client (a repository)
-and a server (swh repository) to permit the deposit of software
-tarballs.
+and a server (swh repository) to permit deposits of software tarballs.
 
-In this document, we will refer to a client (e.g. HAL server) and a
-server (SWH's).
+In this document, we will discuss the interaction between a client
+(e.g. HAL server) and the deposit server (SWH's).
 
 == Use cases ==
 
 === First deposit ===
-
-Endpoint: /1/<user-or-collection>/
 
 From client's deposit repository server to SWH's repository server
 (aka deposit).
@@ -24,82 +22,104 @@ From client's deposit repository server to SWH's repository server
 1. The client requests for the server's abilities.
 (GET query to the *service document uri*)
 
-2. The server answers the client with the service document
+2. The server answers the client with the service document which gives
+   the *collection uri*.
 
-3. The client sends the deposit (an archive -> .zip) through the
-deposit *creation uri*
+3. The client sends a deposit (an archive -> .zip) through the
+*collection uri* (also known as COL/collection IRI).
 
 This can be done in:
 - one POST request to the creation uri (metadata + archive).
-- one POST request to the creation uri + other PUT request to the *update uri*
+- one POST request to the creation uri (metadata or archive) + other
+  PUT or POST request to the *update uri*
 
 4. The server notifies the client it acknowledged the client's
 request. An 'http 201 Created' response with a deposit receipt is sent
 back.  That deposit receipt will hold the necessary information to
 eventually complete the deposit if it was partial.
 
-=== Updating an existing archive ===
+=== Updating an existing deposit ===
 
-5. Client updates existing archive through the deposit *update uri*
-(one or more PUT requests).
+5. Client updates existing deposit through the *update uris* (one or
+more POST or PUT requests to the *edit-media* or *edit-iri*).
 
-This would be the case for example if:
-- the client initially posted only metadata (with no archive)
-- the client initially posted only one archive (without metadata)
+This would be the case for example if the client initially posted a
+partial deposit (e.g. only metadata with no archive, or an archive
+without metadata, a splitted archive because the initial one is too
+big)
 
-And that client would like to complete its deposit with another
-archive (or other metadata)
+=== Deleting ===
 
-=== Deleting an existing archive ===
+6. Deposit deletion is possible as long as the deposit is still in
+   partial state.
 
-6. Document deletion will not be implemented, cf. limitation paragraph
-for detail
+That is, a deposit initially occurred with the IN-PROGRESS header to
+true and it did not change (even after multiple updates).
 
 
 == Limitations ==
 
 Applying the SWORD protocol procedure will result with voluntary implementation
-shortcomings during the first iteration:
+shortcomings, at least, during the first iteration:
 
 - upload limitation of 20Mib
 - only tarballs (.zip) will be accepted
-- no removal (implementation-wise, this will possibly be a means
-  to hide the origin).
-- basic http authentication enforced at the application layer
-  on a per client basis (authentication:
-  http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#authenticationmediateddeposit)
 - no mediation (we do not know the other system's users)
 
 == Collection ==
 
 SWORD defines a 'collection' concept.  The collection refers to a
-group of documents to which the document uploaded (a.k.a deposit) is
+group of documents to which the deposit uploaded (a.k.a deposit) is
 part of.
 
-For example, we will start the collaboration with HAL, thus we define a HAL collection to which hal clients will deposit new document.
+For example, we will start the collaboration with HAL, thus we define
+a HAL collection to which the hal client will deposit new document.
 
 === Client asks for operation status and repository id ===
 
-A state endpoint is defined in the sword specification to provide such information.
+A state endpoint is defined in the sword specification to provide such
+information.
 
+== Endpoints ==
+
+The api defines the following endpoints:
+
+- /1/servicedocument/
+  *service document iri* (a.k.a SD-IRI)
+
+- /1/<collection-name>/
+  *collection iri* (a.k.a COL-IRI)
+
+- /1/<collection-name>/<deposit-id>/media/
+  *update iri* (a.k.a EM-IRI)
+
+- /1/<collection-name>/<deposit-id>/metadata/
+  *update iri* (a.k.a EDIT-SE-IRI)
+
+- /1/<collection-name>/<deposit-id>/content/
+  *content iri* (a.k.a CONT-FILE-IRI)
+
+- /1/<collection-name>/<deposit-id>/status/
+  *state iri*  (a.k.a STATE-IRI)
 
 == API overview ==
 
 API access is over HTTPS.
 
-service document accessible at:
-https://deposit.softwareheritage.org/1/
+All API endpoints are rooted at https://archive.softwareheritage.org/1/.
+
+Data is sent and received as XML.
 
 === Service document ===
 
 Endpoint: /1/servicedocument/
 
-This is the starting endpoint from which the user will access its
+This is the starting endpoint from which the client will access its
 initial collection information.
 
 This:
 - describes the server's abilities
-- list the connected user's collection information.
+- list the connected client's collection information.
 
 HTTP verbs supported: GET
 
@@ -114,20 +134,20 @@ Host: deposit.softwareheritage.org
 
 The server returns its abilities with the service document in xml format:
 - protocol sword version v2
-- accepted mime types: application/zip, application/gzip
-- upload max size accepted, beyond that, it's expected the client
-  chunk the tarball into multiple ones
+- accepted mime types: application/zip
+- upload max size accepted. Beyond that point, it's expected the
+  client splits its tarball into multiple ones
 - the collection the client can act upon (swh supports only one
   software collection per client)
 - mediation is not supported
+- etc...
 
-==== Sample answer:====
+==== Sample answer ====
+
+The current answer for example for the
+[hal archive](https://hal.archives-ouvertes.fr/) is:
 
 ``` XML
-The current answer for example for the [hal
-archive](https://hal.archives-ouvertes.fr/) is:
-
-``` xml
 <?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
@@ -159,36 +179,43 @@ archive](https://hal.archives-ouvertes.fr/) is:
 
 Process of deposit creation:
 
--> [3] client request
+-> [3] client request(s)
 
   - [3.1] server validation
   - [3.2] server temporary upload
-  - [3.3] server injects deposit into archive*
 
 <- [4] server returns deposit receipt id
 
+- [5] server injects deposit into archive*
 
-NOTE: [3.3] Asynchronously, the server will inject the archive
-uploaded and the associated metadata. The operation status mentioned
-earlier is a reference to that injection operation.
+NOTE: [5] Asynchronously, the server will inject the archive uploaded
+and the associated metadata.
 
-The image bellow represent only the communication and creation of
-a deposit:
+The image below represents only the communication and creation of a
+deposit:
 
 {F2403754}
 
-=== [3] client request  ===
+=== [3] client request(s)  ===
 
-The client can send a deposit through one request deposit or multiple
-requests deposit.
+The client can send a deposit through a series of deposit requests to
+multiple endpoints:
+- *collection iri* (COL-IRI) to initialize a deposit
+- *update iris* (EM-IRI, EDIT-SE-IRI) to complete/finalize a deposit
 
-The deposit can contain:
+The deposit can also happens in one request.
+
+The deposit request can contain:
 - an archive holding the software source code (binary upload)
 - an envelop with metadata describing information regarding a deposit
   (atom entry deposit)
 - or both (multipart deposit, exactly one archive and one envelop).
 
-the client can deposit a binary file, supplying the following headers:
+== Request Types ==
+
+=== Binary deposit ===
+
+The client can deposit a binary archive, supplying the following headers:
 - Content-Type (text): accepted mimetype
 - Content-Length (int): tarball size
 - Content-MD5 (text): md5 checksum hex encoded of the tarball
@@ -197,15 +224,8 @@ the client can deposit a binary file, supplying the following headers:
 - Packaging (IRI): http://purl.org/net/sword/package/SimpleZip
 - In-Progress (bool): true to specify it's not the last request, false
   to specify it's a final request and the server can go on with
-  processing the request's information.
-
-WARNING: if In-Progress is not present the server MUST assume that it is false
-
-==== API endpoint ====
-
-POST /1/<client-or-collection-name>/
-
-=== Archive deposit ===
+  processing the request's information (if not provided, this is
+  considered false, so final).
 
 This is a single zip archive deposit. Almost no metadata is associated
 with the archive except for the unique external identifier.
@@ -213,21 +233,79 @@ with the archive except for the unique external identifier.
 Note: This kind of deposit should be partial (In-Progress: True) as
 almost no metadata can be associated with the uploaded archive.
 
-==== sample request for binary upload deposit ====
+==== API endpoints concerned ====
 
-```
-curl -i --data-binary @swh/deposit.zip \
+POST /1/<collection-name>/                    Create a first deposit with one archive
+PUT /1/<collection-name>/<deposit-id>/media/  Replace existing archives
+POST /1/<collection-name>/<deposit-id>/media/ Add new archive
+
+==== Sample request ====
+
+``` Shell
+curl -i -u hal:<pass> \
+    --data-binary @swh/deposit.zip \
     -H 'In-Progress: false' -H 'Content-MD5: 0faa1ecbf9224b9bf48a7c691b8c2b6f' \
     -H 'Content-Disposition: attachment; filename=[deposit.zip]' \
     -H 'Slug: some-external-id' \
     -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
     -H 'Content-type: application/zip' \
-    -XPOST http://127.0.0.1:8000/1/hal/
+    -XPOST https://deposit.softwareheritage.org/1/hal/
 ```
 
 === Atom entry deposit ===
 
-Sample atom entry:
+The client can deposit an xml body holding metadata information on the
+deposit.
+
+Note: This kind of deposit is mostly expected to be partial
+(In-Progress: True) since no archive will be associated to those
+metadata.
+
+==== API endpoints concerned ====
+
+POST /1/<collection-name>/                       Create a first atom deposit entry
+PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata
+POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata to deposit
+
+==== Sample request ====
+
+Sample query:
+
+``` Shell
+curl -i -u hal:hal --data-binary @../atom-entry.xml \
+-H 'In-Progress: false' \
+-H 'Slug: some-external-id' \
+-H 'Content-Type: application/atom+xml;type=entry' \
+-XPOST http://127.0.0.1:5006/1/hal/
+HTTP/1.0 201 Created
+Date: Tue, 26 Sep 2017 10:32:35 GMT
+Server: WSGIServer/0.2 CPython/3.5.3
+Vary: Accept, Cookie
+Allow: GET, POST, PUT, DELETE, HEAD, OPTIONS
+Location: /1/hal/10/metadata/
+X-Frame-Options: SAMEORIGIN
+Content-Type: application/xml
+
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>10</deposit_id>
+    <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
+    <deposit_archive>None</deposit_archive>
+
+    <!-- Edit-IRI -->
+    <link rel="edit" href="/1/hal/10/metadata/" />
+    <!-- EM-IRI -->
+    <link rel="edit-media" href="/1/hal/10/media/"/>
+    <!-- SE-IRI -->
+    <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/10/metadata/" />
+
+    <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
+</entry>
+```
+
+Sample body:
+
 ``` XML
 <entry xmlns="http://www.w3.org/2005/Atom"
         xmlns:dcterms="http://purl.org/dc/terms/">
@@ -259,9 +337,6 @@ Sample atom entry:
 </entry>
 ```
 
-Note: This kind of deposit should be partial (In-Progress: True) since
-no archive will be associated to those metadata.
-
 ==== One request deposit / Multipart deposit ====
 
 The one request deposit is a single request containing both the
@@ -281,7 +356,52 @@ Client provides:
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
 
-==== sample request for multipart deposit: ====
+==== API endpoints concerned ====
+
+POST /1/<collection-name>/                       Create a full deposit (metadata + archive)
+PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata and archive
+POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata and archive to deposit
+
+==== sample request ====
+
+Sample query:
+
+``` Shell
+curl -i -u hal:<pass> \
+    -F "file=@../deposit.json;type=application/zip;filename=payload" \
+    -F "atom=@../atom-entry.xml;type=application/atom+xml;charset=UTF-8" \
+    -H 'In-Progress: false' \
+    -H 'Slug: some-external-id' \
+    -XPOST http://127.0.0.1:5006/1/hal/
+
+HTTP/1.0 201 Created
+Date: Tue, 26 Sep 2017 10:11:55 GMT
+Server: WSGIServer/0.2 CPython/3.5.3
+Vary: Accept, Cookie
+Allow: GET, POST, PUT, DELETE, HEAD, OPTIONS
+Location: /1/hal/9/metadata/
+X-Frame-Options: SAMEORIGIN
+Content-Type: application/xml
+
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>9</deposit_id>
+    <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
+    <deposit_archive>payload</deposit_archive>
+
+    <!-- Edit-IRI -->
+    <link rel="edit" href="/1/hal/9/metadata/" />
+    <!-- EM-IRI -->
+    <link rel="edit-media" href="/1/hal/9/media/"/>
+    <!-- SE-IRI -->
+    <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/9/metadata/" />
+
+    <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
+</entry>
+```
+
+Sample content:
 
 ``` XML
 POST deposit HTTP/1.1
@@ -339,15 +459,25 @@ MIME-Version: 1.0
 
 == Deposit Creation - server point of view ==
 
-The server receives the request and:
+The server receives the request(s) and does minimal checking on the
+input prior to any saving operations.
 
 === [3.1] Validation of the header and body request ===
 
-Any kind of errors can happen, here is the list depending on the situation:
+Any kind of errors can happen, here is the list depending on the
+situation:
 
-- archive deposit:
-  - 400 (bad request) if the request is not providing an external
-    identifier
+- common errors:
+  - 401 (unauthenticated) if a client does not provide credential or
+    provide wrong ones
+  - 403 (forbidden) if a client tries access to a collection it does
+    not own
+  - 404 (not found) if a client tries access to an unknown collection
+  - 404 (not found) if a client tries access to an unknown deposit
+  - 415 (unsupported media type) if a wrong media type is
+    provided to the endpoint
+
+- archive/binary deposit:
   - 403 (forbidden) if the length of the archive exceeds the
     max size configured
   - 412 (precondition failed) if the length or hash provided
@@ -356,87 +486,94 @@ Any kind of errors can happen, here is the list depending on the situation:
     provided
 
 - multipart deposit:
-  - 400 (bad request) if the request is not providing an external
-    identifier
-  - 412 (precondition failed) if the potentially md5 hash
-    provided mismatch the reality of the archive
+  - 412 (precondition failed) if the md5 hash provided mismatch the
+    reality of the archive
   - 415 (unsupported media type) if a wrong media type is
     provided
 
 - Atom entry deposit:
-  - 400 (bad request) if the request is not providing an external
-    identifier
-  - 400 (bad request) if the request's body is empty
-  - 415 (unsupported media type) if a wrong media type is
-    provided
+  - 400 (bad request) if the request's body is empty (for creation only)
 
 === [3.2] Server uploads the content in a temporary location ==
 
 Using an objstorage, the server stores the archive in a temporary
-location, the time the deposit is completed.
+location.  It's temporary the time the deposit is completed (status
+becomes ready) and the injection finishes.
 
-Store those information as metadata associated to the request.
+The server also stores requests' information in a database.
 
 === [4] Servers answers the client ===
 
-If everything went well, an 'http 201 Created' response is returned.
+If everything went well, the server answers either with a 200, 201 or
+204 response.
+
+A 'http 200' response is returned for GET endpoints.
+
+A 'http 201 Created' response is returned for POST endpoints.
 The body holds the deposit receipt.
 The headers holds the EDIT-IRI in the Location header of the response.
 
-The server possible answers are:
-- OK: '201 created' + one header 'Location' holding the EDIT IRI
-- KO: with the error status code and associated message
-  (cf. [possible errors paragraph](#possible errors)).
+A 'http 204 No Content' response is returned for PUT, DELETE endpoints.
+
+If something went wrong, the server answers with one of the
+[error status code and associated message mentioned](#possible errors)).
 
 
 === [5] Deposit Update ===
 
 The client previously deposited a partial document (through an
-archive, or metadata). The client wants to update new metadata
-information or other archives for that previous deposit (possibly in
-multiple steps as well).
+archive, metadata, or both). The client wants to update information
+for that previous deposit (possibly in multiple steps as well).
 
-The important thing to note here is that for swh, as long as the
-deposit is in status 'partial', the injection did not start.  So the
-user can update information (new archive, new metadata) for that same
-partial deposit. The aggregation of all those information will then be
-used when the injection starts (when the deposit is complete).
+The important thing to note here is that, as long as the deposit is in
+status 'partial', the injection did not start.  Thus, the client can
+update information (replace or add new archive, new metadata, even
+delete) for that same partial deposit.
 
-However, as soon as the deposit is in another state (different than
-'partial'), the update will refuse to continue. It is then expected
-that the client will create a new deposit (for a new version).
+When the deposit status changes to `ready`, we no longer can change
+the deposit's information (a 403 will be returned in that case).
 
-Providing the identifier of the previous deposit id received from the
-status URI, the client executes a PUT request on the same URI as the
-deposit one.
+Then aggregation of all those deposit's information will later be used
+for the actual injection.
+
+Providing the collection name, and the identifier of the previous
+deposit id received from the deposit receipt, the client executes a
+POST or PUT request on the *update iris*.
 
 After validation of the body request, the server:
-- uploads such content in a temporary location (to be defined).
+- uploads such content in a temporary location
 
 - answers the client an 'http 204 (No content)'. In the Location
-  header of the response lies a deposit receipt id permitting the
-  client to check back the operation status later on.
+  header of the response lies an iri to permit further update.
 
 - Asynchronously, the server will inject the archive uploaded and the
-  associated metadata. The operation status mentioned earlier is a
-  reference to that injection operation. The fact that the version is
-  a new one is dealt with at the injection level.
+  associated metadata. An operation status endpoint *state iri*
+  permits the client to query the injection operation status.
 
-  URL: PUT /1/<collection-name>/<deposit-id>/
+Possible endpoints:
+
+PUT /1/<collection-name>/<deposit-id>/media/      Replace existing archives for the deposit
+POST /1/<collection-name>/<deposit-id>/media/     Add new archives to the deposit
+PUT /1/<collection-name>/<deposit-id>/metadata/   Replace existing metadata (and possible archives)
+POST /1/<collection-name>/<deposit-id>/metadata/  Add new metadata
 
 === [6] Deposit Removal ===
 
-[#limitation](As explained in the limitation paragraph), removal won't
-be implemented.  Nothing is removed from the SWH archive.
+As long as the deposit's status remains 'partial', it's possible to
+remove the deposit.
 
-The server answers a '405 Method not allowed' error.
+Further query to that deposit will return a 404 response.
 
 === Operation Status ===
 
-Providing a collection name and a deposit receipt id, the client asks
-the operation status of a prior deposit.
+Providing a collection name and a deposit id, the client asks the
+operation status of a prior deposit.
 
-  URL: GET /1/<collection-name>/<deposit_id>/status/
+URL: GET /1/<collection-name>/<deposit_id>/status/
+
+This returns:
+- 201 response with the actual status
+- 404 if the deposit does not exist (or no longer does)
 
 ## <a name="errors"> Possible errors
 
@@ -505,159 +642,10 @@ The action is forbidden (access to another collection for example).
 
 Associated HTTP status: 403
 
-== Tarball Injection ==
-
-Providing we use indeed synthetic revision to represent a version of a
-tarball injected through the sword use case, this needs to be improved
-so that the synthetic revision is created with a parent revision (the
-previous known one for the same 'origin').
-
-
-=== Injection mapping ===
-| origin                              |      https://hal.inria.fr/hal-id      |
-|-------------------------------------|---------------------------------------|
-| origin_visit                        |           1 :reception_date           |
-| occurrence &amp; occurrence_history | branch: client's version n° (e.g hal) |
-| revision                            |      synthetic_revision (tarball)     |
-| directory                           | upper level of the uncompressed archive|
-
-
-=== Questions raised concerning injection: ===
-- A deposit has one origin, yet an origin can have multiple deposits ?
-
-No, an origin can have multiple requests for the same deposit,
-which should end up in one single deposit (when the client pushes its final
-request saying deposit 'done' through the header In-Progress).
-
-When an update of a deposit is requested,
-the new version is identified with the external_id.
-
-Illustration First deposit injection:
-
-HAL's deposit 01535619 = SWH's deposit **01535619-1**
-
-    + 1 origin with url:https://hal.inria.fr/medihal-01535619
-
-    + 1 synthetic revision
-
-    + 1 directory
-
-HAL's update on deposit 01535619 = SWH's deposit **01535619-2**
-
-(*with HAL updates can only be on the metadata and a new version is required
-if the content changes)
-    + 1 origin with url:https://hal.inria.fr/medihal-01535619
-
-    + new synthetic revision (with new metadata)
-
-    + same directory
-
-HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
-
-    + same origin
-
-    + new revision
-
-    + new directory
-
-
-
-== Technical details ==
-
-We will need:
-- one dedicated db to store state - swh-deposit
-
-- one dedicated temporary storage to store archives before injection
-
-- one client to test the communication with SWORD protocol
-
-=== Deposit reception schema ===
-
-- **deposit** table:
-  - id (bigint): deposit receipt id
-
-  - external id (text): client's internal identifier (e.g hal's id, etc...).
-
-  - origin id : null before injection
-  - swh_id : swh identifier result once the injection is complete
-
-  - reception_date: first deposit date
-
-  - complete_date: reception date of the last deposit which makes the deposit
-  complete
-
-  - status (enum):
-```
-      'partial',      -- the deposit is new or partially received since it
-                      -- can be done in multiple requests
-      'expired',      -- deposit has been there too long and is now deemed
-                      -- ready to be garbage collected
-      'ready',        -- deposit is fully received and ready for injection
-      'scheduled',    -- injection is scheduled on swh's side
-      'success',      -- injection successful
-      'failure'       -- injection failure
-```
-- **deposit_request** table:
-  - id (bigint): identifier
-  - deposit_id: deposit concerned by the request
-  - metadata: metadata associated to the request
-
-- **client** table:
-  - id (bigint): identifier
-  - name (text): client's name (e.g HAL)
-  - credentials
-
-
-All metadata (declared metadata) are stored in deposit_request (with the
-request they were sent with).
-When the deposit is complete metadata fields are aggregated and sent
-to injection. During injection the metadata is kept in the
-origin_metadata table (see [metadata injection](#metadata-injection)).
-
-The only update actions occurring on the deposit table are in regards of:
-  - status changing
-    - partial -> {expired/ready},
-    - ready -> scheduled,
-    - scheduled -> {success/failure}
-  - complete_date when the deposit is finalized
-  (when the status is changed to ready)
-  - swh-id being populated once we have the result of the injection
-
-==== SWH Identifier returned? ====
-
-    swh-<client-name>-<synthetic-revision-id>
-
-    e.g: swh-hal-47dc6b4636c7f6cba0df83e3d5490bf4334d987e
-
-    We could have a specific dedicated 'client' table to reference client
-    identifier.
-
-=== Scheduling injection ===
-All data and metadata separated with multiple requests should be aggregated
-before injection.
-
-TODO: injection modeling
-
-=== Metadata injection ===
-- the metadata received with the deposit should be kept in the origin_metadata
-table before translation as part of the injection process and a indexation
-process should be scheduled.
-
-origin_metadata table:
-```
-origin                                  bigint        PK FK
-discovery_date                          date          PK FK
-translation_date                        date          PK FK
-provenance_type                         text                  // (enum: 'publisher', 'lister' needs to be completed)
-raw_metadata                            jsonb                 // before translation
-indexer_configuration_id                bigint            FK  // tool used for translation
-translated_metadata                     jsonb                 // with codemeta schema and terms
-```
-
 == Nomenclature ==
 
-SWORD uses IRI. This means Internationalized Resource Identifier. In
-this chapter, we will describe SWH's IRI.
+SWORD uses IRI notion, Internationalized Resource Identifier. In this
+chapter, we will describe SWH's IRIs.
 
 === Col-IRI - The Collection IRI ===
 
@@ -681,39 +669,50 @@ metadata.
 
 HTTP verbs supported: GET
 
+We refer to it as Cont-File-IRI.
+
 === EM-IRI - The Atom Edit Media IRI ===
 
 This is the endpoint to upload other related archives for the same
 deposit.
 
-Typically, if  a first archive  is too big,  the client can  split it.
-Post  the first  partial  archive in  the  Col-IRI (with  In-Progress:
-True).  Then  other archives needs  to be  uploaded to this  IRI.  The
-last  one mentioning  the  In-Progress  flag to  False  to notify  the
-deposit is done.
+It is used to change a 'partial' deposit in regards of archives, in
+particular:
+- replace existing archives with new ones
+- add new archives
+- delete archives from a deposit
 
-HTTP verbs supported: PUT, DELETE
+Example use case:
+A first archive to put exceeds the deposit's limit size.
+The client can thus split the archives in multiple ones.
+Post a first partial archive to the Col-IRI (with In-Progress:
+
+True).  Then, in order to complete the deposit, POST the other
+remaining archives to the EM-IRI (the last one with the In-Progress
+header to False).
+
+HTTP verbs supported: POST, PUT, DELETE
 
 === Edit-IRI - The Atom Entry Edit IRI ===
 
-This is the endpoint to update metadata for a previous incomplete
-deposit.
+This is the endpoint to change a 'partial' deposit in regards of
+metadata. In particular:
+- replace existing metadata (and archives) with new ones
+- add new metadata (and archives)
+- delete deposit
 
-HTTP verbs supported: PUT, DELETE
+HTTP verbs supported: POST, PUT, DELETE
 
 === SE-IRI - The SWORD Edit IRI ===
 
-This is the IRI to which clients may POST additional content to an
-Atom Entry Resource. This is the same as Edit-IRI.
-
-HTTP verbs supported: POST, DELETE
+The sword specification permits to merge this with EDIT-IRI, so we
+did.
 
 === State-IRI - The SWORD Statement IRI ===
 
-This is the one of the IRIs which can be used to retrieve a
-description of the object from the sword server, including the
-structure of the object and its state. This will be used as the
-operation status endpoint.
+This is the IRI which can be used to retrieve a description of the
+object from the sword server, including the structure of the object
+and its state. This will be used as the operation status endpoint.
 
 HTTP verbs supported: GET
 
