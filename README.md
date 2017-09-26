@@ -7,7 +7,7 @@ SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
 
 This protocol will be used to interact between a client (a repository)
-and a server (swh repository) to permit deposits of software tarballs.
+and a server (swh repository) to permit deposits of software archives.
 
 In this document, we will discuss the interaction between a client
 (e.g. HAL server) and the deposit server (SWH's).
@@ -272,7 +272,7 @@ POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata to deposit
 Sample query:
 
 ``` Shell
-curl -i -u hal:hal --data-binary @../atom-entry.xml \
+curl -i -u hal:<pass> --data-binary @../atom-entry.xml \
 -H 'In-Progress: false' \
 -H 'Slug: some-external-id' \
 -H 'Content-Type: application/atom+xml;type=entry' \
