@@ -1,5 +1,5 @@
-swh-deposit
-==============
+How to bootstrap swh-deposit in production
+====================================================
 
 Once the package is installed, we need to do a few things:
 

@@ -1,5 +1,5 @@
-swh-deposit
-==============
+How to develop with swh-deposit
+=======================================
 
 There are 2 modes to run and test the server locally:
 - development like (automatic reloading when code changes)
