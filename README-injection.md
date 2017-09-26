@@ -12,23 +12,29 @@ previous known one for the same 'origin').
 
 
 === Injection mapping ===
-| origin                              |      https://hal.inria.fr/hal-id      |
-|-------------------------------------|---------------------------------------|
-| origin_visit                        |           1 :reception_date           |
-| occurrence &amp; occurrence_history | branch: client's version n° (e.g hal) |
-| revision                            |      synthetic_revision (tarball)     |
+
+| origin                              |      https://hal.inria.fr/hal-id       |
+|-------------------------------------|----------------------------------------|
+| origin_visit                        |           1 :reception_date            |
+| occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)  |
+| revision                            |      synthetic_revision (tarball)      |
 | directory                           | upper level of the uncompressed archive|
 
 
-=== Questions raised concerning injection: ===
-- A deposit has one origin, yet an origin can have multiple deposits ?
+=== Questions raised concerning injection ===
 
-No, an origin can have multiple requests for the same deposit,
-which should end up in one single deposit (when the client pushes its final
+- A deposit has one origin, yet an origin can have multiple deposits?
+
+No, an origin can have multiple requests for the same deposit.
+Which should end up in one single deposit (when the client pushes its final
 request saying deposit 'done' through the header In-Progress).
 
-When an update of a deposit is requested,
-the new version is identified with the external_id.
+Only update of existing 'partial' deposit is permitted.
+Other than that, the deposit 'update' operation.
+
+To create a new version of a software (already deposited), the client
+must prior to this create a new deposit.
+
 
 Illustration First deposit injection:
 
@@ -44,6 +50,7 @@ HAL's update on deposit 01535619 = SWH's deposit **01535619-2**
 
 (*with HAL updates can only be on the metadata and a new version is required
 if the content changes)
+
     + 1 origin with url:https://hal.inria.fr/medihal-01535619
 
     + new synthetic revision (with new metadata)
@@ -62,84 +69,114 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 
 == Technical details ==
 
-We will need:
-- one dedicated db to store state - swh-deposit
+Requirements:
 
-- one dedicated temporary storage to store archives before injection
+- one dedicated database to store the deposit's state - swh-deposit
+
+- one dedicated temporary objstorage to store archives before
+  injection
 
 - one client to test the communication with SWORD protocol
 
 === Deposit reception schema ===
 
-- **deposit** table:
-  - id (bigint): deposit receipt id
+- SWORD imposes the use of basic authentication, so we need a way to
+authenticate client:
 
+**deposit_client** table:
+  - id (bigint): Client's identifier
+  - username (str): Client's username
+  - password (pass): Client's password
+  - collections ([id]): List of collections the client can access
+
+- A client can access collection and a deposit is specific to a collection.
+
+**deposit_collection** table:
+  - id (bigint): Collection's identifier
+  - name (str): Collection's human readable name
+
+- A deposit is the main entity the repository is all about:
+
+**deposit** table:
+  - id (bigint): deposit's identifier
+  - reception_date (date): First deposit's reception date
+  - complete_data (date): Date when the deposit is deemed complete and ready for injection
+  - collection (id): The collection the deposit belongs to
   - external id (text): client's internal identifier (e.g hal's id, etc...).
+  - client_id (id) : Client which did the deposit
+  - swh_id (str) : swh identifier result once the injection is complete
+  - status (enum): The deposit's current status
 
-  - origin id : null before injection
-  - swh_id : swh identifier result once the injection is complete
-
-  - reception_date: first deposit date
-
-  - complete_date: reception date of the last deposit which makes the deposit
-  complete
-
-  - status (enum):
+- As mentioned, a deposit can have a status, whose possible values are:
 ```
       'partial',      -- the deposit is new or partially received since it
                       -- can be done in multiple requests
       'expired',      -- deposit has been there too long and is now deemed
                       -- ready to be garbage collected
       'ready',        -- deposit is fully received and ready for injection
-      'scheduled',    -- injection is scheduled on swh's side
-      'success',      -- injection successful
-      'failure'       -- injection failure
+      'injecting,     -- injection is ongoing on swh's side
+      'success',      -- injection is successful
+      'failure'       -- injection is a failure
 ```
-- **deposit_request** table:
+
+A deposit is stateful and can be made in multiple requests:
+**deposit_request** table:
   - id (bigint): identifier
-  - deposit_id: deposit concerned by the request
+  - type (id): deposit request's type (possible values: 'archive', 'metadata')
+  - deposit_id (id): deposit whose request belongs to
   - metadata: metadata associated to the request
+  - date (date): date of the requests
 
-- **client** table:
-  - id (bigint): identifier
-  - name (text): client's name (e.g HAL)
-  - credentials
+Information sent along a request are stored in a deposit_request row.
 
+They can be either of type 'metadata' (atom entry, multipart's atom
+entry part) or of type 'archive' (binary upload, multipart's binary
+upload part).
 
-All metadata (declared metadata) are stored in deposit_request (with the
-request they were sent with).
-When the deposit is complete metadata fields are aggregated and sent
-to injection. During injection the metadata is kept in the
+When the deposit is complete (status 'ready'), those metadata fields
+are read and aggregated. They will be sent as parameters to the
+injection routine. During injection, those metadata are kept in the
 origin_metadata table (see [metadata injection](#metadata-injection)).
 
-The only update actions occurring on the deposit table are in regards of:
-  - status changing
-    - partial -> {expired/ready},
-    - ready -> scheduled,
-    - scheduled -> {success/failure}
-  - complete_date when the deposit is finalized
-  (when the status is changed to ready)
-  - swh-id being populated once we have the result of the injection
+The only update actions occurring on the deposit table are in regards
+of:
+- status changing:
+  - partial -> {expired/ready},
+  - ready -> injecting,
+  - injecting -> {success/failure}
+- complete_date when the deposit is finalized (when the status is
+  changed to ready)
+- swh-id is populated once we have the injection result
 
-==== SWH Identifier returned? ====
+==== SWH Identifier returned ====
 
     swh-<client-name>-<synthetic-revision-id>
 
     e.g: swh-hal-47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
-    We could have a specific dedicated 'client' table to reference client
-    identifier.
-
 === Scheduling injection ===
-All data and metadata separated with multiple requests should be aggregated
-before injection.
 
-TODO: injection modeling
+All data and metadata separated with multiple requests should be
+aggregated before injection.
+The injection should be scheduled via the scheduler's api.
+
+When the injection is done and successful, the deposit entry is updated:
+- status is updated to success
+- swh-id is populated with the resulting hash
+- complete_date is updated to the injection's finished date
+
+When the injection is failed, the deposit entry is updated:
+- status is updated to failure
+- swh-id and complete_data are left as is
+
+We may install a retry policy with graceful delays for further
+scheduling.
 
 === Metadata injection ===
-- the metadata received with the deposit should be kept in the origin_metadata
-table before translation as part of the injection process and a indexation
-process should be scheduled.
+
+- the metadata received with the deposit should be kept in the
+origin_metadata table before translation as part of the injection
+process and an indexation process should be scheduled.
 
 origin_metadata table:
 ```
