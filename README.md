@@ -107,7 +107,7 @@ it was incomplete (also known as status `partial`).
 
 <!-- {F2884278} -->
 
-![Schema representation](/images/deposit-create-chart.png)
+![](/images/deposit-create-chart.png)
 
 ### Updating an existing deposit
 
@@ -130,7 +130,7 @@ exceeded the limit size imposed by swh repository deposit)
 
 <!-- {F2884302} -->
 
-![Schema representation](/images/deposit-update-chart.png)
+![](/images/deposit-update-chart.png)
 
 ### Deleting deposit (or associated archive, or associated metadata)
 
@@ -146,7 +146,7 @@ exceeded the limit size imposed by swh repository deposit)
 
 <!-- {F2884311} -->
 
-![Schema representation](/images/deposit-delete-chart.png)
+![](/images/deposit-delete-chart.png)
 
 ### Client asks for operation status
 
@@ -166,7 +166,8 @@ API access is over HTTPS.
 
 The API is protected through basic authentication.
 
-The API endpoints are rooted at https://archive.softwareheritage.org/1/.
+The API endpoints are rooted at
+[https://deposit.softwareheritage.org/1/](https://deposit.softwareheritage.org/1/).
 
 Data is sent and received as XML (as specified in the SWORD 2.0 specification).
 
@@ -175,14 +176,12 @@ In the following chapters, we will described the different endpoints
 
 ### [2] Service document
 
-Endpoint: /1/servicedocument/
+Endpoint: GET /1/servicedocument/
 
 This is the starting endpoint for the client to discover its initial
 collection. The answer to this query will describes:
 - the server's abilities
 - connected client's collection information
-
-HTTP verbs supported: GET
 
 Also known as: [SD-IRI - The Service Document IRI](#sd-iri-the-service-document-iri).
 
@@ -315,7 +314,8 @@ curl -i -u hal:<pass> --data-binary @atom-entry.xml \
 -H 'In-Progress: false' \
 -H 'Slug: some-external-id' \
 -H 'Content-Type: application/atom+xml;type=entry' \
--XPOST http://127.0.0.1:5006/1/hal/
+-XPOST https://deposit.softwareheritage.org/1/hal/
+
 HTTP/1.0 201 Created
 Date: Tue, 26 Sep 2017 10:32:35 GMT
 Server: WSGIServer/0.2 CPython/3.5.3
@@ -411,7 +411,7 @@ curl -i -u hal:<pass> \
     -F "atom=@../atom-entry.xml;type=application/atom+xml;charset=UTF-8" \
     -H 'In-Progress: false' \
     -H 'Slug: some-external-id' \
-    -XPOST http://127.0.0.1:5006/1/hal/
+    -XPOST https://deposit.softwareheritage.org/1/hal/
 
 HTTP/1.0 201 Created
 Date: Tue, 26 Sep 2017 10:11:55 GMT
@@ -604,7 +604,7 @@ As long as the deposit's status remains `partial`, it's possible to
 remove the deposit entirely or remove only the deposit's archive(s).
 
 If the deposit has been removed, further querying that deposit will
-return a 404 response.
+return a *404* response.
 
 If the deposit's archive(s) has been removed, we can still ensue other
 query to update that deposit.
@@ -617,75 +617,79 @@ operation status of a prior deposit.
 URL: GET /1/<collection-name>/<deposit_id>/status/
 
 This returns:
-- 201 response with the actual status
-- 404 if the deposit does not exist (or no longer does)
+- *201* response with the actual status
+- *404* if the deposit does not exist (or no longer does)
 
 ## <a name="errors"> Possible errors
 
 ### sword:ErrorContent
 
-IRI: http://purl.org/net/sword/error/ErrorContent
+IRI: `http://purl.org/net/sword/error/ErrorContent`
 
 The supplied format is not the same as that identified in the
 Packaging header and/or that supported by the server Associated HTTP
 
-Status: 415 (Unsupported Media Type) or 406 (Not Acceptable)
+Associated HTTP status: *415 (Unsupported Media Type)*
 
 ### sword:ErrorChecksumMismatch
 
-IRI: http://purl.org/net/sword/error/ErrorChecksumMismatch
+IRI: `http://purl.org/net/sword/error/ErrorChecksumMismatch`
 
-Checksum sent does not match the calculated checksum. The server MUST
-also return a status code of 412 Precondition Failed
+Checksum sent does not match the calculated checksum.
+
+Associated HTTP status: *412 Precondition Failed*
 
 ### sword:ErrorBadRequest
 
-IRI: http://purl.org/net/sword/error/ErrorBadRequest
+IRI: `http://purl.org/net/sword/error/ErrorBadRequest`
 
-Some parameters sent with the POST/PUT were not understood. The server
-MUST also return a status code of 400 Bad Request.
+Some parameters sent with the POST/PUT were not understood.
+
+Associated HTTP status: *400 Bad Request*
 
 ### sword:MediationNotAllowed
 
-IRI: http://purl.org/net/sword/error/MediationNotAllowed
+IRI: `http://purl.org/net/sword/error/MediationNotAllowed`
 
 Used where a client has attempted a mediated deposit, but this is not
-supported by the server. The server MUST also return a status code of
-412 Precondition Failed.
+supported by the server.
+
+Associated HTTP status: *412 Precondition Failed*
 
 ### sword:MethodNotAllowed
 
-IRI: http://purl.org/net/sword/error/MethodNotAllowed
+IRI: `http://purl.org/net/sword/error/MethodNotAllowed`
 
 Used when the client has attempted one of the HTTP update verbs (POST,
 PUT, DELETE) but the server has decided not to respond to such
-requests on the specified resource at that time. The server MUST also
-return a status code of 405 Method Not Allowed
+requests on the specified resource at that time.
+
+Associated HTTP Status: *405 Method Not Allowed*
 
 ### sword:MaxUploadSizeExceeded
 
-IRI: http://purl.org/net/sword/error/MaxUploadSizeExceeded
+IRI: `http://purl.org/net/sword/error/MaxUploadSizeExceeded`
 
 Used when the client has attempted to supply to the server a file
 which exceeds the server's maximum upload size limit
 
-Associated HTTP Status: 413 (Request Entity Too Large)
+Associated HTTP Status: *413 (Request Entity Too Large)*
 
 ### sword:Unauthorized
 
-IRI: http://purl.org/net/sword/error/ErrorUnauthorized
+IRI: `http://purl.org/net/sword/error/ErrorUnauthorized`
 
 The access to the api is through authentication.
 
-Associated HTTP status: 401
+Associated HTTP status: *401*
 
 ### sword:Forbidden
 
-IRI: http://purl.org/net/sword/error/ErrorForbidden
+IRI: `http://purl.org/net/sword/error/ErrorForbidden`
 
 The action is forbidden (access to another collection for example).
 
-Associated HTTP status: 403
+Associated HTTP status: *403*
 
 ## Nomenclature
 
@@ -697,6 +701,8 @@ chapter, we will describe SWH's IRIs.
 The Service Document IRI. This is the IRI from which the client can
 discover its collection IRI.
 
+HTTP verbs supported: *GET*
+
 ### Col-IRI - The Collection IRI
 
 The software collection associated to one user.
@@ -707,7 +713,7 @@ take place, and which is listed in the Service Document.
 Following our previous example, this is:
 https://deposit.softwareheritage.org/1/hal/.
 
-HTTP verbs supported: POST
+HTTP verbs supported: *POST*
 
 ### Cont-IRI - The Content IRI
 
@@ -717,9 +723,9 @@ representations of the object as it resides in the SWORD server.
 This will display information about the content and its associated
 metadata.
 
-HTTP verbs supported: GET
+HTTP verbs supported: *GET*
 
-We refer to it as Cont-File-IRI.
+*Note:* We also refer to it as *Cont-File-IRI*.
 
 ### EM-IRI - The Atom Edit Media IRI
 
@@ -741,7 +747,7 @@ True).  Then, in order to complete the deposit, POST the other
 remaining archives to the EM-IRI (the last one with the In-Progress
 header to False).
 
-HTTP verbs supported: POST, PUT, DELETE
+HTTP verbs supported: *POST*, *PUT*, *DELETE*
 
 ### Edit-IRI - The Atom Entry Edit IRI
 
@@ -751,12 +757,16 @@ metadata. In particular:
 - add new metadata (and archives)
 - delete deposit
 
-HTTP verbs supported: POST, PUT, DELETE
+HTTP verbs supported: *POST*, *PUT*, *DELETE*
+
+*Note:* We also refer to it as *Edit-SE-IRI*.
 
 ### SE-IRI - The SWORD Edit IRI
 
 The sword specification permits to merge this with EDIT-IRI, so we
 did.
+
+*Note:* We also refer to it as *Edit-SE-IRI*.
 
 ### State-IRI - The SWORD Statement IRI
 
@@ -764,7 +774,7 @@ This is the IRI which can be used to retrieve a description of the
 object from the sword server, including the structure of the object
 and its state. This will be used as the operation status endpoint.
 
-HTTP verbs supported: GET
+HTTP verbs supported: *GET*
 
 ## Sources
 
