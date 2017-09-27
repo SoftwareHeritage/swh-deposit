@@ -1,43 +1,49 @@
 # API Specification
 
-This is Software
-Heritage's
+This is [Software Heritage](https://www.softwareheritage.org)'s
 [SWORD 2.0](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html) Server
 implementation.
 
-SWORD (Simple Web-Service Offering Repository Deposit) is an
-interoperability standard for digital file deposit.
+**S.W.O.R.D** (**S**imple **W**eb-Service **O**ffering **R**epository
+**D**eposit) is an interoperability standard for digital file deposit.
 
 This implementation will permit interaction between a client (a
 repository) and a server (SWH repository) to permit deposits of
 software source code archives and associated metadata.
 
-Note: In the following document, we will use the `archive` or
+*Note:* In the following document, we will use the `archive` or
 `software source code archive` interchangeably.
 
 ## Collection
 
-SWORD defines a `collection` concept.  The collection refers to a
-group of documents to which the deposit uploaded (a.k.a deposit) is
-part of.
+SWORD defines a `collection` concept.  In SWH's case, this collection
+refers to a group of deposits. A `deposit` is some form of software
+source code archive(s) associated with metadata.
 
-For example, we will start the collaboration with HAL, thus we define
-a `HAL collection` to which the `hal` client will deposit new
-documents (software source code archive and associated metadata).
+*Note:* It may be multiple archives if one archive is too big and must be
+splitted into multiple smaller ones.
+
+### Example
+
+As part of the
+[HAL](https://hal.archives-ouvertes.fr/)-[SWH](https://www.softwareheritage.org)
+collaboration, we define a `HAL collection` to which the `hal` client
+will have access to.
 
 ## Limitations
 
-Applying the SWORD 2.0 protocol procedure will result with voluntary
-implementation shortcomings, at least, during the first iteration:
+We will not have a fully compliant SWORD 2.0 protocol at first, so
+voluntary implementation shortcomings can exist, for example, only zip
+tarballs will be accepted.
 
-- upload limitation of 20Mib
-- only zip tarballs will be accepted
+Other more permanent limitations exists:
+- upload limitation of 100Mib
 - no mediation
 
 ## Endpoints
 
-Here are the defined endpoints, we mention them first as they will be
-mentioned all along the document:
+Here are the defined endpoints this document will refer to from this
+point on:
 
 - `/1/servicedocument/`  *service document iri* (a.k.a [SD-IRI](#sd-iri-the-service-document-iri))
 
@@ -72,13 +78,13 @@ mentioned all along the document:
 
 From client's deposit repository server to SWH's repository server:
 
-1. The client requests for the server's abilities and its associated
+[1.] The client requests for the server's abilities and its associated
 collection (GET query to the *SD/service document uri*)
 
-2. The server answers the client with the service document which gives
+[2.] The server answers the client with the service document which gives
    the *collection uri* (also known as *COL/collection IRI*).
 
-3. The client sends a deposit (optionally a zip archive, some metadata
+[3.] The client sends a deposit (optionally a zip archive, some metadata
 or both) through the *collection uri*.
 
 This can be done in:
@@ -86,60 +92,73 @@ This can be done in:
 - one POST request (metadata or archive) + other PUT or POST request
   to the *update uris* (*edit-media iri* or *edit iri*)
 
-  3.1. Server validates the client's input or returns detailed error if any
+  [3.1.] Server validates the client's input or returns detailed error if any
 
-  3.2. Server stores information received (metadata or software
+  [3.2.] Server stores information received (metadata or software
   archive source code or both)
 
-4. The server notifies the client it acknowledged the client's
+[4.] The server notifies the client it acknowledged the client's
 request. An `http 201 Created` response with a deposit receipt in the
 body response is sent back.  That deposit receipt will hold the
 necessary information to eventually complete the deposit later on if
 it was incomplete (also known as status `partial`).
 
+#### Schema representation
+
+<!-- {F2884278} -->
+
+![Schema representation](/images/deposit-create-chart.png)
+
 ### Updating an existing deposit
 
-5. Client updates existing deposit through the *update uris* (one or
+[5.] Client updates existing deposit through the *update uris* (one or
 more POST or PUT requests to either the *edit-media iri* or *edit
 iri*).
 
-    5.1. Server validates the client's input or returns detailed error if any
+  [5.1.] Server validates the client's input or returns detailed error
+  if any
 
-    5.2. Server stores information received (metadata or software
-    archive source code or both)
+  [5.2.] Server stores information received (metadata or software
+  archive source code or both)
 
 This would be the case for example if the client initially posted a
 `partial` deposit (e.g. only metadata with no archive, or an archive
 without metadata, or a splitted archive because the initial one
 exceeded the limit size imposed by swh repository deposit)
 
+#### Schema representation
+
+<!-- {F2884302} -->
+
+![Schema representation](/images/deposit-update-chart.png)
+
 ### Deleting deposit (or associated archive, or associated metadata)
 
-6. Deposit deletion is possible as long as the deposit is still in
+[6.] Deposit deletion is possible as long as the deposit is still in
    `partial` state.
 
-    6.1. Server validates the client's input or returns detailed error if any
+  [6.1.] Server validates the client's input or returns detailed error
+  if any
 
-    6.2. Server actually delete information according to request
+  [6.2.] Server actually delete information according to request
 
-### Client asks for operation status and repository id
+#### Schema representation
 
-7. Operation status can be read through a GET query to the *state
+<!-- {F2884311} -->
+
+![Schema representation](/images/deposit-delete-chart.png)
+
+### Client asks for operation status
+
+[7.] Operation status can be read through a GET query to the *state
    iri*.
-
 
 ### Server: Triggering injection
 
 Once the status `ready` is reached for a deposit, the server will
 inject the archive(s) sent and the associated metadata.
 
-### Schema representation
-
-The image below represents only the communication and creation of a
-deposit:
-
-{F2403754}
-
+This is described in the [injection document](./spec-injection.html).
 
 ## API overview
 
@@ -249,7 +268,7 @@ The client can deposit a binary archive, supplying the following headers:
 This is a single zip archive deposit. Almost no metadata is associated
 with the archive except for the unique external identifier.
 
-Note: This kind of deposit should be `partial` (In-Progress: True) as
+*Note:* This kind of deposit should be `partial` (In-Progress: True) as
 almost no metadata can be associated with the uploaded archive.
 
 ##### API endpoints concerned
@@ -277,7 +296,7 @@ curl -i -u hal:<pass> \
 The client can deposit an xml body holding metadata information on the
 deposit.
 
-Note: This kind of deposit is mostly expected to be `partial`
+*Note:* This kind of deposit is mostly expected to be `partial`
 (In-Progress: True) since no archive will be associated to those
 metadata.
 
