@@ -1,5 +1,4 @@
-swh-deposit
-==============
+# API Specification
 
 This is Software Heritage's SWORD Server implementation.
 
@@ -12,9 +11,9 @@ and a server (swh repository) to permit deposits of software archives.
 In this document, we will discuss the interaction between a client
 (e.g. HAL server) and the deposit server (SWH's).
 
-== Use cases ==
+## Use cases
 
-=== First deposit ===
+### First deposit
 
 From client's deposit repository server to SWH's repository server
 (aka deposit).
@@ -38,7 +37,7 @@ request. An 'http 201 Created' response with a deposit receipt is sent
 back.  That deposit receipt will hold the necessary information to
 eventually complete the deposit if it was partial.
 
-=== Updating an existing deposit ===
+### Updating an existing deposit
 
 5. Client updates existing deposit through the *update uris* (one or
 more POST or PUT requests to the *edit-media* or *edit-iri*).
@@ -48,7 +47,7 @@ partial deposit (e.g. only metadata with no archive, or an archive
 without metadata, a splitted archive because the initial one is too
 big)
 
-=== Deleting ===
+### Deleting
 
 6. Deposit deletion is possible as long as the deposit is still in
    partial state.
@@ -57,7 +56,7 @@ That is, a deposit initially occurred with the IN-PROGRESS header to
 true and it did not change (even after multiple updates).
 
 
-== Limitations ==
+## Limitations
 
 Applying the SWORD protocol procedure will result with voluntary implementation
 shortcomings, at least, during the first iteration:
@@ -66,7 +65,7 @@ shortcomings, at least, during the first iteration:
 - only tarballs (.zip) will be accepted
 - no mediation (we do not know the other system's users)
 
-== Collection ==
+## Collection
 
 SWORD defines a 'collection' concept.  The collection refers to a
 group of documents to which the deposit uploaded (a.k.a deposit) is
@@ -75,12 +74,12 @@ part of.
 For example, we will start the collaboration with HAL, thus we define
 a HAL collection to which the hal client will deposit new document.
 
-=== Client asks for operation status and repository id ===
+### Client asks for operation status and repository id
 
 A state endpoint is defined in the sword specification to provide such
 information.
 
-== Endpoints ==
+## Endpoints
 
 The api defines the following endpoints:
 
@@ -102,7 +101,7 @@ The api defines the following endpoints:
 - /1/<collection-name>/<deposit-id>/status/
   *state iri*  (a.k.a STATE-IRI)
 
-== API overview ==
+## API overview
 
 API access is over HTTPS.
 
@@ -110,7 +109,7 @@ All API endpoints are rooted at https://archive.softwareheritage.org/1/.
 
 Data is sent and received as XML.
 
-=== Service document ===
+### Service document
 
 Endpoint: /1/servicedocument/
 
@@ -125,7 +124,7 @@ HTTP verbs supported: GET
 
 Also known as: SD-IRI - The Service Document IRI.
 
-==== Sample request:====
+#### Sample request
 
 ``` Shell
 GET https://deposit.softwareheritage.org/1/servicedocument/ HTTP/1.1
@@ -142,7 +141,7 @@ The server returns its abilities with the service document in xml format:
 - mediation is not supported
 - etc...
 
-==== Sample answer ====
+#### Sample answer
 
 The current answer for example for the
 [hal archive](https://hal.archives-ouvertes.fr/) is:
@@ -175,7 +174,7 @@ The current answer for example for the
 </service>
 ```
 
-== Deposit Creation: client point of view ==
+## Deposit Creation: client point of view
 
 Process of deposit creation:
 
@@ -196,7 +195,7 @@ deposit:
 
 {F2403754}
 
-=== [3] client request(s)  ===
+### [3] client request(s)
 
 The client can send a deposit through a series of deposit requests to
 multiple endpoints:
@@ -211,9 +210,9 @@ The deposit request can contain:
   (atom entry deposit)
 - or both (multipart deposit, exactly one archive and one envelop).
 
-== Request Types ==
+## Request Types
 
-=== Binary deposit ===
+### Binary deposit
 
 The client can deposit a binary archive, supplying the following headers:
 - Content-Type (text): accepted mimetype
@@ -233,13 +232,13 @@ with the archive except for the unique external identifier.
 Note: This kind of deposit should be partial (In-Progress: True) as
 almost no metadata can be associated with the uploaded archive.
 
-==== API endpoints concerned ====
+#### API endpoints concerned
 
 POST /1/<collection-name>/                    Create a first deposit with one archive
 PUT /1/<collection-name>/<deposit-id>/media/  Replace existing archives
 POST /1/<collection-name>/<deposit-id>/media/ Add new archive
 
-==== Sample request ====
+#### Sample request
 
 ``` Shell
 curl -i -u hal:<pass> \
@@ -252,7 +251,7 @@ curl -i -u hal:<pass> \
     -XPOST https://deposit.softwareheritage.org/1/hal/
 ```
 
-=== Atom entry deposit ===
+### Atom entry deposit
 
 The client can deposit an xml body holding metadata information on the
 deposit.
@@ -261,13 +260,13 @@ Note: This kind of deposit is mostly expected to be partial
 (In-Progress: True) since no archive will be associated to those
 metadata.
 
-==== API endpoints concerned ====
+#### API endpoints concerned
 
 POST /1/<collection-name>/                       Create a first atom deposit entry
 PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata
 POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata to deposit
 
-==== Sample request ====
+#### Sample request
 
 Sample query:
 
@@ -337,7 +336,7 @@ Sample body:
 </entry>
 ```
 
-==== One request deposit / Multipart deposit ====
+### One request deposit / Multipart deposit
 
 The one request deposit is a single request containing both the
 metadata (as atom entry attachment) and the archive (as payload
@@ -356,13 +355,13 @@ Client provides:
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
 
-==== API endpoints concerned ====
+#### API endpoints concerned
 
 POST /1/<collection-name>/                       Create a full deposit (metadata + archive)
 PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata and archive
 POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata and archive to deposit
 
-==== sample request ====
+#### Sample request
 
 Sample query:
 
@@ -457,12 +456,12 @@ MIME-Version: 1.0
 --===============1605871705==--
 ```
 
-== Deposit Creation - server point of view ==
+## Deposit Creation - server point of view
 
 The server receives the request(s) and does minimal checking on the
 input prior to any saving operations.
 
-=== [3.1] Validation of the header and body request ===
+### [3.1] Validation of the header and body request
 
 Any kind of errors can happen, here is the list depending on the
 situation:
@@ -494,7 +493,7 @@ situation:
 - Atom entry deposit:
   - 400 (bad request) if the request's body is empty (for creation only)
 
-=== [3.2] Server uploads the content in a temporary location ==
+### [3.2] Server uploads the content in a temporary location
 
 Using an objstorage, the server stores the archive in a temporary
 location.  It's temporary the time the deposit is completed (status
@@ -502,7 +501,7 @@ becomes ready) and the injection finishes.
 
 The server also stores requests' information in a database.
 
-=== [4] Servers answers the client ===
+### [4] Servers answers the client
 
 If everything went well, the server answers either with a 200, 201 or
 204 response.
@@ -519,7 +518,7 @@ If something went wrong, the server answers with one of the
 [error status code and associated message mentioned](#possible errors)).
 
 
-=== [5] Deposit Update ===
+### [5] Deposit Update
 
 The client previously deposited a partial document (through an
 archive, metadata, or both). The client wants to update information
@@ -557,14 +556,14 @@ POST /1/<collection-name>/<deposit-id>/media/     Add new archives to the deposi
 PUT /1/<collection-name>/<deposit-id>/metadata/   Replace existing metadata (and possible archives)
 POST /1/<collection-name>/<deposit-id>/metadata/  Add new metadata
 
-=== [6] Deposit Removal ===
+### [6] Deposit Removal
 
 As long as the deposit's status remains 'partial', it's possible to
 remove the deposit.
 
 Further query to that deposit will return a 404 response.
 
-=== Operation Status ===
+### Operation Status
 
 Providing a collection name and a deposit id, the client asks the
 operation status of a prior deposit.
@@ -642,12 +641,12 @@ The action is forbidden (access to another collection for example).
 
 Associated HTTP status: 403
 
-== Nomenclature ==
+## Nomenclature
 
 SWORD uses IRI notion, Internationalized Resource Identifier. In this
 chapter, we will describe SWH's IRIs.
 
-=== Col-IRI - The Collection IRI ===
+### Col-IRI - The Collection IRI
 
 The software collection associated to one user.
 
@@ -659,7 +658,7 @@ https://deposit.softwareheritage.org/1/hal/.
 
 HTTP verbs supported: POST
 
-=== Cont-IRI - The Content IRI ===
+### Cont-IRI - The Content IRI
 
 This is the endpoint which permits the client to retrieve
 representations of the object as it resides in the SWORD server.
@@ -671,7 +670,7 @@ HTTP verbs supported: GET
 
 We refer to it as Cont-File-IRI.
 
-=== EM-IRI - The Atom Edit Media IRI ===
+### EM-IRI - The Atom Edit Media IRI
 
 This is the endpoint to upload other related archives for the same
 deposit.
@@ -693,7 +692,7 @@ header to False).
 
 HTTP verbs supported: POST, PUT, DELETE
 
-=== Edit-IRI - The Atom Entry Edit IRI ===
+### Edit-IRI - The Atom Entry Edit IRI
 
 This is the endpoint to change a 'partial' deposit in regards of
 metadata. In particular:
@@ -703,12 +702,12 @@ metadata. In particular:
 
 HTTP verbs supported: POST, PUT, DELETE
 
-=== SE-IRI - The SWORD Edit IRI ===
+### SE-IRI - The SWORD Edit IRI
 
 The sword specification permits to merge this with EDIT-IRI, so we
 did.
 
-=== State-IRI - The SWORD Statement IRI ===
+### State-IRI - The SWORD Statement IRI
 
 This is the IRI which can be used to retrieve a description of the
 object from the sword server, including the structure of the object
@@ -716,7 +715,7 @@ and its state. This will be used as the operation status endpoint.
 
 HTTP verbs supported: GET
 
-== Sources ==
+## Sources
 
 - [SWORD v2 specification](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html)
 - [arxiv documentation](https://arxiv.org/help/submit_sword)
