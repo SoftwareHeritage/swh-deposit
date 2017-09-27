@@ -1,30 +1,43 @@
-How to develop with swh-deposit
-=======================================
+# Develop on swh-deposit
 
-There are 2 modes to run and test the server locally:
-- development like (automatic reloading when code changes)
-- production like (no reloading)
+There are multiple modes to run and test the server locally:
+- development-like (automatic reloading when code changes)
+- production-like (no reloading)
+- integration tests (no side effects)
 
-# Development like
+Except for the tests which are mostly side effects free (except for
+the database access), the other modes will need some configuration
+files (up to 2) to run properly.
 
-## Configuration
+## Development-like environment
 
-In ~/.config/swh/deposit/server.yml
+Development-like environment needs one configuration file to work
+properly.
+
+### Configuration
+
+**`{/etc/softwareheritage | ~/.config/swh | ~/.swh}`/deposit/server.yml**:
 
 ``` YAML
-# dev option
+# dev option for running the server locally
 host: 127.0.0.1
 port: 5006
 
 # production
-authentication: true
+authentication:
+  activated: true
+  white-list:
+    GET:
+      - /
 
 # 20 Mib max size
 max_upload_size: 20971520
 
+# flags for the service document endpoint
 verbose: false
 noop: false
 
+# access to the objstorage for storing uploaded archive
 objstorage:
   cls: pathslicing
   args:
@@ -32,26 +45,28 @@ objstorage:
     slicing: 0:1/1:5
 ```
 
-## Run
+### Run
 
-Run local server which will use the previous setup.
+Run the local server, using the default configuration file:
 
 ``` Shell
 make run-dev
 ```
 
-# Production-like
+## Production-like environment
 
-This will run locally a mode similar to that of production.
+Production-like environment needs two configuration files to work
+properly.
 
-## Configuration
+This is more close to what's actually running in production.
+
+### Configuration
 
 This expects the same file describes in the previous chapter.  Plus,
-an additional private settings.yml file containing secret information
-that is not in the source code repository.
+an additional private **settings.yml** file containing secret
+information that is not in the source code repository.
 
-In ~/.config/swh/deposit/private.yml, a development configuration file
-would look like:
+**`{/etc/softwareheritage | ~/.config/swh | ~/.swh}`/deposit/private.yml**:
 
 ``` YAML
 secret_key: production-local
@@ -71,7 +86,7 @@ db:
   password: user-password
 ```
 
-## Run
+### Run
 
 ``` Shell
 make run
@@ -81,6 +96,12 @@ Note: This expects gunicorn3 package installed on the system
 
 ## Tests
 
+To run the tests:
 ``` Shell
-cd swh && python3 -m manage test
+make test
 ```
+
+As explained, those tests are mostly side-effect free.  The db part is
+dealt with by django. The remaining part which patches those
+side-effect behavior is dealt with in the
+`swh/deposit/tests/__init__.py` module.
