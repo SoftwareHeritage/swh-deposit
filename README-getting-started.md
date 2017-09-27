@@ -1,15 +1,13 @@
-Getting Started
-===================
+# Getting Started
 
 This is a getting started to demonstrate the deposit api use case with
 a shell client.
 
 The api is rooted at https://deposit.softwareheritage.org.
 
-For more details, see the [./README.md](main README).
+For more details, see the [main README](./README.md).
 
-Requirements
----------------
+## Requirements
 
 You need to be referenced on SWH's client list to have:
 - a credential (needed for the basic authentication step).
@@ -17,47 +15,53 @@ You need to be referenced on SWH's client list to have:
 
 [Contact us for more information.](https://www.softwareheritage.org/contact/)
 
-Demonstration
-----------------
+## Demonstration
 
-For the rest of the document, we'll reference <client-name>.
+For the rest of the document, we will:
+- reference `<client-name>` as the client and `<pass>` as its
+associated authentication password.
+- use curl as example on how to request the api.
+- present the main deposit use cases.
 
-We'll use curl as example on how to request the api.
+The use cases are:
 
-We will present 2 deposit use cases.
-Both have a common part.
+- one single deposit step: The user posts in one query (one deposit) a
+  software source code archive and associated metadata (deposit is
+  finalized with status `ready`).
 
-Use cases:
-- one single deposit step: this will create a 'ready' deposit using a
-  multipart query.
-- another deposit which is in 4 steps:
-  1. Create a deposit
-  2. Update a deposit (and finalize it)
+  This will demonstrate the multipart query.
+
+- another 3-steps deposit (which can be extended as more than 2
+  steps):
+  1. Create an incomplete deposit (status `partial`)
+  2. Update a deposit (and finalize it, so the status becomes `ready`)
   3. Check the deposit's state
 
-## Common part
+  This will demonstrate the stateful nature of the sword protocol.
 
-First, to determine the *collection iri*, the client needs to ask the
-server where is its *collection* endpoint.  The initial endpoint is
-the *service document iri*.
+Those use cases share a common part, they must start by requesting the
+`service document iri` (internationalized resource identifier) for
+information about the collection's location.
+
+### Common part - Start with the service document
+
+First, to determine the *collection iri* onto which deposit data, the
+client needs to ask the server where is its *collection* located. That
+is the role of the *service document iri*.
 
 For example:
 
 ``` Shell
-curl -i --user hal:<pass> https://deposit.softwareheritage.org/1/servicedocument/
+curl -i --user <client-name>:<pass> https://deposit.softwareheritage.org/1/servicedocument/
 ```
 
-If everything went well, you should have received a response which
-looks like:
+If everything went well, you should have received a response similar
+to this:
 
 ``` Shell
 HTTP/1.0 200 OK
-Date: Tue, 26 Sep 2017 16:24:55 GMT
 Server: WSGIServer/0.2 CPython/3.5.3
 Content-Type: application/xml
-Allow: GET, POST, PUT, DELETE, HEAD, OPTIONS
-Vary: Accept, Cookie
-X-Frame-Options: SAMEORIGIN
 
 <?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
@@ -72,38 +76,62 @@ X-Frame-Options: SAMEORIGIN
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>
-        <collection href="https://deposit.softwareheritage.org/1/hal/">
-            <atom:title>hal Software Collection</atom:title>
+        <collection href="https://deposit.softwareheritage.org/1/<collection-name>/">
+            <atom:title><client-name> Software Collection</atom:title>
             <accept>application/zip</accept>
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>
             <sword:mediation>false</sword:mediation>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-            <sword:service>https://deposit.softwareheritage.org/1/hal/</sword:service>
+            <sword:service>https://deposit.softwareheritage.org/1/<collection-name>/</sword:service>
         </collection>
     </workspace>
 </service>
 ```
 
-Explaining this response:
+Explaining the response:
 - `HTTP/1.0 200 OK`: the query is successful and returns a body response
-- Content-Type: application/xml: The body response is in xml format
-- body response: it is a service document describing that the client
-  `hal` has a collection named `hal`. It is available at the
-  *collection iri* `/1/hal/` (through POST query).
+- `Content-Type: application/xml`: The body response is in xml format
+- `body response`: it is a service document describing that the client
+  `<client-name>` has a collection named `<collection-name>`. That
+  collection is available at the *collection iri*
+  `/1/<collection-name>/` (through POST query).
 
-## Single deposit
+At this level, if something went wrong, this should be authentication related.
+So the response would have been a 401 Unauthorized access.
+Something like:
+
+``` Shell
+curl -i https://deposit.softwareheritage.org/1/<collection-name>/
+HTTP/1.0 401 Unauthorized
+Server: WSGIServer/0.2 CPython/3.5.3
+Content-Type: application/xml
+WWW-Authenticate: Basic realm=""
+X-Frame-Options: SAMEORIGIN
+
+<?xml version="1.0" encoding="utf-8"?>
+<sword:error xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/">
+    <summary>Access to this api needs authentication</summary>
+    <sword:treatment>processing failed</sword:treatment>
+
+</sword:error>
+```
+
+### Single deposit
 
 A single deposit translates to a multipart deposit request.
 
-This means, in swh's deposit's terms, sending exactly:
-- 1 archive with content-type application/zip
-- 1 application/atom+xml;type=entry
+This means, in swh's deposit's terms, sending exactly one POST query
+with:
+- 1 archive (`content-type application/zip`)
+- 1 atom xml content (`content-type: application/atom+xml;type=entry`)
 
-The archive, for now is a zip files holding some form of software
-source code. The atom entry file is an xml file holding metadata about
-the software.
+The supported archive, for now are limited to zip files.  Those
+archives are expected to contain some form of software source
+code. The atom entry content is some xml defining metadata about that
+software.
 
 Example of minimal atom entry file:
 
@@ -142,7 +170,7 @@ Once the files are ready for deposit, we want to do the actual deposit
 in one shot.
 
 For this, we need to provide:
-- the files with the right content-types
+- the contents and their associated correct content-types
 - either the header `In-Progress` to false (meaning, it's finished
 after this query) or nothing (the server will assume it's not in
 progress if not present).
@@ -152,28 +180,24 @@ identifier the client knows about and wants to provide us.
 You can do this with the following command:
 
 ``` Shell
-curl -i -u hal:<pass> \
+curl -i --user <client-name>:<pass> \
     -F "file=@deposit.zip;type=application/zip;filename=payload" \
     -F "atom=@atom-entry.xml;type=application/atom+xml;charset=UTF-8" \
     -H 'In-Progress: false' \
     -H 'Slug: some-external-id' \
-    -XPOST http://deposit.softwareheritage.org/1/hal/
+    -XPOST https://deposit.softwareheritage.org/1/<collection-name>/
 ```
 
-You just posted a deposit to
-http://deposit.softwareheritage.org/1/hal/, the hal collection IRI.
+You just posted a deposit to the collection <collection-name>
+https://deposit.softwareheritage.org/1/<collection-name>/.
 
-If everything went well, you should have received a response which
-looks like:
+If everything went well, you should have received a response similar
+to this:
 
 ``` Shell
 HTTP/1.0 201 Created
-Date: Tue, 26 Sep 2017 10:11:55 GMT
 Server: WSGIServer/0.2 CPython/3.5.3
-Vary: Accept, Cookie
-Allow: GET, POST, PUT, DELETE, HEAD, OPTIONS
-Location: /1/hal/9/metadata/
-X-Frame-Options: SAMEORIGIN
+Location: /1/<collection-name>/10/metadata/
 Content-Type: application/xml
 
 <entry xmlns="http://www.w3.org/2005/Atom"
@@ -184,11 +208,11 @@ Content-Type: application/xml
     <deposit_archive>payload</deposit_archive>
 
     <!-- Edit-IRI -->
-    <link rel="edit" href="/1/hal/9/metadata/" />
+    <link rel="edit" href="/1/<collection-name>/10/metadata/" />
     <!-- EM-IRI -->
-    <link rel="edit-media" href="/1/hal/9/media/"/>
+    <link rel="edit-media" href="/1/<collection-name>/10/media/"/>
     <!-- SE-IRI -->
-    <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/9/metadata/" />
+    <link rel="http://purl.org/net/sword/terms/add" href="/1/<collection-name>/10/metadata/" />
 
     <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
 </entry>
@@ -196,7 +220,7 @@ Content-Type: application/xml
 
 Explaining this response:
 - `HTTP/1.0 201 Created`: the deposit is successful
-- `Location: /1/hal/9/metadata/`: the EDIT-SE-IRI through which we can
+- `Location: /1/<collection-name>/10/metadata/`: the EDIT-SE-IRI through which we can
   update a deposit
 - body response: it is a deposit receipt detailing all endpoints
   available to manipulate the deposit (update, replace, delete,
@@ -204,24 +228,27 @@ Explaining this response:
   useful for the remaining example).
 
 Note: As the deposit is in `ready` status (meaning ready to be
-injected), you cannot actually update anything.  Well, the client can
-try, but it will be answered with a 403 forbidden answer.
+injected), you cannot actually update anything after this query.
+Well, the client can try, but it will be answered with a 403 forbidden
+answer.
 
-## Multi-steps deposit
+### Multi-steps deposit
 
 1. Create a deposit
 
-We'll use the collection IRI again as the starting point.
+We will use the collection IRI again as the starting point.
 
-We need to explicitely give to the server information:
-- the deposit is not complete (through header `In-Progress` to true).
-- md5 hash of the archive to post (through header `Content-MD5`)
-- the type of upload (through the headers `Content-Disposition` and `Content-Type`)
+We need to explicitely give to the server information about:
+- the deposit's completeness (through header `In-Progress` to true, as
+  we want to do in multiple steps now).
+- archive's md5 hash (through header `Content-MD5`)
+- upload's type (through the headers `Content-Disposition` and
+  `Content-Type`)
 
 The following command:
 
 ``` Shell
-curl -i -u hal:<pass> \
+curl -i --user <client-name>:<pass> \
     --data-binary @swh/deposit.zip \
     -H 'In-Progress: true' \
     -H 'Content-MD5: 0faa1ecbf9224b9bf48a7c691b8c2b6f' \
@@ -229,36 +256,33 @@ curl -i -u hal:<pass> \
     -H 'Slug: some-external-id' \
     -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
     -H 'Content-type: application/zip' \
-    -XPOST https://deposit.softwareheritage.org/1/hal/
+    -XPOST https://deposit.softwareheritage.org/1/<collection-name>/
 ```
 
 The expected answer is the same as the previous sample.
 
-2. Update a deposit
+2. Update deposit's metadata
 
 To update a deposit, we can either add some more archives, some more
 metadata or replace existing ones.
 
-As we don't have defined metadata yet (except for the `slug`), we can
-add some to the `EDIT-SE-IRI` (/1/hal/9/metadata/).
+As we don't have defined metadata yet (except for the `slug` header),
+we can add some to the `EDIT-SE-IRI` endpoint (/1/<collection-name>/10/metadata/).
+That information is extracted from the deposit receipt sample.
 
 Using here the same atom-entry.xml file presented in previous chapter.
 
 For example, here is the command to update deposit metadata:
 
 ``` Shell
-curl -i -u hal:<pass> --data-binary @atom-entry.xml \
+curl -i --user <client-name>:<pass> --data-binary @atom-entry.xml \
 -H 'In-Progress: true' \
 -H 'Slug: some-external-id' \
 -H 'Content-Type: application/atom+xml;type=entry' \
--XPOST http://deposit.softwareheritage.org/1/hal/9/metadata/
+-XPOST https://deposit.softwareheritage.org/1/<collection-name>/10/metadata/
 HTTP/1.0 201 Created
-Date: Tue, 26 Sep 2017 10:32:35 GMT
 Server: WSGIServer/0.2 CPython/3.5.3
-Vary: Accept, Cookie
-Allow: GET, POST, PUT, DELETE, HEAD, OPTIONS
-Location: /1/hal/10/metadata/
-X-Frame-Options: SAMEORIGIN
+Location: /1/<collection-name>/10/metadata/
 Content-Type: application/xml
 
 <entry xmlns="http://www.w3.org/2005/Atom"
@@ -269,14 +293,36 @@ Content-Type: application/xml
     <deposit_archive>None</deposit_archive>
 
     <!-- Edit-IRI -->
-    <link rel="edit" href="/1/hal/10/metadata/" />
+    <link rel="edit" href="/1/<collection-name>/10/metadata/" />
     <!-- EM-IRI -->
-    <link rel="edit-media" href="/1/hal/10/media/"/>
+    <link rel="edit-media" href="/1/<collection-name>/10/media/"/>
     <!-- SE-IRI -->
-    <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/10/metadata/" />
+    <link rel="http://purl.org/net/sword/terms/add" href="/1/<collection-name>/10/metadata/" />
 
     <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
 </entry>
 ```
 
 3. Check the deposit's state
+
+You need to check the STATE-IRI endpoint (/1/<collection-name>/10/status/).
+
+``` Shell
+curl -i --user <client-name>:<pass> https://deposit.softwareheritage.org/1/<collection-name>/10/status/
+HTTP/1.0 200 OK
+Date: Wed, 27 Sep 2017 08:25:53 GMT
+Content-Type: application/xml
+```
+
+Response:
+
+``` XML
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>9</deposit_id>
+    <status>ready</status>
+    <detail>deposit is fully received and ready for injection</detail>
+</entry>
+
+```
