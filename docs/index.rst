@@ -6,7 +6,8 @@ Software Heritage Deposit
    :caption: Contents:
 
    getting-started.md
-   spec-info.md
+   spec-api.md
+   spec-injection.md
    dev-info.md
    sys-info.md
 
