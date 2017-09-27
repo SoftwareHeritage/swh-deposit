@@ -1,23 +1,25 @@
-How to bootstrap swh-deposit in production
-====================================================
+# Bootstrap swh-deposit on production
 
-Once the package is installed, we need to do a few things:
+As usual, the debian packaged is created and uploaded to the swh
+debian repository.  Once the package is installed, we need to do a few
+things in regards to the database.
 
-- prepare the db setup (existence, connection, etc...).
+## Prepare the database setup (existence, connection, etc...).
 
 This is defined through the packaged `swh.deposit.settings.production`
-module and the expected $SWH_CONFIG_PATH/deposit/private.yml.
+module and the expected **/etc/softwareheritage/deposit/private.yml**.
 
-This is all done at the puppet level (cf. puppet-environment/swh-site,
-puppet-environment/swh-profile)
+As usual, the expected configuration files are deployed through our
+puppet manifest (cf. puppet-environment/swh-site,
+puppet-environment/swh-role, puppet-environment/swh-profile)
 
-- migrate/bootstrap the db schema:
+## Migrate/bootstrap the db schema
 
 ``` Shell
 sudo django-admin migrate --settings=swh.deposit.settings.production
 ```
 
-- load minimum defaults data:
+## Load minimum defaults data
 
 ``` Shell
 sudo django-admin loaddata --settings=swh.deposit.settings.production deposit_data
@@ -29,17 +31,17 @@ This adds the minimal:
 
 Note: swh.deposit.fixtures.deposit_data is packaged
 
-- add a client:
+## Add client and collection
 
 ``` Shell
 python3 -m swh.deposit.create_user --platform production \
-    --collection hal \
-    --username hal \
+    --collection <collection-name> \
+    --username <client-name> \
     --password <to-define>
 ```
 
-This adds a user 'hal' which can access the collection 'hal'.  The
-password will be used for the authentication access to the deposit
-api.
+This adds a user `<client-name>` which can access the collection
+`<collection-name>`.  The password will be used for the authentication
+access to the deposit api.
 
-Note: This needs to be improved.
+Note: This creation procedure needs to be improved.
