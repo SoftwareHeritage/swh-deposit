@@ -1,9 +1,8 @@
-swh-deposit - injection
-=============================
+# Injection specification (draft)
 
 This part discusses the deposit injection part on the server side.
 
-== Tarball Injection ==
+## Tarball Injection
 
 Providing we use indeed synthetic revision to represent a version of a
 tarball injected through the sword use case, this needs to be improved
@@ -11,7 +10,7 @@ so that the synthetic revision is created with a parent revision (the
 previous known one for the same 'origin').
 
 
-=== Injection mapping ===
+### Injection mapping
 
 | origin                              |      https://hal.inria.fr/hal-id       |
 |-------------------------------------|----------------------------------------|
@@ -21,7 +20,7 @@ previous known one for the same 'origin').
 | directory                           | upper level of the uncompressed archive|
 
 
-=== Questions raised concerning injection ===
+### Questions raised concerning injection
 
 - A deposit has one origin, yet an origin can have multiple deposits?
 
@@ -67,9 +66,9 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 
 
 
-== Technical details ==
+## Technical details
 
-Requirements:
+### Requirements
 
 - one dedicated database to store the deposit's state - swh-deposit
 
@@ -78,7 +77,7 @@ Requirements:
 
 - one client to test the communication with SWORD protocol
 
-=== Deposit reception schema ===
+### Deposit reception schema
 
 - SWORD imposes the use of basic authentication, so we need a way to
 authenticate client:
@@ -148,13 +147,13 @@ of:
   changed to ready)
 - swh-id is populated once we have the injection result
 
-==== SWH Identifier returned ====
+#### SWH Identifier returned
 
     swh-<client-name>-<synthetic-revision-id>
 
     e.g: swh-hal-47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
-=== Scheduling injection ===
+### Scheduling injection
 
 All data and metadata separated with multiple requests should be
 aggregated before injection.
@@ -172,7 +171,7 @@ When the injection is failed, the deposit entry is updated:
 We may install a retry policy with graceful delays for further
 scheduling.
 
-=== Metadata injection ===
+### Metadata injection
 
 - the metadata received with the deposit should be kept in the
 origin_metadata table before translation as part of the injection
