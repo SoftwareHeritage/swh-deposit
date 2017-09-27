@@ -1,31 +1,67 @@
 # API Specification
 
-This is Software Heritage's SWORD Server implementation.
+This is Software
+Heritage's
+[SWORD 2.0](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html) Server
+implementation.
 
 SWORD (Simple Web-Service Offering Repository Deposit) is an
 interoperability standard for digital file deposit.
 
-This protocol will be used to interact between a client (a repository)
-and a server (swh repository) to permit deposits of software archives.
+This implementation will permit interaction between a client (a
+repository) and a server (SWH repository) to permit deposits of
+software source code archives and associated metadata.
 
-In this document, we will discuss the interaction between a client
-(e.g. HAL server) and the deposit server (SWH's).
+Note: In the following document, we will use the `archive` or
+`software source code archive` interchangeably.
+
+## Endpoints
+
+We will show first the defined api endpoints as they will be mentioned
+later on:
+
+- `/1/servicedocument/`  *service document iri* (a.k.a [SD-IRI](#sd-iri-the-service-document-iri))
+
+  *Goal:* For a client to discover its collection's location
+
+- `/1/<collection-name>/`  *collection iri* (a.k.a [COL-IRI](#col-iri-the-collection-iri))
+
+  *Goal:*: create deposit to a collection
+
+- `/1/<collection-name>/<deposit-id>/media/`  *update iri* (a.k.a [EM-IRI](#em-iri-the-atom-edit-media-iri))
+
+  *Goal:*: Add or replace archive(s) to a deposit
+
+- `/1/<collection-name>/<deposit-id>/metadata/`  *update iri* (a.k.a [EDIT-IRI](#edit-iri-the-atom-entry-edit-iri) merged with [SE-IRI](#se-iri-the-sword-edit-iri))
+
+  *Goal:*: Add or replace metadata (and optionally archive(s) to a
+  deposit
+
+
+- `/1/<collection-name>/<deposit-id>/status/`  *state iri*  (a.k.a [STATE-IRI](#state-iri-the-sword-statement-iri))
+
+  *Goal:*: Display deposit's status in regards to injection
+
+- `/1/<collection-name>/<deposit-id>/content/`  *content iri* (a.k.a [CONT-FILE-IRI](#cont-iri-the-content-iri))
+
+  *Goal:*: Display information on the content's representation in the
+  sword server
 
 ## Use cases
 
 ### First deposit
 
-From client's deposit repository server to SWH's repository server
-(aka deposit).
+From client's deposit repository server to SWH's repository server:
 
-1. The client requests for the server's abilities.
-(GET query to the *service document uri*)
+1. The client requests for the server's abilities and its associated
+collection (GET query to the *service document uri*)
 
 2. The server answers the client with the service document which gives
    the *collection uri*.
 
-3. The client sends a deposit (an archive -> .zip) through the
-*collection uri* (also known as COL/collection IRI).
+3. The client sends a deposit (optionally a zip archive, some metadata
+or both) through the *collection uri* (also known as *COL/collection
+IRI*).
 
 This can be done in:
 - one POST request to the creation uri (metadata + archive).
@@ -33,24 +69,26 @@ This can be done in:
   PUT or POST request to the *update uri*
 
 4. The server notifies the client it acknowledged the client's
-request. An 'http 201 Created' response with a deposit receipt is sent
+request. An `http 201 Created` response with a deposit receipt is sent
 back.  That deposit receipt will hold the necessary information to
-eventually complete the deposit if it was partial.
+eventually complete the deposit later one if it was incomplete (also
+known as status `partial`).
 
 ### Updating an existing deposit
 
 5. Client updates existing deposit through the *update uris* (one or
-more POST or PUT requests to the *edit-media* or *edit-iri*).
+more POST or PUT requests to either the *edit-media iri* or *edit
+iri*).
 
 This would be the case for example if the client initially posted a
-partial deposit (e.g. only metadata with no archive, or an archive
-without metadata, a splitted archive because the initial one is too
-big)
+`partial` deposit (e.g. only metadata with no archive, or an archive
+without metadata, or a splitted archive because the initial one
+exceeded the limit size imposed by swh repository deposit)
 
-### Deleting
+### Deleting deposit (or associated archive, or associated metadata)
 
 6. Deposit deletion is possible as long as the deposit is still in
-   partial state.
+   `partial` state.
 
 That is, a deposit initially occurred with the IN-PROGRESS header to
 true and it did not change (even after multiple updates).
@@ -58,48 +96,27 @@ true and it did not change (even after multiple updates).
 
 ## Limitations
 
-Applying the SWORD protocol procedure will result with voluntary implementation
-shortcomings, at least, during the first iteration:
+Applying the SWORD 2.0 protocol procedure will result with voluntary
+implementation shortcomings, at least, during the first iteration:
 
 - upload limitation of 20Mib
-- only tarballs (.zip) will be accepted
-- no mediation (we do not know the other system's users)
+- only zip tarballs will be accepted
+- no mediation
 
 ## Collection
 
-SWORD defines a 'collection' concept.  The collection refers to a
+SWORD defines a `collection` concept.  The collection refers to a
 group of documents to which the deposit uploaded (a.k.a deposit) is
 part of.
 
 For example, we will start the collaboration with HAL, thus we define
-a HAL collection to which the hal client will deposit new document.
+a `HAL collection` to which the `hal` client will deposit new
+documents (software source code archive and associated metadata).
 
 ### Client asks for operation status and repository id
 
 A state endpoint is defined in the sword specification to provide such
 information.
-
-## Endpoints
-
-The api defines the following endpoints:
-
-- /1/servicedocument/
-  *service document iri* (a.k.a SD-IRI)
-
-- /1/<collection-name>/
-  *collection iri* (a.k.a COL-IRI)
-
-- /1/<collection-name>/<deposit-id>/media/
-  *update iri* (a.k.a EM-IRI)
-
-- /1/<collection-name>/<deposit-id>/metadata/
-  *update iri* (a.k.a EDIT-SE-IRI)
-
-- /1/<collection-name>/<deposit-id>/content/
-  *content iri* (a.k.a CONT-FILE-IRI)
-
-- /1/<collection-name>/<deposit-id>/status/
-  *state iri*  (a.k.a STATE-IRI)
 
 ## API overview
 
@@ -229,7 +246,7 @@ The client can deposit a binary archive, supplying the following headers:
 This is a single zip archive deposit. Almost no metadata is associated
 with the archive except for the unique external identifier.
 
-Note: This kind of deposit should be partial (In-Progress: True) as
+Note: This kind of deposit should be `partial` (In-Progress: True) as
 almost no metadata can be associated with the uploaded archive.
 
 #### API endpoints concerned
@@ -256,7 +273,7 @@ curl -i -u hal:<pass> \
 The client can deposit an xml body holding metadata information on the
 deposit.
 
-Note: This kind of deposit is mostly expected to be partial
+Note: This kind of deposit is mostly expected to be `partial`
 (In-Progress: True) since no archive will be associated to those
 metadata.
 
@@ -351,7 +368,7 @@ Client provides:
 - Content-MD5 (text): md5 checksum hex encoded of the tarball
 - Packaging (text): http://purl.org/net/sword/package/SimpleZip
   (packaging format used on the Media Part)
-- In-Progress (bool): true|false; true means partial upload and we can expect
+- In-Progress (bool): true|false; true means `partial` upload and we can expect
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
 
@@ -497,7 +514,7 @@ situation:
 
 Using an objstorage, the server stores the archive in a temporary
 location.  It's temporary the time the deposit is completed (status
-becomes ready) and the injection finishes.
+becomes `ready`) and the injection finishes.
 
 The server also stores requests' information in a database.
 
@@ -520,14 +537,14 @@ If something went wrong, the server answers with one of the
 
 ### [5] Deposit Update
 
-The client previously deposited a partial document (through an
+The client previously deposited a `partial` document (through an
 archive, metadata, or both). The client wants to update information
 for that previous deposit (possibly in multiple steps as well).
 
 The important thing to note here is that, as long as the deposit is in
-status 'partial', the injection did not start.  Thus, the client can
+status `partial`, the injection did not start.  Thus, the client can
 update information (replace or add new archive, new metadata, even
-delete) for that same partial deposit.
+delete) for that same `partial` deposit.
 
 When the deposit status changes to `ready`, we no longer can change
 the deposit's information (a 403 will be returned in that case).
@@ -558,7 +575,7 @@ POST /1/<collection-name>/<deposit-id>/metadata/  Add new metadata
 
 ### [6] Deposit Removal
 
-As long as the deposit's status remains 'partial', it's possible to
+As long as the deposit's status remains `partial`, it's possible to
 remove the deposit.
 
 Further query to that deposit will return a 404 response.
@@ -646,6 +663,11 @@ Associated HTTP status: 403
 SWORD uses IRI notion, Internationalized Resource Identifier. In this
 chapter, we will describe SWH's IRIs.
 
+### SD-IRI - The Service Document IRI
+
+The Service Document IRI. This is the IRI from which the client can
+discover its collection IRI.
+
 ### Col-IRI - The Collection IRI
 
 The software collection associated to one user.
@@ -675,7 +697,7 @@ We refer to it as Cont-File-IRI.
 This is the endpoint to upload other related archives for the same
 deposit.
 
-It is used to change a 'partial' deposit in regards of archives, in
+It is used to change a `partial` deposit in regards of archives, in
 particular:
 - replace existing archives with new ones
 - add new archives
@@ -684,7 +706,7 @@ particular:
 Example use case:
 A first archive to put exceeds the deposit's limit size.
 The client can thus split the archives in multiple ones.
-Post a first partial archive to the Col-IRI (with In-Progress:
+Post a first `partial` archive to the Col-IRI (with In-Progress:
 
 True).  Then, in order to complete the deposit, POST the other
 remaining archives to the EM-IRI (the last one with the In-Progress
@@ -694,7 +716,7 @@ HTTP verbs supported: POST, PUT, DELETE
 
 ### Edit-IRI - The Atom Entry Edit IRI
 
-This is the endpoint to change a 'partial' deposit in regards of
+This is the endpoint to change a `partial` deposit in regards of
 metadata. In particular:
 - replace existing metadata (and archives) with new ones
 - add new metadata (and archives)
