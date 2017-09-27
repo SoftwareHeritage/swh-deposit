@@ -1,5 +1,5 @@
-Software Heritage - Development Documentation
-=============================================
+Software Heritage Deposit
+=========================
 
 .. toctree::
    :maxdepth: 3
