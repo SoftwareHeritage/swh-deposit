@@ -15,10 +15,29 @@ software source code archives and associated metadata.
 Note: In the following document, we will use the `archive` or
 `software source code archive` interchangeably.
 
+## Collection
+
+SWORD defines a `collection` concept.  The collection refers to a
+group of documents to which the deposit uploaded (a.k.a deposit) is
+part of.
+
+For example, we will start the collaboration with HAL, thus we define
+a `HAL collection` to which the `hal` client will deposit new
+documents (software source code archive and associated metadata).
+
+## Limitations
+
+Applying the SWORD 2.0 protocol procedure will result with voluntary
+implementation shortcomings, at least, during the first iteration:
+
+- upload limitation of 20Mib
+- only zip tarballs will be accepted
+- no mediation
+
 ## Endpoints
 
-We will show first the defined api endpoints as they will be mentioned
-later on:
+Here are the defined endpoints, we mention them first as they will be
+mentioned all along the document:
 
 - `/1/servicedocument/`  *service document iri* (a.k.a [SD-IRI](#sd-iri-the-service-document-iri))
 
@@ -49,36 +68,45 @@ later on:
 
 ## Use cases
 
-### First deposit
+### Deposit creation
 
 From client's deposit repository server to SWH's repository server:
 
 1. The client requests for the server's abilities and its associated
-collection (GET query to the *service document uri*)
+collection (GET query to the *SD/service document uri*)
 
 2. The server answers the client with the service document which gives
-   the *collection uri*.
+   the *collection uri* (also known as *COL/collection IRI*).
 
 3. The client sends a deposit (optionally a zip archive, some metadata
-or both) through the *collection uri* (also known as *COL/collection
-IRI*).
+or both) through the *collection uri*.
 
 This can be done in:
-- one POST request to the creation uri (metadata + archive).
-- one POST request to the creation uri (metadata or archive) + other
-  PUT or POST request to the *update uri*
+- one POST request (metadata + archive).
+- one POST request (metadata or archive) + other PUT or POST request
+  to the *update uris* (*edit-media iri* or *edit iri*)
+
+  3.1. Server validates the client's input or returns detailed error if any
+
+  3.2. Server stores information received (metadata or software
+  archive source code or both)
 
 4. The server notifies the client it acknowledged the client's
-request. An `http 201 Created` response with a deposit receipt is sent
-back.  That deposit receipt will hold the necessary information to
-eventually complete the deposit later one if it was incomplete (also
-known as status `partial`).
+request. An `http 201 Created` response with a deposit receipt in the
+body response is sent back.  That deposit receipt will hold the
+necessary information to eventually complete the deposit later on if
+it was incomplete (also known as status `partial`).
 
 ### Updating an existing deposit
 
 5. Client updates existing deposit through the *update uris* (one or
 more POST or PUT requests to either the *edit-media iri* or *edit
 iri*).
+
+    5.1. Server validates the client's input or returns detailed error if any
+
+    5.2. Server stores information received (metadata or software
+    archive source code or both)
 
 This would be the case for example if the client initially posted a
 `partial` deposit (e.g. only metadata with no archive, or an archive
@@ -90,56 +118,54 @@ exceeded the limit size imposed by swh repository deposit)
 6. Deposit deletion is possible as long as the deposit is still in
    `partial` state.
 
-That is, a deposit initially occurred with the IN-PROGRESS header to
-true and it did not change (even after multiple updates).
+    6.1. Server validates the client's input or returns detailed error if any
 
-
-## Limitations
-
-Applying the SWORD 2.0 protocol procedure will result with voluntary
-implementation shortcomings, at least, during the first iteration:
-
-- upload limitation of 20Mib
-- only zip tarballs will be accepted
-- no mediation
-
-## Collection
-
-SWORD defines a `collection` concept.  The collection refers to a
-group of documents to which the deposit uploaded (a.k.a deposit) is
-part of.
-
-For example, we will start the collaboration with HAL, thus we define
-a `HAL collection` to which the `hal` client will deposit new
-documents (software source code archive and associated metadata).
+    6.2. Server actually delete information according to request
 
 ### Client asks for operation status and repository id
 
-A state endpoint is defined in the sword specification to provide such
-information.
+7. Operation status can be read through a GET query to the *state
+   iri*.
+
+
+### Server: Triggering injection
+
+Once the status `ready` is reached for a deposit, the server will
+inject the archive(s) sent and the associated metadata.
+
+### Schema representation
+
+The image below represents only the communication and creation of a
+deposit:
+
+{F2403754}
+
 
 ## API overview
 
 API access is over HTTPS.
 
-All API endpoints are rooted at https://archive.softwareheritage.org/1/.
+The API is protected through basic authentication.
 
-Data is sent and received as XML.
+The API endpoints are rooted at https://archive.softwareheritage.org/1/.
 
-### Service document
+Data is sent and received as XML (as specified in the SWORD 2.0 specification).
+
+In the following chapters, we will described the different endpoints
+[through the use cases described previously.](#use-cases)
+
+### [2] Service document
 
 Endpoint: /1/servicedocument/
 
-This is the starting endpoint from which the client will access its
-initial collection information.
-
-This:
-- describes the server's abilities
-- list the connected client's collection information.
+This is the starting endpoint for the client to discover its initial
+collection. The answer to this query will describes:
+- the server's abilities
+- connected client's collection information
 
 HTTP verbs supported: GET
 
-Also known as: SD-IRI - The Service Document IRI.
+Also known as: [SD-IRI - The Service Document IRI](#sd-iri-the-service-document-iri).
 
 #### Sample request
 
@@ -157,8 +183,6 @@ The server returns its abilities with the service document in xml format:
   software collection per client)
 - mediation is not supported
 - etc...
-
-#### Sample answer
 
 The current answer for example for the
 [hal archive](https://hal.archives-ouvertes.fr/) is:
@@ -191,35 +215,14 @@ The current answer for example for the
 </service>
 ```
 
-## Deposit Creation: client point of view
+### [3|5] Deposit creation/update
 
-Process of deposit creation:
-
--> [3] client request(s)
-
-  - [3.1] server validation
-  - [3.2] server temporary upload
-
-<- [4] server returns deposit receipt id
-
-- [5] server injects deposit into archive*
-
-NOTE: [5] Asynchronously, the server will inject the archive uploaded
-and the associated metadata.
-
-The image below represents only the communication and creation of a
-deposit:
-
-{F2403754}
-
-### [3] client request(s)
-
-The client can send a deposit through a series of deposit requests to
-multiple endpoints:
+The client can send deposit creation/update through a series of
+deposit requests to the following endpoints:
 - *collection iri* (COL-IRI) to initialize a deposit
 - *update iris* (EM-IRI, EDIT-SE-IRI) to complete/finalize a deposit
 
-The deposit can also happens in one request.
+The deposit creation/update can also happens in one request.
 
 The deposit request can contain:
 - an archive holding the software source code (binary upload)
@@ -227,9 +230,9 @@ The deposit request can contain:
   (atom entry deposit)
 - or both (multipart deposit, exactly one archive and one envelop).
 
-## Request Types
+#### Request Types
 
-### Binary deposit
+##### Binary deposit
 
 The client can deposit a binary archive, supplying the following headers:
 - Content-Type (text): accepted mimetype
@@ -249,13 +252,14 @@ with the archive except for the unique external identifier.
 Note: This kind of deposit should be `partial` (In-Progress: True) as
 almost no metadata can be associated with the uploaded archive.
 
-#### API endpoints concerned
+##### API endpoints concerned
 
-POST /1/<collection-name>/                    Create a first deposit with one archive
+POST /1/<collection-name>/                    Create a first deposit with one
+                                              archive
 PUT /1/<collection-name>/<deposit-id>/media/  Replace existing archives
 POST /1/<collection-name>/<deposit-id>/media/ Add new archive
 
-#### Sample request
+##### Sample request
 
 ``` Shell
 curl -i -u hal:<pass> \
@@ -268,7 +272,7 @@ curl -i -u hal:<pass> \
     -XPOST https://deposit.softwareheritage.org/1/hal/
 ```
 
-### Atom entry deposit
+#### Atom entry deposit
 
 The client can deposit an xml body holding metadata information on the
 deposit.
@@ -277,13 +281,13 @@ Note: This kind of deposit is mostly expected to be `partial`
 (In-Progress: True) since no archive will be associated to those
 metadata.
 
-#### API endpoints concerned
+##### API endpoints concerned
 
 POST /1/<collection-name>/                       Create a first atom deposit entry
 PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata
 POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata to deposit
 
-#### Sample request
+##### Sample request
 
 Sample query:
 
@@ -353,7 +357,7 @@ Sample body:
 </entry>
 ```
 
-### One request deposit / Multipart deposit
+#### One request deposit / Multipart deposit
 
 The one request deposit is a single request containing both the
 metadata (as atom entry attachment) and the archive (as payload
@@ -372,13 +376,13 @@ Client provides:
   other requests in the future, false means the deposit is done.
 - add metadata formats or foreign markup to the atom:entry element
 
-#### API endpoints concerned
+##### API endpoints concerned
 
 POST /1/<collection-name>/                       Create a full deposit (metadata + archive)
 PUT /1/<collection-name>/<deposit-id>/metadata/  Replace existing metadata and archive
 POST /1/<collection-name>/<deposit-id>/metadata/ Add new metadata and archive to deposit
 
-#### Sample request
+##### Sample request
 
 Sample query:
 
@@ -478,7 +482,7 @@ MIME-Version: 1.0
 The server receives the request(s) and does minimal checking on the
 input prior to any saving operations.
 
-### [3.1] Validation of the header and body request
+### [3|5|6.1] Validation of the header and body request
 
 Any kind of errors can happen, here is the list depending on the
 situation:
@@ -510,26 +514,27 @@ situation:
 - Atom entry deposit:
   - 400 (bad request) if the request's body is empty (for creation only)
 
-### [3.2] Server uploads the content in a temporary location
+### [3|5|6.2] Server uploads the content in a temporary location
 
 Using an objstorage, the server stores the archive in a temporary
-location.  It's temporary the time the deposit is completed (status
-becomes `ready`) and the injection finishes.
+location.  It's deemed temporary the time the deposit is completed
+(status becomes `ready`) and the injection finishes.
 
-The server also stores requests' information in a database.
+The server also persists requests' information in a database.
 
 ### [4] Servers answers the client
 
 If everything went well, the server answers either with a 200, 201 or
-204 response.
+204 response (depending on the actual endpoint)
 
-A 'http 200' response is returned for GET endpoints.
+A `http 200` response is returned for GET endpoints.
 
-A 'http 201 Created' response is returned for POST endpoints.
-The body holds the deposit receipt.
-The headers holds the EDIT-IRI in the Location header of the response.
+A `http 201 Created` response is returned for POST endpoints.  The
+body holds the deposit receipt.  The headers holds the EDIT-IRI in the
+Location header of the response.
 
-A 'http 204 No Content' response is returned for PUT, DELETE endpoints.
+A `http 204 No Content` response is returned for PUT, DELETE
+endpoints.
 
 If something went wrong, the server answers with one of the
 [error status code and associated message mentioned](#possible errors)).
@@ -546,8 +551,9 @@ status `partial`, the injection did not start.  Thus, the client can
 update information (replace or add new archive, new metadata, even
 delete) for that same `partial` deposit.
 
-When the deposit status changes to `ready`, we no longer can change
-the deposit's information (a 403 will be returned in that case).
+When the deposit status changes to `ready`, the client can no longer
+change the deposit's information (a 403 will be returned in that
+case).
 
 Then aggregation of all those deposit's information will later be used
 for the actual injection.
@@ -559,14 +565,14 @@ POST or PUT request on the *update iris*.
 After validation of the body request, the server:
 - uploads such content in a temporary location
 
-- answers the client an 'http 204 (No content)'. In the Location
+- answers the client an `http 204 (No content)`. In the Location
   header of the response lies an iri to permit further update.
 
 - Asynchronously, the server will inject the archive uploaded and the
   associated metadata. An operation status endpoint *state iri*
   permits the client to query the injection operation status.
 
-Possible endpoints:
+#### Possible update endpoints
 
 PUT /1/<collection-name>/<deposit-id>/media/      Replace existing archives for the deposit
 POST /1/<collection-name>/<deposit-id>/media/     Add new archives to the deposit
@@ -576,9 +582,13 @@ POST /1/<collection-name>/<deposit-id>/metadata/  Add new metadata
 ### [6] Deposit Removal
 
 As long as the deposit's status remains `partial`, it's possible to
-remove the deposit.
+remove the deposit entirely or remove only the deposit's archive(s).
 
-Further query to that deposit will return a 404 response.
+If the deposit has been removed, further querying that deposit will
+return a 404 response.
+
+If the deposit's archive(s) has been removed, we can still ensue other
+query to update that deposit.
 
 ### Operation Status
 
