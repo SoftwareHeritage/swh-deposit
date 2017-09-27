@@ -5,7 +5,10 @@ Software Heritage - Development Documentation
    :maxdepth: 2
    :caption: Contents:
 
-
+   getting-started.md
+   spec-info.md
+   dev-info.md
+   sys-info.md
 
 Indices and tables
 ==================
