@@ -6,78 +6,248 @@
 import hashlib
 
 from django.core.urlresolvers import reverse
-from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DepositRequest
-from ..common import BasicTestCase, WithAuthTestCase
-from ...parsers import parse_xml
-from ...config import EM_IRI, EDIT_SE_IRI, COL_IRI
+from swh.deposit.config import EDIT_SE_IRI, EM_IRI
+from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
 
-class CommonData:
-    def _create_deposit_partial(self):
-        response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
-            content_type='application/atom+xml;type=entry',
-            data=self.atom_entry_data0,
-            HTTP_IN_PROGRESS='true')
-
-        # then
-        assert response.status_code == status.HTTP_201_CREATED
-        response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
-        return deposit_id
-
-    def _update_deposit_with_status(self, deposit_id, status_partial=False):
-        # add an archive
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
-
-        # when
-        response = self.client.post(
-            reverse(EM_IRI, args=[self.username, deposit_id]),
-            content_type='application/zip',  # as zip
-            data=data_text,
-            # + headers
-            HTTP_CONTENT_MD5=md5sum,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-            HTTP_IN_PROGRESS=status_partial,
-            HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
-
-        # then
-        assert response.status_code == status.HTTP_201_CREATED
-        return deposit_id
-
-    def _create_deposit_ready(self):
-        """Creating a deposit"""
-        deposit_id = self._create_deposit_partial()
-        deposit_id = self._update_deposit_with_status(deposit_id)
-        return deposit_id
-
-    def _create_deposit_complex_partial(self):
-        """Creating a deposit"""
-        deposit_id = self._create_deposit_partial()
-        deposit_id = self._update_deposit_with_status(
-            deposit_id, status_partial=True)
-        return deposit_id
-
-
-class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
-                                CommonData):
-    """Try and post/put deposit on unknown ones
+class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
+                                     BasicTestCase, CommonCreationRoutine):
+    """Try put/post (update/replace) query on EM_IRI
 
     """
     def setUp(self):
         super().setUp()
-        self.atom_entry_data0 = b"""<?xml version="1.0"?>
+
+        self.atom_entry_data1 = b"""<?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>%s</external_identifier>
+    <foobar>bar</foobar>
 </entry>"""
 
+    def test_replace_archive_to_deposit_is_possible(self):
+        """Replace all archive with another one should return a 204 response
+
+        """
+        # given
+        deposit_id = self.create_deposit_partial()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive'])
+
+        assert len(list(requests)) == 1
+        assert requests[0].metadata['archive']['name'] == 'filename0'
+        assert requests[0].metadata['archive']['id'] == '94e66df8cd09d410c62d9e0dc59d3a884e458e05'  # noqa
+
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata']))
+        assert len(requests) == 1
+
+        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+        external_id = 'some-external-id-1'
+
+        response = self.client.put(
+            update_uri,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=otherfilename')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive'])
+
+        self.assertEquals(len(list(requests)), 1)
+        self.assertEquals(requests[0].metadata['archive']['name'],
+                          'otherfilename')
+
+        # check we did not touch the other parts
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata']))
+        self.assertEquals(len(requests), 1)
+
+    def test_replace_metadata_to_deposit_is_possible(self):
+        """Replace all metadata with another one should return a 204 response
+
+        """
+        # given
+        deposit_id = self.create_deposit_partial()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['metadata'])
+
+        assert len(list(requests)) == 1
+        external_id_key = '{http://www.w3.org/2005/Atom}external_identifier'
+        assert requests[0].metadata[external_id_key] == 'some-external-id'
+
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['archive']))
+        assert len(requests) == 1
+
+        update_uri = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+
+        response = self.client.put(
+            update_uri,
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_entry_data1)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['metadata'])
+
+        self.assertEquals(len(list(requests)), 1)
+        metadata = requests[0].metadata
+        self.assertIsNone(metadata.get(external_id_key))
+        self.assertEquals(metadata["{http://www.w3.org/2005/Atom}foobar"],
+                          'bar')
+
+        # check we did not touch the other parts
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['archive']))
+        self.assertEquals(len(requests), 1)
+
+
+class DepositUpdateDepositWithNewDataTest(
+        APITestCase, WithAuthTestCase, BasicTestCase, CommonCreationRoutine):
+    """Testing Replace/Update on EDIT_SE_IRI class.
+
+    """
+    def setUp(self):
+        super().setUp()
+
+        self.atom_entry_data1 = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom">
+    <foobar>bar</foobar>
+</entry>"""
+
+    def test_add_archive_to_deposit_is_possible(self):
+        """Add another archive to a deposit return a 201 response
+
+        """
+        # given
+        deposit_id = self.create_deposit_partial()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive'])
+
+        assert len(list(requests)) == 1
+        assert requests[0].metadata['archive']['name'] == 'filename0'
+        assert requests[0].metadata['archive']['id'] == '94e66df8cd09d410c62d9e0dc59d3a884e458e05'  # noqa
+
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata']))
+        assert len(requests) == 1
+
+        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+        external_id = 'some-external-id-1'
+
+        response = self.client.post(
+            update_uri,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=otherfilename')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['archive']).order_by('id'))
+
+        self.assertEquals(len(requests), 2)
+        # first archive still exists
+        self.assertEquals(requests[0].metadata['archive']['name'],
+                          'filename0')
+        # a new one was added
+        self.assertEquals(requests[1].metadata['archive']['name'],
+                          'otherfilename')
+
+        # check we did not touch the other parts
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata']))
+        self.assertEquals(len(requests), 1)
+
+    def test_add_metadata_to_deposit_is_possible(self):
+        """Replace all metadata with another one should return a 204 response
+
+        """
+        # given
+        deposit_id = self.create_deposit_partial()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['metadata'])
+
+        assert len(list(requests)) == 1
+        external_id_key = '{http://www.w3.org/2005/Atom}external_identifier'
+        assert requests[0].metadata[external_id_key] == 'some-external-id'
+
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['archive']))
+        assert len(requests) == 1
+
+        update_uri = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+
+        response = self.client.post(
+            update_uri,
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_entry_data1)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        requests = DepositRequest.objects.filter(
+            deposit=deposit,
+            type=self.deposit_request_types['metadata']).order_by('id')
+
+        self.assertEquals(len(list(requests)), 2)
+        # first metadata still exists
+        self.assertEquals(requests[0].metadata[external_id_key],
+                          'some-external-id')
+        # a new one was added
+        self.assertEquals(requests[1].metadata[
+            "{http://www.w3.org/2005/Atom}foobar"],
+                          'bar')
+
+        # check we did not touch the other parts
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['archive']))
+        self.assertEquals(len(requests), 1)
+
+
+class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
+                                CommonCreationRoutine):
+    """Failure scenario about add/replace (post/put) query on deposit.
+
+    """
     def test_add_metadata_to_unknown_collection(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
@@ -103,7 +273,9 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_replace_metadata_to_unknown_deposit(self):
-        """Adding metadata to unknown deposit should return a 404 response"""
+        """Adding metadata to unknown deposit should return a 404 response
+
+        """
         url = reverse(EDIT_SE_IRI,
                       args=[self.username, 999]),
         response = self.client.put(
@@ -113,7 +285,9 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_add_archive_to_unknown_deposit(self):
-        """Adding metadata to unknown deposit should return a 404 response"""
+        """Adding metadata to unknown deposit should return a 404 response
+
+        """
         url = reverse(EM_IRI,
                       args=[self.username, 999]),
         response = self.client.post(
@@ -123,7 +297,9 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_replace_archive_to_unknown_deposit(self):
-        """Replacing archive to unknown deposit should return a 404 response"""
+        """Replacing archive to unknown deposit should return a 404 response
+
+        """
         url = reverse(EM_IRI,
                       args=[self.username, 999]),
         response = self.client.put(
@@ -133,8 +309,10 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_metadata_to_em_iri_failure(self):
-        """Add archive with wrong content type should return a 400 response"""
-        deposit_id = self._create_deposit_ready()
+        """Add archive with wrong content type should return a 400 response
+
+        """
+        deposit_id = self.create_deposit_ready()
 
         update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
         response = self.client.put(
@@ -144,9 +322,11 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_put_metadata_to_em_iri_failure(self):
-        """Update archive with wrong content type should return 400 response"""
+        """Update archive with wrong content type should return 400 response
+
+        """
         # given
-        deposit_id = self._create_deposit_ready()
+        deposit_id = self.create_deposit_ready()
         # when
         update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
         response = self.client.put(
@@ -155,107 +335,3 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         # then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-class DepositUpdateTest(APITestCase, WithAuthTestCase, BasicTestCase,
-                        CommonData):
-
-    def setUp(self):
-        super().setUp()
-        self.atom_entry_data0 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>%s</external_identifier>
-</entry>"""
-
-    def test_delete_archive_on_partial_deposit_works(self):
-        """Removing partial deposit's archive should return a 204 response
-
-        """
-        # given
-        deposit_id = self._create_deposit_complex_partial()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-
-        self.assertEquals(len(deposit_requests), 2)
-        for dr in deposit_requests:
-            if dr.type.name == 'archive':
-                continue
-            elif dr.type.name == 'metadata':
-                continue
-            else:
-                self.fail('only archive and metadata type should exist '
-                          'in this test context')
-
-        # when
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-        deposit = Deposit.objects.get(pk=deposit_id)
-        requests = list(DepositRequest.objects.filter(deposit=deposit))
-
-        self.assertEquals(len(requests), 1)
-        self.assertEquals(requests[0].type.name, 'metadata')
-
-    def test_delete_archive_on_undefined_deposit_fails(self):
-        """Delete undefined deposit returns a 404 response
-
-        """
-        # when
-        update_uri = reverse(EM_IRI, args=[self.username, 999])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_delete_archive_on_non_partial_deposit_fails(self):
-        """Delete !partial status deposit should return a 400 response"""
-        deposit_id = self._create_deposit_ready()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.status == 'ready'
-
-        # when
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertIsNotNone(deposit)
-
-    def test_delete_partial_deposit_works(self):
-        """Delete deposit should return a 204 response
-
-        """
-        # given
-        deposit_id = self._create_deposit_partial()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.id == deposit_id
-
-        # when
-        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
-        response = self.client.delete(url)
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_204_NO_CONTENT)
-        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
-        self.assertEquals(deposit_requests, [])
-        deposits = list(Deposit.objects.filter(pk=deposit_id))
-        self.assertEquals(deposits, [])
-
-    def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
-        """Delete !partial deposit should return a 400 response
-
-        """
-        # given
-        deposit_id = self._create_deposit_ready()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.id == deposit_id
-
-        # when
-        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
-        response = self.client.delete(url)
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_400_BAD_REQUEST)
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertIsNotNone(deposit)
