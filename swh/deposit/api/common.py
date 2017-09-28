@@ -320,8 +320,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         return None
 
-    def _binary_upload(self, req, headers, collection_name,
-                       deposit_id=None, update=False):
+    def _binary_upload(self, req, headers, collection_name, deposit_id=None,
+                       replace_metadata=False, replace_archives=False):
         """Binary upload routine.
 
         Other than such a request, a 415 response is returned.
@@ -333,10 +333,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new metadata request to
-              existing ones
+              deposit. If False (default), this adds new metadata request to
+              existing ones. Otherwise, this will replace existing metadata.
             replace_archives (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new archives to existing
+              deposit. If False (default), this adds new archive request to
+              existing ones. Otherwise, this will replace existing archives.
               ones.
 
         Returns:
@@ -397,7 +398,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
         deposit_request = self._deposit_request_put(
-            deposit, {'archive': archive_metadata})
+            deposit, {'archive': archive_metadata},
+            replace_metadata=replace_metadata,
+            replace_archives=replace_archives)
 
         return {
             'deposit_id': deposit.id,
@@ -421,10 +424,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new metadata request to
-              existing ones
+              deposit. If False (default), this adds new metadata request to
+              existing ones. Otherwise, this will replace existing metadata.
             replace_archives (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new archives to existing
+              deposit. If False (default), this adds new archive request to
+              existing ones. Otherwise, this will replace existing archives.
               ones.
 
         Returns:
@@ -515,14 +519,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new metadata request to
-              existing ones
+              deposit. If False (default), this adds new metadata request to
+              existing ones. Otherwise, this will replace existing metadata.
             replace_archives (bool): 'Update or add' request to existing
-              deposit. Default to False, this adds new archives to existing
+              deposit. If False (default), this adds new archive request to
+              existing ones. Otherwise, this will replace existing archives.
               ones.
 
         Returns:
             In the optimal case a dict with the following keys:
+
                 - deposit_id: deposit id associated to the deposit
                 - deposit_date: date of the deposit
                 - archive: None (no archive is provided here)

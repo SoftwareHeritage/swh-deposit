@@ -42,3 +42,6 @@ class MockObjStorage(objstorage.ObjStorage):
 
     def check(self, obj_id, *args, **kwargs):
         return True
+
+    def delete(self, *args, **kwargs):
+        return True

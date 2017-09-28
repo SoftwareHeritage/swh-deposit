@@ -19,7 +19,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
@@ -35,7 +34,6 @@ from .api.service_document import SWHServiceDocument
 
 urlpatterns = [
     url(r'^$', index, name='home'),
-    url(r'^admin', admin.site.urls, name='admin'),
     # SD IRI - Service Document IRI
     # -> GET
     url(r'^1/servicedocument/', SWHServiceDocument.as_view(),
