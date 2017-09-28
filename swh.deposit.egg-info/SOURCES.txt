@@ -5,6 +5,9 @@ MANIFEST.in
 Makefile
 Makefile.local
 README-dev.md
+README-getting-started.md
+README-injection.md
+README-sys.md
 README.md
 requirements-swh.txt
 requirements.txt
@@ -16,8 +19,16 @@ debian/control
 debian/copyright
 debian/rules
 debian/source/format
+docs/.gitignore
+docs/Makefile
+docs/conf.py
+docs/index.rst
+docs/_static/.placeholder
+docs/_templates/.placeholder
+docs/images/deposit-create-chart.png
+docs/images/deposit-delete-chart.png
+docs/images/deposit-update-chart.png
 resources/deposit/server.yml
-sql/swh-schema.sql
 swh/manage.py
 swh.deposit.egg-info/PKG-INFO
 swh.deposit.egg-info/SOURCES.txt
@@ -65,6 +76,7 @@ swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
+swh/deposit/tests/api/test_deposit_delete.py
 swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
