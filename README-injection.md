@@ -4,20 +4,29 @@ This part discusses the deposit injection part on the server side.
 
 ## Tarball Injection
 
-Providing we use indeed synthetic revision to represent a version of a
-tarball injected through the sword use case, this needs to be improved
-so that the synthetic revision is created with a parent revision (the
-previous known one for the same 'origin').
+The `swh-loader-tar` module is already able to inject tarballs in swh
+with very limited metadata (mainly the origin).
 
+The injection of the deposit will use the deposit's associated data:
+- the metadata
+- the archive(s)
+
+We will use the `synthetic` revision notion.  To that revision will be
+associated the metadata, thus those will be included in the hash
+computation.
 
 ### Injection mapping
 
-| origin                              |      https://hal.inria.fr/hal-id       |
-|-------------------------------------|----------------------------------------|
-| origin_visit                        |           1 :reception_date            |
-| occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)  |
-| revision                            |      synthetic_revision (tarball)      |
-| directory                           | upper level of the uncompressed archive|
+Some of those metadata will also be included in the `origin_metadata`
+table.
+
+
+ origin                              |      https://hal.inria.fr/hal-id
+-------------------------------------|----------------------------------------
+ origin_visit                        | 1 :reception_date
+ occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)
+ revision                            | synthetic_revision (tarball)
+ directory                           | upper level of the uncompressed archive
 
 
 ### Questions raised concerning injection
@@ -80,21 +89,21 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 ### Deposit reception schema
 
 - SWORD imposes the use of basic authentication, so we need a way to
-authenticate client:
+authenticate client. Also, a client can access collections:
 
 **deposit_client** table:
   - id (bigint): Client's identifier
   - username (str): Client's username
-  - password (pass): Client's password
+  - password (pass): Client's crypted password
   - collections ([id]): List of collections the client can access
 
-- A client can access collection and a deposit is specific to a collection.
+- Collections group deposits together:
 
 **deposit_collection** table:
   - id (bigint): Collection's identifier
   - name (str): Collection's human readable name
 
-- A deposit is the main entity the repository is all about:
+- A deposit is the main object the repository is all about:
 
 **deposit** table:
   - id (bigint): deposit's identifier
@@ -106,19 +115,22 @@ authenticate client:
   - swh_id (str) : swh identifier result once the injection is complete
   - status (enum): The deposit's current status
 
-- As mentioned, a deposit can have a status, whose possible values are:
-```
-      'partial',      -- the deposit is new or partially received since it
-                      -- can be done in multiple requests
-      'expired',      -- deposit has been there too long and is now deemed
-                      -- ready to be garbage collected
-      'ready',        -- deposit is fully received and ready for injection
-      'injecting,     -- injection is ongoing on swh's side
-      'success',      -- injection is successful
-      'failure'       -- injection is a failure
+- As mentioned, a deposit can have a status, whose possible values
+  are:
+
+``` text
+    'partial',      -- the deposit is new or partially received since it
+                    -- can be done in multiple requests
+    'expired',      -- deposit has been there too long and is now deemed
+                    -- ready to be garbage collected
+    'ready',        -- deposit is fully received and ready for injection
+    'injecting,     -- injection is ongoing on swh's side
+    'success',      -- injection is successful
+    'failure'       -- injection is a failure
 ```
 
 A deposit is stateful and can be made in multiple requests:
+
 **deposit_request** table:
   - id (bigint): identifier
   - type (id): deposit request's type (possible values: 'archive', 'metadata')
@@ -126,26 +138,30 @@ A deposit is stateful and can be made in multiple requests:
   - metadata: metadata associated to the request
   - date (date): date of the requests
 
-Information sent along a request are stored in a deposit_request row.
+Information sent along a request are stored in a `deposit_request`
+row.
 
-They can be either of type 'metadata' (atom entry, multipart's atom
-entry part) or of type 'archive' (binary upload, multipart's binary
+They can be either of type `metadata` (atom entry, multipart's atom
+entry part) or of type `archive` (binary upload, multipart's binary
 upload part).
 
-When the deposit is complete (status 'ready'), those metadata fields
-are read and aggregated. They will be sent as parameters to the
-injection routine. During injection, those metadata are kept in the
-origin_metadata table (see [metadata injection](#metadata-injection)).
+When the deposit is complete (status `ready`), those `metadata` and
+`archive` deposit requests will be read and aggregated. They will then
+be sent as parameters to the injection routine.
+
+During injection, some of those metadata are kept in the
+`origin_metadata` table and some other are stored in the `revision`
+table (see [metadata injection](#metadata-injection)).
 
 The only update actions occurring on the deposit table are in regards
 of:
 - status changing:
-  - partial -> {expired/ready},
-  - ready -> injecting,
-  - injecting -> {success/failure}
-- complete_date when the deposit is finalized (when the status is
+  - `partial` -> {`expired`/`ready`},
+  - `ready` -> `injecting`,
+  - `injecting` -> {`success`/`failure`}
+- `complete_date` when the deposit is finalized (when the status is
   changed to ready)
-- swh-id is populated once we have the injection result
+- `swh-id` is populated once we have the injection result
 
 #### SWH Identifier returned
 
@@ -155,26 +171,31 @@ of:
 
 ### Scheduling injection
 
-All data and metadata separated with multiple requests should be
-aggregated before injection.
+All `archive` and `metadata` deposit requests should be aggregated
+before injection.
+
 The injection should be scheduled via the scheduler's api.
 
-When the injection is done and successful, the deposit entry is updated:
-- status is updated to success
-- swh-id is populated with the resulting hash
-- complete_date is updated to the injection's finished date
+Only `ready` deposit are concerned by the injection.
+
+When the injection is done and successful, the deposit entry is
+updated:
+- `status` is updated to `success`
+- `swh-id` is populated with the resulting hash
+  (cf. [swh identifier](#swh-identifier-returned))
+- `complete_date` is updated to the injection's finished time
 
 When the injection is failed, the deposit entry is updated:
-- status is updated to failure
-- swh-id and complete_data are left as is
+- `status` is updated to `failure`
+- `swh-id` and `complete_data` remains as is
 
-We may install a retry policy with graceful delays for further
-scheduling.
+*Note:* As a further improvement, we may prefer having a retry policy
+with graceful delays for further scheduling.
 
 ### Metadata injection
 
 - the metadata received with the deposit should be kept in the
-origin_metadata table before translation as part of the injection
+`origin_metadata` table before translation as part of the injection
 process and an indexation process should be scheduled.
 
 origin_metadata table:
@@ -182,8 +203,8 @@ origin_metadata table:
 origin                                  bigint        PK FK
 discovery_date                          date          PK FK
 translation_date                        date          PK FK
-provenance_type                         text                  // (enum: 'publisher', 'lister' needs to be completed)
-raw_metadata                            jsonb                 // before translation
-indexer_configuration_id                bigint            FK  // tool used for translation
-translated_metadata                     jsonb                 // with codemeta schema and terms
+provenance_type                         text                 // (enum: 'publisher', 'lister' needs to be completed)
+raw_metadata                            jsonb                // before translation
+indexer_configuration_id                bigint           FK  // tool used for translation
+translated_metadata                     jsonb                // with codemeta schema and terms
 ```
