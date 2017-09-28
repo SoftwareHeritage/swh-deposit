@@ -53,7 +53,7 @@ def main(platform, username, password, firstname, lastname, email, collection):
             username=username,
             password=password)
 
-    user.collections = [collection]
+    user.collections = [collection.id]
     user.first_name = firstname
     user.last_name = lastname
     user.email = email

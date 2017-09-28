@@ -36,11 +36,8 @@ class Dbversion(models.Model):
 """Possible status"""
 DEPOSIT_STATUS = [
     ('partial', 'partial'),
-
     ('expired', 'expired'),
-
     ('ready', 'ready'),
-
     ('injecting', 'injecting'),
     ('success', 'success'),
     ('failure', 'failure'),
