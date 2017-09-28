@@ -1,3 +1,13 @@
+swh-deposit (0.0.14-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.14
+  * swh.deposit.tests: Add missing test cases scenario about updates
+  * docs: Improve and make the documentation browsable through browser
+  * docs: Add README-sys, README-getting-started, README-injection
+  * swh.deposit.create_user: Fix collection setup
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 28 Sep 2017 16:56:54 +0200
+
 swh-deposit (0.0.13-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.13
