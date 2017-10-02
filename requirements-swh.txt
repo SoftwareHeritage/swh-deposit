@@ -1,1 +1,2 @@
 swh.core >= 0.0.14
+swh.loader.tar >= 0.0.27
