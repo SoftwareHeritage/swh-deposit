@@ -6,18 +6,10 @@
 import os
 import django
 
-from swh.objstorage import _STORAGE_CLASSES
-
-try:
-    from .objstorage import MockObjStorage
-    _STORAGE_CLASSES['mock'] = MockObjStorage
-except ImportError:
-    raise ValueError('Development error - '
-                     'Problem during setup for mock objstorage')
 
 TEST_CONFIG = {
     'objstorage': {
-        'cls': 'mock',
+        'cls': 'in-memory',
         'args': {}
     },
     'max_upload_size': 209715200,
