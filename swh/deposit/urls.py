@@ -30,7 +30,7 @@ from .api.deposit_update import SWHUpdateMetadataDeposit
 from .api.deposit_update import SWHUpdateArchiveDeposit
 from .api.deposit_content import SWHDepositContent
 from .api.service_document import SWHServiceDocument
-
+from .api.deposit_read import SWHDepositReadArchives
 
 urlpatterns = [
     url(r'^$', index, name='home'),
@@ -67,6 +67,11 @@ urlpatterns = [
         name=CONT_FILE_IRI),  # specification is not clear about
                               # FILE-IRI, we assume it's the same as
                               # the CONT-IRI one
+    # Retrieve deposit's raw archives' content
+    # -> GET
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/raw/$',
+        SWHDepositReadArchives.as_view(),
+        name='download'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

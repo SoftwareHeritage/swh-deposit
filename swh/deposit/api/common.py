@@ -646,6 +646,39 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return make_error_response(req, METHOD_NOT_ALLOWED)
 
 
+class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support GET method.
+
+    """
+    def get(self, req, collection_name, deposit_id, format=None):
+        """Endpoint to create/add resources to deposit.
+
+        Returns:
+            200 response when no error during routine occurred
+            400 if the deposit does not belong to the collection
+            404 if the deposit or the collection does not exist
+
+        """
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
+        status, content, content_type = self.process_get(
+            req, collection_name, deposit_id)
+
+        return HttpResponse(content, status=status, content_type=content_type)
+
+    @abstractmethod
+    def process_get(self, req, collection_name, deposit_id):
+        """Routine to deal with the deposit's get processing.
+
+        Returns:
+            Tuple status, stream of content, content-type
+
+        """
+        pass
+
+
 class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
     """Mixin for class to support DELETE method.
 
