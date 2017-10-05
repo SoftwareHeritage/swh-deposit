@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.config import EDIT_SE_IRI, EM_IRI
+from swh.deposit.config import EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY
 from swh.deposit.models import Deposit, DepositRequest
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
@@ -26,9 +26,9 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEquals(len(deposit_requests), 2)
         for dr in deposit_requests:
-            if dr.type.name == 'archive':
+            if dr.type.name == ARCHIVE_KEY:
                 continue
-            elif dr.type.name == 'metadata':
+            elif dr.type.name == METADATA_KEY:
                 continue
             else:
                 self.fail('only archive and metadata type should exist '

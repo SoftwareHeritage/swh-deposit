@@ -127,6 +127,21 @@ class DepositRequestType(models.Model):
         return str({'id': self.id, 'name': self.name})
 
 
+def client_directory_path(instance, filename):
+    """Callable to upload archive in MEDIA_ROOT/user_<id>/<filename>
+
+    Args:
+        instance (DepositRequest): DepositRequest concerned by the upload
+        filename (str): Filename of the uploaded file
+
+    Returns:
+        A path to be prefixed by the MEDIA_ROOT to access physically
+        to the file uploaded.
+
+    """
+    return 'client_{0}/{1}'.format(instance.deposit.client.id, filename)
+
+
 class DepositRequest(models.Model):
     """Deposit request associated to one deposit.
 
@@ -136,7 +151,11 @@ class DepositRequest(models.Model):
     deposit = models.ForeignKey(Deposit, models.DO_NOTHING)
     date = models.DateTimeField(auto_now_add=True)
     # Deposit request information on the data to inject
+    # this can be null when type is 'archive'
     metadata = JSONField(null=True)
+    # this can be null when type is 'metadata'
+    archive = models.FileField(null=True, upload_to=client_directory_path)
+
     type = models.ForeignKey(
         'DepositRequestType', models.DO_NOTHING)
 
@@ -145,10 +164,19 @@ class DepositRequest(models.Model):
 
     def __str__(self):
         from json import dumps
+        meta = None
+        if self.metadata:
+            meta = dumps(self.metadata)
+
+        archive_name = None
+        if self.archive:
+            archive_name = self.archive.name
+
         return str({
             'id': self.id,
             'deposit': self.deposit,
-            'metadata': dumps(self.metadata),
+            'metadata': meta,
+            'archive': archive_name
         })
 
 

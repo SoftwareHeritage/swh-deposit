@@ -92,13 +92,6 @@ max_upload_size: 20971520
 # flags for the service document endpoint
 verbose: false
 noop: false
-
-# access to the objstorage for storing uploaded archive
-objstorage:
-  cls: pathslicing
-  args:
-    root: /home/storage/swh-deposit/uploads
-    slicing: 0:1/1:5
 ```
 
 ### Run

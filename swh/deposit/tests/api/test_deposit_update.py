@@ -40,8 +40,7 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             type=self.deposit_request_types['archive'])
 
         assert len(list(requests)) == 1
-        assert requests[0].metadata['archive']['name'] == 'filename0'
-        assert requests[0].metadata['archive']['id'] == '94e66df8cd09d410c62d9e0dc59d3a884e458e05'  # noqa
+        assert 'filename0' in requests[0].archive.name
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
@@ -72,8 +71,7 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             type=self.deposit_request_types['archive'])
 
         self.assertEquals(len(list(requests)), 1)
-        self.assertEquals(requests[0].metadata['archive']['name'],
-                          'otherfilename')
+        self.assertRegex(requests[0].archive.name, 'otherfilename')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
@@ -151,8 +149,7 @@ class DepositUpdateDepositWithNewDataTest(
             type=self.deposit_request_types['archive'])
 
         assert len(list(requests)) == 1
-        assert requests[0].metadata['archive']['name'] == 'filename0'
-        assert requests[0].metadata['archive']['id'] == '94e66df8cd09d410c62d9e0dc59d3a884e458e05'  # noqa
+        assert 'filename0' in requests[0].archive.name
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
@@ -184,11 +181,9 @@ class DepositUpdateDepositWithNewDataTest(
 
         self.assertEquals(len(requests), 2)
         # first archive still exists
-        self.assertEquals(requests[0].metadata['archive']['name'],
-                          'filename0')
+        self.assertRegex(requests[0].archive.name, 'filename0')
         # a new one was added
-        self.assertEquals(requests[1].metadata['archive']['name'],
-                          'otherfilename')
+        self.assertRegex(requests[1].archive.name, 'otherfilename')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(

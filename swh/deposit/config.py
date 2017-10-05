@@ -16,6 +16,8 @@ SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'status'
 
+ARCHIVE_KEY = 'archive'
+METADATA_KEY = 'metadata'
 
 AUTHORIZED_PLATFORMS = ['development', 'production']
 

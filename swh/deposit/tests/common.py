@@ -4,6 +4,8 @@
 # See top-level LICENSE file for more information
 
 import hashlib
+import os
+import shutil
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -14,6 +16,7 @@ from swh.deposit.config import COL_IRI, EM_IRI
 from swh.deposit.models import DepositClient, DepositCollection
 from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
+from swh.deposit.settings.testing import MEDIA_ROOT
 
 
 class BasicTestCase(TestCase):
@@ -50,6 +53,12 @@ class BasicTestCase(TestCase):
         self.userpass = _name
 
         self.deposit_request_types = deposit_request_types
+
+    def tearDown(self):
+        # Clean up uploaded files in temporary directory (tests have
+        # their own media root folder)
+        for d in os.listdir(MEDIA_ROOT):
+            shutil.rmtree(os.path.join(MEDIA_ROOT, d))
 
 
 class WithAuthTestCase(TestCase):
