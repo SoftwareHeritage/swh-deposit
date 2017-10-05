@@ -17,6 +17,9 @@ db-migrate:
 db-load-data:
 	$(MANAGE) loaddata deposit_data
 
+db-load-private-data: db-load-data
+	$(MANAGE) loaddata ../private_data.yaml
+
 run-dev:
 	$(MANAGE) runserver
 

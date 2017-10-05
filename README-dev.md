@@ -9,6 +9,62 @@ Except for the tests which are mostly side effects free (except for
 the database access), the other modes will need some configuration
 files (up to 2) to run properly.
 
+## Database
+
+swh-deposit uses a database to store the state of a deposit.
+The default db is expected to be called swh-deposit-dev.
+
+To simplify the use, the following makefile targets can be used:
+
+### schema
+
+``` Shell
+make db-create db-prepare db-migrate
+```
+
+### data
+
+Once the db is created, you need some data to be injected (request
+types, client, collection, etc...):
+
+``` Shell
+make db-load-data db-load-private-data
+```
+
+The private data are about having a user (`hal`) with a password
+(`hal`) who can access a collection (`hal`).
+
+Add the following to `../private-data.yaml`:
+
+``` YAML
+- model: deposit.depositclient
+  fields:
+    user_ptr_id: 1
+    collections:
+      - 1
+- model: auth.User
+  pk: 2
+  fields:
+    first_name: hal
+    last_name: hal
+    username: hal
+    password: "pbkdf2_sha256$30000$8lxjoGc9PiBm$DO22vPUJCTM17zYogBgBg5zr/97lH4pw10Mqwh85yUM="
+- model: deposit.depositclient
+  fields:
+    user_ptr_id: 2
+    collections:
+      - 1
+
+```
+
+### drop
+
+For information, you can drop the db:
+
+``` Shell
+make db-drop
+```
+
 ## Development-like environment
 
 Development-like environment needs one configuration file to work
@@ -105,3 +161,11 @@ As explained, those tests are mostly side-effect free.  The db part is
 dealt with by django. The remaining part which patches those
 side-effect behavior is dealt with in the
 `swh/deposit/tests/__init__.py` module.
+
+## Sum up
+
+Prepare everything for your user to run:
+
+``` Shell
+make db-drop db-create db-prepare db-migrate db-load-private-data run-dev
+```
