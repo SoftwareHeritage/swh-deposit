@@ -56,8 +56,6 @@ class SWHDefaultConfig(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
-        'verbose': ('bool', False),
-        'noop': ('bool', False),
     }
 
     def __init__(self, **config):

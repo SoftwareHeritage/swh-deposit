@@ -214,8 +214,6 @@ The current answer for example for the
 
     <sword:version>2.0</sword:version>
     <sword:maxUploadSize>20971520</sword:maxUploadSize>
-    <sword:verbose>False</sword:verbose>
-    <sword:noOp>False</sword:noOp>
 
     <workspace>
         <atom:title>The Software Heritage (SWH) archive</atom:title>

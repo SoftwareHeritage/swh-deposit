@@ -8,8 +8,6 @@ import django
 
 TEST_CONFIG = {
     'max_upload_size': 209715200,
-    'verbose': False,
-    'noop': False,
     'authentication': {
         'activated': 'true',
         'white-list': {

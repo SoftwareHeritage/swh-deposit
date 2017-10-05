@@ -89,9 +89,6 @@ authentication:
 # 20 Mib max size
 max_upload_size: 20971520
 
-# flags for the service document endpoint
-verbose: false
-noop: false
 ```
 
 ### Run
