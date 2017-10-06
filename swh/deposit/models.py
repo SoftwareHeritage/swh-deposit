@@ -163,9 +163,9 @@ class DepositRequest(models.Model):
         db_table = 'deposit_request'
 
     def __str__(self):
-        from json import dumps
         meta = None
         if self.metadata:
+            from json import dumps
             meta = dumps(self.metadata)
 
         archive_name = None
