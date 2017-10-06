@@ -190,3 +190,22 @@ class DepositCollection(models.Model):
 
     def __str__(self):
         return str({'id': self.id, 'name': self.name})
+
+
+class TemporaryArchive(models.Model):
+    """Temporary archive path to remove
+
+    """
+    id = models.BigAutoField(primary_key=True)
+    path = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'deposit_temporary_archive'
+
+    def __str__(self):
+        return str({
+            'id': self.id,
+            'date': self.date,
+            'path': self.path,
+        })

@@ -11,7 +11,7 @@ from rest_framework import status
 
 from swh.loader.tar import tarball
 from .common import SWHGetDepositAPI
-from ..models import Deposit, DepositRequest
+from ..models import Deposit, DepositRequest, TemporaryArchive
 
 
 def aggregate_tarballs(extraction_dir, archive_paths):
@@ -23,7 +23,7 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         archive_paths ([str]): Deposit's archive paths
 
     Returns:
-        Tuple (cleanup flag, archive path (aggregated or not))
+        Tuple (directory to clean up, archive path (aggregated or not))
 
     """
     if len(archive_paths) > 1:  # need to rebuild one archive
@@ -48,14 +48,12 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         # clean up temporary uncompressed tarball's on-disk content
         shutil.rmtree(aggregated_tarball_rootdir)
         # need to cleanup the temporary tarball when we are done
-        cleanup_step = True
+        directory_to_cleanup = dir_path
     else:  # only 1 archive, no need to do fancy actions (and no cleanup step)
-        cleanup_step = False
         temp_tarpath = archive_paths[0]
+        directory_to_cleanup = None
 
-    print('cleanup_step: %s' % cleanup_step)
-    print('temp: %s' % temp_tarpath)
-    return cleanup_step, temp_tarpath
+    return directory_to_cleanup, temp_tarpath
 
 
 def stream_content(tarpath):
@@ -65,7 +63,7 @@ def stream_content(tarpath):
         tarpath (path): Path to a tarball
 
     Raises:
-        ValueError if the tarpath targets something inexisting.
+        ValueError if the tarpath targets something nonexistent
 
     """
     if not os.path.exists(tarpath):
@@ -101,10 +99,28 @@ class SWHDepositReadArchives(SWHGetDepositAPI):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit_requests = DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['archive']).order_by('id')  # noqa
+            deposit=deposit,
+            type=self.deposit_request_types['archive']).order_by('id')
 
         for deposit_request in deposit_requests:
             yield deposit_request.archive.path
+
+    def cleanup(self, directory_to_cleanup):
+        """Reference the temporary directory holding the archive to be cleaned
+           up. This actually does not clean up but add a reference for
+           a directory to be cleaned up if it exists.
+
+        Args:
+            directory_to_cleanup (str/None): A reference to a
+            directory to be cleaned up
+
+        """
+        if directory_to_cleanup:
+            # Add a temporary directory to be cleaned up in the db model
+            # Another service is in charge of actually cleaning up
+            if os.path.exists(directory_to_cleanup):
+                tmp_archive = TemporaryArchive(path=directory_to_cleanup)
+                tmp_archive.save()
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
@@ -120,12 +136,9 @@ class SWHDepositReadArchives(SWHGetDepositAPI):
 
         """
         archive_paths = list(self.retrieve_archives(deposit_id))
-        cleanup_step, temp_tarpath = aggregate_tarballs(
+        directory_to_cleanup, temp_tarpath = aggregate_tarballs(
             self.extraction_dir, archive_paths)
         stream = stream_content(temp_tarpath)
-
-        # FIXME: Find proper way to clean up when consumption is done
-        # if cleanup_step:
-        #     shutil.rmtree(os.path.dirname(temp_tarpath))
+        self.cleanup(directory_to_cleanup)
 
         return status.HTTP_200_OK, stream, 'application/octet-stream'
