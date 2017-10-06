@@ -57,8 +57,9 @@ class BasicTestCase(TestCase):
     def tearDown(self):
         # Clean up uploaded files in temporary directory (tests have
         # their own media root folder)
-        for d in os.listdir(MEDIA_ROOT):
-            shutil.rmtree(os.path.join(MEDIA_ROOT, d))
+        if os.path.exists(MEDIA_ROOT):
+            for d in os.listdir(MEDIA_ROOT):
+                shutil.rmtree(os.path.join(MEDIA_ROOT, d))
 
 
 class WithAuthTestCase(TestCase):
