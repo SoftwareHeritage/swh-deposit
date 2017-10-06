@@ -3,9 +3,9 @@ FLAKEFLAGS='--exclude=swh/manage.py,swh/deposit/settings.py,swh/deposit/migratio
 MANAGE=python3 -m swh.manage
 
 db-drop:
-	dropdb swh-deposit-dev
+	dropdb swh-deposit-dev || return 0
 
-db-create:
+db-create: db-drop
 	createdb swh-deposit-dev
 
 db-prepare:
