@@ -43,7 +43,7 @@ Add the following to `../private-data.yaml`:
     collections:
       - 1
 - model: auth.User
-  pk: 2
+  pk: 1
   fields:
     first_name: hal
     last_name: hal
@@ -51,7 +51,7 @@ Add the following to `../private-data.yaml`:
     password: "pbkdf2_sha256$30000$8lxjoGc9PiBm$DO22vPUJCTM17zYogBgBg5zr/97lH4pw10Mqwh85yUM="
 - model: deposit.depositclient
   fields:
-    user_ptr_id: 2
+    user_ptr_id: 1
     collections:
       - 1
 
