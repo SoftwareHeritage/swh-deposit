@@ -15,6 +15,7 @@ CONT_FILE_IRI = 'cont_file_iri'
 SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'status'
+DEPOSIT_RAW_CONTENT = 'download'
 
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'

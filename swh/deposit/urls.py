@@ -22,7 +22,7 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from .config import SD_IRI, COL_IRI, STATE_IRI
+from .config import SD_IRI, COL_IRI, STATE_IRI, DEPOSIT_RAW_CONTENT
 from .api.common import index
 from .api.deposit import SWHDeposit
 from .api.deposit_status import SWHDepositStatus
@@ -71,7 +71,7 @@ urlpatterns = [
     # -> GET
     url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/raw/$',
         SWHDepositReadArchives.as_view(),
-        name='download'),
+        name=DEPOSIT_RAW_CONTENT),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

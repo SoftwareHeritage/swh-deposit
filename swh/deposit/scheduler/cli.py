@@ -8,7 +8,6 @@
 """
 
 import click
-import os
 import logging
 
 from abc import ABCMeta, abstractmethod
@@ -16,7 +15,6 @@ from abc import ABCMeta, abstractmethod
 from swh.core.config import SWHConfig
 from swh.deposit.config import setup_django_for
 from swh.model import hashutil
-from swh.objstorage import get_objstorage
 
 
 def previous_revision_id(swh_id):
@@ -40,98 +38,12 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
        injection.
 
     """
-    CONFIG_BASE_FILENAME = 'deposit/server'
-    DEFAULT_CONFIG = {
-        'objstorage': ('dict', {
-            'cls': 'remote',
-            'args': {
-                'url': 'http://localhost:5002',
-            }
-        }),
-        'extraction_dir': ('str', '/srv/storage/space/tmp/')
-    }
 
     def __init__(self):
         super().__init__()
         self.config = self.parse_config_file(
                 additional_configs=[self.ADDITIONAL_CONFIG])
         self.log = logging.getLogger('swh.deposit.scheduling')
-        self.objstorage = get_objstorage(**self.config['objstorage'])
-
-    def _aggregate_tarballs(self, deposit, archive_requests):
-        """Retrieve and aggregates tarballs information.
-
-        """
-        import shutil
-        import tempfile
-        from swh.loader.tar import tarball
-
-        # root directory to manipulate tarballs
-        extraction_dir = self.config['extraction_dir']
-
-        os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        dir_path = tempfile.mkdtemp(prefix='swh.deposit.scheduler-',
-                                    dir=extraction_dir)
-
-        if len(archive_requests) > 1:  # need to rebuild one archive
-            # from multiple ones
-            # root folder to build an aggregated tarball
-            aggregated_tarball_rootdir = os.path.join(dir_path, 'aggregate')
-            os.makedirs(aggregated_tarball_rootdir, 0o755, exist_ok=True)
-
-            for archive_request in archive_requests:
-                archive = archive_request.metadata['archive']
-                archive_name = archive['name']
-                archive_id = archive['id']
-
-                # write in a temporary location the tarball
-                temp_tarball = os.path.join(dir_path, archive_name)
-
-                # build the temporary tarball
-                with open(temp_tarball, 'wb') as f:
-                    for chunk in self.objstorage.get_stream(archive_id):
-                        f.write(chunk)
-
-                # to uncompress it in another temporary tarball directory
-                tarball.uncompress(temp_tarball, aggregated_tarball_rootdir)
-
-                # clean up the temporary compressed tarball
-                os.remove(temp_tarball)
-
-            # Aggregate into one big tarball the multiple smaller ones
-            temp_tarball = tarball.compress(
-                aggregated_tarball_rootdir + '.zip',
-                nature='zip',
-                dirpath_or_files=aggregated_tarball_rootdir)
-
-            # clean up the temporary uncompressed tarball
-            shutil.rmtree(aggregated_tarball_rootdir)
-
-        else:  # we only need to retrieve the archive from the
-            # objstorage
-            archive = archive_requests[0].metadata['archive']
-            archive_name = archive['name']
-            archive_id = archive['id']
-
-            # write in a temporary location the tarball
-            temp_tarball = os.path.join(dir_path, archive_name)
-
-            # build the temporary tarball
-            with open(temp_tarball, 'wb') as f:
-                for chunk in self.objstorage.get_stream(archive_id):
-                    f.write(chunk)
-
-        # FIXME: 1. Need to clean up the temporary space
-        # FIXME: 2. In case of multiple archives, the archive name
-        # elected here is the last one
-
-        print('temporary tarball', temp_tarball)
-
-        data = {
-            'tarpath': temp_tarball,
-            'name': archive_name,
-        }
-        return data
 
     def _aggregate_metadata(self, deposit, metadata_requests):
         """Retrieve and aggregates metadata information.
@@ -143,11 +55,13 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
 
         return metadata
 
-    def aggregate(self, deposit, requests):
+    def aggregate(self, deposit, deposit_archive_url, requests):
         """Aggregate multiple data on deposit into one unified data dictionary.
 
         Args:
             deposit (Deposit): Deposit concerned by the data aggregation.
+            deposit_archive_url (str): Url to retrieve a tarball from
+                                       the deposit instance
             requests ([DepositRequest]): List of associated requests which
                                          need aggregation.
 
@@ -156,22 +70,12 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
 
         """
         data = {}
-
         metadata_requests = []
-        archive_requests = []
-        for req in requests:
-            if req.type.name == 'archive':
-                archive_requests.append(req)
-            elif req.type.name == 'metadata':
-                metadata_requests.append(req)
-            else:
-                raise ValueError('Unknown request type %s' % req.type)
 
         # Retrieve tarballs/metadata information
-        archive_data = self._aggregate_tarballs(deposit, archive_requests)
         metadata = self._aggregate_metadata(deposit, metadata_requests)
 
-        data['tarpath'] = archive_data['tarpath']
+        data['deposit_archive_url'] = deposit_archive_url
 
         # Read information metadata
         data['origin'] = {
@@ -210,10 +114,6 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
                 'parents': [hashutil.hash_to_bytes(parent_revision)]
             }
 
-        data['occurrence'] = {
-            'branch': archive_data['name'],
-        }
-
         return data
 
     @abstractmethod
@@ -236,7 +136,7 @@ class SWHCeleryScheduling(SWHScheduling):
 
     """
     ADDITIONAL_CONFIG = {
-        'task_name': ('str', 'swh.loader.tar.tasks.LoadTarRepository'),
+        'task_name': ('str', 'swh.deposit.tasks.LoadDepositArchive'),
         'dry_run': ('bool', False),
     }
 
@@ -257,17 +157,19 @@ class SWHCeleryScheduling(SWHScheduling):
             None
 
         """
-        tarpath = deposit_data['tarpath']
+        deposit_archive_url = deposit_data['deposit_archive_url']
         origin = deposit_data['origin']
         visit_date = None  # default to Now
         revision = deposit_data['revision']
-        occurrence = deposit_data['occurrence']
 
         if not self.dry_run:
             return self.task.delay(
-                tarpath, origin, visit_date, revision, [occurrence])
+                deposit_archive_url=deposit_archive_url,
+                origin=origin,
+                visit_date=visit_date,
+                revision=revision)
 
-        print(tarpath, origin, visit_date, revision, [occurrence])
+        print(deposit_archive_url, origin, visit_date, revision)
 
 
 class SWHScheduling(SWHConfig):
@@ -302,18 +204,43 @@ class SWHScheduling(SWHConfig):
     help='Schedule one-shot deposit injections')
 @click.option('--platform', default='development',
               help='development or production platform')
-def main(platform):
+@click.option('--scheduling-method', default='celery',
+              help='Scheduling method')
+@click.option('--server', default='http://127.0.0.1:5006',
+              help='Deposit server')
+def main(platform, scheduling_method, server):
     setup_django_for(platform)
 
-    from swh.deposit.models import Deposit, DepositRequest
+    from swh.deposit.models import Deposit, DepositRequest, DepositRequestType
 
-    scheduling = SWHCeleryScheduling()
+    if scheduling_method == 'celery':
+        scheduling = SWHCeleryScheduling()
+    elif scheduling_method == 'swh-scheduler':
+        scheduling = SWHScheduling()
+    else:
+        raise ValueError(
+            'Only `celery` or `swh-scheduler` values are accepted')
+
+    from swh.deposit.config import DEPOSIT_RAW_CONTENT
+    from django.core.urlresolvers import reverse
+
+    _request_types = DepositRequestType.objects.all()
+    deposit_request_types = {
+        type.name: type for type in _request_types
+    }
 
     deposits = Deposit.objects.filter(status='ready')
     for deposit in deposits:
-        requests = DepositRequest.objects.filter(deposit_id=deposit.id)
+        deposit_archive_url = '%s%s' % (server, reverse(
+            DEPOSIT_RAW_CONTENT,
+            args=[deposit.collection.name, deposit.id]))
 
-        deposit_data = scheduling.aggregate(deposit, requests)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit, type=deposit_request_types['metadata'])
+
+        deposit_data = scheduling.aggregate(
+            deposit, deposit_archive_url, requests)
+
         scheduling.schedule(deposit_data)
 
 
