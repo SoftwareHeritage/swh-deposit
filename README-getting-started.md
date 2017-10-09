@@ -71,8 +71,6 @@ Content-Type: application/xml
 
     <sword:version>2.0</sword:version>
     <sword:maxUploadSize>209715200</sword:maxUploadSize>
-    <sword:verbose>False</sword:verbose>
-    <sword:noOp>False</sword:noOp>
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>

@@ -18,17 +18,24 @@ DEFAULT_CONFIG = {
 
 
 if __name__ == "__main__":
-    # override the default host:port
-    if sys.argv[1] == 'runserver':
+    settings_file = 'development'
+    if sys.argv[1] == 'runserver':  # override the default host:port
+                                    # for the 'runserver' task
+
         conf = config.load_named_config('deposit/server',
                                         default_conf=DEFAULT_CONFIG)
         extra_cmd = ['%s:%s' % (conf['host'], conf['port'])]
         cmd = sys.argv + extra_cmd
-    else:
+    elif sys.argv[1] == 'test':     # override the default settings file
+                                    # to read in testing mode
+        settings_file = 'testing'
+        cmd = sys.argv
+    else:  # otherwise, do nothing
         cmd = sys.argv
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "swh.deposit.settings.development")
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                          'swh.deposit.settings.%s' % settings_file)
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError:
@@ -36,7 +43,7 @@ if __name__ == "__main__":
         # issue is really that Django is missing to avoid masking other
         # exceptions on Python 2.
         try:
-            import django
+            import django  # noqa
         except ImportError:
             raise ImportError(
                 "Couldn't import Django. Are you sure it's installed and "

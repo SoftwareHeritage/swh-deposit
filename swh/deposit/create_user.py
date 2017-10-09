@@ -6,10 +6,8 @@
 # See top-level LICENSE file for more information
 
 import click
-import os
 
-
-AUTHORIZED_PLATFORMS = ['development', 'production']
+from swh.deposit.config import setup_django_for
 
 
 @click.command(
@@ -23,16 +21,7 @@ AUTHORIZED_PLATFORMS = ['development', 'production']
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
 def main(platform, username, password, firstname, lastname, email, collection):
-
-    if platform not in AUTHORIZED_PLATFORMS:
-        raise ValueError('Platform should either be one of %s' %
-                         AUTHORIZED_PLATFORMS)
-
-    # setup
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "swh.deposit.settings.%s" % platform)
-    import django
-    django.setup()
+    setup_django_for(platform)
 
     from swh.deposit.models import DepositClient, DepositCollection
 

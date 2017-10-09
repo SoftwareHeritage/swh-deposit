@@ -158,7 +158,6 @@ and other stuff</description>
         url = reverse(COL_IRI, args=[self.username])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
-        id = hashlib.sha1(data_text).hexdigest()
 
         external_id = 'some-external-id-1'
 
@@ -191,12 +190,7 @@ and other stuff</description>
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata, {
-            'archive': {
-                'id': id,
-                'name': 'filename0',
-            },
-        })
+        self.assertRegex(deposit_request.archive.name, 'filename0')
 
         response_content = parse_xml(BytesIO(response.content))
         self.assertEqual(
@@ -453,7 +447,6 @@ and other stuff</description>
         # 1st archive to upload
         data_text0 = b'some other content'
         md5sum0 = hashlib.md5(data_text0).hexdigest()
-        id0 = hashlib.sha1(data_text0).hexdigest()
 
         # when
         response = self.client.post(
@@ -484,17 +477,12 @@ and other stuff</description>
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata, {
-            'archive': {
-                'id': id0,
-                'name': 'filename0',
-            },
-        })
+        self.assertEquals(deposit_request.type.name, 'archive')
+        self.assertRegex(deposit_request.archive.name, 'filename0')
 
         # 2nd archive to upload
         data_text = b'second archive uploaded'
         md5sum1 = hashlib.md5(data_text).hexdigest()
-        id1 = hashlib.sha1(data_text).hexdigest()
 
         # uri to update the content
         update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
@@ -519,31 +507,26 @@ and other stuff</description>
         self.assertEqual(deposit.client, self.user)
         self.assertIsNone(deposit.swh_id)
 
-        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
+        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit).
+                                order_by('id'))
 
         # 2 deposit requests for the same deposit
         self.assertEquals(len(deposit_requests), 2)
         self.assertEquals(deposit_requests[0].deposit, deposit)
-        self.assertEquals(deposit_requests[0].metadata, {
-            'archive': {
-                'id': id0,
-                'name': 'filename0',
-            },
-        })
+        self.assertEquals(deposit_requests[0].type.name, 'archive')
+        self.assertRegex(deposit_requests[0].archive.name, 'filename0')
+
         self.assertEquals(deposit_requests[1].deposit, deposit)
-        self.assertEquals(deposit_requests[1].metadata, {
-            'archive': {
-                'id': id1,
-                'name': 'filename1',
-            },
-        })
+        self.assertEquals(deposit_requests[1].type.name, 'archive')
+        self.assertRegex(deposit_requests[1].archive.name, 'filename1')
 
         # only 1 deposit in db
         deposits = Deposit.objects.all()
         self.assertEqual(len(deposits), 1)
 
     def test_post_deposit_then_post_or_put_is_refused_when_status_ready(self):
-        """When a deposit is complete, updating/adding new data to it is forbidden.
+        """When a deposit is complete, updating/adding new data to it is
+           forbidden.
 
         """
         url = reverse(COL_IRI, args=[self.username])
@@ -553,7 +536,6 @@ and other stuff</description>
         # 1st archive to upload
         data_text0 = b'some other content'
         md5sum0 = hashlib.md5(data_text0).hexdigest()
-        id0 = hashlib.sha1(data_text0).hexdigest()
 
         # when
         response = self.client.post(
@@ -584,12 +566,7 @@ and other stuff</description>
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.metadata, {
-            'archive': {
-                'id': id0,
-                'name': 'filename0',
-            },
-        })
+        self.assertRegex(deposit_request.archive.name, 'filename0')
 
         # updating/adding is forbidden
 

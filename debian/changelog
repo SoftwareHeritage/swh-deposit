@@ -1,8 +1,19 @@
-swh-deposit (0.0.14-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.15-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.15
+  * swh.deposit.api: Add service to clean up temporary archives
+  * swh.deposit.api: Add private api to read a deposit's raw content
+  * swh.deposit.api: Update docstring
+  * swh.deposit.api: Switch from objstorage layer to django's
+  * docs: Fix typo in private yaml sample
+  * README-dev: Update documentation about bootstraping the dev env
+  * swh.deposit.tests: Check existence before directory cleanup
+  * Remove reference to noop and verbose since no longer in spec 2.0
+  * bin: Reference sample executables to exercise local run
+  * swh.deposit.scheduler.cli: Add a scheduling implementation on
+    deposit
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 28 Sep 2017 16:56:54 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 09 Oct 2017 10:23:48 +0200
 
 swh-deposit (0.0.14-1~swh1) unstable-swh; urgency=medium
 
