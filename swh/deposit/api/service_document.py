@@ -20,8 +20,6 @@ class SWHServiceDocument(SWHBaseDeposit):
 
         context = {
             'max_upload_size': self.config['max_upload_size'],
-            'verbose': self.config['verbose'],
-            'noop': self.config['noop'],
             'accept_packagings': ACCEPT_PACKAGINGS,
             'accept_content_types': ACCEPT_CONTENT_TYPES,
             'collections': collections,

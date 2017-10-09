@@ -23,6 +23,7 @@ setup(
               'swh.deposit.api',
               'swh.deposit.fixtures',
               'swh.deposit.migrations',
+              'swh.deposit.scheduler',
               'swh.deposit.settings',
               'swh.deposit.static',
               'swh.deposit.templates',

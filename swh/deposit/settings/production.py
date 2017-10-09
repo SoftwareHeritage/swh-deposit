@@ -78,3 +78,8 @@ if db_port:
 DATABASES = {
     'default': db,
 }
+
+# Upload user directory
+
+# https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-MEDIA_ROOT
+MEDIA_ROOT = private_conf['media_root']

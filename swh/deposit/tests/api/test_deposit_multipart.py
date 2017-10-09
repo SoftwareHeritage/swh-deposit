@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import hashlib
-
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
@@ -90,7 +88,6 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
             charset='utf-8')
 
         external_id = 'external-id'
-        id1 = hashlib.sha1(archive_content).hexdigest()
 
         # when
         response = self.client.post(
@@ -123,10 +120,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertEquals(deposit_request.metadata['archive'], {
-                    'id': id1,
-                    'name': 'archive0',
-                })
+                self.assertRegex(deposit_request.archive.name, 'archive0')
             else:
                 self.assertEquals(
                     deposit_request.metadata[
@@ -161,7 +155,6 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
             charset='utf-8')
 
         external_id = 'external-id'
-        id1 = hashlib.sha1(archive_content).hexdigest()
 
         # when
         response = self.client.post(
@@ -195,10 +188,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertEquals(deposit_request.metadata['archive'], {
-                    'id': id1,
-                    'name': 'archive0',
-                })
+                self.assertRegex(deposit_request.archive.name, 'archive0')
             else:
                 self.assertEquals(
                     deposit_request.metadata[
@@ -227,12 +217,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertEquals(deposit_request.metadata, {
-                    'archive': {
-                        'id': id1,
-                        'name': 'archive0',
-                    },
-                })
+                self.assertRegex(deposit_request.archive.name, 'archive0')
             else:
                 self.assertEquals(
                     deposit_request.metadata[

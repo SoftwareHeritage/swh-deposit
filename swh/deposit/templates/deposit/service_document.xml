@@ -6,8 +6,6 @@
 
     <sword:version>2.0</sword:version>
     <sword:maxUploadSize>{{ max_upload_size }}</sword:maxUploadSize>
-    <sword:verbose>{{ verbose }}</sword:verbose>
-    <sword:noOp>{{ noop }}</sword:noOp>
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>
