@@ -15,10 +15,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
 
-from swh.objstorage import get_objstorage
-from swh.model.hashutil import hash_to_hex
-
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
+from ..config import ARCHIVE_KEY, METADATA_KEY
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
@@ -48,18 +46,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
-    ADDITIONAL_CONFIG = {
-        'objstorage': ('dict', {
-            'cls': 'remote',
-            'args': {
-                'url': 'http://localhost:5002',
-            }
-        })
-    }
-
     def __init__(self):
         super().__init__()
-        self.objstorage = get_objstorage(**self.config['objstorage'])
         deposit_request_types = DepositRequestType.objects.all()
         self.deposit_request_types = {
             type.name: type for type in deposit_request_types
@@ -185,29 +173,38 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
               archives to existing deposit
 
         Returns:
-            The DepositRequest instance saved.
+            None
 
         """
         if replace_metadata:
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types['metadata']).delete()
+                type=self.deposit_request_types[METADATA_KEY]).delete()
+
         if replace_archives:
-            # FIXME: delete in the objstorage?
-            # For now, we only remove the reference from the db.
-            # In effect, dangling files will exist in the objstorage.
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types['archive']).delete()
+                type=self.deposit_request_types[ARCHIVE_KEY]).delete()
 
-        for type, metadata in deposit_request_data.items():
+        deposit_request = None
+
+        archive_file = deposit_request_data.get(ARCHIVE_KEY)
+        if archive_file:
             deposit_request = DepositRequest(
-                type=self.deposit_request_types[type],
+                type=self.deposit_request_types[ARCHIVE_KEY],
+                deposit=deposit,
+                archive=archive_file)
+            deposit_request.save()
+
+        metadata = deposit_request_data.get(METADATA_KEY)
+        if metadata:
+            deposit_request = DepositRequest(
+                type=self.deposit_request_types[METADATA_KEY],
                 deposit=deposit,
                 metadata=metadata)
             deposit_request.save()
 
-        return deposit_request
+        assert deposit_request is not None
 
     def _delete_archives(self, collection_name, deposit_id):
         """Delete archives reference from the deposit id.
@@ -219,12 +216,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_dict(
                 NOT_FOUND,
                 'The deposit %s does not exist' % deposit_id)
-        # FIXME: delete in the objstorage?
-        # For now, we only remove the reference from the db.
-        # In effect, dangling files will exist in the objstorage.
         DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['archive']).delete()
+            type=self.deposit_request_types[ARCHIVE_KEY]).delete()
+
         return {}
 
     def _delete_deposit(self, collection_name, deposit_id):
@@ -259,26 +254,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         deposit.delete()
 
         return {}
-
-    def _archive_put(self, file):
-        """Store archive file in objstorage and returns metadata about it.
-
-        Args:
-            file (InMemoryUploadedFile): archive's memory representation
-
-        Returns:
-            dict representing metadata about the archive
-
-        """
-        raw_content = b''.join(file.chunks())
-        id = self.objstorage.add(content=raw_content)
-
-        return {
-            'archive': {
-                'id': hash_to_hex(id),
-                'name': file.name,
-            }
-        }
 
     def _check_preconditions_on(self, filehandler, md5sum,
                                 content_length=None):
@@ -393,19 +368,19 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         external_id = headers['slug']
 
         # actual storage of data
-        archive_metadata = self._archive_put(filehandler)
+        archive_metadata = filehandler
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
-        deposit_request = self._deposit_request_put(
-            deposit, {'archive': archive_metadata},
+        self._deposit_request_put(
+            deposit, {ARCHIVE_KEY: archive_metadata},
             replace_metadata=replace_metadata,
             replace_archives=replace_archives)
 
         return {
             'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': deposit_request.metadata['archive']['name'],
+            'deposit_date': deposit.reception_date,
+            'archive': filehandler.name,
         }
 
     def _multipart_upload(self, req, headers, collection_name,
@@ -488,22 +463,21 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return precondition_status_response
 
         # actual storage of data
-        archive_metadata = self._archive_put(filehandler)
         atom_metadata = parse_xml(data['application/atom+xml'])
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
         deposit_request_data = {
-            'archive': archive_metadata,
-            'metadata': atom_metadata,
+            ARCHIVE_KEY: filehandler,
+            METADATA_KEY: atom_metadata,
         }
-        deposit_request = self._deposit_request_put(
+        self._deposit_request_put(
             deposit, deposit_request_data, replace_metadata, replace_archives)
 
         return {
             'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
-            'archive': archive_metadata['archive']['name'],
+            'deposit_date': deposit.reception_date,
+            'archive': filehandler.name,
         }
 
     def _atom_entry(self, req, headers, collection_name,
@@ -556,13 +530,13 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
-        deposit_request = self._deposit_request_put(
-            deposit, {'metadata': req.data},
+        self._deposit_request_put(
+            deposit, {METADATA_KEY: req.data},
             replace_metadata, replace_archives)
 
         return {
             'deposit_id': deposit.id,
-            'deposit_date': deposit_request.date,
+            'deposit_date': deposit.reception_date,
             'archive': None,
         }
 
@@ -672,6 +646,39 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return make_error_response(req, METHOD_NOT_ALLOWED)
 
 
+class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+    """Mixin for class to support GET method.
+
+    """
+    def get(self, req, collection_name, deposit_id, format=None):
+        """Endpoint to create/add resources to deposit.
+
+        Returns:
+            200 response when no error during routine occurred
+            400 if the deposit does not belong to the collection
+            404 if the deposit or the collection does not exist
+
+        """
+        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return make_error_response_from_dict(req, checks['error'])
+
+        status, content, content_type = self.process_get(
+            req, collection_name, deposit_id)
+
+        return HttpResponse(content, status=status, content_type=content_type)
+
+    @abstractmethod
+    def process_get(self, req, collection_name, deposit_id):
+        """Routine to deal with the deposit's get processing.
+
+        Returns:
+            Tuple status, stream of content, content-type
+
+        """
+        pass
+
+
 class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
     """Mixin for class to support DELETE method.
 
@@ -682,7 +689,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         Returns:
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
-            404 if the deposit does not exist
+            404 if the deposit or the collection does not exist
 
 
         """
@@ -732,7 +739,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         Returns:
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
-            404 if the deposit does not exist
+            404 if the deposit or the collection does not exist
         """
         checks = self._primary_input_checks(req, collection_name, deposit_id)
         if 'error' in checks:
@@ -768,7 +775,7 @@ class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         Returns:
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
-            404 if the deposit does not exist
+            404 if the deposit or the collection does not exist
 
         """
         checks = self._primary_input_checks(req, collection_name, deposit_id)

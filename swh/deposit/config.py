@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
 import logging
 
 from swh.core.config import SWHConfig
@@ -15,6 +16,37 @@ SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'status'
 
+ARCHIVE_KEY = 'archive'
+METADATA_KEY = 'metadata'
+
+AUTHORIZED_PLATFORMS = ['development', 'production']
+
+
+def setup_django_for(platform):
+    """Setup function for command line tools (swh.deposit.create_user,
+       swh.deposit.scheduler.cli) to initialize the needed db access.
+
+    Note:
+        Do not import any django related module prior to this function
+        call. Otherwise, this will raise an
+        django.core.exceptions.ImproperlyConfigured error message.
+
+    Args:
+        platform (str): the platform the scheduling is running
+
+    Raises:
+        ValueError in case of wrong platform inputs.
+
+    """
+    if platform not in AUTHORIZED_PLATFORMS:
+        raise ValueError('Platform should be one of %s' % AUTHORIZED_PLATFORMS)
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                          'swh.deposit.settings.%s' % platform)
+
+    import django
+    django.setup()
+
 
 class SWHDefaultConfig(SWHConfig):
     """Mixin intended to enrich views with SWH configuration.
@@ -24,8 +56,6 @@ class SWHDefaultConfig(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
-        'verbose': ('bool', False),
-        'noop': ('bool', False),
     }
 
     def __init__(self, **config):

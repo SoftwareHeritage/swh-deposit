@@ -4,4 +4,5 @@ djangorestframework
 djangorestframework-xml
 retrying
 swh.core>=0.0.14
+swh.loader.tar>=0.0.26
 vcversioner
