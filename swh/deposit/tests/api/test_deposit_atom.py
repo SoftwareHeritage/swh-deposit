@@ -136,8 +136,8 @@ and other stuff</description>
 
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        actual_metadata = deposit_request.metadata
-        self.assertIsNone(actual_metadata.get('archive'))
+        self.assertIsNotNone(deposit_request.metadata)
+        self.assertFalse(bool(deposit_request.archive))
 
     def test_post_deposit_atom_entry_multiple_steps(self):
         """Test one deposit upload."""
@@ -206,4 +206,4 @@ and other stuff</description>
         for deposit_request in deposit_requests:
             actual_metadata = deposit_request.metadata
             self.assertIsNotNone(actual_metadata)
-            self.assertIsNone(actual_metadata.get('archive'))
+            self.assertFalse(bool(deposit_request.archive))
