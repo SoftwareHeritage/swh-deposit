@@ -234,10 +234,8 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_binary_fails_if_unsupported_packaging_header(
             self):
@@ -266,10 +264,8 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_binary_upload_fail_if_no_content_disposition_header(
             self):
@@ -298,10 +294,8 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_mediation_not_supported(self):
         """Binary upload only supports application/zip (for now)...
@@ -332,10 +326,8 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_412_PRECONDITION_FAILED)
 
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     # FIXME: Test this scenario (need a way to override the default
     # size limit in test scenario)
@@ -368,10 +360,8 @@ and other stuff</description>
     #     # then
     #     self.assertEqual(response.status_code,
     #                      status.HTTP_403_FORBIDDEN)
-    #     try:
+    #     with self.assertRaises(Deposit.DoesNotExist):
     #         Deposit.objects.get(external_id=external_id)
-    #     except Deposit.DoesNotExist:
-    #         pass
 
     def test_post_deposit_2_post_2_different_deposits(self):
         """Making 2 post requests result in 2 different deposit

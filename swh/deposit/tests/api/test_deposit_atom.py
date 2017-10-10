@@ -109,10 +109,8 @@ and other stuff</description>
         # given
         external_id = 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
 
-        try:
-            deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            assert True
+        with self.assertRaises(Deposit.DoesNotExist):
+            Deposit.objects.get(external_id=external_id)
 
         atom_entry_data = self.atom_entry_data0 % external_id.encode('utf-8')
 
@@ -146,10 +144,8 @@ and other stuff</description>
         # given
         external_id = 'urn:uuid:2225c695-cfb8-4ebb-aaaa-80da344efa6a'
 
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             deposit = Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            assert True
 
         # when
         response = self.client.post(
