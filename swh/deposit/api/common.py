@@ -619,12 +619,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     'Deposit with id %s does not exist' %
                     deposit_id)
 
-            if req.method != 'GET' and deposit.status != 'partial':
-                summary = "You can only act on deposit with status 'partial'"
-                description = "This deposit has status '%s'" % deposit.status
-                return make_error_dict(
-                    BAD_REQUEST, summary=summary,
-                    verbose_description=description)
+            checks = self.restrict_access(req, deposit)
+            if checks:
+                return checks
 
         headers = self._read_headers(req)
         if headers['on-behalf-of']:
@@ -632,6 +629,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                                    'Mediation is not supported.')
 
         return {'headers': headers}
+
+    def restrict_access(self, req, deposit=None):
+        if deposit:
+            if req.method != 'GET' and deposit.status != 'partial':
+                summary = "You can only act on deposit with status 'partial'"
+                description = "This deposit has status '%s'" % deposit.status
+                return make_error_dict(
+                    BAD_REQUEST, summary=summary,
+                    verbose_description=description)
 
     def get(self, req, *args, **kwargs):
         return make_error_response(req, METHOD_NOT_ALLOWED)

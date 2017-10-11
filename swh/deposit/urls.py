@@ -23,12 +23,12 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from .config import SD_IRI, COL_IRI, STATE_IRI, PRIVATE_GET_RAW_CONTENT
-from .config import PRIVATE_DEPOSIT_UPDATE
+from .config import PRIVATE_PUT_DEPOSIT
 from .api.common import index
 from .api.deposit import SWHDeposit
 from .api.deposit_status import SWHDepositStatus
 from .api.deposit_update import SWHUpdateMetadataDeposit
-from .api.deposit_update import SWHUpdateArchiveDeposit
+from .api.deposit_update import SWHUpdateArchiveDeposit, SWHUpdateStatusDeposit
 from .api.deposit_content import SWHDepositContent
 from .api.service_document import SWHServiceDocument
 from .api.deposit_read import SWHDepositReadArchives
@@ -73,6 +73,9 @@ urlpatterns = [
     url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/raw/$',
         SWHDepositReadArchives.as_view(),
         name=PRIVATE_GET_RAW_CONTENT),
+    url(r'^1/(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/update/$',
+        SWHUpdateStatusDeposit.as_view(),
+        name=PRIVATE_PUT_DEPOSIT),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

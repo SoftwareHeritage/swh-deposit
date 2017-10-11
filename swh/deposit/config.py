@@ -16,6 +16,7 @@ SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'status'
 PRIVATE_GET_RAW_CONTENT = 'private-download'
+PRIVATE_PUT_DEPOSIT = 'private-update'
 
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
