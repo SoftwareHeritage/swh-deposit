@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractmethod
 
 from swh.core.config import SWHConfig
 from swh.deposit.config import setup_django_for
-from swh.model import hashutil
+from swh.model import hashutil, identifiers
 
 
 def previous_revision_id(swh_id):
@@ -38,6 +38,11 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
        injection.
 
     """
+    CONFIG_BASE_FILENAME = 'deposit/server'
+
+    DEFAULT_CONFIG = {
+        'dry_run': ('bool', False),
+    }
 
     def __init__(self):
         super().__init__()
@@ -95,7 +100,7 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
             fullname, deposit.id, deposit.collection.name)
-        complete_date = deposit.complete_date
+        complete_date = identifiers.normalize_timestamp(deposit.complete_date)
 
         data['revision'] = {
             'synthetic': True,
@@ -137,14 +142,15 @@ class SWHCeleryScheduling(SWHScheduling):
     """
     ADDITIONAL_CONFIG = {
         'task_name': ('str', 'swh.deposit.tasks.LoadDepositArchive'),
-        'dry_run': ('bool', False),
     }
 
-    def __init__(self):
+    def __init__(self, config=None):
         super().__init__()
         from swh.scheduler import utils
         self.task_name = self.config['task_name']
         self.task = utils.get_task(self.task_name)
+        if config:
+            self.config.update(**config)
         self.dry_run = self.config['dry_run']
 
     def schedule(self, deposit_data):
@@ -162,42 +168,67 @@ class SWHCeleryScheduling(SWHScheduling):
         visit_date = None  # default to Now
         revision = deposit_data['revision']
 
-        if not self.dry_run:
-            return self.task.delay(
-                deposit_archive_url=deposit_archive_url,
-                origin=origin,
-                visit_date=visit_date,
-                revision=revision)
+        self.log.debug('args: %s %s %s %s' % (
+            deposit_archive_url, origin, visit_date, revision))
 
-        print(deposit_archive_url, origin, visit_date, revision)
+        if self.dry_run:
+            return
+
+        return self.task.delay(
+            deposit_archive_url=deposit_archive_url,
+            origin=origin,
+            visit_date=visit_date,
+            revision=revision)
 
 
-class SWHScheduling(SWHConfig):
-    """Deposit injection as SWH's task scheduling interface.
+class SWHScheduling(SWHScheduling):
+    """Deposit injection through SWH's task scheduling interface.
 
     """
-    ADDITIONAL_CONFIG = {
-        'scheduling_db': ('str', 'dbname=swh-scheduler-dev'),
-    }
+    ADDITIONAL_CONFIG = {}
 
-    def __init__(self):
+    def __init__(self, config=None):
         super().__init__()
         from swh.scheduler.backend import SchedulerBackend
-        self.scheduler = SchedulerBackend(self.config)
+        if config:
+            self.config.update(**config)
+        self.dry_run = self.config['dry_run']
+        self.scheduler = SchedulerBackend(**self.config)
 
-    def schedule(self, deposit, data):
-        """Schedule the new deposit injection through swh.scheduler's one-shot
-        task api.
+    def schedule(self, deposit_data):
+        """Schedule the new deposit injection through swh.scheduler's api.
 
         Args:
-            deposit (Deposit): Deposit concerned by the data aggregation.
-            data (dict): Deposit aggregated data
-
-        Returns:
-            None
+            deposit_data (dict): Deposit aggregated information.
 
         """
-        pass
+        deposit_archive_url = deposit_data['deposit_archive_url']
+        origin = deposit_data['origin']
+        visit_date = None  # default to Now
+        revision = deposit_data['revision']
+
+        self.log.debug('args: %s %s %s %s' % (
+            deposit_archive_url, origin, visit_date, revision))
+
+        if self.dry_run:
+            return
+
+        import datetime
+        task = {
+            'policy': 'oneshot',
+            'type': 'swh-deposit-archive-ingestion',
+            'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
+            'arguments': {
+                'args': [],
+                'kwargs': {
+                    'deposit_archive_url': deposit_archive_url,
+                    'origin': origin,
+                    'visit_date': visit_date,
+                    'revision': revision
+                },
+            }
+        }
+        self.scheduler.create_tasks([task])
 
 
 @click.command(
@@ -208,15 +239,21 @@ class SWHScheduling(SWHConfig):
               help='Scheduling method')
 @click.option('--server', default='http://127.0.0.1:5006',
               help='Deposit server')
-def main(platform, scheduling_method, server):
+@click.option('--dry-run/--no-dry-run', is_flag=True, default=False,
+              help='Dry run')
+def main(platform, scheduling_method, server, dry_run):
     setup_django_for(platform)
 
     from swh.deposit.models import Deposit, DepositRequest, DepositRequestType
 
+    override_config = {}
+    if dry_run:
+        override_config['dry_run'] = dry_run
+
     if scheduling_method == 'celery':
-        scheduling = SWHCeleryScheduling()
+        scheduling = SWHCeleryScheduling(override_config)
     elif scheduling_method == 'swh-scheduler':
-        scheduling = SWHScheduling()
+        scheduling = SWHScheduling(override_config)
     else:
         raise ValueError(
             'Only `celery` or `swh-scheduler` values are accepted')
