@@ -21,7 +21,7 @@ PRIVATE_PUT_DEPOSIT = 'private-update'
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
 
-AUTHORIZED_PLATFORMS = ['development', 'production']
+AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
 
 def setup_django_for(platform):

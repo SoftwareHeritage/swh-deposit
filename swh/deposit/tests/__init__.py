@@ -3,7 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import django
+from swh.deposit.config import setup_django_for
+from swh.deposit.config import SWHDefaultConfig  # noqa
 
 
 TEST_CONFIG = {
@@ -17,9 +18,6 @@ TEST_CONFIG = {
 }
 
 
-from swh.deposit.config import SWHDefaultConfig  # noqa
-
-
 def parse_config_file(base_filename=None, config_filename=None,
                       additional_configs=None, global_config=True):
     return TEST_CONFIG
@@ -30,4 +28,4 @@ def parse_config_file(base_filename=None, config_filename=None,
 # load the configuration from disk
 SWHDefaultConfig.parse_config_file = parse_config_file
 
-django.setup()
+setup_django_for('testing')
