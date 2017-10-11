@@ -221,7 +221,7 @@ def main(platform, scheduling_method, server):
         raise ValueError(
             'Only `celery` or `swh-scheduler` values are accepted')
 
-    from swh.deposit.config import DEPOSIT_RAW_CONTENT
+    from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
     from django.core.urlresolvers import reverse
 
     _request_types = DepositRequestType.objects.all()
@@ -232,7 +232,7 @@ def main(platform, scheduling_method, server):
     deposits = Deposit.objects.filter(status='ready')
     for deposit in deposits:
         deposit_archive_url = '%s%s' % (server, reverse(
-            DEPOSIT_RAW_CONTENT,
+            PRIVATE_GET_RAW_CONTENT,
             args=[deposit.collection.name, deposit.id]))
 
         requests = DepositRequest.objects.filter(
