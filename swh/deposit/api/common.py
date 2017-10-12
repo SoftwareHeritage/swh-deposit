@@ -595,7 +595,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 args=[collection_name, deposit_id]),
         }
 
-    def _primary_input_checks(self, req, collection_name, deposit_id=None):
+    def additional_checks(self, req, collection_name, deposit_id=None):
+        """Permit the child class to enrich with additional checks.
+
+        Returns:
+            dict with 'error' detailing the problem.
+
+        """
+        return {}
+
+    def checks(self, req, collection_name, deposit_id=None):
         try:
             self._collection = DepositCollection.objects.get(
                 name=collection_name)
@@ -634,6 +643,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_dict(MEDIATION_NOT_ALLOWED,
                                    'Mediation is not supported.')
 
+        checks = self.additional_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return checks
+
         return {'headers': headers}
 
     def restrict_access(self, req, deposit=None):
@@ -671,7 +684,7 @@ class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -705,7 +718,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
 
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -753,7 +766,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -790,7 +803,7 @@ class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
