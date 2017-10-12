@@ -25,7 +25,12 @@ class LoadDepositArchive(Task):
         loader = TarLoader()
         loader.log = self.log
 
-        # FIXME: Retrieve tarball and copy locally
+        # 1. Retrieve tarball from deposit's private api
+        # 2. Store locally in a temporary directory
+        # 3. Trigger the ingestion
+        # 4. clean up the temporary directory
+        # 5. Update the deposit's status according to result using the
+        #    deposit's private update status api
 
         tar_path = 'foobar'
 
