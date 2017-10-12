@@ -71,8 +71,7 @@ def stream_content(tarpath):
         raise ValueError('Development error: %s should exist' % tarpath)
 
     with open(tarpath, 'rb') as f:
-        for chunk in f:
-            yield chunk
+        yield from f
 
 
 class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
