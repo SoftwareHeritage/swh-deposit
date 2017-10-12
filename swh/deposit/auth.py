@@ -5,15 +5,15 @@
 
 import base64
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 
 from .config import SWHDefaultConfig
 from .errors import UNAUTHORIZED, make_error_response
 
 
 def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
-    """This determine if the request has already provided proper
-    http-authorization or not.  If it is, returns the view. Otherwise,
+    """This determines if the request has already provided proper
+    http-authorization or not.  If it did, returns the view. Otherwise,
     respond with a 401.
 
     Note: Only basic realm is supported.
@@ -32,12 +32,10 @@ def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
                 authorization_token = base64.b64decode(auth[1]).decode('utf-8')
                 uname, passwd = authorization_token.split(':', 1)
                 user = authenticate(username=uname, password=passwd)
-                if user is not None:
-                    if user.is_active:
-                        login(request, user)
-                        request.user = user
-                        if test_func(request.user):
-                            return view(request, *args, **kwargs)
+                if user is not None and user.is_active:
+                    request.user = user
+                    if test_func(request.user):
+                        return view(request, *args, **kwargs)
 
     # Either they did not provide an authorization header or
     # something in the authorization attempt failed. Send a 401
