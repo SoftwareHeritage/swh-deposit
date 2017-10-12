@@ -10,8 +10,9 @@ import tempfile
 from rest_framework import status
 
 from swh.loader.tar import tarball
-from .common import SWHGetDepositAPI
-from ..models import Deposit, DepositRequest, TemporaryArchive
+
+from ..common import SWHGetDepositAPI
+from ...models import Deposit, DepositRequest, TemporaryArchive
 
 
 def aggregate_tarballs(extraction_dir, archive_paths):

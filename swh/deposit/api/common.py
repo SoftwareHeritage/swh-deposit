@@ -14,6 +14,8 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from django.contrib.auth.middleware import AuthenticationMiddleware
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY
@@ -35,7 +37,15 @@ class SWHAPIView(APIView):
        authentication check
 
     """
-    pass
+    authentication_classes = (BasicAuthentication, SessionAuthentication, )
+
+
+class SWHPrivateAPIView(SWHAPIView):
+    """Mixin intended as private api (so no authentication) based API view
+       (for the private ones).
+
+    """
+    authentication_classes = ()
 
 
 class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):

@@ -26,13 +26,16 @@ from ..config import PRIVATE_PUT_DEPOSIT
 from .deposit import SWHDeposit
 from .deposit_status import SWHDepositStatus
 from .deposit_update import SWHUpdateMetadataDeposit
-from .deposit_update import SWHUpdateArchiveDeposit, SWHUpdateStatusDeposit
+from .deposit_update import SWHUpdateArchiveDeposit
 from .deposit_content import SWHDepositContent
 from .service_document import SWHServiceDocument
-from .deposit_read import SWHDepositReadArchives
+from .private.deposit_read import SWHDepositReadArchives
+from .private.deposit_update_status import SWHUpdateStatusDeposit
 
 
 urlpatterns = [
+    # PUBLIC API
+
     # SD IRI - Service Document IRI
     # -> GET
     url(r'^servicedocument/', SWHServiceDocument.as_view(),
@@ -66,6 +69,9 @@ urlpatterns = [
         name=CONT_FILE_IRI),  # specification is not clear about
                               # FILE-IRI, we assume it's the same as
                               # the CONT-IRI one
+
+    # PRIVATE API
+
     # Retrieve deposit's raw archives' content
     # -> GET
     url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/raw/$',
