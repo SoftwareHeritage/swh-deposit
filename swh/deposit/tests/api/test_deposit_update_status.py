@@ -29,8 +29,8 @@ class UpdateDepositStatusTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Existing status for update should return a 204 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT, args=[
-            self.username, self.deposit.id])
+        url = reverse(PRIVATE_PUT_DEPOSIT,
+                      args=[self.collection.name, self.deposit.id])
 
         for _status in DEPOSIT_STATUS_DETAIL.keys():
             response = self.client.put(
@@ -47,8 +47,8 @@ class UpdateDepositStatusTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Unknown status for update should return a 400 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT, args=[
-            self.username, self.deposit.id])
+        url = reverse(PRIVATE_PUT_DEPOSIT,
+                      args=[self.collection.name, self.deposit.id])
 
         response = self.client.put(
             url,
@@ -61,8 +61,8 @@ class UpdateDepositStatusTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """No status provided for update should return a 400 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT, args=[
-            self.username, self.deposit.id])
+        url = reverse(PRIVATE_PUT_DEPOSIT,
+                      args=[self.collection.name, self.deposit.id])
 
         response = self.client.put(
             url,

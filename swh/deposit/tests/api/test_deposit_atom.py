@@ -94,14 +94,14 @@ and other stuff</description>
 
     def test_post_deposit_atom_empty_body_request(self):
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_deposit_atom_badly_formatted_is_a_bad_request(self):
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_badly_formatted)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -128,7 +128,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_IN_PROGRESS='false')
@@ -164,7 +164,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
             HTTP_SLUG=external_id,
@@ -198,7 +198,7 @@ and other stuff</description>
 
         # when
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data1,
             HTTP_IN_PROGRESS='True',

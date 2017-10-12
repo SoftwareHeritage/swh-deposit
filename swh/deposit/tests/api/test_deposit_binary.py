@@ -25,7 +25,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
         """Without authentication, endpoint refuses access with 401 response
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -155,7 +155,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -201,7 +201,7 @@ and other stuff</description>
             deposit.id)
 
         edit_se_iri = reverse('edit_se_iri',
-                              args=[self.username, deposit.id])
+                              args=[self.collection.name, deposit.id])
 
         self.assertEqual(response._headers['location'],
                          ('Location', edit_se_iri))
@@ -211,7 +211,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -243,7 +243,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -273,7 +273,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -302,7 +302,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -338,7 +338,7 @@ and other stuff</description>
 
     #     """
     #     # given
-    #     url = reverse(COL_IRI, args=[self.username])
+    #     url = reverse(COL_IRI, args=[self.collection.name])
     #     data_text = b'some content'
     #     md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -367,7 +367,7 @@ and other stuff</description>
         """Making 2 post requests result in 2 different deposit
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -430,7 +430,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
 
         external_id = 'some-external-id-1'
 
@@ -475,7 +475,7 @@ and other stuff</description>
         md5sum1 = hashlib.md5(data_text).hexdigest()
 
         # uri to update the content
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
         # adding another archive for the deposit
         response = self.client.post(
@@ -519,7 +519,7 @@ and other stuff</description>
            forbidden.
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
 
         external_id = 'some-external-id-1'
 
@@ -562,9 +562,9 @@ and other stuff</description>
 
         # uri to update the content
         edit_se_iri = reverse(
-            'edit_se_iri', args=[self.username, deposit_id])
+            'edit_se_iri', args=[self.collection.name, deposit_id])
         em_iri = reverse(
-            'em_iri', args=[self.username, deposit_id])
+            'em_iri', args=[self.collection.name, deposit_id])
 
         # Testing all update/add endpoint should fail
         # since the status is ready
