@@ -11,7 +11,7 @@ from rest_framework import status
 
 from swh.loader.tar import tarball
 
-from ..common import SWHGetDepositAPI
+from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest, TemporaryArchive
 
 
@@ -75,7 +75,7 @@ def stream_content(tarpath):
             yield chunk
 
 
-class SWHDepositReadArchives(SWHGetDepositAPI):
+class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.

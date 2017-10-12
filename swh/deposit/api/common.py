@@ -14,8 +14,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from django.contrib.auth.middleware import AuthenticationMiddleware
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY
@@ -37,7 +36,7 @@ class SWHAPIView(APIView):
        authentication check
 
     """
-    authentication_classes = (BasicAuthentication, SessionAuthentication, )
+    permission_classes = (IsAuthenticated, )
 
 
 class SWHPrivateAPIView(SWHAPIView):
@@ -45,7 +44,7 @@ class SWHPrivateAPIView(SWHAPIView):
        (for the private ones).
 
     """
-    authentication_classes = ()
+    permission_classes = (AllowAny, )
 
 
 class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
@@ -613,17 +612,19 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 NOT_FOUND,
                 'Unknown collection name %s' % collection_name)
 
-        try:
-            username = req.user.username
-            self._client = DepositClient.objects.get(username=username)
-        except DepositClient.DoesNotExist:
-            return make_error_dict(NOT_FOUND,
-                                   'Unknown client name %s' % username)
+        username = req.user.username
+        if username:  # unauthenticated request can have the username empty
+            try:
+                self._client = DepositClient.objects.get(username=username)
+            except DepositClient.DoesNotExist:
+                return make_error_dict(NOT_FOUND,
+                                       'Unknown client name %s' % username)
 
-        if self._collection.id not in self._client.collections:
-            return make_error_dict(FORBIDDEN,
-                                   'Client %s cannot access collection %s' % (
-                                       username, collection_name))
+            if self._collection.id not in self._client.collections:
+                return make_error_dict(
+                    FORBIDDEN,
+                    'Client %s cannot access collection %s' % (
+                        username, collection_name))
 
         if deposit_id:
             try:

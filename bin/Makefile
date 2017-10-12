@@ -3,6 +3,7 @@ ARCHIVE=../../swh-deposit.zip
 ARCHIVE2=../../swh-model.zip
 STATUS=false
 PARTIAL_STATUS=true
+UPDATE_STATUS='success'
 
 create-archives:
 	7z a $(ARCHIVE) $(FOLDER)
@@ -31,3 +32,9 @@ status:
 
 service-document:
 	./service-document.sh
+
+home:
+	./home.sh
+
+update-status:
+	./update-status.sh $(DEPOSIT_ID) $(UPDATE_STATUS)

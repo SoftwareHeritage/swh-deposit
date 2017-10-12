@@ -5,12 +5,12 @@
 
 from rest_framework.parsers import JSONParser
 
-from ..common import SWHPutDepositAPI
+from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
 from ...models import Deposit, DEPOSIT_STATUS_DETAIL
 
 
-class SWHUpdateStatusDeposit(SWHPutDepositAPI):
+class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
     """Deposit request class to update the deposit's status.
 
     HTTP verbs supported: PUT

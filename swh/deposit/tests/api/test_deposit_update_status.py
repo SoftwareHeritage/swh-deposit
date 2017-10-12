@@ -11,18 +11,20 @@ from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
 from swh.deposit.config import PRIVATE_PUT_DEPOSIT
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+from ..common import BasicTestCase
 
 
-class UpdateDepositStatusTest(APITestCase, WithAuthTestCase, BasicTestCase,
-                              CommonCreationRoutine):
+class UpdateDepositStatusTest(APITestCase, BasicTestCase):
     """Update the deposit's status scenario
 
     """
     def setUp(self):
         super().setUp()
-        deposit_id = self.create_deposit_ready()
-        self.deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = Deposit(status='ready',
+                          collection=self.collection,
+                          client=self.user)
+        deposit.save()
+        self.deposit = Deposit.objects.get(pk=deposit.id)
         assert self.deposit.status == 'ready'
 
     def test_update_deposit_status(self):
