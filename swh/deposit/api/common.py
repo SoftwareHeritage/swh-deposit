@@ -30,10 +30,6 @@ ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
 ACCEPT_CONTENT_TYPES = ['application/zip']
 
 
-def index(req):
-    return HttpResponse('SWH Deposit API')
-
-
 class SWHAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
