@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import base64
 import hashlib
 import os
 import shutil
@@ -63,20 +64,19 @@ class BasicTestCase(TestCase):
 
 
 class WithAuthTestCase(TestCase):
-    """Mixin intended for login/logout automatically during setUp/tearDown
-       test method call.
+    """Mixin intended for testing the api with basic authentication.
 
     """
     def setUp(self):
         super().setUp()
-        r = self.client.login(username=self.username, password=self.userpass)
-        if not r:
-            raise ValueError(
-                'Dev error - test misconfiguration. Bad credentials provided!')
+        _token = '%s:%s' % (self.username, self.userpass)
+        token = base64.b64encode(_token.encode('utf-8'))
+        authorization = 'Basic %s' % token.decode('utf-8')
+        self.client.credentials(HTTP_AUTHORIZATION=authorization)
 
     def tearDown(self):
         super().tearDown()
-        self.client.logout()
+        self.client.credentials()
 
 
 class CommonCreationRoutine(TestCase):

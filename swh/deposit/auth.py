@@ -3,83 +3,62 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import base64
+from rest_framework import status
 
-from django.contrib.auth import authenticate, login
-
-from .config import SWHDefaultConfig
 from .errors import UNAUTHORIZED, make_error_response
 
 
-def view_or_basicauth(view, request, test_func, realm="", *args, **kwargs):
-    """This determine if the request has already provided proper
-    http-authorization or not.  If it is, returns the view. Otherwise,
-    respond with a 401.
+def convert_response(request, content):
+    """Convert response from drf's basic authentication mechanism to a
+       swh-deposit one.
 
-    Note: Only basic realm is supported.
+        Args:
+           request (Request): Use to build the response
+           content (bytes): The drf's answer
+
+        Returns:
+
+            Response with the same status error as before, only the
+            body is now an swh-deposit compliant one.
 
     """
-    if test_func(request.user):
-        # Already logged in, just return the view.
-        return view(request, *args, **kwargs)
+    from json import loads
 
-    # They are not logged in. See if they provided login credentials
-    if 'HTTP_AUTHORIZATION' in request.META:
-        auth = request.META['HTTP_AUTHORIZATION'].split()
-        if len(auth) == 2:
-            # NOTE: Only support basic authentication
-            if auth[0].lower() == "basic":
-                authorization_token = base64.b64decode(auth[1]).decode('utf-8')
-                uname, passwd = authorization_token.split(':', 1)
-                user = authenticate(username=uname, password=passwd)
-                if user is not None:
-                    if user.is_active:
-                        login(request, user)
-                        request.user = user
-                        if test_func(request.user):
-                            return view(request, *args, **kwargs)
+    content = loads(content.decode('utf-8'))
+    detail = content.get('detail')
+    if detail:
+        verbose_description = 'API is protected by basic authentication'
+    else:
+        detail = 'API is protected by basic authentication'
+        verbose_description = None
 
-    # Either they did not provide an authorization header or
-    # something in the authorization attempt failed. Send a 401
-    # back to them to ask them to authenticate.
-    response = make_error_response(request, UNAUTHORIZED,
-                                   'Access to this api needs authentication')
-    response['WWW-Authenticate'] = 'Basic realm="%s"' % realm
+    response = make_error_response(
+        request,
+        UNAUTHORIZED,
+        summary=detail,
+        verbose_description=verbose_description)
+    response['WWW-Authenticate'] = 'Basic realm=""'
+
     return response
 
 
-class HttpBasicAuthMiddleware(SWHDefaultConfig):
-    """Middleware to install or not the basic authentication layer
-       according to swh's yaml configuration.
+class WrapBasicAuthenticationResponseMiddleware:
+    """Middleware to capture potential authentication error and convert
+       them to standard deposit response.
 
-       Note: white-list authentication is supported (cf. DEFAULT_CONFIG)
+       This is to be installed in django's settings.py module.
 
     """
-    ADDITIONAL_CONFIG = {
-        'authentication': ('dict', {
-            'activated': 'true',
-            'white-list': {
-                'GET': ['/'],
-            }
-        })
-    }
-
     def __init__(self, get_response):
         super().__init__()
         self.get_response = get_response
-        self.auth = self.config['authentication']
-        self.auth_activated = self.auth['activated']
-        if self.auth_activated:
-            self.whitelist = self.auth.get('white-list', {})
 
     def __call__(self, request):
-        if self.auth_activated:
-            whitelist = self.whitelist.get(request.method)
-            if whitelist and request.path in whitelist:
-                return self.get_response(request)
+        response = self.get_response(request)
 
-            r = view_or_basicauth(view=self.get_response,
-                                  request=request,
-                                  test_func=lambda u: u.is_authenticated())
-            return r
-        return self.get_response(request)
+        if response.status_code is status.HTTP_401_UNAUTHORIZED:
+            content_type = response._headers.get('content-type')
+            if content_type == ('Content-Type', 'application/json'):
+                return convert_response(request, response.content)
+
+        return response

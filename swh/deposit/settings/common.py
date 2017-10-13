@@ -47,7 +47,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'swh.deposit.auth.HttpBasicAuthMiddleware',
+    'swh.deposit.auth.WrapBasicAuthenticationResponseMiddleware',
 ]
 
 ROOT_URLCONF = 'swh.deposit.urls'
@@ -112,8 +112,7 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    )
+    ),
 }
 
 FILE_UPLOAD_HANDLERS = [

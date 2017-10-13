@@ -35,7 +35,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
                           'in this test context')
 
         # when
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
         response = self.client.delete(update_uri)
         # then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -51,7 +51,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         # when
-        update_uri = reverse(EM_IRI, args=[self.username, 999])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, 999])
         response = self.client.delete(update_uri)
         # then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -63,7 +63,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         assert deposit.status == 'ready'
 
         # when
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
         response = self.client.delete(update_uri)
         # then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -80,7 +80,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         assert deposit.id == deposit_id
 
         # when
-        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        url = reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id])
         response = self.client.delete(url)
         # then
         self.assertEqual(response.status_code,
@@ -100,7 +100,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         assert deposit.id == deposit_id
 
         # when
-        url = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        url = reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id])
         response = self.client.delete(url)
         # then
         self.assertEqual(response.status_code,

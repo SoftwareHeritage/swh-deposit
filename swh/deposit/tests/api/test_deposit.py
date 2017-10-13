@@ -37,7 +37,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase):
         """Delete on col iri should return a 405 response
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         response = self.client.delete(url)
         self.assertEqual(response.status_code,
                          status.HTTP_405_METHOD_NOT_ALLOWED)

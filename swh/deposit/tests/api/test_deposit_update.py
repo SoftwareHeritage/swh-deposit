@@ -46,7 +46,7 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             deposit=deposit, type=self.deposit_request_types['metadata']))
         assert len(requests) == 1
 
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
@@ -98,7 +98,8 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             deposit=deposit, type=self.deposit_request_types['archive']))
         assert len(requests) == 1
 
-        update_uri = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EDIT_SE_IRI, args=[self.collection.name,
+                                                deposit_id])
 
         response = self.client.put(
             update_uri,
@@ -155,7 +156,7 @@ class DepositUpdateDepositWithNewDataTest(
             deposit=deposit, type=self.deposit_request_types['metadata']))
         assert len(requests) == 1
 
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
@@ -210,7 +211,8 @@ class DepositUpdateDepositWithNewDataTest(
             deposit=deposit, type=self.deposit_request_types['archive']))
         assert len(requests) == 1
 
-        update_uri = reverse(EDIT_SE_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EDIT_SE_IRI, args=[self.collection.name,
+                                                deposit_id])
 
         response = self.client.post(
             update_uri,
@@ -260,7 +262,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         url = reverse(EDIT_SE_IRI,
-                      args=[self.username, 999]),
+                      args=[self.collection.name, 999]),
         response = self.client.post(
             url,
             content_type='application/atom+xml;type=entry',
@@ -272,7 +274,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         url = reverse(EDIT_SE_IRI,
-                      args=[self.username, 999]),
+                      args=[self.collection.name, 999]),
         response = self.client.put(
             url,
             content_type='application/atom+xml;type=entry',
@@ -284,7 +286,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         url = reverse(EM_IRI,
-                      args=[self.username, 999]),
+                      args=[self.collection.name, 999]),
         response = self.client.post(
             url,
             content_type='application/zip',
@@ -296,7 +298,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         url = reverse(EM_IRI,
-                      args=[self.username, 999]),
+                      args=[self.collection.name, 999]),
         response = self.client.put(
             url,
             content_type='application/zip',
@@ -309,7 +311,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """
         deposit_id = self.create_deposit_ready()
 
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
         response = self.client.put(
             update_uri,
             content_type='application/binary',
@@ -323,7 +325,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         # given
         deposit_id = self.create_deposit_ready()
         # when
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
         response = self.client.put(
             update_uri,
             content_type='application/atom+xml;type=entry',
