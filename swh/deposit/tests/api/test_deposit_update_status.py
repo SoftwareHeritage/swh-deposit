@@ -34,7 +34,9 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         url = reverse(PRIVATE_PUT_DEPOSIT,
                       args=[self.collection.name, self.deposit.id])
 
-        for _status in DEPOSIT_STATUS_DETAIL.keys():
+        possible_status = set(DEPOSIT_STATUS_DETAIL.keys()) - set(['success'])
+
+        for _status in possible_status:
             response = self.client.put(
                 url,
                 content_type='application/json',
@@ -44,6 +46,30 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
             deposit = Deposit.objects.get(pk=self.deposit.id)
             self.assertEquals(deposit.status, _status)
+
+    def test_update_deposit_with_success_ingestion_and_swh_id(self):
+        """Existing status for update should return a 204 response
+
+        """
+        url = reverse(PRIVATE_PUT_DEPOSIT,
+                      args=[self.collection.name, self.deposit.id])
+
+        expected_status = 'success'
+        revision_id = '47dc6b4636c7f6cba0df83e3d5490bf4334d987e'
+        expected_id = 'swh-hal-%s' % revision_id
+        response = self.client.put(
+            url,
+            content_type='application/json',
+            data=json.dumps({
+                'status': expected_status,
+                'revision_id': revision_id,
+            }))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        deposit = Deposit.objects.get(pk=self.deposit.id)
+        self.assertEquals(deposit.status, expected_status)
+        self.assertEquals(deposit.swh_id, expected_id)
 
     def test_update_deposit_status_will_fail_with_unknown_status(self):
         """Unknown status for update should return a 400 response
@@ -70,5 +96,19 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             url,
             content_type='application/json',
             data=json.dumps({'something': 'something'}))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_deposit_status_success_without_swh_id_fail(self):
+        """Providing 'success' status without swh_id should return a 400
+
+        """
+        url = reverse(PRIVATE_PUT_DEPOSIT,
+                      args=[self.collection.name, self.deposit.id])
+
+        response = self.client.put(
+            url,
+            content_type='application/json',
+            data=json.dumps({'status': 'success'}))
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

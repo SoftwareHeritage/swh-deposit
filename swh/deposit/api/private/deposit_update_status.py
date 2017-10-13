@@ -7,7 +7,7 @@ from rest_framework.parsers import JSONParser
 
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
-from ...models import Deposit, DEPOSIT_STATUS_DETAIL
+from ...models import Deposit, DEPOSIT_STATUS_DETAIL, format_swh_id
 
 
 class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
@@ -26,7 +26,8 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         - Ensure it exists
 
         """
-        status = req.data.get('status')
+        data = req.data
+        status = data.get('status')
         if not status:
             msg = 'The status key is mandatory with possible values %s' % list(
                 DEPOSIT_STATUS_DETAIL.keys())
@@ -35,6 +36,13 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         if status not in DEPOSIT_STATUS_DETAIL:
             msg = 'Possible status in %s' % list(DEPOSIT_STATUS_DETAIL.keys())
             return make_error_dict(BAD_REQUEST, msg)
+
+        if status == 'success':
+            swh_id = data.get('revision_id')
+            if not swh_id:
+                msg = 'Updating status to %s requires a revision_id key' % (
+                    status, )
+                return make_error_dict(BAD_REQUEST, msg)
 
         return {}
 
@@ -54,6 +62,9 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.status = req.data['status']  # checks already done before
+        swh_id = req.data.get('revision_id')
+        if swh_id:
+            deposit.swh_id = format_swh_id(collection_name, swh_id)
         deposit.save()
 
         return {}
