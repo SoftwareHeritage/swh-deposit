@@ -57,6 +57,7 @@ swh/deposit/models.py
 swh/deposit/parsers.py
 swh/deposit/urls.py
 swh/deposit/wsgi.py
+swh/deposit/api/__init__.py
 swh/deposit/api/common.py
 swh/deposit/api/deposit.py
 swh/deposit/api/deposit_content.py
@@ -64,6 +65,7 @@ swh/deposit/api/deposit_status.py
 swh/deposit/api/deposit_update.py
 swh/deposit/api/service_document.py
 swh/deposit/api/urls.py
+swh/deposit/api/private/__init__.py
 swh/deposit/api/private/deposit_read.py
 swh/deposit/api/private/deposit_update_status.py
 swh/deposit/fixtures/__init__.py
@@ -77,6 +79,7 @@ swh/deposit/migrations/0003_temporaryarchive.py
 swh/deposit/migrations/__init__.py
 swh/deposit/scheduler/__init__.py
 swh/deposit/scheduler/cli.py
+swh/deposit/service/__init__.py
 swh/deposit/service/clean_temporary_directory.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
