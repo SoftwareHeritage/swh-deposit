@@ -25,7 +25,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
         """Without authentication, endpoint refuses access with 401 response
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -155,7 +155,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -201,7 +201,7 @@ and other stuff</description>
             deposit.id)
 
         edit_se_iri = reverse('edit_se_iri',
-                              args=[self.username, deposit.id])
+                              args=[self.collection.name, deposit.id])
 
         self.assertEqual(response._headers['location'],
                          ('Location', edit_se_iri))
@@ -211,7 +211,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -234,10 +234,8 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_binary_fails_if_unsupported_packaging_header(
             self):
@@ -245,7 +243,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -266,10 +264,8 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_binary_upload_fail_if_no_content_disposition_header(
             self):
@@ -277,7 +273,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -298,17 +294,15 @@ and other stuff</description>
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     def test_post_deposit_mediation_not_supported(self):
         """Binary upload only supports application/zip (for now)...
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -332,10 +326,8 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_412_PRECONDITION_FAILED)
 
-        try:
+        with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
-        except Deposit.DoesNotExist:
-            pass
 
     # FIXME: Test this scenario (need a way to override the default
     # size limit in test scenario)
@@ -346,7 +338,7 @@ and other stuff</description>
 
     #     """
     #     # given
-    #     url = reverse(COL_IRI, args=[self.username])
+    #     url = reverse(COL_IRI, args=[self.collection.name])
     #     data_text = b'some content'
     #     md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -368,16 +360,14 @@ and other stuff</description>
     #     # then
     #     self.assertEqual(response.status_code,
     #                      status.HTTP_403_FORBIDDEN)
-    #     try:
+    #     with self.assertRaises(Deposit.DoesNotExist):
     #         Deposit.objects.get(external_id=external_id)
-    #     except Deposit.DoesNotExist:
-    #         pass
 
     def test_post_deposit_2_post_2_different_deposits(self):
         """Making 2 post requests result in 2 different deposit
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -440,7 +430,7 @@ and other stuff</description>
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
 
         external_id = 'some-external-id-1'
 
@@ -485,7 +475,7 @@ and other stuff</description>
         md5sum1 = hashlib.md5(data_text).hexdigest()
 
         # uri to update the content
-        update_uri = reverse(EM_IRI, args=[self.username, deposit_id])
+        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
         # adding another archive for the deposit
         response = self.client.post(
@@ -529,7 +519,7 @@ and other stuff</description>
            forbidden.
 
         """
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
 
         external_id = 'some-external-id-1'
 
@@ -572,9 +562,9 @@ and other stuff</description>
 
         # uri to update the content
         edit_se_iri = reverse(
-            'edit_se_iri', args=[self.username, deposit_id])
+            'edit_se_iri', args=[self.collection.name, deposit_id])
         em_iri = reverse(
-            'em_iri', args=[self.username, deposit_id])
+            'em_iri', args=[self.collection.name, deposit_id])
 
         # Testing all update/add endpoint should fail
         # since the status is ready

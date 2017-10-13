@@ -21,7 +21,7 @@ class SWHDepositStatus(SWHBaseDeposit):
 
     """
     def get(self, req, collection_name, deposit_id, format=None):
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 

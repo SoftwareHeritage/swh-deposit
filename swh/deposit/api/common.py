@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY
@@ -30,16 +31,20 @@ ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
 ACCEPT_CONTENT_TYPES = ['application/zip']
 
 
-def index(req):
-    return HttpResponse('SWH Deposit API')
-
-
 class SWHAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
 
     """
-    pass
+    permission_classes = (IsAuthenticated, )
+
+
+class SWHPrivateAPIView(SWHAPIView):
+    """Mixin intended as private api (so no authentication) based API view
+       (for the private ones).
+
+    """
+    permission_classes = (AllowAny, )
 
 
 class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
@@ -589,7 +594,16 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 args=[collection_name, deposit_id]),
         }
 
-    def _primary_input_checks(self, req, collection_name, deposit_id=None):
+    def additional_checks(self, req, collection_name, deposit_id=None):
+        """Permit the child class to enrich with additional checks.
+
+        Returns:
+            dict with 'error' detailing the problem.
+
+        """
+        return {}
+
+    def checks(self, req, collection_name, deposit_id=None):
         try:
             self._collection = DepositCollection.objects.get(
                 name=collection_name)
@@ -598,17 +612,19 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 NOT_FOUND,
                 'Unknown collection name %s' % collection_name)
 
-        try:
-            username = req.user.username
-            self._client = DepositClient.objects.get(username=username)
-        except DepositClient.DoesNotExist:
-            return make_error_dict(NOT_FOUND,
-                                   'Unknown client name %s' % username)
+        username = req.user.username
+        if username:  # unauthenticated request can have the username empty
+            try:
+                self._client = DepositClient.objects.get(username=username)
+            except DepositClient.DoesNotExist:
+                return make_error_dict(NOT_FOUND,
+                                       'Unknown client name %s' % username)
 
-        if self._collection.id not in self._client.collections:
-            return make_error_dict(FORBIDDEN,
-                                   'Client %s cannot access collection %s' % (
-                                       username, collection_name))
+            if self._collection.id not in self._client.collections:
+                return make_error_dict(
+                    FORBIDDEN,
+                    'Client %s cannot access collection %s' % (
+                        username, collection_name))
 
         if deposit_id:
             try:
@@ -619,19 +635,29 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     'Deposit with id %s does not exist' %
                     deposit_id)
 
-            if req.method != 'GET' and deposit.status != 'partial':
-                summary = "You can only act on deposit with status 'partial'"
-                description = "This deposit has status '%s'" % deposit.status
-                return make_error_dict(
-                    BAD_REQUEST, summary=summary,
-                    verbose_description=description)
+            checks = self.restrict_access(req, deposit)
+            if checks:
+                return checks
 
         headers = self._read_headers(req)
         if headers['on-behalf-of']:
             return make_error_dict(MEDIATION_NOT_ALLOWED,
                                    'Mediation is not supported.')
 
+        checks = self.additional_checks(req, collection_name, deposit_id)
+        if 'error' in checks:
+            return checks
+
         return {'headers': headers}
+
+    def restrict_access(self, req, deposit=None):
+        if deposit:
+            if req.method != 'GET' and deposit.status != 'partial':
+                summary = "You can only act on deposit with status 'partial'"
+                description = "This deposit has status '%s'" % deposit.status
+                return make_error_dict(
+                    BAD_REQUEST, summary=summary,
+                    verbose_description=description)
 
     def get(self, req, *args, **kwargs):
         return make_error_response(req, METHOD_NOT_ALLOWED)
@@ -659,7 +685,7 @@ class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -693,7 +719,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
 
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -741,7 +767,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
@@ -778,7 +804,7 @@ class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self._primary_input_checks(req, collection_name, deposit_id)
+        checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 

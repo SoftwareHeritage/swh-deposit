@@ -10,8 +10,9 @@ import tempfile
 from rest_framework import status
 
 from swh.loader.tar import tarball
-from .common import SWHGetDepositAPI
-from ..models import Deposit, DepositRequest, TemporaryArchive
+
+from ..common import SWHGetDepositAPI, SWHPrivateAPIView
+from ...models import Deposit, DepositRequest, TemporaryArchive
 
 
 def aggregate_tarballs(extraction_dir, archive_paths):
@@ -70,11 +71,10 @@ def stream_content(tarpath):
         raise ValueError('Development error: %s should exist' % tarpath)
 
     with open(tarpath, 'rb') as f:
-        for chunk in f:
-            yield chunk
+        yield from f
 
 
-class SWHDepositReadArchives(SWHGetDepositAPI):
+class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.

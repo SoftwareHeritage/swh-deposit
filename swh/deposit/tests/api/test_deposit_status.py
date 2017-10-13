@@ -26,7 +26,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         """
         # given
-        url = reverse(COL_IRI, args=[self.username])
+        url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
 
@@ -51,7 +51,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         deposit = Deposit.objects.get(external_id=external_id)
 
         status_url = reverse(STATE_IRI,
-                             args=[self.username, deposit.id])
+                             args=[self.collection.name, deposit.id])
 
         # check status
         status_response = self.client.get(status_url)
@@ -68,7 +68,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
     def test_status_on_unknown_deposit(self):
         """Asking for the status of unknown deposit returns 404 response"""
-        status_url = reverse(STATE_IRI, args=[self.username, 999])
+        status_url = reverse(STATE_IRI, args=[self.collection.name, 999])
         status_response = self.client.get(status_url)
         self.assertEqual(status_response.status_code,
                          status.HTTP_404_NOT_FOUND)
