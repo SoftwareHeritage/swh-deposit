@@ -1,3 +1,10 @@
+swh-deposit (0.0.17-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.17
+  * Fix missing files for packaging
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 13 Oct 2017 16:37:27 +0200
+
 swh-deposit (0.0.16-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.16
