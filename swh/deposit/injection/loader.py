@@ -95,6 +95,7 @@ class DepositLoader(loader.TarLoader):
         if not archive:
             raise ValueError('Failure to retrieve archive')
 
+        update_deposit_status(self.archive_url, 'injecting')
         super().prepare(tar_path=archive,
                         origin=origin,
                         visit_date=visit_date,
