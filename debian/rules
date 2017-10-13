@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=swh-deposit
+export PYBUILD_NAME=swh.deposit
 export PYBUILD_TEST_ARGS=--with-doctest -sv -a !db,!fs
 
 %:
@@ -10,5 +10,10 @@ export PYBUILD_TEST_ARGS=--with-doctest -sv -a !db,!fs
 override_dh_install:
 	dh_install
 	rm -v $(CURDIR)/debian/python3-*/usr/lib/python*/dist-packages/swh/__init__.py
+	for pyvers in $(shell py3versions -vr); do \
+		mkdir -p $(CURDIR)/debian/python3-swh.deposit.injection/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection ; \
+		mv $(CURDIR)/debian/python3-swh.deposit/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection/* \
+		   $(CURDIR)/debian/python3-swh.deposit.injection/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection/ ; \
+	done
 
 override_dh_auto_test:

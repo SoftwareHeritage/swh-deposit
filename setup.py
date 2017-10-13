@@ -22,6 +22,10 @@ setup(
     packages=find_packages(),
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
+    extras_require={
+        'injection': ['swh.loader.core >= 0.0.19',
+                      'requests'],
+    },
     setup_requires=['vcversioner'],
     vcversioner={},
     include_package_data=True,
