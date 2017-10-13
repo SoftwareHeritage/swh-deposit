@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def parse_requirements():
@@ -19,18 +19,13 @@ setup(
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/source/swh-deposit/',
-    packages=['swh.deposit',
-              'swh.deposit.api',
-              'swh.deposit.fixtures',
-              'swh.deposit.migrations',
-              'swh.deposit.scheduler',
-              'swh.deposit.settings',
-              'swh.deposit.static',
-              'swh.deposit.templates',
-              'swh.deposit.templates.deposit',
-              'swh.deposit.tests'],
+    packages=find_packages(),
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
+    extras_require={
+        'injection': ['swh.loader.core >= 0.0.19',
+                      'requests'],
+    },
     setup_requires=['vcversioner'],
     vcversioner={},
     include_package_data=True,

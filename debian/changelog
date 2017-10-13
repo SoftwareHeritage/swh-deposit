@@ -1,8 +1,17 @@
-swh-deposit (0.0.15-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.16-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.16
+  * packaging: Split python3-swh.deposit / python3-swh.deposit.injection
+  * swh.deposit.injection: Add deposit archive ingestion task
+  * packaging: Cleanup
+  * swh.deposit.auth: Cleanup authentication to use directly drf's
+  * swh.deposit.api: Split between private and public api
+  * swh.deposit.api: Add private api to update deposit's status
+  * swh.deposit.scheduler.cli: Add one-shot task scheduling machinery
+  * swh.deposit.tests: use the collection name when creating uri
+  * swh.deposit.admin: Clean up unused code
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 09 Oct 2017 10:23:48 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 13 Oct 2017 15:41:47 +0200
 
 swh-deposit (0.0.15-1~swh1) unstable-swh; urgency=medium
 

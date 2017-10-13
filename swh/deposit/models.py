@@ -75,6 +75,20 @@ class DepositClient(User):
         })
 
 
+def format_swh_id(collection_name, revision_id):
+    """Format swh_id value before storing in swh-deposit backend.
+
+    Args:
+        collection_name (str): the collection's name
+        revision_id (str): the revision's hash identifier
+
+    Returns:
+        The identifier as string
+
+    """
+    return 'swh-%s-%s' % (collection_name, revision_id)
+
+
 class Deposit(models.Model):
     """Deposit reception table
 
