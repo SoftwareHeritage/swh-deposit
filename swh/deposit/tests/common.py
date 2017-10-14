@@ -110,6 +110,7 @@ class CommonCreationRoutine(TestCase):
             reverse(COL_IRI, args=[self.username]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0,
+            HTTP_SLUG='external-id',
             HTTP_IN_PROGRESS='true')
 
         # then

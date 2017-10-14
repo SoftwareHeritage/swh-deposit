@@ -150,6 +150,27 @@ and other stuff</description>
 
 </entry>"""
 
+    def test_post_deposit_binary_without_slug_header_is_bad_request(self):
+        url = reverse(COL_IRI, args=[self.collection.name])
+        data_text = b'some content'
+        md5sum = hashlib.md5(data_text).hexdigest()
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data_text,
+            # + headers
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_LENGTH=len(data_text),
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertIn(b'Missing SLUG header', response.content)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+
     def test_post_deposit_binary_upload_final_and_status_check(self):
         """Binary upload should be accepted
 
