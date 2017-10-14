@@ -60,6 +60,43 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     <dcterms:type>Type</dcterms:type>
 </entry>"""
 
+    def test_post_deposit_multipart_without_slug_header_is_bad_request(self):
+        # given
+        url = reverse(COL_IRI, args=[self.collection.name])
+        data_atom_entry = self.data_atom_entry_ok
+
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(
+            BytesIO(archive_content),
+            field_name='archive0',
+            name='archive0',
+            content_type='application/zip',
+            size=len(archive_content),
+            charset=None)
+
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(data_atom_entry),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(data_atom_entry),
+            charset='utf-8')
+
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false')
+
+        self.assertIn(b'Missing SLUG header', response.content)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+
     def test_post_deposit_multipart(self):
         """one multipart deposit should be accepted
 

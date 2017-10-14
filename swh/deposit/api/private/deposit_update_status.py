@@ -18,7 +18,8 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
     """
     parser_classes = (JSONParser, )
 
-    def additional_checks(self, req, collection_name, deposit_id=None):
+    def additional_checks(self, req, headers, collection_name,
+                          deposit_id=None):
         """Enrich existing checks to the default ones.
 
         New checks:

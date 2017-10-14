@@ -106,6 +106,21 @@ and other stuff</description>
             data=self.atom_entry_data_badly_formatted)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_post_deposit_atom_without_slug_header_is_bad_request(self):
+        url = reverse(COL_IRI, args=[self.collection.name])
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_entry_data0,
+            # + headers
+            HTTP_IN_PROGRESS='false')
+
+        self.assertIn(b'Missing SLUG header', response.content)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+
     def test_post_deposit_atom_unknown_collection(self):
         response = self.client.post(
             reverse(COL_IRI, args=['unknown-one']),
@@ -131,6 +146,7 @@ and other stuff</description>
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
+            HTTP_SLUG='external-id',
             HTTP_IN_PROGRESS='false')
 
         # then
@@ -230,8 +246,7 @@ and other stuff</description>
             update_uri,
             content_type='application/atom+xml;type=entry',
             data=atom_entry_data,
-            HTTP_IN_PROGRESS='False',
-            HTTP_SLUG=external_id)
+            HTTP_IN_PROGRESS='False')
 
         # then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
