@@ -594,8 +594,9 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 args=[collection_name, deposit_id]),
         }
 
-    def additional_checks(self, req, collection_name, deposit_id=None):
-        """Permit the child class to enrich with additional checks.
+    def additional_checks(self, req, headers, collection_name,
+                          deposit_id=None):
+        """Permit the child class to enrich additional checks.
 
         Returns:
             dict with 'error' detailing the problem.
@@ -644,7 +645,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             return make_error_dict(MEDIATION_NOT_ALLOWED,
                                    'Mediation is not supported.')
 
-        checks = self.additional_checks(req, collection_name, deposit_id)
+        checks = self.additional_checks(req, headers,
+                                        collection_name, deposit_id)
         if 'error' in checks:
             return checks
 
