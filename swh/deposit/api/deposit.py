@@ -7,6 +7,7 @@ from rest_framework import status
 
 from .common import SWHPostDepositAPI
 from ..config import EDIT_SE_IRI
+from ..errors import make_error_dict, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
@@ -22,6 +23,16 @@ class SWHDeposit(SWHPostDepositAPI):
     parser_classes = (SWHMultiPartParser,
                       SWHFileUploadParser,
                       SWHAtomEntryParser)
+
+    def additional_checks(self, req, headers, collection_name,
+                          deposit_id=None):
+        slug = headers['slug']
+        if not slug:
+            msg = 'Missing SLUG header in request'
+            verbose_description = 'Provide in the SLUG header one identifier, for example the url pointing to the resource you are depositing.'  # noqa
+            return make_error_dict(BAD_REQUEST, msg, verbose_description)
+
+        return {}
 
     def process_post(self, req, headers, collection_name, deposit_id=None):
         """Create a first deposit as:

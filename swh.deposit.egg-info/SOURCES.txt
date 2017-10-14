@@ -15,6 +15,7 @@ setup.py
 version.txt
 bin/Makefile
 bin/create_deposit.sh
+bin/create_deposit_atom.sh
 bin/create_deposit_with_metadata.sh
 bin/default-setup
 bin/download-deposit-archive.sh
