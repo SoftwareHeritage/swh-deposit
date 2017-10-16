@@ -1,8 +1,11 @@
-swh-deposit (0.0.19-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.20-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.20
+  * swh.deposit.scheduler: Move scheduling part to swh.deposit.injection
+  * swh.deposit.injection: Separation of concern between reading/loading
+  * swh.deposit.api: Remove dead code
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 16 Oct 2017 12:46:11 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 16 Oct 2017 18:23:19 +0200
 
 swh-deposit (0.0.19-1~swh1) unstable-swh; urgency=medium
 
