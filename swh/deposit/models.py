@@ -89,6 +89,22 @@ def format_swh_id(collection_name, revision_id):
     return 'swh-%s-%s' % (collection_name, revision_id)
 
 
+def previous_revision_id(swh_id):
+    """Compute the parent's revision id (if any) from the swh_id.
+
+    Args:
+        swh_id (id): SWH Identifier from a previous deposit.
+
+    Returns:
+        None if no parent revision is detected.
+        The revision id's hash if any.
+
+    """
+    if swh_id:
+        return swh_id.split('-')[2]
+    return None
+
+
 class Deposit(models.Model):
     """Deposit reception table
 

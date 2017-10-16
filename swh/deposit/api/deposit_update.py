@@ -4,12 +4,10 @@
 # See top-level LICENSE file for more information
 
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 
 from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
-from ..errors import make_error_response, make_error_dict, BAD_REQUEST
-from ..models import Deposit, DEPOSIT_STATUS_DETAIL
+from ..errors import make_error_response, BAD_REQUEST
 from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
@@ -155,42 +153,3 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
         #protocoloperations_deleteconteiner
         """
         return self._delete_deposit(collection_name, deposit_id)
-
-
-class SWHUpdateStatusDeposit(SWHPutDepositAPI):
-    """Deposit request class to update the deposit's status.
-
-    HTTP verbs supported: PUT
-
-    """
-    parser_classes = (JSONParser, )
-
-    def restrict_access(self, req, deposit=None):
-        """Remove restriction modification to 'partial' deposit.
-           Update is possible regardless of the existing status.
-
-        """
-        return None
-
-    def process_put(self, req, headers, collection_name, deposit_id):
-        """Update the deposit's status
-
-        Returns:
-            204 No content
-
-        """
-        status = req.data.get('status')
-        if not status:
-            msg = 'The status key is mandatory with possible values %s' % list(
-                DEPOSIT_STATUS_DETAIL.keys())
-            return make_error_dict(BAD_REQUEST, msg)
-
-        if status not in DEPOSIT_STATUS_DETAIL:
-            msg = 'Possible status in %s' % list(DEPOSIT_STATUS_DETAIL.keys())
-            return make_error_dict(BAD_REQUEST, msg)
-
-        deposit = Deposit.objects.get(pk=deposit_id)
-        deposit.status = status
-        deposit.save()
-
-        return {}

@@ -17,6 +17,7 @@ COL_IRI = 'upload'
 STATE_IRI = 'status'
 PRIVATE_GET_RAW_CONTENT = 'private-download'
 PRIVATE_PUT_DEPOSIT = 'private-update'
+PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
