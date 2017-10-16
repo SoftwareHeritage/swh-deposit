@@ -20,8 +20,7 @@ class LoadDepositArchive(Task):
     """
     task_queue = 'swh_deposit_archive'
 
-    def run_task(self, *, deposit_archive_url, origin, visit_date,
-                 revision):
+    def run_task(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Import a deposit tarball into swh.
 
         Args: see :func:`DepositLoader.load`.
@@ -29,7 +28,6 @@ class LoadDepositArchive(Task):
         """
         loader = DepositLoader()
         loader.log = self.log
-        loader.load(deposit_archive_url=deposit_archive_url,
-                    origin=origin,
-                    visit_date=visit_date,
-                    revision=revision)
+        loader.load(archive_url=archive_url,
+                    deposit_meta_url=deposit_meta_url,
+                    deposit_update_url=deposit_update_url)

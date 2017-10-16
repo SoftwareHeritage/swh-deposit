@@ -3,7 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Module in charge of scheduling deposit injection one-shot task to swh.
+"""Module in charge of sending deposit injection as celery task or
+scheduled one-shot tasks.
 
 """
 
@@ -11,26 +12,11 @@ import click
 import logging
 
 from abc import ABCMeta, abstractmethod
+from celery import group
 
+from swh.core import utils
 from swh.core.config import SWHConfig
 from swh.deposit.config import setup_django_for
-from swh.model import hashutil, identifiers
-
-
-def previous_revision_id(swh_id):
-    """Compute the parent's revision id (if any) from the swh_id.
-
-    Args:
-        swh_id (id): SWH Identifier from a previous deposit.
-
-    Returns:
-        None if no parent revision is detected.
-        The revision id's hash if any.
-
-    """
-    if swh_id:
-        return swh_id.split('-')[2]
-    return None
 
 
 class SWHScheduling(SWHConfig, metaclass=ABCMeta):
@@ -50,83 +36,11 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
                 additional_configs=[self.ADDITIONAL_CONFIG])
         self.log = logging.getLogger('swh.deposit.scheduling')
 
-    def _aggregate_metadata(self, deposit, metadata_requests):
-        """Retrieve and aggregates metadata information.
-
-        """
-        metadata = {}
-        for req in metadata_requests:
-            metadata.update(req.metadata)
-
-        return metadata
-
-    def aggregate(self, deposit, deposit_archive_url, requests):
-        """Aggregate multiple data on deposit into one unified data dictionary.
-
-        Args:
-            deposit (Deposit): Deposit concerned by the data aggregation.
-            deposit_archive_url (str): Url to retrieve a tarball from
-                                       the deposit instance
-            requests ([DepositRequest]): List of associated requests which
-                                         need aggregation.
-
-        Returns:
-            Dictionary of data representing the deposit to inject in swh.
-
-        """
-        data = {}
-        metadata_requests = []
-
-        # Retrieve tarballs/metadata information
-        metadata = self._aggregate_metadata(deposit, metadata_requests)
-
-        data['deposit_archive_url'] = deposit_archive_url
-
-        # Read information metadata
-        data['origin'] = {
-            'type': deposit.collection.name,
-            'url': deposit.external_id,
-        }
-
-        # revision
-
-        fullname = deposit.client.get_full_name()
-        author_committer = {
-            'name': deposit.client.last_name,
-            'fullname': fullname,
-            'email': deposit.client.email,
-        }
-
-        revision_type = 'tar'
-        revision_msg = '%s: Deposit %s in collection %s' % (
-            fullname, deposit.id, deposit.collection.name)
-        complete_date = identifiers.normalize_timestamp(deposit.complete_date)
-
-        data['revision'] = {
-            'synthetic': True,
-            'date': complete_date,
-            'committer_date': complete_date,
-            'author': author_committer,
-            'committer': author_committer,
-            'type': revision_type,
-            'message': revision_msg,
-            'metadata': metadata,
-        }
-
-        parent_revision = previous_revision_id(deposit.swh_id)
-        if parent_revision:
-            data['revision'] = {
-                'parents': [hashutil.hash_to_bytes(parent_revision)]
-            }
-
-        return data
-
     @abstractmethod
-    def schedule(self, deposit, data):
+    def schedule(self, deposits):
         """Schedule the new deposit injection.
 
         Args:
-            deposit (Deposit): Deposit concerned by the data aggregation.
             data (dict): Deposit aggregated data
 
         Returns:
@@ -153,32 +67,30 @@ class SWHCeleryScheduling(SWHScheduling):
             self.config.update(**config)
         self.dry_run = self.config['dry_run']
 
-    def schedule(self, deposit_data):
+    def _convert(self, deposits):
+        """Convert tuple to celery task signature.
+
+        """
+        task = self.task
+        for archive_url, deposit_meta_url, deposit_update_url in deposits:
+            yield task.s(archive_url=archive_url,
+                         deposit_meta_url=deposit_meta_url,
+                         deposit_update_url=deposit_update_url)
+
+    def schedule(self, deposits):
         """Schedule the new deposit injection directly through celery.
 
         Args:
-            deposit_data (dict): Deposit aggregated information.
+            depositdata (dict): Deposit aggregated information.
 
         Returns:
             None
 
         """
-        deposit_archive_url = deposit_data['deposit_archive_url']
-        origin = deposit_data['origin']
-        visit_date = None  # default to Now
-        revision = deposit_data['revision']
-
-        self.log.debug('args: %s %s %s %s' % (
-            deposit_archive_url, origin, visit_date, revision))
-
         if self.dry_run:
             return
 
-        return self.task.delay(
-            deposit_archive_url=deposit_archive_url,
-            origin=origin,
-            visit_date=visit_date,
-            revision=revision)
+        return group(self._convert(deposits)).delay()
 
 
 class SWHScheduling(SWHScheduling):
@@ -195,40 +107,66 @@ class SWHScheduling(SWHScheduling):
         self.dry_run = self.config['dry_run']
         self.scheduler = SchedulerBackend(**self.config)
 
-    def schedule(self, deposit_data):
+    def _convert(self, deposits):
+        """Convert tuple to one-shot scheduling tasks.
+
+        """
+        import datetime
+        for archive_url, deposit_meta_url, deposit_update_url in deposits:
+            yield {
+                'policy': 'oneshot',
+                'type': 'swh-deposit-archive-ingestion',
+                'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
+                'arguments': {
+                    'args': [],
+                    'kwargs': {
+                        'archive_url': archive_url,
+                        'deposit_meta_url': deposit_meta_url,
+                        'deposit_update_url': deposit_update_url,
+                    },
+                }
+            }
+
+    def schedule(self, deposits):
         """Schedule the new deposit injection through swh.scheduler's api.
 
         Args:
-            deposit_data (dict): Deposit aggregated information.
+            deposits (dict): Deposit aggregated information.
 
         """
-        deposit_archive_url = deposit_data['deposit_archive_url']
-        origin = deposit_data['origin']
-        visit_date = None  # default to Now
-        revision = deposit_data['revision']
-
-        self.log.debug('args: %s %s %s %s' % (
-            deposit_archive_url, origin, visit_date, revision))
-
         if self.dry_run:
             return
 
-        import datetime
-        task = {
-            'policy': 'oneshot',
-            'type': 'swh-deposit-archive-ingestion',
-            'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
-            'arguments': {
-                'args': [],
-                'kwargs': {
-                    'deposit_archive_url': deposit_archive_url,
-                    'origin': origin,
-                    'visit_date': visit_date,
-                    'revision': revision
-                },
-            }
-        }
-        self.scheduler.create_tasks([task])
+        self.scheduler.create_tasks(self._convert(deposits))
+
+
+def get_deposit_ready():
+    """Retrieve deposit ready to be task executed.
+
+    """
+    from swh.deposit.models import Deposit
+    yield from Deposit.objects.filter(status='ready')
+
+
+def prepare_task_arguments(server):
+    """Convert deposit to argument for task to be executed.
+
+    """
+    from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
+    from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
+    from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+    from django.core.urlresolvers import reverse
+
+    for deposit in get_deposit_ready():
+        args = [deposit.collection.name, deposit.id]
+        archive_url = '%s%s' % (server, reverse(
+            PRIVATE_GET_RAW_CONTENT, args=args))
+        deposit_meta_url = '%s%s' % (server, reverse(
+            PRIVATE_GET_DEPOSIT_METADATA, args=args))
+        deposit_update_url = '%s%s' % (server, reverse(
+            PRIVATE_PUT_DEPOSIT, args=args))
+
+        yield archive_url, deposit_meta_url, deposit_update_url
 
 
 @click.command(
@@ -239,12 +177,12 @@ class SWHScheduling(SWHScheduling):
               help='Scheduling method')
 @click.option('--server', default='http://127.0.0.1:5006',
               help='Deposit server')
+@click.option('--batch-size', default=1000, type=click.INT,
+              help='Task batch size')
 @click.option('--dry-run/--no-dry-run', is_flag=True, default=False,
               help='Dry run')
-def main(platform, scheduling_method, server, dry_run):
+def main(platform, scheduling_method, server, batch_size, dry_run):
     setup_django_for(platform)
-
-    from swh.deposit.models import Deposit, DepositRequest, DepositRequestType
 
     override_config = {}
     if dry_run:
@@ -258,27 +196,8 @@ def main(platform, scheduling_method, server, dry_run):
         raise ValueError(
             'Only `celery` or `swh-scheduler` values are accepted')
 
-    from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
-    from django.core.urlresolvers import reverse
-
-    _request_types = DepositRequestType.objects.all()
-    deposit_request_types = {
-        type.name: type for type in _request_types
-    }
-
-    deposits = Deposit.objects.filter(status='ready')
-    for deposit in deposits:
-        deposit_archive_url = '%s%s' % (server, reverse(
-            PRIVATE_GET_RAW_CONTENT,
-            args=[deposit.collection.name, deposit.id]))
-
-        requests = DepositRequest.objects.filter(
-            deposit=deposit, type=deposit_request_types['metadata'])
-
-        deposit_data = scheduling.aggregate(
-            deposit, deposit_archive_url, requests)
-
-        scheduling.schedule(deposit_data)
+    for deposits in utils.grouper(prepare_task_arguments(server), batch_size):
+        scheduling.schedule(deposits)
 
 
 if __name__ == '__main__':

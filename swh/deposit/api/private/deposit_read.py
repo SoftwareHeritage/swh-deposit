@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import json
 import os
 import shutil
 import tempfile
@@ -10,9 +11,11 @@ import tempfile
 from rest_framework import status
 
 from swh.loader.tar import tarball
+from swh.model import hashutil, identifiers
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest, TemporaryArchive
+from ...models import previous_revision_id
 
 
 def aggregate_tarballs(extraction_dir, archive_paths):
@@ -142,3 +145,91 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
         self.cleanup(directory_to_cleanup)
 
         return status.HTTP_200_OK, stream, 'application/octet-stream'
+
+
+class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
+    """Class in charge of aggregating metadata on a deposit.
+
+    """
+    def _aggregate_metadata(self, deposit, metadata_requests):
+        """Retrieve and aggregates metadata information.
+
+        """
+        metadata = {}
+        for req in metadata_requests:
+            metadata.update(req.metadata)
+
+        return metadata
+
+    def aggregate(self, deposit, requests):
+        """Aggregate multiple data on deposit into one unified data dictionary.
+
+        Args:
+            deposit (Deposit): Deposit concerned by the data aggregation.
+            requests ([DepositRequest]): List of associated requests which
+                                         need aggregation.
+
+        Returns:
+            Dictionary of data representing the deposit to inject in swh.
+
+        """
+        data = {}
+        metadata_requests = []
+
+        # Retrieve tarballs/metadata information
+        metadata = self._aggregate_metadata(deposit, metadata_requests)
+
+        # Read information metadata
+        data['origin'] = {
+            'type': deposit.collection.name,
+            'url': deposit.external_id,
+        }
+
+        # revision
+
+        fullname = deposit.client.get_full_name()
+        author_committer = {
+            'name': deposit.client.last_name,
+            'fullname': fullname,
+            'email': deposit.client.email,
+        }
+
+        revision_type = 'tar'
+        revision_msg = '%s: Deposit %s in collection %s' % (
+            fullname, deposit.id, deposit.collection.name)
+        complete_date = identifiers.normalize_timestamp(deposit.complete_date)
+
+        data['revision'] = {
+            'synthetic': True,
+            'date': complete_date,
+            'committer_date': complete_date,
+            'author': author_committer,
+            'committer': author_committer,
+            'type': revision_type,
+            'message': revision_msg,
+            'metadata': metadata,
+        }
+
+        parent_revision = previous_revision_id(deposit.swh_id)
+        if parent_revision:
+            data['revision'] = {
+                'parents': [hashutil.hash_to_bytes(parent_revision)]
+            }
+
+        data['occurrence'] = {
+            'branch': 'master'
+        }
+
+        return data
+
+    def process_get(self, req, collection_name, deposit_id):
+        deposit = Deposit.objects.get(pk=deposit_id)
+        requests = DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata'])
+
+        data = self.aggregate(deposit, requests)
+        d = {}
+        if data:
+            d = json.dumps(data)
+
+        return status.HTTP_200_OK, d, 'application/json'
