@@ -661,17 +661,22 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     BAD_REQUEST, summary=summary,
                     verbose_description=description)
 
+    def _basic_not_allowed_method(self, req, method):
+        return make_error_response(
+            req, METHOD_NOT_ALLOWED,
+            '%s method is not supported on this endpoint' % method)
+
     def get(self, req, *args, **kwargs):
-        return make_error_response(req, METHOD_NOT_ALLOWED)
+        return self._basic_not_allowed_method(req, 'GET')
 
     def post(self, req, *args, **kwargs):
-        return make_error_response(req, METHOD_NOT_ALLOWED)
+        return self._basic_not_allowed_method(req, 'POST')
 
     def put(self, req, *args, **kwargs):
-        return make_error_response(req, METHOD_NOT_ALLOWED)
+        return self._basic_not_allowed_method(req, 'PUT')
 
     def delete(self, req, *args, **kwargs):
-        return make_error_response(req, METHOD_NOT_ALLOWED)
+        return self._basic_not_allowed_method(req, 'DELETE')
 
 
 class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
