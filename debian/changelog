@@ -1,3 +1,10 @@
+swh-deposit (0.0.19-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.19
+  * Define summary message for method not allowed endpoints
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 16 Oct 2017 12:46:11 +0200
+
 swh-deposit (0.0.18-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.18
