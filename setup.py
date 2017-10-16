@@ -24,6 +24,7 @@ setup(
     install_requires=parse_requirements(),
     extras_require={
         'injection': ['swh.loader.core >= 0.0.19',
+                      'swh.scheduler >= 0.0.17',
                       'requests'],
     },
     setup_requires=['vcversioner'],
