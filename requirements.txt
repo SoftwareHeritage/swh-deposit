@@ -1,6 +1,5 @@
 vcversioner
 
-retrying
 click
 Django
 djangorestframework
