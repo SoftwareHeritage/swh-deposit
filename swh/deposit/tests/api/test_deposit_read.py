@@ -59,8 +59,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEquals(data, expected_meta)
 
-    def test_access_to_unexisting_collection_returns_404_response(self):
-        """Read unknown deposit should return a 404 response
+    def test_access_to_nonexisting_deposit_returns_404_response(self):
+        """Read unknown collection should return a 404 response
 
         """
         unknown_id = '999'
@@ -70,3 +70,20 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
         response = self.client.get(url)
         self.assertEqual(response.status_code,
                          status.HTTP_404_NOT_FOUND)
+        self.assertIn('Deposit with id %s does not exist' % unknown_id,
+                      response.content.decode('utf-8'))
+
+    def test_access_to_nonexisting_collection_returns_404_response(self):
+        """Read unknown deposit should return a 404 response
+
+        """
+        collection_name = 'non-existing'
+        deposit_id = self.create_deposit_partial()
+        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
+                      args=[collection_name, deposit_id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code,
+                         status.HTTP_404_NOT_FOUND)
+        self.assertIn('Unknown collection name %s' % collection_name,
+                      response.content.decode('utf-8'),)
