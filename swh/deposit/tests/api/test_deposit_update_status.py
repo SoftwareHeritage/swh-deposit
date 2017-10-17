@@ -6,6 +6,7 @@
 import json
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -27,7 +28,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.deposit = Deposit.objects.get(pk=deposit.id)
         assert self.deposit.status == 'ready'
 
-    def test_update_deposit_status(self):
+    @istest
+    def update_deposit_status(self):
         """Existing status for update should return a 204 response
 
         """
@@ -47,7 +49,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             deposit = Deposit.objects.get(pk=self.deposit.id)
             self.assertEquals(deposit.status, _status)
 
-    def test_update_deposit_with_success_ingestion_and_swh_id(self):
+    @istest
+    def update_deposit_with_success_ingestion_and_swh_id(self):
         """Existing status for update should return a 204 response
 
         """
@@ -71,7 +74,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.assertEquals(deposit.status, expected_status)
         self.assertEquals(deposit.swh_id, expected_id)
 
-    def test_update_deposit_status_will_fail_with_unknown_status(self):
+    @istest
+    def update_deposit_status_will_fail_with_unknown_status(self):
         """Unknown status for update should return a 400 response
 
         """
@@ -85,7 +89,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_update_deposit_status_will_fail_with_no_status_key(self):
+    @istest
+    def update_deposit_status_will_fail_with_no_status_key(self):
         """No status provided for update should return a 400 response
 
         """
@@ -99,7 +104,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_update_deposit_status_success_without_swh_id_fail(self):
+    @istest
+    def update_deposit_status_success_without_swh_id_fail(self):
         """Providing 'success' status without swh_id should return a 400
 
         """

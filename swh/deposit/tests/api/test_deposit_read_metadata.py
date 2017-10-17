@@ -6,6 +6,7 @@
 import json
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -19,7 +20,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
     """Deposit access to read metadata information on deposit.
 
     """
-    def test_access_to_an_existing_deposit_returns_metadata(self):
+    @istest
+    def access_to_an_existing_deposit_returns_metadata(self):
         deposit_id = self.create_deposit_partial()
 
         url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
@@ -59,7 +61,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEquals(data, expected_meta)
 
-    def test_access_to_nonexisting_deposit_returns_404_response(self):
+    @istest
+    def access_to_nonexisting_deposit_returns_404_response(self):
         """Read unknown collection should return a 404 response
 
         """
@@ -73,7 +76,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertIn('Deposit with id %s does not exist' % unknown_id,
                       response.content.decode('utf-8'))
 
-    def test_access_to_nonexisting_collection_returns_404_response(self):
+    @istest
+    def access_to_nonexisting_collection_returns_404_response(self):
         """Read unknown deposit should return a 404 response
 
         """

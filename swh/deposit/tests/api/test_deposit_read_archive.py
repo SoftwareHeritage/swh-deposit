@@ -9,6 +9,7 @@ import shutil
 import tempfile
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
 from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -74,7 +75,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
                      self.workdir, self.root_path]:
             shutil.rmtree(path)
 
-    def test_access_to_existing_deposit_with_one_archive(self):
+    @istest
+    def access_to_existing_deposit_with_one_archive(self):
         """Access to deposit should stream a 200 response with its raw content
 
         """
@@ -109,7 +111,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertNotEqual(actual_sha1, self.archive_path_sha1sum)
         self.assertNotEqual(actual_sha1, self.archive_path_sha1sum2)
 
-    def test_access_to_existing_deposit_with_multiple_archives(self):
+    @istest
+    def access_to_existing_deposit_with_multiple_archives(self):
         """Access to deposit should stream a 200 response with its raw contents
 
         """
@@ -132,7 +135,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
 class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
                                      BasicTestCase, CommonCreationRoutine):
-    def test_access_to_nonexisting_deposit_returns_404_response(self):
+    @istest
+    def access_to_nonexisting_deposit_returns_404_response(self):
         """Read unknown collection should return a 404 response
 
         """
@@ -146,7 +150,8 @@ class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
         self.assertIn('Deposit with id %s does not exist' % unknown_id,
                       response.content.decode('utf-8'))
 
-    def test_access_to_nonexisting_collection_returns_404_response(self):
+    @istest
+    def access_to_nonexisting_collection_returns_404_response(self):
         """Read unknown deposit should return a 404 response
 
         """
