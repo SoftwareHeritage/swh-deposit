@@ -1,6 +1,6 @@
 include ../../swh-docs/Makefile.sphinx
 
-html: copy_md
+sphinx/html: copy_md
 
 copy_md:
 	cp ../README-getting-started.md getting-started.md
