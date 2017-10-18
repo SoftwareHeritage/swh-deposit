@@ -4,6 +4,8 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -15,7 +17,8 @@ from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
                         CommonCreationRoutine):
 
-    def test_delete_archive_on_partial_deposit_works(self):
+    @istest
+    def delete_archive_on_partial_deposit_works(self):
         """Removing partial deposit's archive should return a 204 response
 
         """
@@ -46,7 +49,8 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEquals(len(requests), 1)
         self.assertEquals(requests[0].type.name, 'metadata')
 
-    def test_delete_archive_on_undefined_deposit_fails(self):
+    @istest
+    def delete_archive_on_undefined_deposit_fails(self):
         """Delete undefined deposit returns a 404 response
 
         """
@@ -56,7 +60,8 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         # then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_delete_archive_on_non_partial_deposit_fails(self):
+    @istest
+    def delete_archive_on_non_partial_deposit_fails(self):
         """Delete !partial status deposit should return a 400 response"""
         deposit_id = self.create_deposit_ready()
         deposit = Deposit.objects.get(pk=deposit_id)
@@ -70,7 +75,8 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit)
 
-    def test_delete_partial_deposit_works(self):
+    @istest
+    def delete_partial_deposit_works(self):
         """Delete deposit should return a 204 response
 
         """
@@ -90,7 +96,8 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposits = list(Deposit.objects.filter(pk=deposit_id))
         self.assertEquals(deposits, [])
 
-    def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
+    @istest
+    def delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
         """Delete !partial deposit should return a 400 response
 
         """

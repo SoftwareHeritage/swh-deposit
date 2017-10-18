@@ -1,8 +1,12 @@
-swh-deposit (0.0.20-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.21-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.21
+  * swh.deposit.api: Simplify clean up temporary directory routine for
+  * deposit read archive api
+  * swh.deposit.tests: Add missing test cases around deposit read api
+  * README-injection: Improve sentence phrasing
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 16 Oct 2017 18:23:19 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 18 Oct 2017 11:36:40 +0200
 
 swh-deposit (0.0.20-1~swh1) unstable-swh; urgency=medium
 

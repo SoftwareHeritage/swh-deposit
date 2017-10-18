@@ -6,6 +6,7 @@
 import hashlib
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -27,7 +28,8 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
     <foobar>bar</foobar>
 </entry>"""
 
-    def test_replace_archive_to_deposit_is_possible(self):
+    @istest
+    def replace_archive_to_deposit_is_possible(self):
         """Replace all archive with another one should return a 204 response
 
         """
@@ -78,7 +80,8 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             deposit=deposit, type=self.deposit_request_types['metadata']))
         self.assertEquals(len(requests), 1)
 
-    def test_replace_metadata_to_deposit_is_possible(self):
+    @istest
+    def replace_metadata_to_deposit_is_possible(self):
         """Replace all metadata with another one should return a 204 response
 
         """
@@ -137,7 +140,8 @@ class DepositUpdateDepositWithNewDataTest(
     <foobar>bar</foobar>
 </entry>"""
 
-    def test_add_archive_to_deposit_is_possible(self):
+    @istest
+    def add_archive_to_deposit_is_possible(self):
         """Add another archive to a deposit return a 201 response
 
         """
@@ -191,7 +195,8 @@ class DepositUpdateDepositWithNewDataTest(
             deposit=deposit, type=self.deposit_request_types['metadata']))
         self.assertEquals(len(requests), 1)
 
-    def test_add_metadata_to_deposit_is_possible(self):
+    @istest
+    def add_metadata_to_deposit_is_possible(self):
         """Replace all metadata with another one should return a 204 response
 
         """
@@ -245,7 +250,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
     """Failure scenario about add/replace (post/put) query on deposit.
 
     """
-    def test_add_metadata_to_unknown_collection(self):
+    @istest
+    def add_metadata_to_unknown_collection(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
@@ -257,7 +263,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_add_metadata_to_unknown_deposit(self):
+    @istest
+    def add_metadata_to_unknown_deposit(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
@@ -269,7 +276,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_replace_metadata_to_unknown_deposit(self):
+    @istest
+    def replace_metadata_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
@@ -281,7 +289,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_add_archive_to_unknown_deposit(self):
+    @istest
+    def add_archive_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
@@ -293,7 +302,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_replace_archive_to_unknown_deposit(self):
+    @istest
+    def replace_archive_to_unknown_deposit(self):
         """Replacing archive to unknown deposit should return a 404 response
 
         """
@@ -305,7 +315,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_post_metadata_to_em_iri_failure(self):
+    @istest
+    def post_metadata_to_em_iri_failure(self):
         """Add archive with wrong content type should return a 400 response
 
         """
@@ -318,7 +329,8 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_put_metadata_to_em_iri_failure(self):
+    @istest
+    def put_metadata_to_em_iri_failure(self):
         """Update archive with wrong content type should return 400 response
 
         """
