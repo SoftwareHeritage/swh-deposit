@@ -11,9 +11,11 @@ The injection of the deposit will use the deposit's associated data:
 - the metadata
 - the archive(s)
 
-We will use the `synthetic` revision notion.  To that revision will be
-associated the metadata, thus those will be included in the hash
-computation.
+We will use the `synthetic` revision notion.
+
+To that revision will be associated the metadata. Those will be
+included in the hash computation, thus resulting in a unique
+identifier.
 
 ### Injection mapping
 

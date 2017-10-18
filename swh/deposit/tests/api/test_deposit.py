@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -27,13 +28,18 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase):
         _user.collections = [_collection2.id]
         self.collection2 = _collection2
 
-    def test_access_to_another_user_collection_is_forbidden(self):
+    @istest
+    def access_to_another_user_collection_is_forbidden(self):
+        """Access to another user collection should return a 403
+
+        """
         url = reverse(COL_IRI, args=[self.collection2.name])
         response = self.client.post(url)
         self.assertEqual(response.status_code,
                          status.HTTP_403_FORBIDDEN)
 
-    def test_delete_on_col_iri_not_supported(self):
+    @istest
+    def delete_on_col_iri_not_supported(self):
         """Delete on col iri should return a 405 response
 
         """

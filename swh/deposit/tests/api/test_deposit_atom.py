@@ -5,6 +5,7 @@
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -92,21 +93,33 @@ and other stuff</description>
         self.atom_entry_data_badly_formatted = b"""<?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"</entry>"""
 
-    def test_post_deposit_atom_empty_body_request(self):
+    @istest
+    def post_deposit_atom_empty_body_request(self):
+        """Posting empty body request should return a 400 response
+
+        """
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_badly_formatted_is_a_bad_request(self):
+    @istest
+    def post_deposit_atom_badly_formatted_is_a_bad_request(self):
+        """Posting a badly formatted atom should return a 400 response
+
+        """
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data_badly_formatted)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_without_slug_header_is_bad_request(self):
+    @istest
+    def post_deposit_atom_without_slug_header_is_bad_request(self):
+        """Posting an atom entry without a slug header should return a 400
+
+        """
         url = reverse(COL_IRI, args=[self.collection.name])
 
         # when
@@ -121,7 +134,11 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_atom_unknown_collection(self):
+    @istest
+    def post_deposit_atom_unknown_collection(self):
+        """Posting an atom entry to an unknown collection should return a 404
+
+        """
         response = self.client.post(
             reverse(COL_IRI, args=['unknown-one']),
             content_type='application/atom+xml;type=entry',
@@ -129,8 +146,9 @@ and other stuff</description>
             HTTP_SLUG='something')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_post_deposit_atom_entry_initial(self):
-        """One deposit upload as atom entry
+    @istest
+    def post_deposit_atom_entry_initial(self):
+        """Posting an initial atom entry should return 201 with deposit receipt
 
         """
         # given
@@ -167,8 +185,9 @@ and other stuff</description>
         self.assertIsNotNone(deposit_request.metadata)
         self.assertFalse(bool(deposit_request.archive))
 
+    @istest
     def test_post_deposit_atom_entry_tei(self):
-        """One deposit upload as atom entry
+        """Posting initial atom entry as TEI should return 201 with receipt
 
         """
         # given
@@ -204,8 +223,11 @@ and other stuff</description>
         self.assertIsNotNone(deposit_request.metadata)
         self.assertFalse(bool(deposit_request.archive))
 
-    def test_post_deposit_atom_entry_multiple_steps(self):
-        """Test one deposit upload."""
+    @istest
+    def post_deposit_atom_entry_multiple_steps(self):
+        """After initial deposit, updating a deposit should return a 201
+
+        """
         # given
         external_id = 'urn:uuid:2225c695-cfb8-4ebb-aaaa-80da344efa6a'
 

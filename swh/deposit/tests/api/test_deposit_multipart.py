@@ -6,6 +6,7 @@
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -60,7 +61,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     <dcterms:type>Type</dcterms:type>
 </entry>"""
 
-    def test_post_deposit_multipart_without_slug_header_is_bad_request(self):
+    @istest
+    def post_deposit_multipart_without_slug_header_is_bad_request(self):
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
         data_atom_entry = self.data_atom_entry_ok
@@ -97,7 +99,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_multipart(self):
+    @istest
+    def post_deposit_multipart(self):
         """one multipart deposit should be accepted
 
         """
@@ -164,7 +167,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
                         '{http://www.w3.org/2005/Atom}id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
 
-    def test_post_deposit_multipart_put_to_replace_metadata(self):
+    @istest
+    def post_deposit_multipart_put_to_replace_metadata(self):
         """One multipart deposit followed by a metadata update should be
            accepted
 
@@ -263,7 +267,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
     # FAILURE scenarios
 
-    def test_post_deposit_multipart_only_archive_and_atom_entry(self):
+    @istest
+    def post_deposit_multipart_only_archive_and_atom_entry(self):
         """Multipart deposit only accepts one archive and one atom+xml"""
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
