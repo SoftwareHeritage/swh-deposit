@@ -5,7 +5,13 @@
 
 from .common import *  # noqa
 from .development import *  # noqa
+from .development import INSTALLED_APPS
 
+# django-nose setup
+
+INSTALLED_APPS += ['django_nose']
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # https://docs.djangoproject.com/en/1.10/ref/settings/#logging
 LOGGING = {

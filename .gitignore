@@ -12,3 +12,4 @@ version.txt
 /test.json
 /swh/test
 db.sqlite3
+/.noseids

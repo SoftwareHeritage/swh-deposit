@@ -8,6 +8,8 @@ import hashlib
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
+from nose.tools import istest
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -21,7 +23,8 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
     """Deposit access are protected with basic authentication.
 
     """
-    def test_post_will_fail_with_401(self):
+    @istest
+    def post_will_fail_with_401(self):
         """Without authentication, endpoint refuses access with 401 response
 
         """
@@ -150,7 +153,11 @@ and other stuff</description>
 
 </entry>"""
 
-    def test_post_deposit_binary_without_slug_header_is_bad_request(self):
+    @istest
+    def post_deposit_binary_without_slug_header_is_bad_request(self):
+        """Posting a binary deposit without slug header should return 400
+
+        """
         url = reverse(COL_IRI, args=[self.collection.name])
         data_text = b'some content'
         md5sum = hashlib.md5(data_text).hexdigest()
@@ -171,8 +178,9 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
 
-    def test_post_deposit_binary_upload_final_and_status_check(self):
-        """Binary upload should be accepted
+    @istest
+    def post_deposit_binary_upload_final_and_status_check(self):
+        """Binary upload with correct headers should return 201 with receipt
 
         """
         # given
@@ -227,8 +235,9 @@ and other stuff</description>
         self.assertEqual(response._headers['location'],
                          ('Location', edit_se_iri))
 
-    def test_post_deposit_binary_upload_only_supports_zip(self):
-        """Binary upload only supports application/zip (for now)...
+    @istest
+    def post_deposit_binary_upload_only_supports_zip(self):
+        """Binary upload without content_type application/zip should return 415
 
         """
         # given
@@ -258,9 +267,10 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    def test_post_deposit_binary_fails_if_unsupported_packaging_header(
+    @istest
+    def post_deposit_binary_fails_if_unsupported_packaging_header(
             self):
-        """Binary upload must have content_disposition header provided...
+        """Bin deposit without supported content_disposition header returns 400
 
         """
         # given
@@ -288,9 +298,10 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    def test_post_deposit_binary_upload_fail_if_no_content_disposition_header(
+    @istest
+    def post_deposit_binary_upload_fail_if_no_content_disposition_header(
             self):
-        """Binary upload must have content_disposition header provided...
+        """Binary upload without content_disposition header should return 400
 
         """
         # given
@@ -318,8 +329,9 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    def test_post_deposit_mediation_not_supported(self):
-        """Binary upload only supports application/zip (for now)...
+    @istest
+    def post_deposit_mediation_not_supported(self):
+        """Binary upload with mediation should return a 412 response
 
         """
         # given
@@ -353,7 +365,8 @@ and other stuff</description>
     # FIXME: Test this scenario (need a way to override the default
     # size limit in test scenario)
 
-    # def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
+    # @istest
+    # def post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
     #         self):
     #     """Binary upload must not exceed the limit set up...
 
@@ -384,8 +397,9 @@ and other stuff</description>
     #     with self.assertRaises(Deposit.DoesNotExist):
     #         Deposit.objects.get(external_id=external_id)
 
-    def test_post_deposit_2_post_2_different_deposits(self):
-        """Making 2 post requests result in 2 different deposit
+    @istest
+    def post_deposit_2_post_2_different_deposits(self):
+        """2 posting deposits should return 2 different 201 with receipt
 
         """
         url = reverse(COL_IRI, args=[self.collection.name])
@@ -445,9 +459,9 @@ and other stuff</description>
         self.assertEqual(len(deposits), 2)
         self.assertEqual(list(deposits), [deposit, deposit2])
 
-    def test_post_deposit_binary_and_post_to_add_another_archive(self):
-        """One post to post a binary deposit, One other post to update the
-        first deposit.
+    @istest
+    def post_deposit_binary_and_post_to_add_another_archive(self):
+        """Updating a deposit should return a 201 with receipt
 
         """
         # given
@@ -535,9 +549,9 @@ and other stuff</description>
         deposits = Deposit.objects.all()
         self.assertEqual(len(deposits), 1)
 
-    def test_post_deposit_then_post_or_put_is_refused_when_status_ready(self):
-        """When a deposit is complete, updating/adding new data to it is
-           forbidden.
+    @istest
+    def post_deposit_then_post_or_put_is_refused_when_status_ready(self):
+        """Updating a deposit with status 'ready' should return a 400
 
         """
         url = reverse(COL_IRI, args=[self.collection.name])

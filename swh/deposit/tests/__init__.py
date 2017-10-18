@@ -9,12 +9,7 @@ from swh.deposit.config import SWHDefaultConfig  # noqa
 
 TEST_CONFIG = {
     'max_upload_size': 209715200,
-    'authentication': {
-        'activated': 'true',
-        'white-list': {
-            'GET': ['/'],
-        },
-    },
+    'extraction_dir': '/tmp/swh-deposit/test/extraction-dir',
 }
 
 

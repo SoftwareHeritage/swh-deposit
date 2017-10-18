@@ -7,6 +7,7 @@ import hashlib
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
+from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -21,7 +22,8 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     """Status on deposit
 
     """
-    def test_post_deposit_with_status_check(self):
+    @istest
+    def post_deposit_with_status_check(self):
         """Binary upload should be accepted
 
         """
@@ -66,7 +68,8 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
                          'deposit is fully received and ready for injection')
 
-    def test_status_on_unknown_deposit(self):
+    @istest
+    def status_on_unknown_deposit(self):
         """Asking for the status of unknown deposit returns 404 response"""
         status_url = reverse(STATE_IRI, args=[self.collection.name, 999])
         status_response = self.client.get(status_url)

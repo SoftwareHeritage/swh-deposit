@@ -107,11 +107,77 @@ class CommonCreationRoutine(TestCase):
 
         """
         response = self.client.post(
-            reverse(COL_IRI, args=[self.username]),
+            reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0,
             HTTP_SLUG='external-id',
             HTTP_IN_PROGRESS='true')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
+
+    def _init_data_from(self, archive_path, default_data):
+        if not archive_path:
+            data = default_data
+        else:
+            with open(archive_path, 'rb') as f:
+                data = f.read()
+
+        md5sum = hashlib.md5(data).hexdigest()
+        return data, md5sum
+
+    def create_simple_binary_deposit(self, status_partial=False,
+                                     archive_path=None):
+
+        data, md5sum = self._init_data_from(
+            archive_path, b'some simulation data to pass as binary package')
+
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/zip',
+            data=data,
+            HTTP_MD5SUM=md5sum,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=status_partial,
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0.zip')
+
+        # then
+        if response.status_code != status.HTTP_201_CREATED:
+            print(response.status_code, response.content)
+
+        # then
+        assert response.status_code == status.HTTP_201_CREATED
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
+
+    def create_complex_binary_deposit(self, status_partial=False,
+                                      archive_path=None,
+                                      archive_path2=None):
+
+        deposit_id = self.create_simple_binary_deposit(
+            status_partial=True,
+            archive_path=archive_path)
+
+        # Update the deposit to add another archive
+        # and update its status to 'ready'
+        data, md5sum = self._init_data_from(
+            archive_path2, b'some other data to pass as binary package')
+
+        # Add a second archive to the deposit
+        # update its status to 'ready'
+        response = self.client.post(
+            reverse(EM_IRI, args=[self.collection.name, deposit_id]),
+            content_type='application/zip',
+            data=data,
+            HTTP_MD5SUM=md5sum,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=status_partial,
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename1.zip')
 
         # then
         assert response.status_code == status.HTTP_201_CREATED
@@ -134,7 +200,7 @@ class CommonCreationRoutine(TestCase):
 
         # when
         response = self.client.post(
-            reverse(EM_IRI, args=[self.username, deposit_id]),
+            reverse(EM_IRI, args=[self.collection.name, deposit_id]),
             content_type='application/zip',  # as zip
             data=data_text,
             # + headers
