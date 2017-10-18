@@ -8,3 +8,6 @@ copy_md:
 	cp ../README-injection.md spec-injection.md
 	cp ../README-dev.md dev-info.md
 	cp ../README-sys.md sys-info.md
+
+clean:
+	rm -f *.md
