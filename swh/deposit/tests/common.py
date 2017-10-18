@@ -145,10 +145,6 @@ class CommonCreationRoutine(TestCase):
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0.zip')
 
         # then
-        if response.status_code != status.HTTP_201_CREATED:
-            print(response.status_code, response.content)
-
-        # then
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
         deposit_id = response_content[
