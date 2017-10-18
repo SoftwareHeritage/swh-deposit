@@ -16,6 +16,7 @@ from rest_framework.test import APITestCase
 
 from swh.loader.tar import tarball
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
+from swh.deposit.tests import TEST_CONFIG
 
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
@@ -71,9 +72,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.root_path = root_path
 
     def tearDown(self):
-        for path in [self.archive_path_dir, self.archive_path_dir2,
-                     self.workdir, self.root_path]:
-            shutil.rmtree(path)
+        shutil.rmtree(self.root_path)
 
     @istest
     def access_to_existing_deposit_with_one_archive(self):
@@ -95,6 +94,9 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         data = r.content
         actual_sha1 = hashlib.sha1(data).hexdigest()
         self.assertEquals(actual_sha1, self.archive_path_sha1sum)
+
+        # this does not touch the extraction dir so this should stay empty
+        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
     def _check_tarball_consistency(self, actual_sha1):
         tarball.uncompress(self.archive_path, self.workdir)
@@ -131,6 +133,10 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         data = r.content
         actual_sha1 = hashlib.sha1(data).hexdigest()
         self._check_tarball_consistency(actual_sha1)
+
+        # this touches the extraction directory but should clean up
+        # after itself
+        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
 
 class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
