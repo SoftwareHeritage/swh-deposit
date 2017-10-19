@@ -19,29 +19,7 @@ from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests import TEST_CONFIG
 
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-
-
-def _create_arborescence_zip(root_path, archive_name, filename, content):
-    root_path = '/tmp/swh-deposit/test/build-zip/'
-    os.makedirs(root_path, exist_ok=True)
-    archive_path_dir = tempfile.mkdtemp(dir=root_path)
-
-    dir_path = os.path.join(archive_path_dir, archive_name)
-    os.mkdir(dir_path)
-
-    filepath = os.path.join(dir_path, filename)
-    with open(filepath, 'wb') as f:
-        f.write(content)
-
-    zip_path = dir_path + '.zip'
-    zip_path = tarball.compress(zip_path, 'zip', dir_path)
-
-    with open(zip_path, 'rb') as f:
-        sha1 = hashlib.sha1()
-        for chunk in f:
-            sha1.update(chunk)
-
-    return archive_path_dir, zip_path, sha1.hexdigest()
+from ..common import create_arborescence_zip
 
 
 @attr('fs')
@@ -54,19 +32,11 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         root_path = '/tmp/swh-deposit/test/build-zip/'
         os.makedirs(root_path, exist_ok=True)
 
-        archive_path_dir, zip_path, zip_sha1sum = _create_arborescence_zip(
+        self.archive = create_arborescence_zip(
             root_path, 'archive1', 'file1', b'some content in file')
 
-        self.archive_path = zip_path
-        self.archive_path_sha1sum = zip_sha1sum
-        self.archive_path_dir = archive_path_dir
-
-        archive_path_dir2, zip_path2, zip_sha1sum2 = _create_arborescence_zip(
+        self.archive2 = create_arborescence_zip(
             root_path, 'archive2', 'file2', b'some other content in file')
-
-        self.archive_path2 = zip_path2
-        self.archive_path_sha1sum2 = zip_sha1sum2
-        self.archive_path_dir2 = archive_path_dir2
 
         self.workdir = tempfile.mkdtemp(dir=root_path)
         self.root_path = root_path
@@ -80,7 +50,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         deposit_id = self.create_simple_binary_deposit(
-            archive_path=self.archive_path)
+            archive_path=self.archive['path'])
 
         url = reverse(PRIVATE_GET_RAW_CONTENT,
                       args=[self.collection.name, deposit_id])
@@ -93,15 +63,15 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         data = r.content
         actual_sha1 = hashlib.sha1(data).hexdigest()
-        self.assertEquals(actual_sha1, self.archive_path_sha1sum)
+        self.assertEquals(actual_sha1, self.archive['sha1sum'])
 
         # this does not touch the extraction dir so this should stay empty
         self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
     def _check_tarball_consistency(self, actual_sha1):
-        tarball.uncompress(self.archive_path, self.workdir)
+        tarball.uncompress(self.archive['path'], self.workdir)
         self.assertEquals(os.listdir(self.workdir), ['file1'])
-        tarball.uncompress(self.archive_path2, self.workdir)
+        tarball.uncompress(self.archive2['path'], self.workdir)
         lst = set(os.listdir(self.workdir))
         self.assertEquals(lst, {'file1', 'file2'})
 
@@ -111,8 +81,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
             h = hashlib.sha1(f.read()).hexdigest()
 
         self.assertEqual(actual_sha1, h)
-        self.assertNotEqual(actual_sha1, self.archive_path_sha1sum)
-        self.assertNotEqual(actual_sha1, self.archive_path_sha1sum2)
+        self.assertNotEqual(actual_sha1, self.archive['sha1sum'])
+        self.assertNotEqual(actual_sha1, self.archive2['sha1sum'])
 
     @istest
     def access_to_existing_deposit_with_multiple_archives(self):
@@ -120,8 +90,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         deposit_id = self.create_complex_binary_deposit(
-            archive_path=self.archive_path,
-            archive_path2=self.archive_path2)
+            archive_path=self.archive['path'],
+            archive_path2=self.archive2['path'])
 
         url = reverse(PRIVATE_GET_RAW_CONTENT,
                       args=[self.collection.name, deposit_id])

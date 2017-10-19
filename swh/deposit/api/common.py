@@ -20,7 +20,7 @@ from swh.model import hashutil
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
-from ..config import DEPOSIT_STATUS_READY
+from ..config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_PARTIAL
 
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
@@ -146,10 +146,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_READY
+            status_type = DEPOSIT_STATUS_READY_FOR_CHECKS
         else:
             complete_date = None
-            status_type = 'partial'
+            status_type = DEPOSIT_STATUS_PARTIAL
 
         if not deposit_id:
             deposit = Deposit(collection=self._collection,
@@ -570,7 +570,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_READY
+        deposit.status = DEPOSIT_STATUS_READY_FOR_CHECKS
         deposit.save()
 
         return {
@@ -658,8 +658,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
     def restrict_access(self, req, deposit=None):
         if deposit:
-            if req.method != 'GET' and deposit.status != 'partial':
-                summary = "You can only act on deposit with status 'partial'"
+            if (req.method != 'GET' and
+               deposit.status != DEPOSIT_STATUS_PARTIAL):
+                summary = "You can only act on deposit with status '%s'" % (
+                    DEPOSIT_STATUS_PARTIAL, )
                 description = "This deposit has status '%s'" % deposit.status
                 return make_error_dict(
                     BAD_REQUEST, summary=summary,

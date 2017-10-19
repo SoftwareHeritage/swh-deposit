@@ -3,19 +3,24 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
+import shutil
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
 from nose.tools import istest
+from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_READY
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from ..common import BasicTestCase, WithAuthTestCase
+from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_zip
 
 
+@attr('fs')
 class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     """Post multipart deposit scenario
 
@@ -60,6 +65,15 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
     <dcterms:title>Title</dcterms:title>
     <dcterms:type>Type</dcterms:type>
 </entry>"""
+
+        self.root_path = '/tmp/swh-deposit/test/build-zip2/'
+        os.makedirs(self.root_path, exist_ok=True)
+
+        self.archive = create_arborescence_zip(
+            self.root_path, 'archive1', 'file1', b'some content in file')
+
+    def tearDown(self):
+        shutil.rmtree(self.root_path)
 
     @istest
     def post_deposit_multipart_without_slug_header_is_bad_request(self):
@@ -178,13 +192,12 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         data_atom_entry = self.data_atom_entry_ok
 
-        archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
-            BytesIO(archive_content),
-            field_name='archive0',
-            name='archive0',
+            BytesIO(self.archive['data']),
+            field_name=self.archive['name'],
+            name=self.archive['name'],
             content_type='application/zip',
-            size=len(archive_content),
+            size=self.archive['length'],
             charset=None)
 
         atom_entry = InMemoryUploadedFile(
@@ -229,7 +242,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertRegex(deposit_request.archive.name, 'archive0')
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
             else:
                 self.assertEquals(
                     deposit_request.metadata[
@@ -258,7 +272,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertRegex(deposit_request.archive.name, 'archive0')
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
             else:
                 self.assertEquals(
                     deposit_request.metadata[

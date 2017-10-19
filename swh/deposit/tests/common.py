@@ -7,6 +7,7 @@ import base64
 import hashlib
 import os
 import shutil
+import tempfile
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -18,6 +19,63 @@ from swh.deposit.models import DepositClient, DepositCollection
 from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
+from swh.loader.tar import tarball
+
+
+def create_arborescence_zip(root_path, archive_name, filename, content,
+                            up_to_size=None):
+    """Build an archive named archive_name in the root_path.
+    This archive contains one file named filename with the content content.
+
+    Returns:
+        dict with the keys:
+        - dir: the directory of that archive
+        - path: full path to the archive
+        - sha1sum: archive's sha1sum
+        - length: archive's length
+
+    """
+    os.makedirs(root_path, exist_ok=True)
+    archive_path_dir = tempfile.mkdtemp(dir=root_path)
+
+    dir_path = os.path.join(archive_path_dir, archive_name)
+    os.mkdir(dir_path)
+
+    filepath = os.path.join(dir_path, filename)
+    l = len(content)
+    count = 0
+    batch_size = 128
+    with open(filepath, 'wb') as f:
+        f.write(content)
+        if up_to_size:  # fill with blank content up to a given size
+            count += l
+            while count < up_to_size:
+                f.write(b'0'*batch_size)
+                count += batch_size
+
+    zip_path = dir_path + '.zip'
+    zip_path = tarball.compress(zip_path, 'zip', dir_path)
+
+    with open(zip_path, 'rb') as f:
+        length = 0
+        sha1sum = hashlib.sha1()
+        md5sum = hashlib.md5()
+        data = b''
+        for chunk in f:
+            sha1sum.update(chunk)
+            md5sum.update(chunk)
+            length += len(chunk)
+            data += chunk
+
+    return {
+        'dir': archive_path_dir,
+        'name': archive_name,
+        'data': data,
+        'path': zip_path,
+        'sha1sum': sha1sum.hexdigest(),
+        'md5sum': md5sum.hexdigest(),
+        'length': length,
+    }
 
 
 class BasicTestCase(TestCase):
