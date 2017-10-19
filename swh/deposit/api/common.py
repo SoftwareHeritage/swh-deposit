@@ -724,7 +724,6 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
 
-
         """
         checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
@@ -773,6 +772,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
+
         """
         checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
