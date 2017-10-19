@@ -16,6 +16,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from swh.model import hashutil
+
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
 from ..config import DEPOSIT_STATUS_READY
@@ -298,7 +300,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     CHECKSUM_MISMATCH,
                     'Wrong md5 hash',
                     'The checksum sent %s and the actual checksum '
-                    '%s does not match.' % (md5sum, _md5sum))
+                    '%s does not match.' % (hashutil.hash_to_hex(md5sum),
+                                            hashutil.hash_to_hex(_md5sum)))
 
         return None
 
