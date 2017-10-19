@@ -577,10 +577,11 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': None,
         }
 
-    def _make_iris(self, collection_name, deposit_id):
+    def _make_iris(self, req, collection_name, deposit_id):
         """Define the IRI endpoints
 
         Args:
+            req (Request): The initial request
             collection_name (str): client/collection's name
             deposit_id (id): Deposit identifier
 
@@ -590,10 +591,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         args = [collection_name, deposit_id]
         return {
-            EM_IRI: reverse(EM_IRI, args=args),
-            EDIT_SE_IRI: reverse(EDIT_SE_IRI, args=args),
-            CONT_FILE_IRI: reverse(CONT_FILE_IRI, args=args),
-            STATE_IRI: reverse(STATE_IRI, args=args),
+            iri: req.build_absolute_uri(reverse(iri, args=args))
+            for iri in [EM_IRI, EDIT_SE_IRI, CONT_FILE_IRI, STATE_IRI]
         }
 
     def additional_checks(self, req, headers, collection_name,
@@ -740,7 +739,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             return make_error_response_from_dict(req, error)
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(collection_name, data['deposit_id'])
+        iris = self._make_iris(req, collection_name, data['deposit_id'])
         data.update(iris)
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,

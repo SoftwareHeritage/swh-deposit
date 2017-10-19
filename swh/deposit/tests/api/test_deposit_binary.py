@@ -234,7 +234,7 @@ and other stuff</description>
                               args=[self.collection.name, deposit.id])
 
         self.assertEqual(response._headers['location'],
-                         ('Location', edit_se_iri))
+                         ('Location', 'http://testserver' + edit_se_iri))
 
     @istest
     def post_deposit_binary_upload_only_supports_zip(self):
