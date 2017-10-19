@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from ..config import ARCHIVE_KEY, METADATA_KEY
+from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
@@ -385,6 +385,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
+            'status': deposit.status,
             'archive': filehandler.name,
         }
 
@@ -483,6 +484,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
             'archive': filehandler.name,
+            'status': deposit.status,
         }
 
     def _atom_entry(self, req, headers, collection_name,
@@ -543,6 +545,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
             'archive': None,
+            'status': deposit.status,
         }
 
     def _empty_post(self, req, headers, collection_name, deposit_id):
@@ -568,6 +571,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             'deposit_id': deposit_id,
             'deposit_date': deposit.complete_date,
+            'status': deposit.status,
             'archive': None,
         }
 
