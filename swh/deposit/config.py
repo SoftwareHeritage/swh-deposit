@@ -24,6 +24,8 @@ METADATA_KEY = 'metadata'
 
 AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
+DEPOSIT_STATUS_READY = 'ready'
+
 
 def setup_django_for(platform):
     """Setup function for command line tools (swh.deposit.create_user,

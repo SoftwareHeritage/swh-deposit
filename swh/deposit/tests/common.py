@@ -160,12 +160,12 @@ class CommonCreationRoutine(TestCase):
             archive_path=archive_path)
 
         # Update the deposit to add another archive
-        # and update its status to 'ready'
+        # and update its status to DEPOSIT_STATUS_READY
         data, md5sum = self._init_data_from(
             archive_path2, b'some other data to pass as binary package')
 
         # Add a second archive to the deposit
-        # update its status to 'ready'
+        # update its status to DEPOSIT_STATUS_READY
         response = self.client.post(
             reverse(EM_IRI, args=[self.collection.name, deposit_id]),
             content_type='application/zip',

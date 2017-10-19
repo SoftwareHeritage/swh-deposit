@@ -13,6 +13,8 @@ from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.timezone import now
 
+from .config import DEPOSIT_STATUS_READY
+
 
 class Dbversion(models.Model):
     """Db version
@@ -37,7 +39,8 @@ class Dbversion(models.Model):
 DEPOSIT_STATUS = [
     ('partial', 'partial'),
     ('expired', 'expired'),
-    ('ready', 'ready'),
+    # ('ready-for-checks', 'ready-for-checks'),
+    (DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY),
     ('injecting', 'injecting'),
     ('success', 'success'),
     ('failure', 'failure'),
@@ -50,7 +53,10 @@ DEPOSIT_STATUS_DETAIL = {
                ' done in multiple requests',
     'expired': 'deposit has been there too long and is now '
                'deemed ready to be garbage collected',
-    'ready': 'deposit is fully received and ready for injection',
+    # 'ready-for-checks': 'Deposit is ready for supplementary checks '
+    #                     '(tarball ok, etc...)',
+    DEPOSIT_STATUS_READY: 'deposit is fully received and '
+                          'ready for injection',
     'injecting': "injection is ongoing on swh's side",
     'success': 'Injection is successful',
     'failure': 'Injection is a failure',

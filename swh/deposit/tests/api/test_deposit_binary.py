@@ -14,6 +14,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.config import COL_IRI, EM_IRI
+from swh.deposit.config import DEPOSIT_STATUS_READY
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase
@@ -211,7 +212,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -526,7 +527,7 @@ and other stuff</description>
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -551,7 +552,7 @@ and other stuff</description>
 
     @istest
     def post_deposit_then_post_or_put_is_refused_when_status_ready(self):
-        """Updating a deposit with status 'ready' should return a 400
+        """Updating a deposit with status DEPOSIT_STATUS_READY should return a 400
 
         """
         url = reverse(COL_IRI, args=[self.collection.name])
@@ -583,7 +584,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)

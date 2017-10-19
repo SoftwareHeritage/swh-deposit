@@ -18,6 +18,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
+from ..config import DEPOSIT_STATUS_READY
+
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
@@ -142,7 +144,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = 'ready'
+            status_type = DEPOSIT_STATUS_READY
         else:
             complete_date = None
             status_type = 'partial'
@@ -565,7 +567,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = 'ready'
+        deposit.status = DEPOSIT_STATUS_READY
         deposit.save()
 
         return {

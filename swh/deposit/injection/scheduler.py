@@ -16,7 +16,7 @@ from celery import group
 
 from swh.core import utils
 from swh.core.config import SWHConfig
-from swh.deposit.config import setup_django_for
+from swh.deposit.config import setup_django_for, DEPOSIT_STATUS_READY
 
 
 class SWHScheduling(SWHConfig, metaclass=ABCMeta):
@@ -145,7 +145,7 @@ def get_deposit_ready():
 
     """
     from swh.deposit.models import Deposit
-    yield from Deposit.objects.filter(status='ready')
+    yield from Deposit.objects.filter(status=DEPOSIT_STATUS_READY)
 
 
 def prepare_task_arguments(server):
