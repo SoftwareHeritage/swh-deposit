@@ -586,16 +586,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             Dictionary of keys with the iris' urls.
 
         """
+        args = [collection_name, deposit_id]
         return {
-            EM_IRI: reverse(
-                EM_IRI,
-                args=[collection_name, deposit_id]),
-            EDIT_SE_IRI: reverse(
-                EDIT_SE_IRI,
-                args=[collection_name, deposit_id]),
-            CONT_FILE_IRI: reverse(
-                CONT_FILE_IRI,
-                args=[collection_name, deposit_id]),
+            EM_IRI: reverse(EM_IRI, args=args),
+            EDIT_SE_IRI: reverse(EDIT_SE_IRI, args=args),
+            CONT_FILE_IRI: reverse(CONT_FILE_IRI, args=args),
+            STATE_IRI: reverse(STATE_IRI, args=args),
         }
 
     def additional_checks(self, req, headers, collection_name,

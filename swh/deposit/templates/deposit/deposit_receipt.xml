@@ -12,6 +12,8 @@
     <link rel="edit-media" href="{{ em_iri }}"/>
     <!-- SE-IRI -->
     <link rel="http://purl.org/net/sword/terms/add" href="{{ edit_se_iri }}" />
+    <!-- State-IRI -->
+    <link rel="state" href="{{ state_iri }}" />
 
     {% for packaging in packagings %}<sword:packaging>{{ packaging }}</sword:packaging>{% endfor %}
 </entry>
