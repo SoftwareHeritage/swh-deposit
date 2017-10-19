@@ -376,40 +376,42 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    # FIXME: Test this scenario (need a way to override the default
-    # size limit in test scenario)
+    @istest
+    def post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
+            self):
+        """Binary upload must not exceed the limit set up...
 
-    # @istest
-    # def post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
-    #         self):
-    #     """Binary upload must not exceed the limit set up...
+        """
+        # given
+        url = reverse(COL_IRI, args=[self.collection.name])
 
-    #     """
-    #     # given
-    #     url = reverse(COL_IRI, args=[self.collection.name])
-    #     data_text = b'some content'
-    #     md5sum = hashlib.md5(data_text).hexdigest()
+        archive = create_arborescence_zip(
+            self.root_path, 'archive2', 'file2', b'some content in file',
+            up_to_size=TEST_CONFIG['max_upload_size'])
 
-    #     external_id = 'some-external-id'
+        external_id = 'some-external-id'
 
-    #     # when
-    #     response = self.client.post(
-    #         url,
-    #         content_type='application/zip',
-    #         data=data_text,
-    #         # + headers
-    #         HTTP_SLUG=external_id,
-    #         HTTP_CONTENT_MD5=md5sum,
-    #         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-    #         HTTP_IN_PROGRESS='false',
-    #         CONTENT_LENGTH=len(data_text),
-    #         HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',
+            data=archive['data'],
+            # + headers
+            CONTENT_LENGTH=archive['length'],
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=archive['md5sum'],
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_IN_PROGRESS='false',
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
-    #     # then
-    #     self.assertEqual(response.status_code,
-    #                      status.HTTP_403_FORBIDDEN)
-    #     with self.assertRaises(Deposit.DoesNotExist):
-    #         Deposit.objects.get(external_id=external_id)
+        # then
+        print(response.content)
+        self.assertEqual(response.status_code,
+                         status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        self.assertRegex(response.content, b'Upload size limit exceeded')
+
+        with self.assertRaises(Deposit.DoesNotExist):
+            Deposit.objects.get(external_id=external_id)
 
     @istest
     def post_deposit_2_post_2_different_deposits(self):
