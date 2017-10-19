@@ -14,7 +14,7 @@ EM_IRI = 'em_iri'
 CONT_FILE_IRI = 'cont_file_iri'
 SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
-STATE_IRI = 'status'
+STATE_IRI = 'state_iri'
 PRIVATE_GET_RAW_CONTENT = 'private-download'
 PRIVATE_PUT_DEPOSIT = 'private-update'
 PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
@@ -23,6 +23,8 @@ ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
 
 AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
+
+DEPOSIT_STATUS_READY = 'ready'
 
 
 def setup_django_for(platform):

@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
-from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+from swh.deposit.config import PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_READY
 from ..common import BasicTestCase
 
 
@@ -21,12 +21,12 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
     """
     def setUp(self):
         super().setUp()
-        deposit = Deposit(status='ready',
+        deposit = Deposit(status=DEPOSIT_STATUS_READY,
                           collection=self.collection,
                           client=self.user)
         deposit.save()
         self.deposit = Deposit.objects.get(pk=deposit.id)
-        assert self.deposit.status == 'ready'
+        assert self.deposit.status == DEPOSIT_STATUS_READY
 
     @istest
     def update_deposit_status(self):
