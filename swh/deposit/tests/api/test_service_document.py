@@ -58,6 +58,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>
             <sword:mediation>false</sword:mediation>
+            <sword:metadataRelevantHeader>false</sword:metadataRelevantHeader>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
             <sword:service>https://deposit.softwareheritage.org/1/%s/</sword:service>
         </collection>

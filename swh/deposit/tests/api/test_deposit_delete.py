@@ -10,6 +10,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.config import EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY
+from swh.deposit.config import DEPOSIT_STATUS_READY
+
 from swh.deposit.models import Deposit, DepositRequest
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
@@ -65,7 +67,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Delete !partial status deposit should return a 400 response"""
         deposit_id = self.create_deposit_ready()
         deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.status == 'ready'
+        assert deposit.status == DEPOSIT_STATUS_READY
 
         # when
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])

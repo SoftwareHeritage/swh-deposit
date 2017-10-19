@@ -17,7 +17,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from ..config import ARCHIVE_KEY, METADATA_KEY
+from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
+from ..config import DEPOSIT_STATUS_READY
+
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
 from ..parsers import parse_xml
@@ -142,7 +144,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = 'ready'
+            status_type = DEPOSIT_STATUS_READY
         else:
             complete_date = None
             status_type = 'partial'
@@ -385,6 +387,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return {
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
+            'status': deposit.status,
             'archive': filehandler.name,
         }
 
@@ -483,6 +486,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
             'archive': filehandler.name,
+            'status': deposit.status,
         }
 
     def _atom_entry(self, req, headers, collection_name,
@@ -543,6 +547,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'deposit_id': deposit.id,
             'deposit_date': deposit.reception_date,
             'archive': None,
+            'status': deposit.status,
         }
 
     def _empty_post(self, req, headers, collection_name, deposit_id):
@@ -562,19 +567,21 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = 'ready'
+        deposit.status = DEPOSIT_STATUS_READY
         deposit.save()
 
         return {
             'deposit_id': deposit_id,
             'deposit_date': deposit.complete_date,
+            'status': deposit.status,
             'archive': None,
         }
 
-    def _make_iris(self, collection_name, deposit_id):
+    def _make_iris(self, req, collection_name, deposit_id):
         """Define the IRI endpoints
 
         Args:
+            req (Request): The initial request
             collection_name (str): client/collection's name
             deposit_id (id): Deposit identifier
 
@@ -582,16 +589,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             Dictionary of keys with the iris' urls.
 
         """
+        args = [collection_name, deposit_id]
         return {
-            EM_IRI: reverse(
-                EM_IRI,
-                args=[collection_name, deposit_id]),
-            EDIT_SE_IRI: reverse(
-                EDIT_SE_IRI,
-                args=[collection_name, deposit_id]),
-            CONT_FILE_IRI: reverse(
-                CONT_FILE_IRI,
-                args=[collection_name, deposit_id]),
+            iri: req.build_absolute_uri(reverse(iri, args=args))
+            for iri in [EM_IRI, EDIT_SE_IRI, CONT_FILE_IRI, STATE_IRI]
         }
 
     def additional_checks(self, req, headers, collection_name,
@@ -724,7 +725,6 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
 
-
         """
         checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:
@@ -739,7 +739,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             return make_error_response_from_dict(req, error)
 
         data['packagings'] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(collection_name, data['deposit_id'])
+        iris = self._make_iris(req, collection_name, data['deposit_id'])
         data.update(iris)
         response = render(req, 'deposit/deposit_receipt.xml',
                           context=data,
@@ -773,6 +773,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
             204 response when no error during routine occurred.
             400 if the deposit does not belong to the collection
             404 if the deposit or the collection does not exist
+
         """
         checks = self.checks(req, collection_name, deposit_id)
         if 'error' in checks:

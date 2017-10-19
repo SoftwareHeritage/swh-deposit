@@ -102,7 +102,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         tarball.uncompress(self.archive_path, self.workdir)
         self.assertEquals(os.listdir(self.workdir), ['file1'])
         tarball.uncompress(self.archive_path2, self.workdir)
-        self.assertEquals(os.listdir(self.workdir), ['file1', 'file2'])
+        lst = set(os.listdir(self.workdir))
+        self.assertEquals(lst, {'file1', 'file2'})
 
         new_path = self.workdir + '.zip'
         tarball.compress(new_path, 'zip', self.workdir)
