@@ -1,8 +1,14 @@
-swh-deposit (0.0.21-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.22-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.22
+  * swh.deposit.api: Return fqdn urls
+  * swh.deposit.api: Use variable to define the pivot status 'ready'
+  * swh.deposit.api: Add state iri in the deposit receipt
+  * swh.deposit.api: Add deposit's status in the deposit receipt
+  * swh.deposit.api: Explicit no support for Metadata-Relevant header
+  * swh.deposit.tests: Fix potential listing error
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 18 Oct 2017 11:36:40 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 19 Oct 2017 15:38:01 +0200
 
 swh-deposit (0.0.21-1~swh1) unstable-swh; urgency=medium
 

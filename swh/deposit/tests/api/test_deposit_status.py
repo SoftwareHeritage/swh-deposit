@@ -15,7 +15,7 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase
-from ...config import COL_IRI, STATE_IRI
+from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
@@ -64,7 +64,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
                          deposit.id)
         self.assertEqual(r['{http://www.w3.org/2005/Atom}status'],
-                         'ready')
+                         DEPOSIT_STATUS_READY)
         self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
                          'deposit is fully received and ready for injection')
 

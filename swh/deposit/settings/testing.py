@@ -4,10 +4,12 @@
 # See top-level LICENSE file for more information
 
 from .common import *  # noqa
+from .common import ALLOWED_HOSTS
 from .development import *  # noqa
 from .development import INSTALLED_APPS
 
 # django-nose setup
+ALLOWED_HOSTS += ['testserver']
 
 INSTALLED_APPS += ['django_nose']
 
