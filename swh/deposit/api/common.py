@@ -336,8 +336,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
             - 400 (bad request) if the request is not providing an external
               identifier
-            - 403 (forbidden) if the length of the archive exceeds the
-              max size configured
+            - 413 (request entity too large) if the length of the
+              archive exceeds the max size configured
             - 412 (precondition failed) if the length or md5 hash provided
               mismatch the reality of the archive
             - 415 (unsupported media type) if a wrong media type is provided
@@ -430,6 +430,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
               identifier
             - 412 (precondition failed) if the potentially md5 hash provided
               mismatch the reality of the archive
+            - 413 (request entity too large) if the length of the
+              archive exceeds the max size configured
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
