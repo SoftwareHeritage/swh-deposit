@@ -18,41 +18,37 @@ import zipfile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Deposit, DepositRequest, DepositRequestType
+from .models import DepositRequest
 from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
-from .config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from .config import DEPOSIT_STATUS_READY_FOR_CHECKS, ARCHIVE_TYPE
 
 
-def checks(deposit):
-    """Additional checks to execute on the deposit's associated data (archive).
-       the status to ready for injection.
+def checks(deposit_request):
+    """Additional checks to execute on the deposit request's associated
+       data (archive).
 
     Args:
-        The deposit whose archives we need to check
+        The deposit request whose archive we need to check
 
     Returns:
-        True if every we can at least read some content to every
-        deposit associated archive. False otherwise.
+        True if we can at least read some content to the
+        request's deposit associated archive. False otherwise.
 
     """
-    archive_type = DepositRequestType.objects.filter(name='archive')
-    requests = DepositRequest.objects.filter(deposit=deposit,
-                                             type=archive_type)
+    if deposit_request.type.name != ARCHIVE_TYPE:  # no check for other types
+        return True
 
     try:
-        for req in requests:
-            archive = req.archive
-            print('check %s' % archive.path)
-            zf = zipfile.ZipFile(archive.path)
-            zf.infolist()
+        archive = deposit_request.archive
+        zf = zipfile.ZipFile(archive.path)
+        zf.infolist()
     except Exception as e:
-        print(e)
         return False
     else:
         return True
 
 
-@receiver(post_save, sender=Deposit)
+@receiver(post_save, sender=DepositRequest)
 def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                                       update_fields, **kwargs):
     """Check the status is ready for check.
@@ -63,8 +59,8 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
         Triggered when a deposit is saved.
 
     Args:
-        sender (Deposit): The model class
-        instance (Deposit): The actual instance being saved
+        sender (DepositRequest): The model class
+        instance (DepositRequest): The actual instance being saved
         created (bool): True if a new record was created
         raw (bool): True if the model is saved exactly as presented
                     (i.e. when loading a fixture). One should not
@@ -76,12 +72,12 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                        passed to save()
 
     """
-    if instance.status is not DEPOSIT_STATUS_READY_FOR_CHECKS:
+    if instance.deposit.status is not DEPOSIT_STATUS_READY_FOR_CHECKS:
         return
-    if not checks(instance):
-        instance.status = DEPOSIT_STATUS_REJECTED
-    else:
-        instance.status = DEPOSIT_STATUS_READY
-        print('Check ok: %s -> %s' % (instance.status, DEPOSIT_STATUS_READY))
 
-    instance.save()
+    if not checks(instance):
+        instance.deposit.status = DEPOSIT_STATUS_REJECTED
+    else:
+        instance.deposit.status = DEPOSIT_STATUS_READY
+
+    instance.deposit.save()

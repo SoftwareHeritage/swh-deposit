@@ -22,6 +22,9 @@ PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
 
+ARCHIVE_TYPE = 'archive'
+METADATA_TYPE = 'metadata'
+
 AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
 DEPOSIT_STATUS_REJECTED = 'rejected'

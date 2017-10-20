@@ -3,15 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import hashlib
-import os
-import shutil
-
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
 from nose.tools import istest
-from nose.plugins.attrib import attr
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -22,42 +17,11 @@ from swh.deposit.config import DEPOSIT_STATUS_READY
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_zip
+from ..common import FileSystemCreationRoutine
 
 
-class DepositNoAuthCase(APITestCase, BasicTestCase):
-    """Deposit access are protected with basic authentication.
-
-    """
-    @istest
-    def post_will_fail_with_401(self):
-        """Without authentication, endpoint refuses access with 401 response
-
-        """
-        url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
-
-        external_id = 'some-external-id-1'
-
-        # when
-        response = self.client.post(
-            url,
-            content_type='application/zip',  # as zip
-            data=data_text,
-            # + headers
-            CONTENT_LENGTH=len(data_text),
-            HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
-            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-            HTTP_IN_PROGRESS='false',
-            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
-@attr('fs')
-class DepositTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
+class DepositTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
+                      FileSystemCreationRoutine):
     """Try and upload one single deposit
 
     """
@@ -159,32 +123,21 @@ and other stuff</description>
 
 </entry>"""
 
-        self.root_path = '/tmp/swh-deposit/test/build-zip2/'
-        os.makedirs(self.root_path, exist_ok=True)
-
-        self.archive = create_arborescence_zip(
-            self.root_path, 'archive1', 'file1', b'some content in file')
-
-    def tearDown(self):
-        shutil.rmtree(self.root_path)
-
     @istest
     def post_deposit_binary_without_slug_header_is_bad_request(self):
         """Posting a binary deposit without slug header should return 400
 
         """
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         # when
         response = self.client.post(
             url,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_MD5=md5sum,
+            CONTENT_LENGTH=self.archive['length'],
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -259,8 +212,6 @@ and other stuff</description>
         """
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         external_id = 'some-external-id-1'
 
@@ -268,11 +219,11 @@ and other stuff</description>
         response = self.client.post(
             url,
             content_type='application/octet-stream',
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -292,8 +243,6 @@ and other stuff</description>
         """
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         external_id = 'some-external-id'
 
@@ -301,11 +250,11 @@ and other stuff</description>
         response = self.client.post(
             url,
             content_type='application/zip',
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='something-unsupported',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
@@ -323,8 +272,6 @@ and other stuff</description>
         """
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         external_id = 'some-external-id'
 
@@ -332,11 +279,11 @@ and other stuff</description>
         response = self.client.post(
             url,
             content_type='application/zip',
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false')
 
@@ -353,8 +300,6 @@ and other stuff</description>
         """
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         external_id = 'some-external-id-1'
 
@@ -362,11 +307,11 @@ and other stuff</description>
         response = self.client.post(
             url,
             content_type='application/zip',
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_ON_BEHALF_OF='someone',
@@ -408,7 +353,6 @@ and other stuff</description>
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         # then
-        print(response.content)
         self.assertEqual(response.status_code,
                          status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
         self.assertRegex(response.content, b'Upload size limit exceeded')
@@ -422,18 +366,16 @@ and other stuff</description>
 
         """
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         # when
         response = self.client.post(
             url,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG='some-external-id-1',
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -455,11 +397,11 @@ and other stuff</description>
         response = self.client.post(
             url,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG='another-external-id',
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename1')
@@ -525,9 +467,6 @@ and other stuff</description>
         archive2 = create_arborescence_zip(
             self.root_path, 'archive2', 'file2', b'some other content in file')
 
-        import os
-        print('exists?', os.path.exists(archive2['path']))
-
         # uri to update the content
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
@@ -546,7 +485,6 @@ and other stuff</description>
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_content = parse_xml(BytesIO(response.content))
-        print(response_content)
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
@@ -583,19 +521,15 @@ and other stuff</description>
 
         external_id = 'some-external-id-1'
 
-        # 1st archive to upload
-        data_text0 = b'some other content'
-        md5sum0 = hashlib.md5(data_text0).hexdigest()
-
         # when
         response = self.client.post(
             url,
             content_type='application/zip',  # as zip
-            data=data_text0,
+            data=self.archive['data'],
             # + headers
-            CONTENT_LENGTH=len(data_text0),
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -629,15 +563,18 @@ and other stuff</description>
         # Testing all update/add endpoint should fail
         # since the status is ready
 
+        archive2 = create_arborescence_zip(
+            self.root_path, 'archive2', 'file2', b'some content in file 2')
+
         # replacing file is no longer possible since the deposit's
         # status is ready
         r = self.client.put(
             em_iri,
             content_type='application/zip',
-            data=data_text0,
-            CONTENT_LENGTH=len(data_text0),
+            data=archive2['data'],
+            CONTENT_LENGTH=archive2['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_CONTENT_MD5=archive2['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
@@ -649,10 +586,10 @@ and other stuff</description>
         r = self.client.post(
             em_iri,
             content_type='application/zip',
-            data=data_text0,
-            CONTENT_LENGTH=len(data_text0),
+            data=archive2['data'],
+            CONTENT_LENGTH=archive2['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum0,
+            HTTP_CONTENT_MD5=archive2['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')

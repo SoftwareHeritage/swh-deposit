@@ -5,8 +5,6 @@
 
 import hashlib
 import os
-import shutil
-import tempfile
 
 from django.core.urlresolvers import reverse
 from nose.tools import istest
@@ -19,38 +17,26 @@ from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests import TEST_CONFIG
 
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import create_arborescence_zip
+from ..common import FileSystemCreationRoutine, create_arborescence_zip
 
 
 @attr('fs')
-class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
-                              CommonCreationRoutine):
+class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
+                              BasicTestCase, CommonCreationRoutine,
+                              FileSystemCreationRoutine):
 
     def setUp(self):
         super().setUp()
-
-        root_path = '/tmp/swh-deposit/test/build-zip/'
-        os.makedirs(root_path, exist_ok=True)
-
-        self.archive = create_arborescence_zip(
-            root_path, 'archive1', 'file1', b'some content in file')
-
         self.archive2 = create_arborescence_zip(
-            root_path, 'archive2', 'file2', b'some other content in file')
-
-        self.workdir = tempfile.mkdtemp(dir=root_path)
-        self.root_path = root_path
-
-    def tearDown(self):
-        shutil.rmtree(self.root_path)
+            self.root_path, 'archive2', 'file2', b'some other content in file')
+        self.workdir = os.path.join(self.root_path, 'workdir')
 
     @istest
     def access_to_existing_deposit_with_one_archive(self):
         """Access to deposit should stream a 200 response with its raw content
 
         """
-        deposit_id = self.create_simple_binary_deposit(
-            archive_path=self.archive['path'])
+        deposit_id = self.create_simple_binary_deposit()
 
         url = reverse(PRIVATE_GET_RAW_CONTENT,
                       args=[self.collection.name, deposit_id])
@@ -89,9 +75,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Access to deposit should stream a 200 response with its raw contents
 
         """
-        deposit_id = self.create_complex_binary_deposit(
-            archive_path=self.archive['path'],
-            archive_path2=self.archive2['path'])
+        deposit_id = self.create_complex_binary_deposit()
 
         url = reverse(PRIVATE_GET_RAW_CONTENT,
                       args=[self.collection.name, deposit_id])

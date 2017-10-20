@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import hashlib
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
@@ -14,11 +13,12 @@ from rest_framework.test import APITestCase
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
-from ..common import BasicTestCase, WithAuthTestCase
+from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
 from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY
 
 
-class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
+class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
+                            FileSystemCreationRoutine):
     """Status on deposit
 
     """
@@ -29,8 +29,6 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         """
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
 
         external_id = 'some-external-id-1'
 
@@ -38,13 +36,13 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         response = self.client.post(
             url,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive['data'],
             # + headers
+            CONTENT_LENGTH=self.archive['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
-            HTTP_CONTENT_LENGTH=len(data_text),
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         # then
