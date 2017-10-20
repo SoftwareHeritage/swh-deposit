@@ -202,11 +202,10 @@ process and an indexation process should be scheduled.
 
 origin_metadata table:
 ```
-origin                                  bigint        PK FK
-discovery_date                          date          PK FK
-translation_date                        date          PK FK
-provenance_type                         text                 // (enum: 'publisher', 'lister' needs to be completed)
-raw_metadata                            jsonb                // before translation
-indexer_configuration_id                bigint           FK  // tool used for translation
-translated_metadata                     jsonb                // with codemeta schema and terms
+id                                      bigint        PK
+origin                                  bigint        
+discovery_date                          date         
+provider_id                             bigint        FK      // (from provider table)
+metadata                                jsonb                // before translation
+indexer_configuration_id                bigint        FK  // tool used for extraction
 ```

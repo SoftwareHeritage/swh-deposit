@@ -88,6 +88,124 @@ and other stuff</description>
     <something>something</something>
 </entry>"""
 
+        self.atom_entry_data_atom_only = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <updated>2017-10-07T15:17:08Z</updated>
+                <author>some awesome author</author>
+        </entry>"""
+
+        self.atom_entry_data_codemeta = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom"
+                     xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <codemeta:id>1785io25c695</codemeta:id>
+                <codemeta:url>origin url</codemeta:url>
+                <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
+                <codemeta:applicationCategory>Domain</codemeta:applicationCategory>
+
+                <codemeta:description>description</codemeta:description>
+                <codemeta:keywords>key-word 1</codemeta:keywords>
+                <codemeta:keywords>key-word 2</codemeta:keywords>
+                <codemeta:dateCreated>creation date</codemeta:dateCreated>
+                <codemeta:datePublished>publication date</codemeta:datePublished>
+                <codemeta:releaseNotes>comment</codemeta:releaseNotes>
+                <codemeta:referencePublication>
+                  <codemeta:name> article name</codemeta:name>
+                  <codemeta:identifier> article id </codemeta:identifier>
+                </codemeta:referencePublication>
+                <codemeta:isPartOf>
+                    <codemeta:type> Collaboration/Projet </codemeta:type>
+                    <codemeta:name> project name</codemeta:name>
+                    <codemeta:identifier> id </codemeta:identifier>
+                </codemeta:isPartOf>
+                <codemeta:relatedLink>see also </codemeta:relatedLink>
+                <codemeta:funding>Sponsor A  </codemeta:funding>
+                <codemeta:funding>Sponsor B</codemeta:funding>
+                <codemeta:operatingSystem>Platform/OS </codemeta:operatingSystem>
+                <codemeta:softwareRequirements>dependencies </codemeta:softwareRequirements>
+                <codemeta:softwareVersion>Version</codemeta:softwareVersion>
+                <codemeta:developmentStatus>active </codemeta:developmentStatus>
+                <codemeta:license>
+                    <codemeta:name>license</codemeta:name>
+                    <codemeta:url>url spdx</codemeta:url>
+                </codemeta:license>
+                <codemeta:runtimePlatform>.Net Framework 3.0 </codemeta:runtimePlatform>
+                <codemeta:runtimePlatform>Python2.3</codemeta:runtimePlatform>
+                <codemeta:author>
+                    <codemeta:name> author1 </codemeta:name>
+                    <codemeta:affiliation> Inria </codemeta:affiliation>
+                    <codemeta:affiliation> UPMC </codemeta:affiliation>
+                </codemeta:author>
+                <codemeta:author>
+                    <codemeta:name> author2 </codemeta:name>
+                    <codemeta:affiliation> Inria </codemeta:affiliation>
+                    <codemeta:affiliation> UPMC </codemeta:affiliation>
+                </codemeta:author>
+                <codemeta:codeRepository>http://code.com</codemeta:codeRepository>
+                <codemeta:programmingLanguage>language 1</codemeta:programmingLanguage>
+                <codemeta:programmingLanguage>language 2</codemeta:programmingLanguage>
+                <codemeta:issueTracker>http://issuetracker.com</codemeta:issueTracker>
+            </entry>"""
+
+        self.atom_entry_data_dc_codemeta = b"""<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+               xmlns:dcterms="http://purl.org/dc/terms/"
+               xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+
+
+            <external_identifier>%s</external_identifier>
+            <dcterms:identifier>hal-01587361</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361/document</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361/file/AffectationRO-v1.0.0.zip</dcterms:identifier>
+            <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>
+            <dcterms:title xml:lang="en">The assignment problem</dcterms:title>
+            <dcterms:title xml:lang="fr">AffectationRO</dcterms:title>
+            <dcterms:creator>Gruenpeter, Morane</dcterms:creator>
+            <dcterms:subject>[INFO] Computer Science [cs]</dcterms:subject>
+            <dcterms:subject>[INFO.INFO-RO] Computer Science [cs]/Operations Research [cs.RO]</dcterms:subject>
+            <dcterms:type>SOFTWARE</dcterms:type>
+            <dcterms:abstract xml:lang="en">Project in OR: The assignment problemA java implementation for the assignment problem first release</dcterms:abstract>
+            <dcterms:abstract xml:lang="fr">description fr</dcterms:abstract>
+            <dcterms:created>2015-06-01</dcterms:created>
+            <dcterms:available>2017-10-19</dcterms:available>
+            <dcterms:language>en</dcterms:language>
+
+
+            <codemeta:url>url stable</codemeta:url>
+            <codemeta:version>Version sur hal </codemeta:version>
+            <codemeta:softwareVersion>Version entre par lutilisateur</codemeta:softwareVersion>
+            <codemeta:keywords>Mots-cls</codemeta:keywords>
+            <codemeta:releaseNotes>Commentaire</codemeta:releaseNotes>
+            <codemeta:referencePublication>Rfrence interne </codemeta:referencePublication>
+            <codemeta:isPartOf>
+                <codemeta:type> Collaboration/Projet </codemeta:type>
+                <codemeta:name> nom du projet</codemeta:name>
+                <codemeta:identifier> id </codemeta:identifier>
+            </codemeta:isPartOf>
+            <codemeta:relatedLink>Voir aussi  </codemeta:relatedLink>
+            <codemeta:funding>Financement  </codemeta:funding>
+            <codemeta:funding>Projet ANR </codemeta:funding>
+            <codemeta:funding>Projet Europen </codemeta:funding>
+            <codemeta:operatingSystem>Platform/OS </codemeta:operatingSystem>
+            <codemeta:softwareRequirements>Dpendances </codemeta:softwareRequirements>
+            <codemeta:developmentStatus>Etat du dveloppement </codemeta:developmentStatus>
+            <codemeta:license>
+                <codemeta:name>license</codemeta:name>
+                <codemeta:url>url spdx</codemeta:url>
+            </codemeta:license>
+            <codemeta:runtimePlatform>Outils de dveloppement- outil no1 </codemeta:runtimePlatform>
+            <codemeta:runtimePlatform>Outils de dveloppement- outil no2 </codemeta:runtimePlatform>
+            <codemeta:codeRepository>http://code.com</codemeta:codeRepository>
+            <codemeta:programmingLanguage>language 1</codemeta:programmingLanguage>
+            <codemeta:programmingLanguage>language 2</codemeta:programmingLanguage>
+        </entry>"""
+
         self.atom_entry_tei = b"""<TEI><teiHeader><fileDesc><titleStmt><title>HAL TEI export of hal-01587083</title></titleStmt><publicationStmt><distributor>CCSD</distributor><availability status="restricted"><licence target="http://creativecommons.org/licenses/by/4.0/">Distributed under a Creative Commons Attribution 4.0 International License</licence></availability><date when="2017-10-03T17:21:03+02:00"/></publicationStmt><sourceDesc><p part="N">HAL API platform</p></sourceDesc></fileDesc></teiHeader><text><body><listBibl><biblFull><titleStmt><title xml:lang="en">questionnaire software metadata</title><author role="aut"><persName><forename type="first">Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">7de56c632362954fa84172cad80afe4e</email><email type="domain">inria.fr</email><ptr type="url" target="moranegg.github.io"/><idno type="halauthorid">1556733</idno><affiliation ref="#struct-474639"/></author><editor role="depositor"><persName><forename>Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">f85a43a5fb4a2e0778a77e017f28c8fd</email><email type="domain">gmail.com</email></editor></titleStmt><editionStmt><edition n="v1" type="current"><date type="whenSubmitted">2017-09-29 11:21:32</date><date type="whenModified">2017-10-03 17:20:13</date><date type="whenReleased">2017-10-03 17:20:13</date><date type="whenProduced">2017-09-29</date><date type="whenEndEmbargoed">2017-09-29</date><ref type="file" target="https://hal.inria.fr/hal-01587083/document"><date notBefore="2017-09-29"/></ref><ref type="file" subtype="author" n="1" target="https://hal.inria.fr/hal-01587083/file/questionnaire.zip"><date notBefore="2017-09-29"/></ref></edition><respStmt><resp>contributor</resp><name key="442239"><persName><forename>Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">f85a43a5fb4a2e0778a77e017f28c8fd</email><email type="domain">gmail.com</email></name></respStmt></editionStmt><publicationStmt><distributor>CCSD</distributor><idno type="halId">hal-01587083</idno><idno type="halUri">https://hal.inria.fr/hal-01587083</idno><idno type="halBibtex">gruenpeter:hal-01587083</idno><idno type="halRefHtml">2017</idno><idno type="halRef">2017</idno></publicationStmt><seriesStmt/><notesStmt/><sourceDesc><biblStruct><analytic><title xml:lang="en">questionnaire software metadata</title><author role="aut"><persName><forename type="first">Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">7de56c632362954fa84172cad80afe4e</email><email type="domain">inria.fr</email><ptr type="url" target="moranegg.github.io"/><idno type="halauthorid">1556733</idno><affiliation ref="#struct-474639"/></author></analytic><monogr><imprint/></monogr></biblStruct></sourceDesc><profileDesc><langUsage><language ident="en">English</language></langUsage><textClass><classCode scheme="halDomain" n="info">Computer Science [cs]</classCode><classCode scheme="halTypology" n="SOFTWARE">Software</classCode></textClass></profileDesc></biblFull></listBibl></body><back><listOrg type="structures"><org type="laboratory" xml:id="struct-474639" status="VALID"><orgName>IRILL</orgName><orgName type="acronym">Initiative pour la Recherche et l'Innovation sur le Logiciel Libre</orgName><desc><address><country key="FR"/></address><ref type="url">https://www.irill.org/</ref></desc><listRelation><relation active="#struct-93591" type="direct"/><relation active="#struct-300009" type="direct"/><relation active="#struct-300301" type="direct"/></listRelation></org><org type="institution" xml:id="struct-93591" status="VALID"><orgName>Universite Pierre et Marie Curie - Paris 6</orgName><orgName type="acronym">UPMC</orgName><desc><address><addrLine>4 place Jussieu - 75005 Paris</addrLine><country key="FR"/></address><ref type="url">http://www.upmc.fr/</ref></desc></org><org type="institution" xml:id="struct-300009" status="VALID"><orgName>Institut National de Recherche en Informatique et en Automatique</orgName><orgName type="acronym">Inria</orgName><desc><address><addrLine>Domaine de VoluceauRocquencourt - BP 10578153 Le Chesnay Cedex</addrLine><country key="FR"/></address><ref type="url">http://www.inria.fr/en/</ref></desc></org><org type="institution" xml:id="struct-300301" status="VALID"><orgName>Universite Paris Diderot - Paris 7</orgName><orgName type="acronym">UPD7</orgName><desc><address><addrLine>5 rue Thomas-Mann - 75205 Paris cedex 13</addrLine><country key="FR"/></address><ref type="url">http://www.univ-paris-diderot.fr</ref></desc></org></listOrg></back></text></TEI>"""  # noqa
 
         self.atom_entry_data_badly_formatted = b"""<?xml version="1.0"?>
@@ -183,6 +301,47 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
+        self.assertFalse(bool(deposit_request.archive))
+
+    @istest
+    def post_deposit_atom_entry_with_codemeta(self):
+        """Posting an initial atom entry should return 201 with deposit receipt
+
+        """
+        # given
+        external_id = 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
+
+        with self.assertRaises(Deposit.DoesNotExist):
+            Deposit.objects.get(external_id=external_id)
+
+        atom_entry_data = self.atom_entry_data_dc_codemeta % external_id.encode('utf-8')
+
+        # when
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/atom+xml;type=entry',
+            data=atom_entry_data,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS='false')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.collection, self.collection)
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.client, self.user)
+
+        # one associated request to a deposit
+        deposit_request = DepositRequest.objects.get(deposit=deposit)
+        self.assertIsNotNone(deposit_request.metadata)
+
         self.assertFalse(bool(deposit_request.archive))
 
     @istest
