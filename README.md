@@ -223,6 +223,7 @@ The current answer for example for the
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:mediation>false</sword:mediation>
+            <sword:metadataRelevantHeader>false</sword:metadataRelevantHeader>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
             <sword:service>https://deposit.softwareheritage.org/1/hal/</sword:service>
@@ -329,6 +330,7 @@ Content-Type: application/xml
     <deposit_id>10</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
     <deposit_archive>None</deposit_archive>
+    <deposit_state>ready</deposit_state>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/10/metadata/" />
@@ -336,6 +338,8 @@ Content-Type: application/xml
     <link rel="edit-media" href="/1/hal/10/media/"/>
     <!-- SE-IRI -->
     <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/10/metadata/" />
+    <!-- State-IRI -->
+    <link rel="alternate" href="/1/<collection-name>/10/status/"/>
 
     <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
 </entry>
@@ -426,6 +430,7 @@ Content-Type: application/xml
     <deposit_id>9</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
     <deposit_archive>payload</deposit_archive>
+    <deposit_state>ready</deposit_state>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/9/metadata/" />
@@ -433,6 +438,8 @@ Content-Type: application/xml
     <link rel="edit-media" href="/1/hal/9/media/"/>
     <!-- SE-IRI -->
     <link rel="http://purl.org/net/sword/terms/add" href="/1/hal/9/metadata/" />
+    <!-- State-IRI -->
+    <link rel="alternate" href="/1/<collection-name>/10/status/"/>
 
     <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
 </entry>
