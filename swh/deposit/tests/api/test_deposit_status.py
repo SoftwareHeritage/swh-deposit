@@ -14,11 +14,12 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
+from ..common import CommonCreationRoutine
 from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
-                            FileSystemCreationRoutine):
+                            FileSystemCreationRoutine, CommonCreationRoutine):
     """Status on deposit
 
     """
@@ -74,3 +75,18 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         status_response = self.client.get(status_url)
         self.assertEqual(status_response.status_code,
                          status.HTTP_404_NOT_FOUND)
+
+    @istest
+    def status_with_http_accept_header_should_not_break(self):
+        """Asking deposit status with Accept header should return 200
+
+        """
+        deposit_id = self.create_deposit_partial()
+
+        status_url = reverse(STATE_IRI, args=[
+            self.collection.name, deposit_id])
+        response = self.client.get(
+            status_url,
+            HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
