@@ -22,9 +22,15 @@ PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
 
+ARCHIVE_TYPE = 'archive'
+METADATA_TYPE = 'metadata'
+
 AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
+DEPOSIT_STATUS_REJECTED = 'rejected'
+DEPOSIT_STATUS_PARTIAL = 'partial'
 DEPOSIT_STATUS_READY = 'ready'
+DEPOSIT_STATUS_READY_FOR_CHECKS = 'ready-for-checks'
 
 
 def setup_django_for(platform):

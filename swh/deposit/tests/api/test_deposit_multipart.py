@@ -14,9 +14,11 @@ from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_READY
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase
+from ..common import FileSystemCreationRoutine
 
 
-class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
+class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
+                               FileSystemCreationRoutine):
     """Post multipart deposit scenario
 
     """
@@ -110,13 +112,12 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         # from django.core.files import uploadedfile
         data_atom_entry = self.data_atom_entry_ok
 
-        archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
-            BytesIO(archive_content),
-            field_name='archive0',
-            name='archive0',
+            BytesIO(self.archive['data']),
+            field_name=self.archive['name'],
+            name=self.archive['name'],
             content_type='application/zip',
-            size=len(archive_content),
+            size=self.archive['length'],
             charset=None)
 
         atom_entry = InMemoryUploadedFile(
@@ -160,7 +161,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertRegex(deposit_request.archive.name, 'archive0')
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
             else:
                 self.assertEquals(
                     deposit_request.metadata[
@@ -178,13 +180,12 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
         data_atom_entry = self.data_atom_entry_ok
 
-        archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
-            BytesIO(archive_content),
-            field_name='archive0',
-            name='archive0',
+            BytesIO(self.archive['data']),
+            field_name=self.archive['name'],
+            name=self.archive['name'],
             content_type='application/zip',
-            size=len(archive_content),
+            size=self.archive['length'],
             charset=None)
 
         atom_entry = InMemoryUploadedFile(
@@ -229,7 +230,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertRegex(deposit_request.archive.name, 'archive0')
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
             else:
                 self.assertEquals(
                     deposit_request.metadata[
@@ -258,7 +260,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase):
         for deposit_request in deposit_requests:
             self.assertEquals(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
-                self.assertRegex(deposit_request.archive.name, 'archive0')
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
             else:
                 self.assertEquals(
                     deposit_request.metadata[

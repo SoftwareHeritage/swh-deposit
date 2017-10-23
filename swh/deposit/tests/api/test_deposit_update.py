@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import hashlib
-
 from django.core.urlresolvers import reverse
 from nose.tools import istest
 from rest_framework import status
@@ -12,11 +10,14 @@ from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.config import EDIT_SE_IRI, EM_IRI
+
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+from ..common import FileSystemCreationRoutine, create_arborescence_zip
 
 
-class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
-                                     BasicTestCase, CommonCreationRoutine):
+class DepositUpdateOrReplaceExistingDataTest(
+        APITestCase, WithAuthTestCase, BasicTestCase,
+        FileSystemCreationRoutine, CommonCreationRoutine):
     """Try put/post (update/replace) query on EM_IRI
 
     """
@@ -28,13 +29,21 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
     <foobar>bar</foobar>
 </entry>"""
 
+        self.atom_entry_data1 = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom">
+    <foobar>bar</foobar>
+</entry>"""
+
+        self.archive2 = create_arborescence_zip(
+            self.root_path, 'archive2', 'file2', b'some other content in file')
+
     @istest
     def replace_archive_to_deposit_is_possible(self):
         """Replace all archive with another one should return a 204 response
 
         """
         # given
-        deposit_id = self.create_deposit_partial()
+        deposit_id = self.create_simple_binary_deposit(status_partial=True)
 
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
@@ -42,7 +51,15 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             type=self.deposit_request_types['archive'])
 
         assert len(list(requests)) == 1
-        assert 'filename0' in requests[0].archive.name
+        assert self.archive['name'] in requests[0].archive.name
+
+        # we have no metadata for that deposit
+        requests = list(DepositRequest.objects.filter(
+            deposit=deposit, type=self.deposit_request_types['metadata']))
+        assert len(requests) == 0
+
+        deposit_id = self._update_deposit_with_status(deposit_id,
+                                                      status_partial=True)
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
@@ -50,21 +67,20 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
 
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
         external_id = 'some-external-id-1'
 
         response = self.client.put(
             update_uri,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive2['data'],
             # + headers
+            CONTENT_LENGTH=self.archive2['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive2['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
-            HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=otherfilename')
+            HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+                self.archive2['name'], ))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -73,7 +89,7 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             type=self.deposit_request_types['archive'])
 
         self.assertEquals(len(list(requests)), 1)
-        self.assertRegex(requests[0].archive.name, 'otherfilename')
+        self.assertRegex(requests[0].archive.name, self.archive2['name'])
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
@@ -86,16 +102,13 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
 
         """
         # given
-        deposit_id = self.create_deposit_partial()
+        deposit_id = self.create_simple_binary_deposit(status_partial=True)
 
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
             deposit=deposit,
             type=self.deposit_request_types['metadata'])
-
-        assert len(list(requests)) == 1
-        external_id_key = '{http://www.w3.org/2005/Atom}external_identifier'
-        assert requests[0].metadata[external_id_key] == 'some-external-id'
+        assert len(list(requests)) == 0
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['archive']))
@@ -117,7 +130,6 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
 
         self.assertEquals(len(list(requests)), 1)
         metadata = requests[0].metadata
-        self.assertIsNone(metadata.get(external_id_key))
         self.assertEquals(metadata["{http://www.w3.org/2005/Atom}foobar"],
                           'bar')
 
@@ -126,27 +138,13 @@ class DepositReplaceExistingDataTest(APITestCase, WithAuthTestCase,
             deposit=deposit, type=self.deposit_request_types['archive']))
         self.assertEquals(len(requests), 1)
 
-
-class DepositUpdateDepositWithNewDataTest(
-        APITestCase, WithAuthTestCase, BasicTestCase, CommonCreationRoutine):
-    """Testing Replace/Update on EDIT_SE_IRI class.
-
-    """
-    def setUp(self):
-        super().setUp()
-
-        self.atom_entry_data1 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <foobar>bar</foobar>
-</entry>"""
-
     @istest
     def add_archive_to_deposit_is_possible(self):
         """Add another archive to a deposit return a 201 response
 
         """
         # given
-        deposit_id = self.create_deposit_partial()
+        deposit_id = self.create_simple_binary_deposit(status_partial=True)
 
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
@@ -154,29 +152,28 @@ class DepositUpdateDepositWithNewDataTest(
             type=self.deposit_request_types['archive'])
 
         assert len(list(requests)) == 1
-        assert 'filename0' in requests[0].archive.name
+        assert self.archive['name'] in requests[0].archive.name
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
-        assert len(requests) == 1
+        assert len(requests) == 0
 
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
 
-        data_text = b'some content'
-        md5sum = hashlib.md5(data_text).hexdigest()
         external_id = 'some-external-id-1'
 
         response = self.client.post(
             update_uri,
             content_type='application/zip',  # as zip
-            data=data_text,
+            data=self.archive2['data'],
             # + headers
+            CONTENT_LENGTH=self.archive2['length'],
             HTTP_SLUG=external_id,
-            HTTP_CONTENT_MD5=md5sum,
+            HTTP_CONTENT_MD5=self.archive2['md5sum'],
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_IN_PROGRESS='false',
-            HTTP_CONTENT_LENGTH=len(data_text),
-            HTTP_CONTENT_DISPOSITION='attachment; filename=otherfilename')
+            HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+                self.archive2['name'],))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -186,18 +183,18 @@ class DepositUpdateDepositWithNewDataTest(
 
         self.assertEquals(len(requests), 2)
         # first archive still exists
-        self.assertRegex(requests[0].archive.name, 'filename0')
+        self.assertRegex(requests[0].archive.name, self.archive['name'])
         # a new one was added
-        self.assertRegex(requests[1].archive.name, 'otherfilename')
+        self.assertRegex(requests[1].archive.name, self.archive2['name'])
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
-        self.assertEquals(len(requests), 1)
+        self.assertEquals(len(requests), 0)
 
     @istest
     def add_metadata_to_deposit_is_possible(self):
-        """Replace all metadata with another one should return a 204 response
+        """Add metadata with another one should return a 204 response
 
         """
         # given
@@ -208,13 +205,11 @@ class DepositUpdateDepositWithNewDataTest(
             deposit=deposit,
             type=self.deposit_request_types['metadata'])
 
-        assert len(list(requests)) == 1
-        external_id_key = '{http://www.w3.org/2005/Atom}external_identifier'
-        assert requests[0].metadata[external_id_key] == 'some-external-id'
+        assert len(list(requests)) == 2
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['archive']))
-        assert len(requests) == 1
+        assert len(requests) == 0
 
         update_uri = reverse(EDIT_SE_IRI, args=[self.collection.name,
                                                 deposit_id])
@@ -230,19 +225,15 @@ class DepositUpdateDepositWithNewDataTest(
             deposit=deposit,
             type=self.deposit_request_types['metadata']).order_by('id')
 
-        self.assertEquals(len(list(requests)), 2)
-        # first metadata still exists
-        self.assertEquals(requests[0].metadata[external_id_key],
-                          'some-external-id')
+        self.assertEquals(len(list(requests)), 3)
         # a new one was added
         self.assertEquals(requests[1].metadata[
-            "{http://www.w3.org/2005/Atom}foobar"],
-                          'bar')
+            "{http://www.w3.org/2005/Atom}foobar"], 'bar')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['archive']))
-        self.assertEquals(len(requests), 1)
+        self.assertEquals(len(requests), 0)
 
 
 class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,

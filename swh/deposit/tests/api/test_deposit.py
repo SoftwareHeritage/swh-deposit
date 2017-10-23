@@ -3,18 +3,42 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import hashlib
+
 from django.core.urlresolvers import reverse
+from io import BytesIO
 from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.config import COL_IRI
-from swh.deposit.models import DepositClient, DepositCollection
+from swh.deposit.config import COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_REJECTED
+from swh.deposit.config import DEPOSIT_STATUS_PARTIAL
+from swh.deposit.models import Deposit, DepositClient, DepositCollection
+from swh.deposit.parsers import parse_xml
 
-from ..common import BasicTestCase, WithAuthTestCase
+from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
 
-class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase):
+class DepositNoAuthCase(APITestCase, BasicTestCase):
+    """Deposit access are protected with basic authentication.
+
+    """
+    @istest
+    def post_will_fail_with_401(self):
+        """Without authentication, endpoint refuses access with 401 response
+
+        """
+        url = reverse(COL_IRI, args=[self.collection.name])
+
+        # when
+        response = self.client.post(url)
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
+                          CommonCreationRoutine):
     """Deposit access are protected with basic authentication.
 
     """
@@ -47,3 +71,49 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code,
                          status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @istest
+    def create_deposit_with_rejection_status(self):
+        url = reverse(COL_IRI, args=[self.collection.name])
+
+        data = b'some data which is clearly not a zip file'
+        md5sum = hashlib.md5(data).hexdigest()
+        external_id = 'some-external-id-1'
+
+        # when
+        response = self.client.post(
+            url,
+            content_type='application/zip',  # as zip
+            data=data,
+            # + headers
+            CONTENT_LENGTH=len(data),
+            # other headers needs HTTP_ prefix to be taken into account
+            HTTP_SLUG=external_id,
+            HTTP_CONTENT_MD5=md5sum,
+            HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+            HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        response_content = parse_xml(BytesIO(response.content))
+        actual_state = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_state']
+        self.assertEquals(actual_state, DEPOSIT_STATUS_REJECTED)
+
+    @istest
+    def act_on_deposit_rejected_is_not_permitted(self):
+        deposit_id = self.create_deposit_with_status_rejected()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit.status == DEPOSIT_STATUS_REJECTED
+
+        response = self.client.post(
+            reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id]),
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_entry_data1,
+            HTTP_SLUG='external-id')
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRegex(
+            response.content.decode('utf-8'),
+            "You can only act on deposit with status &#39;%s&#39;" % (
+                DEPOSIT_STATUS_PARTIAL, ))
