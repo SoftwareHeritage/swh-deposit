@@ -14,6 +14,7 @@ ALLOWED_HOSTS += ['testserver']
 INSTALLED_APPS += ['django_nose']
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = ['--verbosity=3', '-s']  # to see test pass
 
 # https://docs.djangoproject.com/en/1.10/ref/settings/#logging
 LOGGING = {

@@ -8,6 +8,7 @@ from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import SD_IRI
 from ..common import BasicTestCase, WithAuthTestCase
 
@@ -47,7 +48,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
     xmlns="http://www.w3.org/2007/app">
 
     <sword:version>2.0</sword:version>
-    <sword:maxUploadSize>209715200</sword:maxUploadSize>
+    <sword:maxUploadSize>%s</sword:maxUploadSize>
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>
@@ -64,4 +65,4 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
         </collection>
     </workspace>
 </service>
-''' % (self.username, self.username, self.username))
+''' % (TEST_CONFIG['max_upload_size'], self.username, self.username, self.username))  # noqa
