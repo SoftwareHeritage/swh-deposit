@@ -13,7 +13,8 @@ from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.timezone import now
 
-from .config import DEPOSIT_STATUS_READY
+from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY_FOR_CHECKS
+from .config import DEPOSIT_STATUS_PARTIAL
 
 
 class Dbversion(models.Model):
@@ -37,10 +38,11 @@ class Dbversion(models.Model):
 
 """Possible status"""
 DEPOSIT_STATUS = [
-    ('partial', 'partial'),
+    (DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_PARTIAL),
     ('expired', 'expired'),
-    # ('ready-for-checks', 'ready-for-checks'),
+    (DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_READY_FOR_CHECKS),
     (DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY),
+    ('rejected', 'rejected'),
     ('injecting', 'injecting'),
     ('success', 'success'),
     ('failure', 'failure'),
@@ -49,15 +51,16 @@ DEPOSIT_STATUS = [
 
 """Possible status and the detailed meaning."""
 DEPOSIT_STATUS_DETAIL = {
-    'partial': 'the deposit is new or partially received since it can be'
-               ' done in multiple requests',
-    'expired': 'deposit has been there too long and is now '
+    DEPOSIT_STATUS_PARTIAL: 'Deposit is new or partially received since it can'
+                            ' be done in multiple requests',
+    'expired': 'Deposit has been there too long and is now '
                'deemed ready to be garbage collected',
-    # 'ready-for-checks': 'Deposit is ready for supplementary checks '
-    #                     '(tarball ok, etc...)',
-    DEPOSIT_STATUS_READY: 'deposit is fully received and '
+    DEPOSIT_STATUS_READY_FOR_CHECKS: 'Deposit is ready for additional checks '
+                                     '(tarball ok, etc...)',
+    DEPOSIT_STATUS_READY: 'Deposit is fully received, checked, and '
                           'ready for injection',
-    'injecting': "injection is ongoing on swh's side",
+    'rejected': 'Deposit failed the checks',
+    'injecting': "Injection is ongoing on swh's side",
     'success': 'Injection is successful',
     'failure': 'Injection is a failure',
 }
@@ -133,7 +136,7 @@ class Deposit(models.Model):
     # Deposit's status regarding injection
     status = models.TextField(
         choices=DEPOSIT_STATUS,
-        default='partial')
+        default=DEPOSIT_STATUS_PARTIAL)
 
     class Meta:
         db_table = 'deposit'

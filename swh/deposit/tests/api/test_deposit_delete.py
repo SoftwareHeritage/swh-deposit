@@ -48,8 +48,9 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = list(DepositRequest.objects.filter(deposit=deposit))
 
-        self.assertEquals(len(requests), 1)
+        self.assertEquals(len(requests), 2)
         self.assertEquals(requests[0].type.name, 'metadata')
+        self.assertEquals(requests[1].type.name, 'metadata')
 
     @istest
     def delete_archive_on_undefined_deposit_fails(self):

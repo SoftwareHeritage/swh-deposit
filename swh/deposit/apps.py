@@ -8,3 +8,9 @@ from django.apps import AppConfig
 
 class DepositConfig(AppConfig):
     name = 'swh.deposit'
+
+    def ready(self):
+        super().ready()
+
+        # install the signal permitting to trigger the status' check
+        from .signals import deposit_on_status_ready_for_check  # noqa

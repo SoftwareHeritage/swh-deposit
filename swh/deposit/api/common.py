@@ -16,9 +16,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from swh.model import hashutil
+
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
-from ..config import DEPOSIT_STATUS_READY
+from ..config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_PARTIAL
 
 from ..models import Deposit, DepositRequest, DepositCollection
 from ..models import DepositRequestType, DepositClient
@@ -144,10 +146,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_READY
+            status_type = DEPOSIT_STATUS_READY_FOR_CHECKS
         else:
             complete_date = None
-            status_type = 'partial'
+            status_type = DEPOSIT_STATUS_PARTIAL
 
         if not deposit_id:
             deposit = Deposit(collection=self._collection,
@@ -298,7 +300,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     CHECKSUM_MISMATCH,
                     'Wrong md5 hash',
                     'The checksum sent %s and the actual checksum '
-                    '%s does not match.' % (md5sum, _md5sum))
+                    '%s does not match.' % (hashutil.hash_to_hex(md5sum),
+                                            hashutil.hash_to_hex(_md5sum)))
 
         return None
 
@@ -333,8 +336,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
             - 400 (bad request) if the request is not providing an external
               identifier
-            - 403 (forbidden) if the length of the archive exceeds the
-              max size configured
+            - 413 (request entity too large) if the length of the
+              archive exceeds the max size configured
             - 412 (precondition failed) if the length or md5 hash provided
               mismatch the reality of the archive
             - 415 (unsupported media type) if a wrong media type is provided
@@ -427,6 +430,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
               identifier
             - 412 (precondition failed) if the potentially md5 hash provided
               mismatch the reality of the archive
+            - 413 (request entity too large) if the length of the
+              archive exceeds the max size configured
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
@@ -567,7 +572,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_READY
+        deposit.status = DEPOSIT_STATUS_READY_FOR_CHECKS
         deposit.save()
 
         return {
@@ -655,8 +660,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
     def restrict_access(self, req, deposit=None):
         if deposit:
-            if req.method != 'GET' and deposit.status != 'partial':
-                summary = "You can only act on deposit with status 'partial'"
+            if (req.method != 'GET' and
+               deposit.status != DEPOSIT_STATUS_PARTIAL):
+                summary = "You can only act on deposit with status '%s'" % (
+                    DEPOSIT_STATUS_PARTIAL, )
                 description = "This deposit has status '%s'" % deposit.status
                 return make_error_dict(
                     BAD_REQUEST, summary=summary,

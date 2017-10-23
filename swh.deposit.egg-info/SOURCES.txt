@@ -7,6 +7,7 @@ Makefile.local
 README-dev.md
 README-getting-started.md
 README-injection.md
+README-metadata.md
 README-sys.md
 README.md
 requirements-swh.txt
@@ -56,6 +57,7 @@ swh/deposit/create_user.py
 swh/deposit/errors.py
 swh/deposit/models.py
 swh/deposit/parsers.py
+swh/deposit/signals.py
 swh/deposit/urls.py
 swh/deposit/wsgi.py
 swh/deposit/api/__init__.py
@@ -79,6 +81,7 @@ swh/deposit/migrations/0001_initial.py
 swh/deposit/migrations/0002_depositrequest_archive.py
 swh/deposit/migrations/0003_temporaryarchive.py
 swh/deposit/migrations/0004_delete_temporaryarchive.py
+swh/deposit/migrations/0005_auto_20171019_1436.py
 swh/deposit/migrations/__init__.py
 swh/deposit/service/__init__.py
 swh/deposit/service/clean_temporary_directory.py
