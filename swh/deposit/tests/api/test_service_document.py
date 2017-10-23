@@ -19,26 +19,32 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
     """
     @istest
     def service_document_no_authentication_fails(self):
-        """Without authentication, service document endpoint is unauthorized"""
+        """Without authentication, service document endpoint should return 401
+
+        """
         url = reverse(SD_IRI)
 
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-
-class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
     @istest
-    def service_document(self):
-        """With authentication, service document list user's collection
+    def service_document_with_http_accept_should_not_break(self):
+        """Without auth, sd endpoint through browser should return 401
 
         """
         url = reverse(SD_IRI)
 
         # when
-        response = self.client.get(url)
+        response = self.client.get(
+            url,
+            HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
 
-        # then
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
+    def assertResponseOk(self, response):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.content.decode('utf-8'),
                           '''<?xml version="1.0" ?>
@@ -66,3 +72,30 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
     </workspace>
 </service>
 ''' % (TEST_CONFIG['max_upload_size'], self.username, self.username, self.username))  # noqa
+
+    @istest
+    def service_document(self):
+        """With authentication, service document list user's collection
+
+        """
+        url = reverse(SD_IRI)
+
+        # when
+        response = self.client.get(url)
+
+        # then
+        self.assertResponseOk(response)
+
+    @istest
+    def service_document_with_http_accept_header(self):
+        """With authentication, with browser, sd list user's collection
+
+        """
+        url = reverse(SD_IRI)
+
+        # when
+        response = self.client.get(
+            url,
+            HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+
+        self.assertResponseOk(response)
