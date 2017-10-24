@@ -4,7 +4,13 @@
 # See top-level LICENSE file for more information
 
 from .common import *  # noqa
+from .common import ALLOWED_HOSTS
 from swh.core import config
+
+ALLOWED_HOSTS += ['deposit.softwareheritage.org']
+# Setup support for proxy headers
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 DEBUG = False
 
