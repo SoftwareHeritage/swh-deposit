@@ -62,11 +62,12 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
                          deposit.id)
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}status'],
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
                          DEPOSIT_STATUS_READY)
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}detail'],
-                         'Deposit is fully received, checked, and ready for '
-                         'injection')
+        self.assertEqual(
+            r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
+            'Deposit is fully received, checked, and ready for '
+            'injection')
 
     @istest
     def status_on_unknown_deposit(self):

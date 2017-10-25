@@ -2,6 +2,6 @@
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/">
     <deposit_id>{{ deposit_id }}</deposit_id>
-    <status>{{ status }}</status>
-    <detail>{{ status_detail }}</detail>
+    <deposit_status>{{ status }}</deposit_status>
+    <deposit_status_detail>{{ status_detail }}</deposit_status_detail>
 </entry>

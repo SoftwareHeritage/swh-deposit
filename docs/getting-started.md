@@ -204,7 +204,7 @@ Content-Type: application/xml
     <deposit_id>9</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
     <deposit_archive>payload</deposit_archive>
-    <deposit_state>ready</deposit_state>
+    <deposit_status>ready</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/<collection-name>/10/metadata/" />
@@ -292,7 +292,7 @@ Content-Type: application/xml
     <deposit_id>10</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
     <deposit_archive>None</deposit_archive>
-    <deposit_state>partial</deposit_state>
+    <deposit_status>partial</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/<collection-name>/10/metadata/" />
@@ -325,8 +325,8 @@ Response:
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/">
     <deposit_id>9</deposit_id>
-    <status>ready</status>
-    <detail>deposit is fully received and ready for injection</detail>
+    <deposit_status>ready</deposit_status>
+    <deposit_status_detail>deposit is fully received and ready for injection</deposit_status_detail>
 </entry>
 
 ```

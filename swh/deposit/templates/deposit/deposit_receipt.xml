@@ -4,7 +4,7 @@
     <deposit_id>{{ deposit_id }}</deposit_id>
     <deposit_date>{{ deposit_date }}</deposit_date>
     <deposit_archive>{{ archive }}</deposit_archive>
-    <deposit_state>{{ status }}</deposit_state>
+    <deposit_status>{{ status }}</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="{{ edit_se_iri }}" />

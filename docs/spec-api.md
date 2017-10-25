@@ -330,7 +330,7 @@ Content-Type: application/xml
     <deposit_id>10</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
     <deposit_archive>None</deposit_archive>
-    <deposit_state>ready</deposit_state>
+    <deposit_status>ready</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/10/metadata/" />
@@ -430,7 +430,7 @@ Content-Type: application/xml
     <deposit_id>9</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
     <deposit_archive>payload</deposit_archive>
-    <deposit_state>ready</deposit_state>
+    <deposit_status>ready</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/9/metadata/" />
