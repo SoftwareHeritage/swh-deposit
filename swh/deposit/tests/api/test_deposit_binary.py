@@ -196,7 +196,7 @@ and other stuff</description>
             response_content['{http://www.w3.org/2005/Atom}deposit_id'],
             deposit.id)
         self.assertEqual(
-            response_content['{http://www.w3.org/2005/Atom}deposit_state'],
+            response_content['{http://www.w3.org/2005/Atom}deposit_status'],
             deposit.status)
 
         edit_se_iri = reverse('edit_se_iri',
