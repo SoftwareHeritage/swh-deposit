@@ -1,3 +1,5 @@
+.. _swh-deposit:
+
 Software Heritage Deposit
 =========================
 
