@@ -47,7 +47,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
         self.assertEquals(r._headers['content-type'][1],
                           'application/octet-stream')
 
-        data = r.content
+        # read the stream
+        data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
         self.assertEquals(actual_sha1, self.archive['sha1sum'])
 
@@ -85,7 +86,8 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
         self.assertEquals(r.status_code, status.HTTP_200_OK)
         self.assertEquals(r._headers['content-type'][1],
                           'application/octet-stream')
-        data = r.content
+        # read the stream
+        data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
         self._check_tarball_consistency(actual_sha1)
 
