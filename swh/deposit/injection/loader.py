@@ -136,12 +136,35 @@ class DepositLoader(loader.TarLoader):
         revision = metadata['revision']
         occurrence = metadata['occurrence']
 
+
         self.client.update_deposit_status(deposit_update_url, 'injecting')
+
         super().prepare(tar_path=archive,
                         origin=origin,
                         visit_date=visit_date,
                         revision=revision,
                         occurrences=[occurrence])
+
+    def store_metadata(self):
+        """Storing the origin_metadata during the load processus.
+
+        Fetching tool and metadata_provider from storage and adding the
+        metadata associated to the current origin.
+
+        """
+        try:
+            tool_id = self.storage.indexer_configuration_get(
+                        self.origin_metadata['tool'])
+            provider_id = self.storage.metadata_provider_get_by(
+                            self.origin_metadata['provider'])
+
+            self.storage.origin_metadata_add(self.origin_id,
+                                             self.visit_date,
+                                             provider_id,
+                                             tool_id,
+                                             self.origin_metadata['metadata'])
+        except:
+            self.log.exception('Problem when storing origin_metadata')
 
     def post_load(self, success=True):
         """Updating the deposit's status according to its loading status.

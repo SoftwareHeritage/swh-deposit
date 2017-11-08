@@ -150,8 +150,8 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # Read information metadata
         data['origin'] = {
-            'type': deposit.collection.name,
-            'url': deposit.external_id,
+            'type': 'deposit',
+            'url': deposit.client.url + deposit.external_id,
         }
 
         # revision
@@ -189,6 +189,28 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'branch': 'master'
         }
 
+        provider = {
+            'provider_name': deposit.client.last_name,
+            'provider_type': 'deposit_client',
+            'provider_url': deposit.client.url,
+            'metadata': {}
+        }
+
+        tool = {
+            'tool_name': 'swh-deposit',
+            'tool_version': '0.0.1',
+            'tool_configuration': {
+                'sword_version': '2'
+            }
+        }
+
+        data['origin_metadata'] = {
+            'provider': provider,
+            'tool': tool,
+            'metadata': metadata
+        }
+
+        print(data)
         return data
 
     def process_get(self, req, collection_name, deposit_id):

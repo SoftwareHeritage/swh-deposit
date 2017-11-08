@@ -37,8 +37,24 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         expected_meta = {
             'origin': {
-                'url': 'some-external-id',
-                'type': 'hal'
+                'url': 'https://hal.archives-ouvertes.fr/some-external-id',
+                'type': 'deposit'
+            },
+            'origin_metadata': {
+                'metadata': {},
+                'provider': {
+                    'provider_name': '',
+                    'provider_type': 'deposit_client',
+                    'provider_url': 'https://hal.archives-ouvertes.fr/',
+                    'metadata': {}
+                },
+                'tool': {
+                    'tool_name': 'swh-deposit',
+                    'tool_version': '0.0.1',
+                    'tool_configuration': {
+                        'sword_version': '2'
+                    }
+                }
             },
             'revision': {
                 'synthetic': True,
