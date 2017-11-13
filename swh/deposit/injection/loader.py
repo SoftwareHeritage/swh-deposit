@@ -136,7 +136,6 @@ class DepositLoader(loader.TarLoader):
         revision = metadata['revision']
         occurrence = metadata['occurrence']
 
-
         self.client.update_deposit_status(deposit_update_url, 'injecting')
 
         super().prepare(tar_path=archive,
@@ -152,17 +151,14 @@ class DepositLoader(loader.TarLoader):
         metadata associated to the current origin.
 
         """
+        origin_id = self.origin_id
+        visit_date = self.visit_date
+        provider = self.origin_metadata['provider']
+        tool = self.origin_metadata['tool']
+        metadata = self.origin_metadata['metadata']
         try:
-            tool_id = self.storage.indexer_configuration_get(
-                        self.origin_metadata['tool'])
-            provider_id = self.storage.metadata_provider_get_by(
-                            self.origin_metadata['provider'])
-
-            self.storage.origin_metadata_add(self.origin_id,
-                                             self.visit_date,
-                                             provider_id,
-                                             tool_id,
-                                             self.origin_metadata['metadata'])
+            self.send_origin_metadata(self, origin_id, visit_date, provider,
+                                      tool, metadata)
         except:
             self.log.exception('Problem when storing origin_metadata')
 

@@ -71,7 +71,7 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
 
     """
     ADDITIONAL_CONFIG = {
-        'extraction_dir': ('str', '/tmp/swh-deposit/archive/')
+        'extraction_dir': ('str', '/tmp/swh-deposit/archive/'),
     }
 
     def __init__(self):
@@ -120,6 +120,28 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
     """Class in charge of aggregating metadata on a deposit.
 
     """
+    ADDITIONAL_CONFIG = {
+        'provider': ('dict', {
+            'provider_name': '',
+            'provider_type': 'deposit_client',
+            'provider_url': '',
+            'metadata': {
+            }
+        }),
+        'tool': ('dict', {
+            'tool_name': 'swh-deposit',
+            'tool_version': '0.0.1',
+            'tool_configuration': {
+                'sword_version': '2'
+            }
+        })
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.provider = self.config['provider']
+        self.tool = self.config['tool']
+
     def _aggregate_metadata(self, deposit, metadata_requests):
         """Retrieve and aggregates metadata information.
 
@@ -163,6 +185,10 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'email': deposit.client.email,
         }
 
+        # metadata provider
+        self.provider['provider_name'] = deposit.client.last_name
+        self.provider['provider_url'] = deposit.client.url
+
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
             fullname, deposit.id, deposit.collection.name)
@@ -189,28 +215,12 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'branch': 'master'
         }
 
-        provider = {
-            'provider_name': deposit.client.last_name,
-            'provider_type': 'deposit_client',
-            'provider_url': deposit.client.url,
-            'metadata': {}
-        }
-
-        tool = {
-            'tool_name': 'swh-deposit',
-            'tool_version': '0.0.1',
-            'tool_configuration': {
-                'sword_version': '2'
-            }
-        }
-
         data['origin_metadata'] = {
-            'provider': provider,
-            'tool': tool,
+            'provider': self.provider,
+            'tool': self.tool,
             'metadata': metadata
         }
 
-        print(data)
         return data
 
     def process_get(self, req, collection_name, deposit_id):
