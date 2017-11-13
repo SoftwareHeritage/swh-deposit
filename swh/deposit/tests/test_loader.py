@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import json
+import os
 import unittest
 import shutil
 
@@ -145,6 +146,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
     def setUp(self):
         super().setUp()
+
+        # create the extraction dir used by the loader
+        os.makedirs(TEST_LOADER_CONFIG['extraction_dir'], exist_ok=True)
 
         self.server = 'http://localhost/'
 
