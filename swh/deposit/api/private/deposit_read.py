@@ -165,10 +165,9 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         """
         data = {}
-        metadata_requests = []
 
         # Retrieve tarballs/metadata information
-        metadata = self._aggregate_metadata(deposit, metadata_requests)
+        metadata = self._aggregate_metadata(deposit, requests)
 
         # Read information metadata
         data['origin'] = {
@@ -214,7 +213,6 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         data['occurrence'] = {
             'branch': 'master'
         }
-
         data['origin_metadata'] = {
             'provider': self.provider,
             'tool': self.tool,

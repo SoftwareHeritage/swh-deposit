@@ -135,6 +135,7 @@ class DepositLoader(loader.TarLoader):
         visit_date = datetime.datetime.now(tz=datetime.timezone.utc)
         revision = metadata['revision']
         occurrence = metadata['occurrence']
+        self.origin_metadata = metadata['origin_metadata']
 
         self.client.update_deposit_status(deposit_update_url, 'injecting')
 
@@ -157,7 +158,7 @@ class DepositLoader(loader.TarLoader):
         tool = self.origin_metadata['tool']
         metadata = self.origin_metadata['metadata']
         try:
-            self.send_origin_metadata(self, origin_id, visit_date, provider,
+            self.send_origin_metadata(origin_id, visit_date, provider,
                                       tool, metadata)
         except:
             self.log.exception('Problem when storing origin_metadata')

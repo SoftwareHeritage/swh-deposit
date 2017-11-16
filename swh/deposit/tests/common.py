@@ -16,7 +16,8 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, EM_IRI, EDIT_SE_IRI
-from swh.deposit.models import DepositClient, DepositCollection
+from swh.deposit.models import DepositClient, DepositCollection, Deposit
+from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
@@ -97,7 +98,7 @@ class FileSystemCreationRoutine(TestCase):
         super().tearDown()
         shutil.rmtree(self.root_path)
 
-    def create_simple_binary_deposit(self, status_partial=False):
+    def create_simple_binary_deposit(self, status_partial=True):
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/zip',
@@ -227,6 +228,57 @@ class CommonCreationRoutine(TestCase):
     <external_identifier>anotherthing</external_identifier>
 </entry>"""
 
+        self.atom_entry_data2 = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <updated>2017-10-07T15:17:08Z</updated>
+                <author>some awesome author</author>
+        </entry>"""
+
+        self.codemeta_entry_data0 = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <updated>2017-10-07T15:17:08Z</updated>
+                <author>some awesome author</author>
+                <codemeta:description>description</codemeta:description>
+                <codemeta:keywords>key-word 1</codemeta:keywords>
+        </entry>"""
+
+        self.codemeta_entry_data1 = b"""<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+  <title>Composing a Web of Audio Applications</title>
+  <client>hal</client>
+  <id>hal-01243065</id>
+  <external_identifier>hal-01243065</external_identifier>
+  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
+  <codemeta:applicationCategory>test</codemeta:applicationCategory>
+  <codemeta:keywords>DSP programming,Web</codemeta:keywords>
+  <codemeta:dateCreated>2017-05-03T16:08:47+02:00</codemeta:dateCreated>
+  <codemeta:description>this is the description</codemeta:description>
+  <codemeta:version>1</codemeta:version>
+  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
+  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
+  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
+  <codemeta:license>
+    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
+  </codemeta:license>
+  <codemeta:license>
+    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
+  </codemeta:license>
+  <author>
+    <name>HAL</name>
+    <email>hal@ccsd.cnrs.fr</email>
+  </author>
+</entry>"""
+
     def create_deposit_with_status_rejected(self):
         url = reverse(COL_IRI, args=[self.collection.name])
 
@@ -274,6 +326,30 @@ class CommonCreationRoutine(TestCase):
             '{http://www.w3.org/2005/Atom}deposit_id']
         return deposit_id
 
+    def create_deposit_partial_with_data_in_args(self, data):
+        """Create a simple deposit (1 request) in `partial` state with the data
+        or metadata as an argument and returns  its new identifier.
+
+        Args:
+            data: atom entry
+
+        Returns:
+            deposit id
+
+        """
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/atom+xml;type=entry',
+            data=data,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS='true')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
+
     def _update_deposit_with_status(self, deposit_id, status_partial=False):
         """Add to a given deposit another archive and update its current
            status to `ready` (by default).
@@ -309,4 +385,28 @@ class CommonCreationRoutine(TestCase):
         deposit_id = self.create_simple_deposit_partial()
         deposit_id = self._update_deposit_with_status(
             deposit_id, status_partial=True)
+        return deposit_id
+
+    def add_metadata_to_deposit(self, deposit_id, status_partial=False):
+        """Add metadata to deposit.
+
+        """
+        # when
+        response = self.client.post(
+            reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id]),
+            content_type='application/atom+xml;type=entry',
+            data=self.codemeta_entry_data1,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=status_partial)
+        assert response.status_code == status.HTTP_201_CREATED
+        # then
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit is not None
+
+        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+        assert deposit_requests is not []
+
+        for dr in deposit_requests:
+            if dr.type.name == 'metadata':
+                assert deposit_requests[0].metadata is not {}
         return deposit_id

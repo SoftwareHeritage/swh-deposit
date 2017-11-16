@@ -41,7 +41,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'type': 'deposit'
             },
             'origin_metadata': {
-                'metadata': {},
+                'metadata': {
+                    '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id'
+                },
                 'provider': {
                     'provider_name': '',
                     'provider_type': 'deposit_client',
@@ -67,7 +70,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                     'fullname': '', 'email': '', 'name': ''
                 },
                 'date': None,
-                'metadata': {},
+                'metadata': {
+                    '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id'
+                },
                 'type': 'tar'
             },
             'occurrence': {

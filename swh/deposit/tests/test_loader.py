@@ -38,6 +38,7 @@ class DepositLoaderInhibitsStorage:
         self.state = {
             'origin': [],
             'origin_visit': [],
+            'origin_metadata': [],
             'content': [],
             'directory': [],
             'revision': [],
@@ -72,6 +73,18 @@ class DepositLoaderInhibitsStorage:
         }
         self._add('origin_visit', [origin_visit])
         return origin_visit
+
+    def send_origin_metadata(self, origin_id, visit_date, provider, tool,
+                             metadata):
+        origin_metadata = {
+            'origin_id': origin_id,
+            'visit_date': visit_date,
+            'provider': provider,
+            'tool': tool,
+            'metadata': metadata
+        }
+        self._add('origin_metadata', [origin_metadata])
+        return origin_metadata
 
     def maybe_load_contents(self, contents):
         self._add('content', contents)
@@ -171,7 +184,8 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
             def get_metadata(self, metadata_url, log=None):
                 r = me.client.get(metadata_url)
-                return json.loads(r.content.decode('utf-8'))
+                data = json.loads(r.content.decode('utf-8'))
+                return data
 
             def update_deposit_status(self, update_status_url, status,
                                       revision_id=None):
@@ -218,3 +232,58 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         # FIXME enrich state introspection
         # expected_revisions = {}
         # self.assertRevisionsOk(expected_revisions)
+
+    @istest
+    def inject_deposit_verify_metadata(self):
+        """Load a deposit with metadata, test metadata integrity
+
+        """
+        self.deposit_metadata_id = self.add_metadata_to_deposit(
+                                        self.deposit_id)
+        args = [self.collection.name, self.deposit_metadata_id]
+
+        archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+        deposit_meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        deposit_update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
+
+        # when
+        self.loader.load(archive_url=archive_url,
+                         deposit_meta_url=deposit_meta_url,
+                         deposit_update_url=deposit_update_url)
+
+        # then
+        self.assertEquals(len(self.loader.state['content']), 1)
+        self.assertEquals(len(self.loader.state['directory']), 1)
+        self.assertEquals(len(self.loader.state['revision']), 1)
+        self.assertEquals(len(self.loader.state['release']), 0)
+        self.assertEquals(len(self.loader.state['occurrence']), 1)
+        self.assertEquals(len(self.loader.state['origin_metadata']), 1)
+        atom = '{http://www.w3.org/2005/Atom}'
+        codemeta = '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}'
+        expected_origin_metadata = {
+            atom + 'author': {
+                atom + 'email': 'hal@ccsd.cnrs.fr',
+                atom + 'name': 'HAL'
+            },
+            codemeta + 'url':
+                'https://hal-test.archives-ouvertes.fr/hal-01243065',
+            codemeta + 'runtimePlatform': 'phpstorm',
+            codemeta + 'license': {
+                codemeta + 'name':
+                    'CeCILL Free Software License Agreement v1.1'
+            },
+            codemeta + 'programmingLanguage': 'C',
+            codemeta + 'applicationCategory': 'test',
+            codemeta + 'dateCreated': '2017-05-03T16:08:47+02:00',
+            codemeta + 'version': 1,
+            atom + 'external_identifier': 'hal-01243065',
+            atom + 'title': 'Composing a Web of Audio Applications',
+            codemeta + 'description': 'this is the description',
+            atom + 'id': 'hal-01243065',
+            atom + 'client': 'hal',
+            codemeta + 'keywords': 'DSP programming,Web',
+            codemeta + 'developmentStatus': 'stable'
+        }
+
+        self.assertEquals(self.loader.state['origin_metadata'][0]['metadata'],
+                          expected_origin_metadata)
