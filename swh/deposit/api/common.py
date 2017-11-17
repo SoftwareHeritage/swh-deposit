@@ -704,10 +704,16 @@ class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         if 'error' in checks:
             return make_error_response_from_dict(req, checks['error'])
 
-        status, content, content_type = self.process_get(
+        r = self.process_get(
             req, collection_name, deposit_id)
 
-        return HttpResponse(content, status=status, content_type=content_type)
+        if isinstance(r, tuple):
+            status, content, content_type = r
+            return HttpResponse(content,
+                                status=status,
+                                content_type=content_type)
+
+        return r
 
     @abstractmethod
     def process_get(self, req, collection_name, deposit_id):

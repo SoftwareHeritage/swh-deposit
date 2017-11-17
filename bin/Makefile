@@ -16,7 +16,7 @@ new-partial:
 	make new STATUS=$(PARTIAL_STATUS) ARCHIVE=$(ARCHIVE)
 
 update:
-	./update-deposit-with-another-archive.sh $(DEPOSIT_ID) $(ARCHIVE_2) $(STATUS)
+	./update-deposit-with-another-archive.sh $(DEPOSIT_ID) $(ARCHIVE2) $(STATUS)
 
 update-partial:
 	make update DEPOSIT_ID=$(DEPOSIT_ID) ARCHIVE2=$(ARCHIVE2) STATUS=$(PARTIAL_STATUS)

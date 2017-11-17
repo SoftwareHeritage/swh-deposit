@@ -13,77 +13,78 @@ from swh.loader.tar import loader
 from swh.loader.core.loader import SWHLoader
 
 
-def retrieve_archive_to(archive_update_url, archive_path, log=None):
-    """Retrieve the archive from the deposit to a local directory.
-
-    Args:
-
-        archive_update_url (str): The full deposit archive(s)'s raw content
-                           to retrieve locally
-
-        archive_path (str): the local archive's path where to store
-        the raw content
-
-    Returns:
-        The archive path to the local archive to load.
-        Or None if any problem arose.
+class DepositClient:
+    """Deposit client to read archive, metadata or update deposit's status.
 
     """
-    r = requests.get(archive_update_url, stream=True)
-    if r.ok:
-        with open(archive_path, 'wb') as f:
-            for chunk in r.iter_content():
-                f.write(chunk)
+    def read_archive_to(self, archive_update_url, archive_path, log=None):
+        """Retrieve the archive from the deposit to a local directory.
 
-        return archive_path
+        Args:
+            archive_update_url (str): The full deposit archive(s)'s raw content
+                               to retrieve locally
 
-    msg = 'Problem when retrieving deposit archive at %s' % (
-        archive_update_url, )
-    if log:
-        log.error(msg)
+            archive_path (str): the local archive's path where to store
+            the raw content
 
-    raise ValueError(msg)
+        Returns:
+            The archive path to the local archive to load.
+            Or None if any problem arose.
 
+        """
+        r = requests.get(archive_update_url, stream=True)
+        if r.ok:
+            with open(archive_path, 'wb') as f:
+                for chunk in r.iter_content():
+                    f.write(chunk)
 
-def retrieve_metadata(metadata_url, log=None):
-    """Retrieve the metadata information on a given deposit.
+            return archive_path
 
-    Args:
+        msg = 'Problem when retrieving deposit archive at %s' % (
+            archive_update_url, )
+        if log:
+            log.error(msg)
 
-        metadata_url (str): The full deposit metadata url to retrieve
-        locally
+        raise ValueError(msg)
 
-    Returns:
-        The dictionary of metadata for that deposit or None if any
-        problem arose.
+    def read_metadata(self, metadata_url, log=None):
+        """Retrieve the metadata information on a given deposit.
 
-    """
-    r = requests.get(metadata_url)
-    if r.ok:
-        data = r.json()
+        Args:
+            metadata_url (str): The full deposit metadata url to retrieve
+            locally
 
-        return data
+        Returns:
+            The dictionary of metadata for that deposit or None if any
+            problem arose.
 
-    msg = 'Problem when retrieving metadata at %s' % metadata_url
-    if log:
-        log.error(msg)
+        """
+        r = requests.get(metadata_url)
+        if r.ok:
+            data = r.json()
 
-    raise ValueError(msg)
+            return data
 
+        msg = 'Problem when retrieving metadata at %s' % metadata_url
+        if log:
+            log.error(msg)
 
-def update_deposit_status(update_status_url, status, revision_id=None):
-    """Update the deposit's status.
+        raise ValueError(msg)
 
-    Args:
-        update_status_url (str): the full deposit's archive
-        status (str): The status to update the deposit with
-        revision_id (str/None): the revision's identifier to update to
+    def update_status(self, update_status_url, status,
+                      revision_id=None):
+        """Update the deposit's status.
 
-    """
-    payload = {'status': status}
-    if revision_id:
-        payload['revision_id'] = revision_id
-    requests.put(update_status_url, json=payload)
+        Args:
+            update_status_url (str): the full deposit's archive
+            status (str): The status to update the deposit with
+            revision_id (str/None): the revision's identifier to update to
+
+        """
+        payload = {'status': status}
+        if revision_id:
+            payload['revision_id'] = revision_id
+            requests.put(update_status_url, json=payload)
 
 
 class DepositLoader(loader.TarLoader):
@@ -102,6 +103,13 @@ class DepositLoader(loader.TarLoader):
     - update the deposit's status accordingly
 
     """
+    def __init__(self, client=None):
+        super().__init__()
+        if client:
+            self.client = client
+        else:
+            self.client = DepositClient()
+
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
         SWHLoader.load(
             self,
@@ -118,15 +126,17 @@ class DepositLoader(loader.TarLoader):
         temporary_directory = tempfile.TemporaryDirectory()
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
-        archive = retrieve_archive_to(archive_url, archive_path, log=self.log)
+        archive = self.client.get_archive(
+            archive_url, archive_path, log=self.log)
 
-        metadata = retrieve_metadata(deposit_meta_url, log=self.log)
+        metadata = self.client.get_metadata(
+            deposit_meta_url, log=self.log)
         origin = metadata['origin']
         visit_date = datetime.datetime.now(tz=datetime.timezone.utc)
         revision = metadata['revision']
         occurrence = metadata['occurrence']
 
-        update_deposit_status(deposit_update_url, 'injecting')
+        self.client.update_deposit_status(deposit_update_url, 'injecting')
         super().prepare(tar_path=archive,
                         origin=origin,
                         visit_date=visit_date,
@@ -143,19 +153,18 @@ class DepositLoader(loader.TarLoader):
         """
         try:
             if not success:
-                update_deposit_status(self.deposit_update_url,
-                                      status='failure')
+                self.client.update_deposit_status(self.deposit_update_url,
+                                                  status='failure')
                 return
             # first retrieve the new revision
-            occs = list(self.storage.occurrence_get(self.origin_id))
-            if occs:
-                occ = occs[0]
-                revision_id = hashutil.hash_to_hex(occ['target'])
+            [rev_id] = self.objects['revision'].keys()
+            if rev_id:
+                rev_id_hex = hashutil.hash_to_hex(rev_id)
                 # then update the deposit's status to success with its
                 # revision-id
-                update_deposit_status(self.deposit_update_url,
-                                      status='success',
-                                      revision_id=revision_id)
+                self.client.update_deposit_status(self.deposit_update_url,
+                                                  status='success',
+                                                  revision_id=rev_id_hex)
         except:
             self.log.exception(
                 'Problem when trying to update the deposit\'s status')

@@ -1,8 +1,12 @@
-swh-deposit (0.0.26-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.27-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.27
+  * swh.deposit.parsers: Fix edge case about decimal serialization
+  * swh.deposit.injection.loader: Add test on loading a deposit
+  * swh.loader.test: Fix path initialization
+  * swh.deposit.injection.scheduler: Adapt default task
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 25 Oct 2017 17:37:01 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 17 Nov 2017 10:54:08 +0100
 
 swh-deposit (0.0.26-1~swh1) unstable-swh; urgency=medium
 
