@@ -6,6 +6,8 @@
 from swh.deposit.config import setup_django_for
 from swh.deposit.config import SWHDefaultConfig  # noqa
 
+from swh.loader.core.loader import SWHLoader
+
 
 TEST_CONFIG = {
     'max_upload_size': 500,
@@ -13,14 +15,43 @@ TEST_CONFIG = {
 }
 
 
-def parse_config_file(base_filename=None, config_filename=None,
-                      additional_configs=None, global_config=True):
+def parse_deposit_config_file(base_filename=None, config_filename=None,
+                              additional_configs=None, global_config=True):
     return TEST_CONFIG
 
 
-# monkey patch this class method permits to override, for tests
-# purposes, the default configuration without side-effect, i.e do not
-# load the configuration from disk
-SWHDefaultConfig.parse_config_file = parse_config_file
+TEST_LOADER_CONFIG = {
+    'extraction_dir': '/tmp/swh-loader-tar/test/',
+    'storage': {
+        'cls': 'remote',
+        'args': {
+            'url': 'http://localhost:unexisting-port/',
+        }
+    },
+    'send_contents': False,
+    'send_directories': False,
+    'send_revisions': False,
+    'send_releases': False,
+    'send_occurrences': False,
+
+    'content_packet_size': 10,
+    'content_packet_size_bytes': 100 * 1024 * 1024,
+    'directory_packet_size': 10,
+    'revision_packet_size': 10,
+    'release_packet_size': 10,
+    'occurrence_packet_size': 10,
+}
+
+
+def parse_loader_config_file(base_filename=None, config_filename=None,
+                             additional_configs=None, global_config=True):
+    return TEST_LOADER_CONFIG
+
+
+# monkey patch classes method permits to override, for tests purposes,
+# the default configuration without side-effect, i.e do not load the
+# configuration from disk
+SWHDefaultConfig.parse_config_file = parse_deposit_config_file
+SWHLoader.parse_config_file = parse_loader_config_file
 
 setup_django_for('testing')

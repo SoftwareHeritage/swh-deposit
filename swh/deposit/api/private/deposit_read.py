@@ -9,6 +9,7 @@ import shutil
 import tempfile
 
 from contextlib import contextmanager
+from django.http import FileResponse
 from rest_framework import status
 
 from swh.loader.tar import tarball
@@ -55,12 +56,12 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         shutil.rmtree(aggregated_tarball_rootdir)
 
         try:
-            yield from open(temp_tarpath, 'rb')
+            yield temp_tarpath
         finally:
             shutil.rmtree(dir_path)
 
     else:  # only 1 archive, no need to do fancy actions (and no cleanup step)
-        yield from open(archive_paths[0], 'rb')
+        yield archive_paths[0]
 
 
 class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
@@ -109,8 +110,10 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
         """
         archive_paths = list(self.retrieve_archives(deposit_id))
         with aggregate_tarballs(self.extraction_dir,
-                                archive_paths) as stream:
-            return status.HTTP_200_OK, stream, 'application/octet-stream'
+                                archive_paths) as path:
+            return FileResponse(open(path, 'rb'),
+                                status=status.HTTP_200_OK,
+                                content_type='application/octet-stream')
 
 
 class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):

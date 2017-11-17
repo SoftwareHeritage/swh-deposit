@@ -103,6 +103,7 @@ swh/deposit/templates/deposit/status.xml
 swh/deposit/templates/rest_framework/api.html
 swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
+swh/deposit/tests/test_loader.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py

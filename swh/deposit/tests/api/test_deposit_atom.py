@@ -211,6 +211,75 @@ and other stuff</description>
         self.atom_entry_data_badly_formatted = b"""<?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"</entry>"""
 
+        self.atom_error_with_decimal = b"""<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+  <title>Composing a Web of Audio Applications</title>
+  <client>hal</client>
+  <id>hal-01243065</id>
+  <external_identifier>hal-01243065</external_identifier>
+  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
+  <codemeta:applicationCategory>test</codemeta:applicationCategory>
+  <codemeta:name/>
+  <description/>
+  <codemeta:keywords>DSP programming,Web,Composability,Faust</codemeta:keywords>
+  <codemeta:dateCreated>2017-05-03T16:08:47+02:00</codemeta:dateCreated>
+  <codemeta:description>The Web offers a great opportunity to share, deploy and use programs without installation difficulties. In this article we explore the idea of freely combining/composing real-time audio applications deployed on the Web using Faust audio DSP language.</codemeta:description>
+  <codemeta:version>1</codemeta:version>
+  <codemeta:softwareVersion>10.4</codemeta:softwareVersion>
+  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
+  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
+  <codeRepository/>
+  <platform>linux</platform>
+  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
+  <codemeta:license>
+    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
+  </codemeta:license>
+  <codemeta:license>
+    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
+  </codemeta:license>
+  <author>
+    <name>HAL</name>
+    <email>hal@ccsd.cnrs.fr</email>
+  </author>
+  <contributor>
+    <name>Someone Nice</name>
+    <email>someone@nice.fr</email>
+    <codemeta:affiliation>FFJ</codemeta:affiliation>
+  </contributor>
+</entry>
+"""  # noqa
+
+    @istest
+    def post_deposit_atom_entry_serialization_error(self):
+        """Posting an initial atom entry should return 201 with deposit receipt
+
+        """
+        # given
+        # when
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/atom+xml;type=entry',
+            data=self.atom_error_with_decimal,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS='false')
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        dr = DepositRequest.objects.get(deposit=deposit)
+
+        self.assertIsNotNone(dr.metadata)
+        sw_version = dr.metadata.get(
+            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}softwareVersion')
+        self.assertEquals(sw_version, '10.4')
+
     @istest
     def post_deposit_atom_empty_body_request(self):
         """Posting empty body request should return a 400 response
