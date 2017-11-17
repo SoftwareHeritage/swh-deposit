@@ -8,6 +8,7 @@
 
 """
 
+from decimal import Decimal
 from rest_framework.parsers import FileUploadParser
 from rest_framework.parsers import MultiPartParser
 from rest_framework_xml.parsers import XMLParser
@@ -20,7 +21,21 @@ class SWHFileUploadParser(FileUploadParser):
     media_type = 'application/zip'
 
 
-class SWHAtomEntryParser(XMLParser):
+class SWHXMLParser(XMLParser):
+    def _type_convert(self, value):
+        """Override the default type converter to avoid having decimal in the
+        resulting output.
+
+        """
+        value = super()._type_convert(value)
+        if isinstance(value, Decimal):
+            print(value)
+            value = str(value)
+
+        return value
+
+
+class SWHAtomEntryParser(SWHXMLParser):
     """Atom entry parser limited to specific mediatype
 
     """
@@ -44,4 +59,4 @@ def parse_xml(raw_content):
         content parsed as dict.
 
     """
-    return XMLParser().parse(raw_content)
+    return SWHXMLParser().parse(raw_content)
