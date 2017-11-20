@@ -22,14 +22,15 @@ identifier.
 Some of those metadata will also be included in the `origin_metadata`
 table.
 
-
- origin                              |      https://hal.inria.fr/hal-id
--------------------------------------|----------------------------------------
- origin_visit                        | 1 :reception_date
- occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)
- revision                            | synthetic_revision (tarball)
- directory                           | upper level of the uncompressed archive
-
+```
+origin                              |      https://hal.inria.fr/hal-id       |
+------------------------------------|----------------------------------------|
+origin_visit                        | 1 :reception_date                      |
+origin_metadata                     | aggregated metadata                    |
+occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)  |
+revision                            | synthetic_revision (tarball)           |
+directory                           | upper level of the uncompressed archive|
+```
 
 ### Questions raised concerning injection
 
@@ -200,12 +201,19 @@ with graceful delays for further scheduling.
 `origin_metadata` table before translation as part of the injection
 process and an indexation process should be scheduled.
 
+- provider_id and tool_id are resolved by the prepare_metadata method in the
+loader-core
+
+- the origin_metadata entry is sent to storage by the send_origin_metadata in
+the loader-core
+
+
 origin_metadata table:
 ```
 id                                      bigint        PK
 origin                                  bigint        
 discovery_date                          date         
 provider_id                             bigint        FK      // (from provider table)
+tool_id                                 bigint        FK     // indexer_configuration_id tool used for extraction
 metadata                                jsonb                // before translation
-indexer_configuration_id                bigint        FK  // tool used for extraction
 ```

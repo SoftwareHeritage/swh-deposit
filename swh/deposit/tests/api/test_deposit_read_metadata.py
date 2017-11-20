@@ -37,7 +37,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         expected_meta = {
             'origin': {
-                'url': 'https://hal.archives-ouvertes.fr/some-external-id',
+                'url': 'https://hal.test.fr/some-external-id',
                 'type': 'deposit'
             },
             'origin_metadata': {
@@ -48,7 +48,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'provider': {
                     'provider_name': '',
                     'provider_type': 'deposit_client',
-                    'provider_url': 'https://hal.archives-ouvertes.fr/',
+                    'provider_url': 'https://hal.test.fr/',
                     'metadata': {}
                 },
                 'tool': {

@@ -161,7 +161,7 @@ class BasicTestCase(TestCase):
             deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
-        _url = 'https://hal.archives-ouvertes.fr/'
+        _url = 'https://hal.test.fr/'
         # set collection up
         _collection = DepositCollection(name=_name)
         _collection.save()

@@ -44,6 +44,8 @@ class DepositLoaderInhibitsStorage:
             'revision': [],
             'release': [],
             'occurrence': [],
+            'tool': [],
+            'provider': []
         }
 
     def _add(self, type, l):
@@ -74,17 +76,39 @@ class DepositLoaderInhibitsStorage:
         self._add('origin_visit', [origin_visit])
         return origin_visit
 
-    def send_origin_metadata(self, origin_id, visit_date, provider, tool,
+    def send_origin_metadata(self, origin_id, visit_date, provider_id, tool_id,
                              metadata):
         origin_metadata = {
             'origin_id': origin_id,
             'visit_date': visit_date,
-            'provider': provider,
-            'tool': tool,
+            'provider_id': provider_id,
+            'tool_id': tool_id,
             'metadata': metadata
         }
         self._add('origin_metadata', [origin_metadata])
         return origin_metadata
+
+    def send_tool(self, tool_name, tool_version, tool_configuration):
+        tool = {
+            'tool_name': tool_name,
+            'tool_version': tool_version,
+            'tool_configuration': tool_configuration
+        }
+        self._add('tool', [tool])
+        tool_id = len(self.state['tool'])
+        return tool_id
+
+    def send_provider(self, provider_name, provider_type, provider_url,
+                      metadata):
+        provider = {
+            'provider_name': provider_name,
+            'provider_type': provider_type,
+            'provider_url': provider_url,
+            'metadata': metadata
+        }
+        self._add('provider', [provider])
+        provider_id = len(self.state['provider'])
+        return provider_id
 
     def maybe_load_contents(self, contents):
         self._add('content', contents)
@@ -119,6 +143,26 @@ class DepositLoaderInhibitsStorage:
 
     def close_success(self):
         pass
+
+    def prepare_metadata(self):
+        origin_metadata = self.origin_metadata
+
+        tool = origin_metadata['tool']
+        tool_id = len(self.state['tool'])
+        if tool_id <= 0:
+            tool_id = self.send_tool(tool['tool_name'],
+                                     tool['tool_version'],
+                                     tool['tool_configuration'])
+        self.origin_metadata['tool']['tool_id'] = tool_id
+
+        provider = origin_metadata['provider']
+        provider_id = len(self.state['provider'])
+        if provider_id <= 0:
+            provider_id = self.send_provider(provider['provider_name'],
+                                             provider['provider_type'],
+                                             provider['provider_url'],
+                                             provider['metadata'])
+        self.origin_metadata['provider']['provider_id'] = provider_id
 
 
 class TestLoaderUtils(unittest.TestCase):
@@ -258,6 +302,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['release']), 0)
         self.assertEquals(len(self.loader.state['occurrence']), 1)
         self.assertEquals(len(self.loader.state['origin_metadata']), 1)
+        self.assertEquals(len(self.loader.state['tool']), 1)
+        self.assertEquals(len(self.loader.state['provider']), 1)
+
         atom = '{http://www.w3.org/2005/Atom}'
         codemeta = '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}'
         expected_origin_metadata = {
@@ -287,3 +334,5 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
         self.assertEquals(self.loader.state['origin_metadata'][0]['metadata'],
                           expected_origin_metadata)
+        expected_tool_id = self.loader.state['origin_metadata'][0]['tool_id']
+        self.assertEquals(expected_tool_id, 1)
