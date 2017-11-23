@@ -25,6 +25,10 @@ from .common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from .common import FileSystemCreationRoutine
 
 
+TOOL_ID = 99
+PROVIDER_ID = 12
+
+
 class DepositLoaderInhibitsStorage:
     """Mixin class to inhibit the persistence and keep in memory the data
     sent for storage.
@@ -88,26 +92,25 @@ class DepositLoaderInhibitsStorage:
         self._add('origin_metadata', [origin_metadata])
         return origin_metadata
 
-    def send_tool(self, tool_name, tool_version, tool_configuration):
+    def send_tool(self, tool):
         tool = {
-            'tool_name': tool_name,
-            'tool_version': tool_version,
-            'tool_configuration': tool_configuration
+            'tool_name': tool['tool_name'],
+            'tool_version': tool['tool_version'],
+            'tool_configuration': tool['tool_configuration']
         }
         self._add('tool', [tool])
-        tool_id = len(self.state['tool'])
+        tool_id = TOOL_ID
         return tool_id
 
-    def send_provider(self, provider_name, provider_type, provider_url,
-                      metadata):
+    def send_provider(self, provider):
         provider = {
-            'provider_name': provider_name,
-            'provider_type': provider_type,
-            'provider_url': provider_url,
-            'metadata': metadata
+            'provider_name': provider['provider_name'],
+            'provider_type': provider['provider_type'],
+            'provider_url': provider['provider_url'],
+            'metadata': provider['metadata']
         }
         self._add('provider', [provider])
-        provider_id = len(self.state['provider'])
+        provider_id = PROVIDER_ID
         return provider_id
 
     def maybe_load_contents(self, contents):
@@ -143,26 +146,6 @@ class DepositLoaderInhibitsStorage:
 
     def close_success(self):
         pass
-
-    def prepare_metadata(self):
-        origin_metadata = self.origin_metadata
-
-        tool = origin_metadata['tool']
-        tool_id = len(self.state['tool'])
-        if tool_id <= 0:
-            tool_id = self.send_tool(tool['tool_name'],
-                                     tool['tool_version'],
-                                     tool['tool_configuration'])
-        self.origin_metadata['tool']['tool_id'] = tool_id
-
-        provider = origin_metadata['provider']
-        provider_id = len(self.state['provider'])
-        if provider_id <= 0:
-            provider_id = self.send_provider(provider['provider_name'],
-                                             provider['provider_type'],
-                                             provider['provider_url'],
-                                             provider['metadata'])
-        self.origin_metadata['provider']['provider_id'] = provider_id
 
 
 class TestLoaderUtils(unittest.TestCase):
@@ -228,8 +211,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
             def get_metadata(self, metadata_url, log=None):
                 r = me.client.get(metadata_url)
-                data = json.loads(r.content.decode('utf-8'))
-                return data
+                return json.loads(r.content.decode('utf-8'))
 
             def update_deposit_status(self, update_status_url, status,
                                       revision_id=None):
@@ -331,8 +313,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
             codemeta + 'keywords': 'DSP programming,Web',
             codemeta + 'developmentStatus': 'stable'
         }
-
-        self.assertEquals(self.loader.state['origin_metadata'][0]['metadata'],
-                          expected_origin_metadata)
-        expected_tool_id = self.loader.state['origin_metadata'][0]['tool_id']
-        self.assertEquals(expected_tool_id, 1)
+        result = self.loader.state['origin_metadata'][0]
+        self.assertEquals(result['metadata'], expected_origin_metadata)
+        self.assertEquals(result['tool_id'], TOOL_ID)
+        self.assertEquals(result['provider_id'], PROVIDER_ID)

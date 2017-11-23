@@ -172,7 +172,8 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         # Read information metadata
         data['origin'] = {
             'type': 'deposit',
-            'url': deposit.client.url + deposit.external_id,
+            'url': os.path.join(deposit.client.url.rstrip('/'),
+                                deposit.external_id),
         }
 
         # revision

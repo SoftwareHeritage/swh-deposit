@@ -162,6 +162,7 @@ class DepositLoader(loader.TarLoader):
                                       tool_id, metadata)
         except:
             self.log.exception('Problem when storing origin_metadata')
+            raise
 
     def post_load(self, success=True):
         """Updating the deposit's status according to its loading status.

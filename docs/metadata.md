@@ -8,7 +8,7 @@ if possible.
 ## Metadata requirements
 
 MUST
-- **the schema/vocabulary** used *MUST* be specified with a persistant url
+- **the schema/vocabulary** used *MUST* be specified with a persistent url
 (DublinCore, DOAP, CodeMeta, etc.)
 ```XML
 <entry xmlns="http://www.w3.org/2005/Atom">
