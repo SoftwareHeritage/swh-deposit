@@ -55,7 +55,8 @@ class SWHCeleryScheduling(SWHScheduling):
 
     """
     ADDITIONAL_CONFIG = {
-        'task_name': ('str', 'swh.deposit.injection.tasks.LoadDepositArchive'),
+        'task_name': (
+            'str', 'swh.deposit.injection.tasks.LoadDepositArchiveTsk'),
     }
 
     def __init__(self, config=None):

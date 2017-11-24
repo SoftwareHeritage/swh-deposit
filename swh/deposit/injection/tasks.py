@@ -7,7 +7,7 @@ from swh.scheduler.task import Task
 from swh.deposit.injection.loader import DepositLoader
 
 
-class LoadDepositArchive(Task):
+class LoadDepositArchiveTsk(Task):
     """Deposit archive ingestion task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
