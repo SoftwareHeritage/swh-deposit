@@ -83,4 +83,5 @@ class DepositClient:
         payload = {'status': status}
         if revision_id:
             payload['revision_id'] = revision_id
-            requests.put(update_status_url, json=payload)
+
+        requests.put(update_status_url, json=payload)
