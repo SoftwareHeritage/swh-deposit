@@ -20,9 +20,9 @@ from swh.deposit.config import PRIVATE_PUT_DEPOSIT
 from django.core.urlresolvers import reverse
 
 
-from . import TEST_LOADER_CONFIG
-from .common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from .common import FileSystemCreationRoutine
+from .. import TEST_LOADER_CONFIG
+from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+from ..common import FileSystemCreationRoutine
 
 
 TOOL_ID = 99
