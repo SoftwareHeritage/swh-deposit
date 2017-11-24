@@ -62,9 +62,7 @@ class DepositClient:
         """
         r = requests.get(metadata_url)
         if r.ok:
-            data = r.json()
-
-            return data
+            return r.json()
 
         msg = 'Problem when retrieving metadata at %s' % metadata_url
         if log:
