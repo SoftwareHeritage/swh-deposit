@@ -11,7 +11,11 @@ import requests
 
 
 class DepositClient:
-    """Deposit client to read archive, metadata or update deposit's status.
+    """Deposit client to:
+
+    - read archive
+    - read metadata
+    - update deposit's status
 
     """
     def read_archive_to(self, archive_update_url, archive_path, log=None):
