@@ -280,7 +280,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
   </author>
 </entry>"""
 
-    def create_deposit_with_status_rejected(self):
+    def create_invalid_deposit(self):
         url = reverse(COL_IRI, args=[self.collection.name])
 
         data = b'some data which is clearly not a zip file'
@@ -304,8 +304,15 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         deposit_id = response_content[
             '{http://www.w3.org/2005/Atom}deposit_id']
 
-        # As we cannot create a rejected deposit in test context
-        # update in place the deposit with such status
+        return deposit_id
+
+    def create_deposit_with_status_rejected(self):
+        deposit_id = self.create_invalid_deposit()
+
+        # We cannot create rejected deposit in test context (we
+        # flipped off the checks in the configuration so all deposits
+        # have the status ready-for-checks). Update in place the
+        # deposit with such status
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.status = DEPOSIT_STATUS_REJECTED
         deposit.save()
