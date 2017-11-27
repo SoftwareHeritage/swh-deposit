@@ -76,3 +76,6 @@ class SWHDefaultConfig(SWHConfig):
         self.config = self.parse_config_file()
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
+        if self.config['checks']:
+            from swh.scheduler.backend import SchedulerBackend
+            self.scheduler = SchedulerBackend()

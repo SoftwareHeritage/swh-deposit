@@ -13,40 +13,13 @@
 
 """
 
-import zipfile
+import datetime
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import DepositRequest
 from .config import SWHDefaultConfig
-from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
-from .config import DEPOSIT_STATUS_READY_FOR_CHECKS, ARCHIVE_TYPE
-
-
-def checks(deposit_request):
-    """Additional checks to execute on the deposit request's associated
-       data (archive).
-
-    Args:
-        The deposit request whose archive we need to check
-
-    Returns:
-        True if we can at least read some content to the
-        request's deposit associated archive. False otherwise.
-
-    """
-    if deposit_request.type.name != ARCHIVE_TYPE:  # no check for other types
-        return True
-
-    try:
-        archive = deposit_request.archive
-        zf = zipfile.ZipFile(archive.path)
-        zf.infolist()
-    except Exception as e:
-        return False
-    else:
-        return True
 
 
 @receiver(post_save, sender=DepositRequest)
@@ -73,15 +46,29 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                        passed to save()
 
     """
-    if not SWHDefaultConfig().config['checks']:
+    default_config = SWHDefaultConfig()
+    if not default_config.config['checks']:
         return
 
-    if instance.deposit.status is not DEPOSIT_STATUS_READY_FOR_CHECKS:
-        return
+    # Schedule oneshot task for checking archives
+    from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
+    from django.core.urlresolvers import reverse
 
-    if not checks(instance):
-        instance.deposit.status = DEPOSIT_STATUS_REJECTED
-    else:
-        instance.deposit.status = DEPOSIT_STATUS_READY
+    # FIXME: Generate absolute uri
+    args = [instance.deposit.collection.name, instance.deposit.id]
+    archive_check_url = reverse(
+        PRIVATE_CHECK_DEPOSIT, args=args)
 
-    instance.deposit.save()
+    task = {
+        'policy': 'oneshot',
+        'type': 'swh-deposit-archive-checks',
+        'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
+        'arguments': {
+            'args': [],
+            'kwargs': {
+                'archive_check_url': archive_check_url,
+            },
+        }
+    }
+
+    default_config.scheduler.create_tasks([task])

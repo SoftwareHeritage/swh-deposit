@@ -26,6 +26,7 @@ Package: python3-swh.deposit
 Architecture: all
 Depends: python3-swh.core (>= 0.0.14~),
          python3-swh.loader.tar (>= 0.0.27~),
+         python3-swh.scheduler (>= 0.0.17~),
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Server
 

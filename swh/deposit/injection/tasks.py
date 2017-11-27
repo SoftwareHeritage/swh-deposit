@@ -5,6 +5,7 @@
 
 from swh.scheduler.task import Task
 from swh.deposit.injection.loader import DepositLoader
+from swh.deposit.injection.checker import DepositChecker
 
 
 class LoadDepositArchiveTsk(Task):
@@ -31,3 +32,20 @@ class LoadDepositArchiveTsk(Task):
         loader.load(archive_url=archive_url,
                     deposit_meta_url=deposit_meta_url,
                     deposit_update_url=deposit_update_url)
+
+
+class DepositChecksTsk(Task):
+    """Deposit checks task.
+
+    """
+    task_queue = 'swh_deposit_checks'
+
+    def run_task(self, *, deposit_check_url, deposit_update_url):
+        """Check a deposit's status
+
+        Args: see :func:`DepositChecker.check`.
+
+        """
+        checker = DepositChecker()
+        checker.log = self.log
+        checker.check(deposit_check_url=deposit_check_url)
