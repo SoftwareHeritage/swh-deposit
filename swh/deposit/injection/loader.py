@@ -53,10 +53,10 @@ class DepositLoader(loader.TarLoader):
         temporary_directory = tempfile.TemporaryDirectory()
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
-        archive = self.client.get_archive(
+        archive = self.client.archive_get(
             archive_url, archive_path, log=self.log)
 
-        metadata = self.client.get_metadata(
+        metadata = self.client.metadata_get(
             deposit_meta_url, log=self.log)
         origin = metadata['origin']
         visit_date = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -65,7 +65,7 @@ class DepositLoader(loader.TarLoader):
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
 
-        self.client.update_deposit_status(deposit_update_url, 'injecting')
+        self.client.status_update(deposit_update_url, 'injecting')
 
         super().prepare(tar_path=archive,
                         origin=origin,
@@ -101,8 +101,8 @@ class DepositLoader(loader.TarLoader):
         """
         try:
             if not success:
-                self.client.update_deposit_status(self.deposit_update_url,
-                                                  status='failure')
+                self.client.status_update(self.deposit_update_url,
+                                          status='failure')
                 return
             # first retrieve the new revision
             [rev_id] = self.objects['revision'].keys()
@@ -110,9 +110,9 @@ class DepositLoader(loader.TarLoader):
                 rev_id_hex = hashutil.hash_to_hex(rev_id)
                 # then update the deposit's status to success with its
                 # revision-id
-                self.client.update_deposit_status(self.deposit_update_url,
-                                                  status='success',
-                                                  revision_id=rev_id_hex)
+                self.client.status_update(self.deposit_update_url,
+                                          status='success',
+                                          revision_id=rev_id_hex)
         except:
             self.log.exception(
                 'Problem when trying to update the deposit\'s status')

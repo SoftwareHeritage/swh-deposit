@@ -31,7 +31,7 @@ class StreamedResponse:
 class DepositClientReadArchiveTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.client = DepositClient()
+        self.client = DepositClient(config={})
         self.temporary_directory = tempfile.mkdtemp(dir='/tmp')
 
     def tearDown(self):
@@ -40,7 +40,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def read_archive_to(self, mock_requests):
+    def archive_get(self, mock_requests):
         """Reading archive should write data in temporary directory
 
         """
@@ -50,7 +50,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             stream=(s for s in stream_content))
 
         archive_path = os.path.join(self.temporary_directory, 'test.archive')
-        archive_path = self.client.read_archive_to(
+        archive_path = self.client.archive_get(
             'http://nowhere:9000/some/url', archive_path)
 
         self.assertTrue(os.path.exists(archive_path))
@@ -62,7 +62,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def read_archive_to_can_fail(self, mock_requests):
+    def archive_get_can_fail(self, mock_requests):
         """Reading archive can fail for some reasons
 
         """
@@ -73,7 +73,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError,
                 'Problem when retrieving deposit archive at %s' % url):
-            self.client.read_archive_to(url, 'some/path')
+            self.client.archive_get(url, 'some/path')
 
 
 class JsonResponse:
@@ -91,11 +91,11 @@ class JsonResponse:
 class DepositClientReadMetadataTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.client = DepositClient()
+        self.client = DepositClient(config={})
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def read_metadata(self, mock_requests):
+    def metadata_get(self, mock_requests):
         """Reading archive should write data in temporary directory
 
         """
@@ -104,14 +104,14 @@ class DepositClientReadMetadataTest(unittest.TestCase):
             ok=True,
             response=expected_response)
 
-        actual_metadata = self.client.read_metadata(
+        actual_metadata = self.client.metadata_get(
             'http://nowhere:9000/metadata')
 
         self.assertEquals(actual_metadata, expected_response)
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def read_metadata_can_fail(self, mock_requests):
+    def metadata_get_can_fail(self, mock_requests):
         """Reading metadata can fail for some reasons
 
         """
@@ -122,17 +122,17 @@ class DepositClientReadMetadataTest(unittest.TestCase):
         with self.assertRaisesRegex(
                 ValueError,
                 'Problem when retrieving metadata at %s' % url):
-            self.client.read_metadata(url)
+            self.client.metadata_get(url)
 
 
 class DepositClientStatusUpdateTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self.client = DepositClient()
+        self.client = DepositClient(config={})
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def update_status(self, mock_requests):
+    def status_update(self, mock_requests):
         """Update status
 
         """
@@ -143,7 +143,7 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
         mock_requests.put.side_effect = side_effect
 
-        self.client.update_status('http://nowhere:9000/update/status',
+        self.client.status_update('http://nowhere:9000/update/status',
                                   'success', revision_id='some-revision-id')
 
         self.assertEquals(actual_status_url,
@@ -155,7 +155,7 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
     @patch('swh.deposit.injection.client.requests')
     @istest
-    def update_status_with_no_revision_id(self, mock_requests):
+    def status_update_with_no_revision_id(self, mock_requests):
         """Reading metadata can fail for some reasons
 
         """
@@ -166,7 +166,7 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
         mock_requests.put.side_effect = side_effect
 
-        self.client.update_status('http://nowhere:9000/update/status',
+        self.client.status_update('http://nowhere:9000/update/status',
                                   'failure')
 
         self.assertEquals(actual_status_url,

@@ -8,9 +8,10 @@
 """
 
 import requests
+from swh.core.config import SWHConfig
 
 
-class DepositClient:
+class DepositClient(SWHConfig):
     """Deposit client to:
 
     - read archive
@@ -18,7 +19,46 @@ class DepositClient:
     - update deposit's status
 
     """
-    def read_archive_to(self, archive_update_url, archive_path, log=None):
+    CONFIG_BASE_FILENAME = 'deposit/client'
+    DEFAULT_CONFIG = {}
+
+    def __init__(self, config=None):
+        if config is not None:
+            self.config = config
+        else:
+            super().__init__()
+
+        # self._client = _client
+
+        # if 'user' in self.config and 'password' in self.config:
+        #     self.auth = (self.config['user'], self.config['pass'])
+        # else:
+        #     self.auth = None
+
+    _methods = {'get': requests.get, 'put': requests.put}
+
+    _supported_methods = set(_methods.keys())
+
+    def do(self, method, *args, **kwargs):
+        """Internal method to deal with requests, possibly with basic http
+           authentication.
+
+        Args:
+            method (str): supported http methods as in self._methods' keys
+
+        Returns:
+            The request's execution
+
+        """
+        if method not in self._supported_methods:
+            raise ValueError('Development error, only methods %s supported' % (
+                self._supported_methods))
+
+        # if self.auth:
+        #     kwargs['auth'] = self.auth
+        return self._methods[method](*args, **kwargs)
+
+    def archive_get(self, archive_update_url, archive_path, log=None):
         """Retrieve the archive from the deposit to a local directory.
 
         Args:
@@ -48,7 +88,7 @@ class DepositClient:
 
         raise ValueError(msg)
 
-    def read_metadata(self, metadata_url, log=None):
+    def metadata_get(self, metadata_url, log=None):
         """Retrieve the metadata information on a given deposit.
 
         Args:
@@ -70,7 +110,7 @@ class DepositClient:
 
         raise ValueError(msg)
 
-    def update_status(self, update_status_url, status,
+    def status_update(self, update_status_url, status,
                       revision_id=None):
         """Update the deposit's status.
 

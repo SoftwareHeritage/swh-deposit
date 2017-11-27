@@ -13,7 +13,8 @@ from nose.plugins.attrib import attr
 from rest_framework.test import APITestCase
 
 from swh.model import hashutil
-from swh.deposit.injection.loader import DepositLoader, DepositClient
+from swh.deposit.injection.loader import DepositLoader
+from swh.deposit.injection.client import DepositClient
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
 from swh.deposit.config import PRIVATE_PUT_DEPOSIT
@@ -179,6 +180,34 @@ class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage, DepositLoader):
     pass
 
 
+class SWHDepositTestClient(DepositClient):
+    def __init__(self, client, config):
+        super().__init__(config=config)
+        self.client = client
+
+    def archive_get(self, archive_update_url, archive_path, log=None):
+        r = self.client.get(archive_update_url)
+        # import os
+        # os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+        with open(archive_path, 'wb') as f:
+            for chunk in r.streaming_content:
+                f.write(chunk)
+
+        return archive_path
+
+    def metadata_get(self, metadata_url, log=None):
+        r = self.client.get(metadata_url)
+        return json.loads(r.content.decode('utf-8'))
+
+    def status_update(self, update_status_url, status, revision_id=None):
+        payload = {'status': status}
+        if revision_id:
+            payload['revision_id'] = revision_id
+            self.client.put(update_status_url,
+                            content_type='application/json',
+                            data=json.dumps(payload))
+
+
 @attr('fs')
 class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                                 BasicTestCase, CommonCreationRoutine,
@@ -195,38 +224,10 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         # 1. create a deposit with archive and metadata
         self.deposit_id = self.create_simple_binary_deposit()
 
-        me = self
-
-        class SWHDepositTestClient(DepositClient):
-            def get_archive(self, archive_update_url, archive_path,
-                            log=None):
-                r = me.client.get(archive_update_url)
-                # import os
-                # os.makedirs(os.path.dirname(archive_path), exist_ok=True)
-                with open(archive_path, 'wb') as f:
-                    for chunk in r.streaming_content:
-                        f.write(chunk)
-
-                return archive_path
-
-            def get_metadata(self, metadata_url, log=None):
-                r = me.client.get(metadata_url)
-                return json.loads(r.content.decode('utf-8'))
-
-            def update_deposit_status(self, update_status_url, status,
-                                      revision_id=None):
-                payload = {'status': status}
-                if revision_id:
-                    payload['revision_id'] = revision_id
-                    me.client.put(update_status_url,
-                                  content_type='application/json',
-                                  data=json.dumps(payload))
-
-        # 2. setup loader with no persistence
+        # 2. setup loader with no persistence and that client
         self.loader = SWHDepositLoaderNoStorage()
-        # and a basic client which accesses the data
-        # setuped in that test
-        self.loader.client = SWHDepositTestClient()
+        # 3. Sets a basic client which accesses the test data
+        self.loader.client = SWHDepositTestClient(self.client, config={})
 
     def tearDown(self):
         super().tearDown()
