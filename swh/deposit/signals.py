@@ -19,6 +19,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import DepositRequest
+from .config import SWHDefaultConfig
 from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
 from .config import DEPOSIT_STATUS_READY_FOR_CHECKS, ARCHIVE_TYPE
 
@@ -72,6 +73,9 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                        passed to save()
 
     """
+    if not SWHDefaultConfig().config['checks']:
+        return
+
     if instance.deposit.status is not DEPOSIT_STATUS_READY_FOR_CHECKS:
         return
 

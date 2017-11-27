@@ -12,6 +12,7 @@ from swh.loader.core.loader import SWHLoader
 TEST_CONFIG = {
     'max_upload_size': 500,
     'extraction_dir': '/tmp/swh-deposit/test/extraction-dir',
+    'checks': False,
     'provider': {
         'provider_name': '',
         'provider_type': 'deposit_client',

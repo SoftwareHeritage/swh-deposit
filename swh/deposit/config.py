@@ -16,6 +16,7 @@ SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'state_iri'
 PRIVATE_GET_RAW_CONTENT = 'private-download'
+PRIVATE_CHECK_DEPOSIT = 'check-deposit'
 PRIVATE_PUT_DEPOSIT = 'private-update'
 PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 
@@ -67,6 +68,7 @@ class SWHDefaultConfig(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
+        'checks': ('bool', True),
     }
 
     def __init__(self, **config):

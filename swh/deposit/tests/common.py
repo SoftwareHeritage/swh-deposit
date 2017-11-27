@@ -16,6 +16,7 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, EM_IRI, EDIT_SE_IRI
+from swh.deposit.config import DEPOSIT_STATUS_REJECTED
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
@@ -302,6 +303,12 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         response_content = parse_xml(BytesIO(response.content))
         deposit_id = response_content[
             '{http://www.w3.org/2005/Atom}deposit_id']
+
+        # As we cannot create a rejected deposit in test context
+        # update in place the deposit with such status
+        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit.status = DEPOSIT_STATUS_REJECTED
+        deposit.save()
 
         return deposit_id
 
