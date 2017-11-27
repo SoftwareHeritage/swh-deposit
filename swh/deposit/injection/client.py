@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Module in charge of defining an swh-deposit client
+"""Module in charge of defining a swh-deposit client
 
 """
 
@@ -22,22 +22,18 @@ class DepositClient(SWHConfig):
     CONFIG_BASE_FILENAME = 'deposit/client'
     DEFAULT_CONFIG = {}
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, _client=requests):
         if config is not None:
             self.config = config
         else:
             super().__init__()
 
-        # self._client = _client
+        self._client = _client
 
-        # if 'user' in self.config and 'password' in self.config:
-        #     self.auth = (self.config['user'], self.config['pass'])
-        # else:
-        #     self.auth = None
-
-    _methods = {'get': requests.get, 'put': requests.put}
-
-    _supported_methods = set(_methods.keys())
+        if 'username' in self.config and 'password' in self.config:
+            self.auth = (self.config['username'], self.config['password'])
+        else:
+            self.auth = None
 
     def do(self, method, *args, **kwargs):
         """Internal method to deal with requests, possibly with basic http
@@ -50,13 +46,16 @@ class DepositClient(SWHConfig):
             The request's execution
 
         """
-        if method not in self._supported_methods:
-            raise ValueError('Development error, only methods %s supported' % (
-                self._supported_methods))
+        if hasattr(self._client, method):
+            method_fn = getattr(self._client, method)
+        else:
+            raise ValueError('Development error, unsupported method %s' % (
+                method))
 
-        # if self.auth:
-        #     kwargs['auth'] = self.auth
-        return self._methods[method](*args, **kwargs)
+        if self.auth:
+            kwargs['auth'] = self.auth
+
+        return method_fn(*args, **kwargs)
 
     def archive_get(self, archive_update_url, archive_path, log=None):
         """Retrieve the archive from the deposit to a local directory.
@@ -73,7 +72,7 @@ class DepositClient(SWHConfig):
             Or None if any problem arose.
 
         """
-        r = requests.get(archive_update_url, stream=True)
+        r = self.do('get', archive_update_url, stream=True)
         if r.ok:
             with open(archive_path, 'wb') as f:
                 for chunk in r.iter_content():
@@ -100,7 +99,7 @@ class DepositClient(SWHConfig):
             problem arose.
 
         """
-        r = requests.get(metadata_url)
+        r = self.do('get', metadata_url)
         if r.ok:
             return r.json()
 
@@ -124,4 +123,4 @@ class DepositClient(SWHConfig):
         if revision_id:
             payload['revision_id'] = revision_id
 
-        requests.put(update_status_url, json=payload)
+        self.do('put', update_status_url, json=payload)

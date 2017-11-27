@@ -37,8 +37,9 @@ class DepositLoaderInhibitsStorage:
     cf. SWHDepositLoaderNoStorage
 
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, client=None):
+        # client is not used here, transit it nonetheless to other mixins
+        super().__init__(client=client)
         # typed data
         self.state = {
             'origin': [],
@@ -223,11 +224,10 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
         # 1. create a deposit with archive and metadata
         self.deposit_id = self.create_simple_binary_deposit()
-
-        # 2. setup loader with no persistence and that client
-        self.loader = SWHDepositLoaderNoStorage()
-        # 3. Sets a basic client which accesses the test data
-        self.loader.client = SWHDepositTestClient(self.client, config={})
+        # 2. Sets a basic client which accesses the test data
+        loader_client = SWHDepositTestClient(self.client, config={})
+        # 3. setup loader with no persistence and that client
+        self.loader = SWHDepositLoaderNoStorage(client=loader_client)
 
     def tearDown(self):
         super().tearDown()
