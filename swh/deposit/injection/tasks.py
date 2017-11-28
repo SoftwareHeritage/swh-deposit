@@ -19,7 +19,7 @@ class LoadDepositArchiveTsk(Task):
           deposit's private update status api
 
     """
-    task_queue = 'swh_deposit_archive'
+    task_queue = 'swh_deposit_archives'
 
     def run_task(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Import a deposit tarball into swh.
@@ -40,7 +40,7 @@ class DepositChecksTsk(Task):
     """
     task_queue = 'swh_deposit_checks'
 
-    def run_task(self, *, deposit_check_url, deposit_update_url):
+    def run_task(self, deposit_check_url):
         """Check a deposit's status
 
         Args: see :func:`DepositChecker.check`.
@@ -48,4 +48,4 @@ class DepositChecksTsk(Task):
         """
         checker = DepositChecker()
         checker.log = self.log
-        checker.check(deposit_check_url=deposit_check_url)
+        checker.check(deposit_check_url)
