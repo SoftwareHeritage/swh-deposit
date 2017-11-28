@@ -175,21 +175,23 @@ class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage, DepositLoader):
 
        It inherits from the actual deposit loader to actually test its
        correct behavior.  It also inherits from
-       DepositLoaderInhibitsStorageLoader so that no persistence takes place.
+       DepositLoaderInhibitsStorage so that no persistence takes place.
 
     """
     pass
 
 
 class SWHDepositTestClient(DepositClient):
+    """Deposit test client to permit overriding the default request
+       client.
+
+    """
     def __init__(self, client, config):
         super().__init__(config=config)
         self.client = client
 
     def archive_get(self, archive_update_url, archive_path, log=None):
         r = self.client.get(archive_update_url)
-        # import os
-        # os.makedirs(os.path.dirname(archive_path), exist_ok=True)
         with open(archive_path, 'wb') as f:
             for chunk in r.streaming_content:
                 f.write(chunk)
@@ -204,9 +206,9 @@ class SWHDepositTestClient(DepositClient):
         payload = {'status': status}
         if revision_id:
             payload['revision_id'] = revision_id
-            self.client.put(update_status_url,
-                            content_type='application/json',
-                            data=json.dumps(payload))
+        self.client.put(update_status_url,
+                        content_type='application/json',
+                        data=json.dumps(payload))
 
 
 @attr('fs')
