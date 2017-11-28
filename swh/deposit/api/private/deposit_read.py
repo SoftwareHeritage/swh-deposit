@@ -122,11 +122,10 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
     """
     ADDITIONAL_CONFIG = {
         'provider': ('dict', {
-            'provider_name': '',
+            # 'provider_name': '',  # those are not set since read from the
+            # 'provider_url': '',   # deposit's client
             'provider_type': 'deposit_client',
-            'provider_url': '',
-            'metadata': {
-            }
+            'metadata': {}
         }),
         'tool': ('dict', {
             'tool_name': 'swh-deposit',
