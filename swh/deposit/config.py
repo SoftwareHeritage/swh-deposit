@@ -71,9 +71,12 @@ class SWHDefaultConfig(SWHConfig):
         'checks': ('bool', True),
     }
 
+    ADDITIONAL_CONFIG = {}
+
     def __init__(self, **config):
         super().__init__()
-        self.config = self.parse_config_file()
+        self.config = self.parse_config_file(
+            additional_configs=[self.ADDITIONAL_CONFIG])
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
         if self.config['checks']:
