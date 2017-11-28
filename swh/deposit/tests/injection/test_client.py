@@ -13,6 +13,8 @@ from nose.tools import istest
 
 from swh.deposit.injection.client import DepositClient
 
+from .common import CLIENT_TEST_CONFIG
+
 
 class StreamedResponse:
     """Streamed response facsimile
@@ -60,11 +62,11 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             stream=(s for s in stream_content))
         _client = FakeRequestClientGet(response)
 
-        deposit_client = DepositClient(config={}, _client=_client)
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
 
         archive_path = os.path.join(self.temporary_directory, 'test.archive')
-        archive_path = deposit_client.archive_get(
-            'http://nowhere:9000/some/url', archive_path)
+        archive_path = deposit_client.archive_get('/some/url', archive_path)
 
         self.assertTrue(os.path.exists(archive_path))
 
@@ -72,8 +74,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             actual_content = f.read()
 
         self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/some/url', ))
+        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
         self.assertEquals(_client.kwargs, {
             'stream': True
         })
@@ -83,21 +84,21 @@ class DepositClientReadArchiveTest(unittest.TestCase):
         """Reading archive should write data in temporary directory
 
         """
-        stream_content = [b"some", b"streamed", b"response"]
+        stream_content = [b"some", b"streamed", b"response", b"for", b"auth"]
         response = StreamedResponse(
             ok=True,
             stream=(s for s in stream_content))
         _client = FakeRequestClientGet(response)
 
-        deposit_client = DepositClient(config={
+        _config = CLIENT_TEST_CONFIG.copy()
+        _config['auth'] = {  # add authentication setup
             'username': 'user',
             'password': 'pass'
-        },
-                                       _client=_client)
+        }
+        deposit_client = DepositClient(_config, _client=_client)
 
         archive_path = os.path.join(self.temporary_directory, 'test.archive')
-        archive_path = deposit_client.archive_get(
-            'http://nowhere:9000/some/url', archive_path)
+        archive_path = deposit_client.archive_get('/some/url', archive_path)
 
         self.assertTrue(os.path.exists(archive_path))
 
@@ -105,8 +106,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             actual_content = f.read()
 
         self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/some/url', ))
+        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
         self.assertEquals(_client.kwargs, {
             'stream': True,
             'auth': ('user', 'pass')
@@ -119,13 +119,13 @@ class DepositClientReadArchiveTest(unittest.TestCase):
         """
         response = StreamedResponse(ok=False, stream=None)
         _client = FakeRequestClientGet(response)
-        deposit_client = DepositClient(config={}, _client=_client)
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
 
-        url = 'http://nowhere:9001/some/url'
         with self.assertRaisesRegex(
                 ValueError,
-                'Problem when retrieving deposit archive at %s' % url):
-            deposit_client.archive_get(url, 'some/path')
+                'Problem when retrieving deposit archive'):
+            deposit_client.archive_get('/some/url', 'some/path')
 
 
 class JsonResponse:
@@ -152,10 +152,10 @@ class DepositClientReadMetadataTest(unittest.TestCase):
             ok=True,
             response=expected_response)
         _client = FakeRequestClientGet(response)
-        deposit_client = DepositClient(config={}, _client=_client)
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
 
-        actual_metadata = deposit_client.metadata_get(
-            'http://nowhere:9000/metadata')
+        actual_metadata = deposit_client.metadata_get('/metadata')
 
         self.assertEquals(actual_metadata, expected_response)
 
@@ -165,12 +165,12 @@ class DepositClientReadMetadataTest(unittest.TestCase):
 
         """
         _client = FakeRequestClientGet(JsonResponse(ok=False, response=None))
-        deposit_client = DepositClient(config={}, _client=_client)
-        url = 'http://nowhere:9001/some/metadata'
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
         with self.assertRaisesRegex(
                 ValueError,
-                'Problem when retrieving metadata at %s' % url):
-            deposit_client.metadata_get(url)
+                'Problem when retrieving metadata at'):
+            deposit_client.metadata_get('/some/metadata/url')
 
 
 class FakeRequestClientPut:
@@ -192,9 +192,10 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
         """
         _client = FakeRequestClientPut()
-        deposit_client = DepositClient(config={}, _client=_client)
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
 
-        deposit_client.status_update('http://nowhere:9000/update/status',
+        deposit_client.status_update('/update/status',
                                      'success', revision_id='some-revision-id')
 
         self.assertEquals(_client.args,
@@ -212,15 +213,53 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
         """
         _client = FakeRequestClientPut()
-        deposit_client = DepositClient(config={}, _client=_client)
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
 
-        deposit_client.status_update('http://nowhere:9001/update/status',
-                                     'failure')
+        deposit_client.status_update('/update/status/fail', 'failure')
 
         self.assertEquals(_client.args,
-                          ('http://nowhere:9001/update/status', ))
+                          ('http://nowhere:9000/update/status/fail', ))
         self.assertEquals(_client.kwargs, {
             'json': {
                 'status': 'failure',
             }
         })
+
+
+class DepositClientCheckTest(unittest.TestCase):
+    @istest
+    def check(self):
+        """When check ok, this should return the deposit's status
+
+        """
+        _client = FakeRequestClientGet(
+            JsonResponse(ok=True, response={'status': 'something'}))
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
+
+        r = deposit_client.check('/check')
+
+        self.assertEquals(_client.args,
+                          ('http://nowhere:9000/check', ))
+        self.assertEquals(_client.kwargs, {})
+        self.assertEquals(r, 'something')
+
+    @istest
+    def check_fails(self):
+        """Checking deposit can fail for some reason
+
+        """
+        _client = FakeRequestClientGet(
+            JsonResponse(ok=False, response=None))
+        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
+                                       _client=_client)
+
+        with self.assertRaisesRegex(
+                ValueError,
+                'Problem when checking deposit'):
+            deposit_client.check('/check/fails')
+
+        self.assertEquals(_client.args,
+                          ('http://nowhere:9000/check/fails', ))
+        self.assertEquals(_client.kwargs, {})

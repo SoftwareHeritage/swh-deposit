@@ -14,28 +14,33 @@ from swh.core.config import SWHConfig
 class DepositClient(SWHConfig):
     """Deposit client to:
 
-    - read archive
-    - read metadata
-    - update deposit's status
+    - read a given deposit's archive(s)
+    - read a given deposit's metadata
+    - update a given deposit's status
 
     """
     CONFIG_BASE_FILENAME = 'deposit/client'
-    DEFAULT_CONFIG = {}
+    DEFAULT_CONFIG = {
+        'url': ('str', 'http://localhost:8000'),
+        'auth': ('dict', {})  # with optional 'username'/'password' keys
+    }
 
     def __init__(self, config=None, _client=requests):
-        if config is not None:
-            self.config = config
+        super().__init__()
+        if config is None:
+            self.config = super().parse_config_file()
         else:
-            super().__init__()
+            self.config = config
 
         self._client = _client
-
-        if 'username' in self.config and 'password' in self.config:
-            self.auth = (self.config['username'], self.config['password'])
-        else:
+        self.base_url = self.config['url']
+        auth = self.config['auth']
+        if auth == {}:
             self.auth = None
+        else:
+            self.auth = (auth['username'], auth['password'])
 
-    def do(self, method, *args, **kwargs):
+    def do(self, method, url, *args, **kwargs):
         """Internal method to deal with requests, possibly with basic http
            authentication.
 
@@ -55,7 +60,8 @@ class DepositClient(SWHConfig):
         if self.auth:
             kwargs['auth'] = self.auth
 
-        return method_fn(*args, **kwargs)
+        full_url = '%s%s' % (self.base_url.rstrip('/'), url)
+        return method_fn(full_url, *args, **kwargs)
 
     def archive_get(self, archive_update_url, archive_path, log=None):
         """Retrieve the archive from the deposit to a local directory.
@@ -124,3 +130,21 @@ class DepositClient(SWHConfig):
             payload['revision_id'] = revision_id
 
         self.do('put', update_status_url, json=payload)
+
+    def check(self, check_url, log=None):
+        """Check the deposit's associated data (metadata, archive(s))
+
+        Args:
+            check_url (str): the full deposit's check url
+
+        """
+        r = self.do('get', check_url)
+        if r.ok:
+            data = r.json()
+            return data['status']
+
+        msg = 'Problem when checking deposit %s' % check_url
+        if log:
+            log.error(msg)
+
+        raise ValueError(msg)

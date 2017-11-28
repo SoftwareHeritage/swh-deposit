@@ -54,7 +54,6 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
     from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
     from django.core.urlresolvers import reverse
 
-    # FIXME: Generate absolute uri
     args = [instance.deposit.collection.name, instance.deposit.id]
     archive_check_url = reverse(
         PRIVATE_CHECK_DEPOSIT, args=args)

@@ -14,10 +14,7 @@ class DepositChecker():
     """
     def __init__(self, client=None):
         super().__init__()
-        if client:
-            self.client = client
-        else:
-            self.client = DepositClient()
+        self.client = client if client else DepositClient()
 
     def check(self, deposit_check_url):
-        self.client.get(deposit_check_url)
+        return self.client.check(deposit_check_url)

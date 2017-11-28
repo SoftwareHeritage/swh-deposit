@@ -149,7 +149,7 @@ def get_deposit_ready():
     yield from Deposit.objects.filter(status=DEPOSIT_STATUS_READY)
 
 
-def prepare_task_arguments(server):
+def prepare_task_arguments():
     """Convert deposit to argument for task to be executed.
 
     """
@@ -160,12 +160,12 @@ def prepare_task_arguments(server):
 
     for deposit in get_deposit_ready():
         args = [deposit.collection.name, deposit.id]
-        archive_url = '%s%s' % (server, reverse(
-            PRIVATE_GET_RAW_CONTENT, args=args))
-        deposit_meta_url = '%s%s' % (server, reverse(
-            PRIVATE_GET_DEPOSIT_METADATA, args=args))
-        deposit_update_url = '%s%s' % (server, reverse(
-            PRIVATE_PUT_DEPOSIT, args=args))
+        archive_url = reverse(
+            PRIVATE_GET_RAW_CONTENT, args=args)
+        deposit_meta_url = reverse(
+            PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        deposit_update_url = reverse(
+            PRIVATE_PUT_DEPOSIT, args=args)
 
         yield archive_url, deposit_meta_url, deposit_update_url
 
@@ -176,13 +176,11 @@ def prepare_task_arguments(server):
               help='development or production platform')
 @click.option('--scheduling-method', default='celery',
               help='Scheduling method')
-@click.option('--server', default='http://127.0.0.1:5006',
-              help='Deposit server')
 @click.option('--batch-size', default=1000, type=click.INT,
               help='Task batch size')
 @click.option('--dry-run/--no-dry-run', is_flag=True, default=False,
               help='Dry run')
-def main(platform, scheduling_method, server, batch_size, dry_run):
+def main(platform, scheduling_method, batch_size, dry_run):
     setup_django_for(platform)
 
     override_config = {}
@@ -197,7 +195,7 @@ def main(platform, scheduling_method, server, batch_size, dry_run):
         raise ValueError(
             'Only `celery` or `swh-scheduler` values are accepted')
 
-    for deposits in utils.grouper(prepare_task_arguments(server), batch_size):
+    for deposits in utils.grouper(prepare_task_arguments(), batch_size):
         scheduling.schedule(deposits)
 
 

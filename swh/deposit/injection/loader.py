@@ -32,10 +32,7 @@ class DepositLoader(loader.TarLoader):
     """
     def __init__(self, client=None):
         super().__init__()
-        if client:
-            self.client = client
-        else:
-            self.client = DepositClient()
+        self.client = client if client else DepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
         SWHLoader.load(

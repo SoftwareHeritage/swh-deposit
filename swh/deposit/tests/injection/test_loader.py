@@ -1,9 +1,8 @@
-# Copyright (C) 2016-2017  The Software Heritage developers
+# Copyright (C) 2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import json
 import os
 import unittest
 import shutil
@@ -14,13 +13,12 @@ from rest_framework.test import APITestCase
 
 from swh.model import hashutil
 from swh.deposit.injection.loader import DepositLoader
-from swh.deposit.injection.client import DepositClient
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
 from swh.deposit.config import PRIVATE_PUT_DEPOSIT
 from django.core.urlresolvers import reverse
 
-
+from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
 from .. import TEST_LOADER_CONFIG
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ..common import FileSystemCreationRoutine
@@ -181,36 +179,6 @@ class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage, DepositLoader):
     pass
 
 
-class SWHDepositTestClient(DepositClient):
-    """Deposit test client to permit overriding the default request
-       client.
-
-    """
-    def __init__(self, client, config):
-        super().__init__(config=config)
-        self.client = client
-
-    def archive_get(self, archive_update_url, archive_path, log=None):
-        r = self.client.get(archive_update_url)
-        with open(archive_path, 'wb') as f:
-            for chunk in r.streaming_content:
-                f.write(chunk)
-
-        return archive_path
-
-    def metadata_get(self, metadata_url, log=None):
-        r = self.client.get(metadata_url)
-        return json.loads(r.content.decode('utf-8'))
-
-    def status_update(self, update_status_url, status, revision_id=None):
-        payload = {'status': status}
-        if revision_id:
-            payload['revision_id'] = revision_id
-        self.client.put(update_status_url,
-                        content_type='application/json',
-                        data=json.dumps(payload))
-
-
 @attr('fs')
 class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                                 BasicTestCase, CommonCreationRoutine,
@@ -222,12 +190,11 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         # create the extraction dir used by the loader
         os.makedirs(TEST_LOADER_CONFIG['extraction_dir'], exist_ok=True)
 
-        self.server = 'http://localhost/'
-
         # 1. create a deposit with archive and metadata
         self.deposit_id = self.create_simple_binary_deposit()
         # 2. Sets a basic client which accesses the test data
-        loader_client = SWHDepositTestClient(self.client, config={})
+        loader_client = SWHDepositTestClient(self.client,
+                                             config=CLIENT_TEST_CONFIG)
         # 3. setup loader with no persistence and that client
         self.loader = SWHDepositLoaderNoStorage(client=loader_client)
 
@@ -257,10 +224,6 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['revision']), 1)
         self.assertEquals(len(self.loader.state['release']), 0)
         self.assertEquals(len(self.loader.state['occurrence']), 1)
-
-        # FIXME enrich state introspection
-        # expected_revisions = {}
-        # self.assertRevisionsOk(expected_revisions)
 
     @istest
     def inject_deposit_verify_metadata(self):
