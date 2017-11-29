@@ -9,7 +9,7 @@ from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_READY
+from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_READY_FOR_CHECKS
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 
@@ -364,7 +364,7 @@ and other stuff</description>
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.client, self.user)
 
         # one associated request to a deposit
@@ -405,7 +405,7 @@ and other stuff</description>
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, 'ready')
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.client, self.user)
 
         # one associated request to a deposit
@@ -444,7 +444,7 @@ and other stuff</description>
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.client, self.user)
 
         # one associated request to a deposit
@@ -509,7 +509,7 @@ and other stuff</description>
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.external_id, external_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.client, self.user)
 
         self.assertEqual(len(Deposit.objects.all()), 1)

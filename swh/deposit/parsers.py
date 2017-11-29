@@ -29,7 +29,6 @@ class SWHXMLParser(XMLParser):
         """
         value = super()._type_convert(value)
         if isinstance(value, Decimal):
-            print(value)
             value = str(value)
 
         return value

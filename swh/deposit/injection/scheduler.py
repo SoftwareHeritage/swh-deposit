@@ -3,8 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Module in charge of sending deposit injection as celery task or
-scheduled one-shot tasks.
+"""Module in charge of sending deposit loading/checking as either
+celery task or scheduled one-shot tasks.
 
 """
 
@@ -17,6 +17,8 @@ from celery import group
 from swh.core import utils
 from swh.core.config import SWHConfig
 from swh.deposit.config import setup_django_for, DEPOSIT_STATUS_READY
+from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.scheduler.utils import get_task, create_oneshot_task_dict
 
 
 class SWHScheduling(SWHConfig, metaclass=ABCMeta):
@@ -29,6 +31,8 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
     DEFAULT_CONFIG = {
         'dry_run': ('bool', False),
     }
+
+    ADDITIONAL_CONFIG = {}
 
     def __init__(self):
         super().__init__()
@@ -54,28 +58,30 @@ class SWHCeleryScheduling(SWHScheduling):
     """Deposit injection as Celery task scheduling.
 
     """
-    ADDITIONAL_CONFIG = {
-        'task_name': ('str', 'swh.deposit.injection.tasks.LoadDepositArchive'),
-    }
-
     def __init__(self, config=None):
         super().__init__()
-        from swh.scheduler import utils
-        self.task_name = self.config['task_name']
-        self.task = utils.get_task(self.task_name)
         if config:
             self.config.update(**config)
         self.dry_run = self.config['dry_run']
+        self.check = self.config['check']
+        if self.check:
+            task_name = 'swh.deposit.injection.tasks.ChecksDepositTsk'
+        else:
+            task_name = 'swh.deposit.injection.tasks.LoadDepositArchiveTsk'
+        self.task = get_task(task_name)
 
     def _convert(self, deposits):
         """Convert tuple to celery task signature.
 
         """
         task = self.task
-        for archive_url, deposit_meta_url, deposit_update_url in deposits:
-            yield task.s(archive_url=archive_url,
-                         deposit_meta_url=deposit_meta_url,
-                         deposit_update_url=deposit_update_url)
+        for archive_url, meta_url, update_url, check_url in deposits:
+            if self.check:
+                yield task.s(deposit_check_url=check_url)
+            else:
+                yield task.s(archive_url=archive_url,
+                             deposit_meta_url=meta_url,
+                             deposit_update_url=update_url)
 
     def schedule(self, deposits):
         """Schedule the new deposit injection directly through celery.
@@ -93,7 +99,7 @@ class SWHCeleryScheduling(SWHScheduling):
         return group(self._convert(deposits)).delay()
 
 
-class SWHScheduling(SWHScheduling):
+class SWHSchedulerScheduling(SWHScheduling):
     """Deposit injection through SWH's task scheduling interface.
 
     """
@@ -106,26 +112,25 @@ class SWHScheduling(SWHScheduling):
             self.config.update(**config)
         self.dry_run = self.config['dry_run']
         self.scheduler = SchedulerBackend(**self.config)
+        self.check = self.config['check']
 
     def _convert(self, deposits):
         """Convert tuple to one-shot scheduling tasks.
 
         """
-        import datetime
-        for archive_url, deposit_meta_url, deposit_update_url in deposits:
-            yield {
-                'policy': 'oneshot',
-                'type': 'swh-deposit-archive-ingestion',
-                'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
-                'arguments': {
-                    'args': [],
-                    'kwargs': {
-                        'archive_url': archive_url,
-                        'deposit_meta_url': deposit_meta_url,
-                        'deposit_update_url': deposit_update_url,
-                    },
-                }
-            }
+        for archive_url, meta_url, update_url, check_url in deposits:
+            if self.check:
+                task = create_oneshot_task_dict(
+                    'swh-deposit-archive-checks',
+                    deposit_check_url=check_url)
+            else:
+                task = create_oneshot_task_dict(
+                    'swh-deposit-archive-ingestion',
+                    archive_url=archive_url,
+                    deposit_meta_url=meta_url,
+                    deposit_update_url=update_url)
+
+            yield task
 
     def schedule(self, deposits):
         """Schedule the new deposit injection through swh.scheduler's api.
@@ -140,33 +145,36 @@ class SWHScheduling(SWHScheduling):
         self.scheduler.create_tasks(self._convert(deposits))
 
 
-def get_deposit_ready():
-    """Retrieve deposit ready to be task executed.
+def get_deposit_by(status):
+    """Filter deposit given a specific status.
 
     """
     from swh.deposit.models import Deposit
-    yield from Deposit.objects.filter(status=DEPOSIT_STATUS_READY)
+    yield from Deposit.objects.filter(status=status)
 
 
-def prepare_task_arguments(server):
+def prepare_task_arguments(check):
     """Convert deposit to argument for task to be executed.
 
     """
     from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
     from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
     from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+    from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
     from django.core.urlresolvers import reverse
 
-    for deposit in get_deposit_ready():
-        args = [deposit.collection.name, deposit.id]
-        archive_url = '%s%s' % (server, reverse(
-            PRIVATE_GET_RAW_CONTENT, args=args))
-        deposit_meta_url = '%s%s' % (server, reverse(
-            PRIVATE_GET_DEPOSIT_METADATA, args=args))
-        deposit_update_url = '%s%s' % (server, reverse(
-            PRIVATE_PUT_DEPOSIT, args=args))
+    if check:
+        status = DEPOSIT_STATUS_READY_FOR_CHECKS
+    else:
+        status = DEPOSIT_STATUS_READY
 
-        yield archive_url, deposit_meta_url, deposit_update_url
+    for deposit in get_deposit_by(status):
+        args = [deposit.collection.name, deposit.id]
+        archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+        meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
+        check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
+        yield archive_url, meta_url, update_url, check_url
 
 
 @click.command(
@@ -175,28 +183,28 @@ def prepare_task_arguments(server):
               help='development or production platform')
 @click.option('--scheduling-method', default='celery',
               help='Scheduling method')
-@click.option('--server', default='http://127.0.0.1:5006',
-              help='Deposit server')
 @click.option('--batch-size', default=1000, type=click.INT,
               help='Task batch size')
 @click.option('--dry-run/--no-dry-run', is_flag=True, default=False,
               help='Dry run')
-def main(platform, scheduling_method, server, batch_size, dry_run):
+@click.option('--check', is_flag=True, default=False)
+def main(platform, scheduling_method, batch_size, dry_run, check):
     setup_django_for(platform)
 
     override_config = {}
     if dry_run:
         override_config['dry_run'] = dry_run
+    override_config['check'] = check
 
     if scheduling_method == 'celery':
         scheduling = SWHCeleryScheduling(override_config)
     elif scheduling_method == 'swh-scheduler':
-        scheduling = SWHScheduling(override_config)
+        scheduling = SWHSchedulerScheduling(override_config)
     else:
         raise ValueError(
             'Only `celery` or `swh-scheduler` values are accepted')
 
-    for deposits in utils.grouper(prepare_task_arguments(server), batch_size):
+    for deposits in utils.grouper(prepare_task_arguments(check), batch_size):
         scheduling.schedule(deposits)
 
 

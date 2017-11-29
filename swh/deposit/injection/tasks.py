@@ -5,9 +5,10 @@
 
 from swh.scheduler.task import Task
 from swh.deposit.injection.loader import DepositLoader
+from swh.deposit.injection.checker import DepositChecker
 
 
-class LoadDepositArchive(Task):
+class LoadDepositArchiveTsk(Task):
     """Deposit archive ingestion task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
@@ -18,7 +19,7 @@ class LoadDepositArchive(Task):
           deposit's private update status api
 
     """
-    task_queue = 'swh_deposit_archive'
+    task_queue = 'swh_loader_deposit'
 
     def run_task(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Import a deposit tarball into swh.
@@ -31,3 +32,20 @@ class LoadDepositArchive(Task):
         loader.load(archive_url=archive_url,
                     deposit_meta_url=deposit_meta_url,
                     deposit_update_url=deposit_update_url)
+
+
+class ChecksDepositTsk(Task):
+    """Deposit checks task.
+
+    """
+    task_queue = 'swh_checker_deposit'
+
+    def run_task(self, deposit_check_url):
+        """Check a deposit's status
+
+        Args: see :func:`DepositChecker.check`.
+
+        """
+        checker = DepositChecker()
+        checker.log = self.log
+        checker.check(deposit_check_url)

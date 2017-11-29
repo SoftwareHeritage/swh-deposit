@@ -13,54 +13,27 @@
 
 """
 
-import zipfile
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import DepositRequest
-from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
-from .config import DEPOSIT_STATUS_READY_FOR_CHECKS, ARCHIVE_TYPE
+from .models import Deposit
+from .config import SWHDefaultConfig, DEPOSIT_STATUS_READY
+from .config import DEPOSIT_STATUS_READY_FOR_CHECKS
 
 
-def checks(deposit_request):
-    """Additional checks to execute on the deposit request's associated
-       data (archive).
+@receiver(post_save, sender=Deposit)
+def post_deposit_save(sender, instance, created, raw, using,
+                      update_fields, **kwargs):
+    """When a deposit is saved, check for the deposit's status change and
+       schedule actions accordingly.
 
-    Args:
-        The deposit request whose archive we need to check
-
-    Returns:
-        True if we can at least read some content to the
-        request's deposit associated archive. False otherwise.
-
-    """
-    if deposit_request.type.name != ARCHIVE_TYPE:  # no check for other types
-        return True
-
-    try:
-        archive = deposit_request.archive
-        zf = zipfile.ZipFile(archive.path)
-        zf.infolist()
-    except Exception as e:
-        return False
-    else:
-        return True
-
-
-@receiver(post_save, sender=DepositRequest)
-def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
-                                      update_fields, **kwargs):
-    """Check the status is ready for check.
-    If so, try and check the associated archives.
-    If not, move along.
-
-    When
-        Triggered when a deposit is saved.
+       When the status passes to ready-for-checks, schedule checks.
+       When the status pass to ready, schedule loading.  Otherwise, do
+       nothing.
 
     Args:
-        sender (DepositRequest): The model class
-        instance (DepositRequest): The actual instance being saved
+        sender (Deposit): The model class
+        instance (Deposit): The actual instance being saved
         created (bool): True if a new record was created
         raw (bool): True if the model is saved exactly as presented
                     (i.e. when loading a fixture). One should not
@@ -72,12 +45,39 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                        passed to save()
 
     """
-    if instance.deposit.status is not DEPOSIT_STATUS_READY_FOR_CHECKS:
+    default_config = SWHDefaultConfig()
+    if not default_config.config['checks']:
         return
 
-    if not checks(instance):
-        instance.deposit.status = DEPOSIT_STATUS_REJECTED
-    else:
-        instance.deposit.status = DEPOSIT_STATUS_READY
+    if instance.status not in {DEPOSIT_STATUS_READY_FOR_CHECKS,
+                               DEPOSIT_STATUS_READY}:
+        return
 
-    instance.deposit.save()
+    from django.core.urlresolvers import reverse
+    from swh.scheduler.utils import create_oneshot_task_dict
+
+    args = [instance.collection.name, instance.id]
+
+    if instance.status == DEPOSIT_STATUS_READY_FOR_CHECKS:
+        # schedule archive check
+        from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
+        check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
+        task = create_oneshot_task_dict(
+            'swh-deposit-archive-checks',
+            archive_check_url=check_url)
+    else:  # instance.status == DEPOSIT_STATUS_READY:
+        # schedule loading
+        from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
+        from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
+        from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+        archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+        meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
+
+        task = create_oneshot_task_dict(
+            'swh-deposit-archive-ingestion',
+            archive_url=archive_url,
+            deposit_meta_url=meta_url,
+            deposit_update_url=update_url)
+
+    default_config.scheduler.create_tasks([task])

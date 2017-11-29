@@ -71,11 +71,14 @@ swh/deposit/api/deposit_update.py
 swh/deposit/api/service_document.py
 swh/deposit/api/urls.py
 swh/deposit/api/private/__init__.py
+swh/deposit/api/private/deposit_check.py
 swh/deposit/api/private/deposit_read.py
 swh/deposit/api/private/deposit_update_status.py
 swh/deposit/fixtures/__init__.py
 swh/deposit/fixtures/deposit_data.yaml
 swh/deposit/injection/__init__.py
+swh/deposit/injection/checker.py
+swh/deposit/injection/client.py
 swh/deposit/injection/loader.py
 swh/deposit/injection/scheduler.py
 swh/deposit/injection/tasks.py
@@ -84,6 +87,7 @@ swh/deposit/migrations/0002_depositrequest_archive.py
 swh/deposit/migrations/0003_temporaryarchive.py
 swh/deposit/migrations/0004_delete_temporaryarchive.py
 swh/deposit/migrations/0005_auto_20171019_1436.py
+swh/deposit/migrations/0006_depositclient_url.py
 swh/deposit/migrations/__init__.py
 swh/deposit/service/__init__.py
 swh/deposit/service/clean_temporary_directory.py
@@ -103,12 +107,12 @@ swh/deposit/templates/deposit/status.xml
 swh/deposit/templates/rest_framework/api.html
 swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
-swh/deposit/tests/test_loader.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
+swh/deposit/tests/api/test_deposit_check.py
 swh/deposit/tests/api/test_deposit_delete.py
 swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_read_archive.py
@@ -117,3 +121,8 @@ swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
 swh/deposit/tests/api/test_deposit_update_status.py
 swh/deposit/tests/api/test_service_document.py
+swh/deposit/tests/injection/__init__.py
+swh/deposit/tests/injection/common.py
+swh/deposit/tests/injection/test_checker.py
+swh/deposit/tests/injection/test_client.py
+swh/deposit/tests/injection/test_loader.py
