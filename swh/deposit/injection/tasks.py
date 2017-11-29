@@ -19,7 +19,7 @@ class LoadDepositArchiveTsk(Task):
           deposit's private update status api
 
     """
-    task_queue = 'swh_deposit_archives'
+    task_queue = 'swh_loader_deposit'
 
     def run_task(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Import a deposit tarball into swh.
@@ -38,7 +38,7 @@ class DepositChecksTsk(Task):
     """Deposit checks task.
 
     """
-    task_queue = 'swh_deposit_checks'
+    task_queue = 'swh_checker_deposit'
 
     def run_task(self, deposit_check_url):
         """Check a deposit's status
