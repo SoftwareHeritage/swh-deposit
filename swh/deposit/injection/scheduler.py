@@ -65,7 +65,7 @@ class SWHCeleryScheduling(SWHScheduling):
         self.dry_run = self.config['dry_run']
         self.check = self.config['check']
         if self.check:
-            task_name = 'swh.deposit.injection.tasks.DepositChecksTsk'
+            task_name = 'swh.deposit.injection.tasks.ChecksDepositTsk'
         else:
             task_name = 'swh.deposit.injection.tasks.LoadDepositArchiveTsk'
         self.task = get_task(task_name)

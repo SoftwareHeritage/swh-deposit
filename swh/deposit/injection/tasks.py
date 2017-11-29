@@ -34,7 +34,7 @@ class LoadDepositArchiveTsk(Task):
                     deposit_update_url=deposit_update_url)
 
 
-class DepositChecksTsk(Task):
+class ChecksDepositTsk(Task):
     """Deposit checks task.
 
     """
