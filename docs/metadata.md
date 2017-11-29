@@ -8,31 +8,44 @@ if possible.
 ## Metadata requirements
 
 MUST
-- the schema/vocabulary used *MUST* be specified with a persistant url
+- **the schema/vocabulary** used *MUST* be specified with a persistent url
 (DublinCore, DOAP, CodeMeta, etc.)
-- the origin url *MUST* be defined depending on the schema you use:
 ```XML
-<link href="hal.archives-ouvertes.fr"/>
-<url>hal.archives-ouvertes.fr</url>
-<codemeta:url>hal.archives-ouvertes.fr</codemeta:url>
-<dcterms:url>hal.archives-ouvertes.fr</dcterms:url>
+<entry xmlns="http://www.w3.org/2005/Atom">
+or
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+or
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 ```
+- **the url** representing the location of the source *MUST* be provided
+under the url tag. The url will be used for creating an origin object in the
+archive.
+```XML
+<url>www.url-example.com</url>
+or
+<codemeta:url>www.url-example.com</codemeta:url>
+or
+<dcterms:url>www.url-example.com</dcterms:url>
+```
+- **the external_identifier** *MUST* be provided as an identifier
+- **the name** of the software deposit *MUST* be provided
+[atom:title, codemeta:name, dcterms:title]
+- **the authors** of the software deposit *MUST* be provided
 
 
 SHOULD
-- the external_identifier *SHOULD* match the Slug external-identifier in
+- **the external_identifier** *SHOULD* match the Slug external-identifier in
 the header
-- the following metadata *SHOULD* be included using the correct terminology
-(depending on the schema you are using- the CodeMeta crosswalk table can
-  help you identify the terms):
-  - codemeta:name - the software artifact title
-  - codemeta:description - short or long description of the software in the
-  deposit
-  - codemeta:license - the software license/s
-  - codemeta:author - the software authors
+- **the description** of the software deposit *SHOULD* be provided
+[codemeta:description] - short or long description of the software
+- **the license/s** of the software deposit *SHOULD* be provided
+[codemeta:license]
+
 
 MAY
-  - other metadata *MAY* be added with terms defined by the schema in use.
+- other metadata *MAY* be added with terms defined by the schema in use.
 
 ## Examples
 ### Using only Atom

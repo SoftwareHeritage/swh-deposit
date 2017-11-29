@@ -17,7 +17,6 @@ from swh.model import hashutil, identifiers
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest
-from ...models import previous_revision_id
 
 
 @contextmanager
@@ -71,7 +70,7 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
 
     """
     ADDITIONAL_CONFIG = {
-        'extraction_dir': ('str', '/tmp/swh-deposit/archive/')
+        'extraction_dir': ('str', '/tmp/swh-deposit/archive/'),
     }
 
     def __init__(self):
@@ -120,6 +119,27 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
     """Class in charge of aggregating metadata on a deposit.
 
     """
+    ADDITIONAL_CONFIG = {
+        'provider': ('dict', {
+            # 'provider_name': '',  # those are not set since read from the
+            # 'provider_url': '',   # deposit's client
+            'provider_type': 'deposit_client',
+            'metadata': {}
+        }),
+        'tool': ('dict', {
+            'tool_name': 'swh-deposit',
+            'tool_version': '0.0.1',
+            'tool_configuration': {
+                'sword_version': '2'
+            }
+        })
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.provider = self.config['provider']
+        self.tool = self.config['tool']
+
     def _aggregate_metadata(self, deposit, metadata_requests):
         """Retrieve and aggregates metadata information.
 
@@ -143,15 +163,15 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         """
         data = {}
-        metadata_requests = []
 
         # Retrieve tarballs/metadata information
-        metadata = self._aggregate_metadata(deposit, metadata_requests)
+        metadata = self._aggregate_metadata(deposit, requests)
 
         # Read information metadata
         data['origin'] = {
-            'type': deposit.collection.name,
-            'url': deposit.external_id,
+            'type': 'deposit',
+            'url': os.path.join(deposit.client.url.rstrip('/'),
+                                deposit.external_id),
         }
 
         # revision
@@ -162,6 +182,10 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'fullname': fullname,
             'email': deposit.client.email,
         }
+
+        # metadata provider
+        self.provider['provider_name'] = deposit.client.last_name
+        self.provider['provider_url'] = deposit.client.url
 
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
@@ -179,7 +203,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'metadata': metadata,
         }
 
-        parent_revision = previous_revision_id(deposit.swh_id)
+        parent_revision = deposit.swh_id
         if parent_revision:
             data['revision'] = {
                 'parents': [hashutil.hash_to_bytes(parent_revision)]
@@ -187,6 +211,11 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         data['occurrence'] = {
             'branch': 'master'
+        }
+        data['origin_metadata'] = {
+            'provider': self.provider,
+            'tool': self.tool,
+            'metadata': metadata
         }
 
         return data

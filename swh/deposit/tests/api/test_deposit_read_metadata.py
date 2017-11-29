@@ -37,8 +37,27 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         expected_meta = {
             'origin': {
-                'url': 'some-external-id',
-                'type': 'hal'
+                'url': 'https://hal.test.fr/some-external-id',
+                'type': 'deposit'
+            },
+            'origin_metadata': {
+                'metadata': {
+                    '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id'
+                },
+                'provider': {
+                    'provider_name': '',
+                    'provider_type': 'deposit_client',
+                    'provider_url': 'https://hal.test.fr/',
+                    'metadata': {}
+                },
+                'tool': {
+                    'tool_name': 'swh-deposit',
+                    'tool_version': '0.0.1',
+                    'tool_configuration': {
+                        'sword_version': '2'
+                    }
+                }
             },
             'revision': {
                 'synthetic': True,
@@ -51,7 +70,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                     'fullname': '', 'email': '', 'name': ''
                 },
                 'date': None,
-                'metadata': {},
+                'metadata': {
+                    '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id'
+                },
                 'type': 'tar'
             },
             'occurrence': {

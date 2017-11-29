@@ -7,7 +7,7 @@ import hashlib
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest
+from nose.tools import istest, nottest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -72,7 +72,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code,
                          status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @istest
+    @nottest
     def create_deposit_with_rejection_status(self):
         url = reverse(COL_IRI, args=[self.collection.name])
 

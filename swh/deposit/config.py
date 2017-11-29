@@ -16,6 +16,7 @@ SD_IRI = 'servicedocument'
 COL_IRI = 'upload'
 STATE_IRI = 'state_iri'
 PRIVATE_GET_RAW_CONTENT = 'private-download'
+PRIVATE_CHECK_DEPOSIT = 'check-deposit'
 PRIVATE_PUT_DEPOSIT = 'private-update'
 PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 
@@ -67,10 +68,17 @@ class SWHDefaultConfig(SWHConfig):
 
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
+        'checks': ('bool', True),
     }
+
+    ADDITIONAL_CONFIG = {}
 
     def __init__(self, **config):
         super().__init__()
-        self.config = self.parse_config_file()
+        self.config = self.parse_config_file(
+            additional_configs=[self.ADDITIONAL_CONFIG])
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
+        if self.config['checks']:
+            from swh.scheduler.backend import SchedulerBackend
+            self.scheduler = SchedulerBackend()

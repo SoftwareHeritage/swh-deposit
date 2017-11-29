@@ -15,7 +15,7 @@ from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
 from ..common import CommonCreationRoutine
-from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY
+from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY_FOR_CHECKS
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
@@ -63,11 +63,10 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
                          deposit.id)
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
-                         DEPOSIT_STATUS_READY)
+                         DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(
             r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
-            'Deposit is fully received, checked, and ready for '
-            'injection')
+            'Deposit is ready for additional checks (tarball ok, etc...)')
 
     @istest
     def status_on_unknown_deposit(self):
