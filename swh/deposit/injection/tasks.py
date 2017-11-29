@@ -9,11 +9,11 @@ from swh.deposit.injection.checker import DepositChecker
 
 
 class LoadDepositArchiveTsk(Task):
-    """Deposit archive ingestion task described by the following steps:
+    """Deposit archive injection task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
           locally in a temporary directory
-       2. Trigger the ingestion
+       2. Trigger the injection
        3. clean up the temporary directory
        4. Update the deposit's status according to result using the
           deposit's private update status api
