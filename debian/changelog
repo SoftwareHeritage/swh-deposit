@@ -1,3 +1,17 @@
+swh-deposit (0.0.28-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.28
+  * swh.deposit: Use revision_id as swh_id
+  * swh.deposit: Untangle checks from the current client/server requests
+    flow
+  * swh.deposit.injection: Trigger scheduling of checks on deposit
+  * swh.deposit.injection: Trigger scheduling of loading on deposit
+  * swh.deposit.injection: Add origin_metadata during loading
+  * d/control: Bump to latest swh layers
+  * swh.deposit.tests: Add and refactor tests
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 29 Nov 2017 15:03:56 +0100
+
 swh-deposit (0.0.27-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.27
