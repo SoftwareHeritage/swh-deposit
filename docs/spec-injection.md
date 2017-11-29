@@ -168,9 +168,9 @@ of:
 
 #### SWH Identifier returned
 
-    swh-<client-name>-<synthetic-revision-id>
+    The synthetic revision id
 
-    e.g: swh-hal-47dc6b4636c7f6cba0df83e3d5490bf4334d987e
+    e.g: 47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
 ### Scheduling injection
 

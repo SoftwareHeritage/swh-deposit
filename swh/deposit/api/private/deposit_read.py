@@ -17,7 +17,6 @@ from swh.model import hashutil, identifiers
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest
-from ...models import previous_revision_id
 
 
 @contextmanager
@@ -204,7 +203,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'metadata': metadata,
         }
 
-        parent_revision = previous_revision_id(deposit.swh_id)
+        parent_revision = deposit.swh_id
         if parent_revision:
             data['revision'] = {
                 'parents': [hashutil.hash_to_bytes(parent_revision)]
