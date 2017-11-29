@@ -122,14 +122,15 @@ authenticate client. Also, a client can access collections:
   are:
 
 ``` text
-    'partial',      -- the deposit is new or partially received since it
-                    -- can be done in multiple requests
-    'expired',      -- deposit has been there too long and is now deemed
-                    -- ready to be garbage collected
-    'ready',        -- deposit is fully received and ready for injection
-    'injecting,     -- injection is ongoing on swh's side
-    'success',      -- injection is successful
-    'failure'       -- injection is a failure
+    'partial',          -- the deposit is new or partially received since it
+                        -- can be done in multiple requests
+    'expired',          -- deposit has been there too long and is now deemed
+                        -- ready to be garbage collected
+    'ready-for-checks'  -- ready for checks to ensure data coherency
+    'ready',            -- deposit is fully received, checked, and ready for injection
+    'injecting,         -- injection is ongoing on swh's side
+    'success',          -- injection is successful
+    'failure'           -- injection is a failure
 ```
 
 A deposit is stateful and can be made in multiple requests:
