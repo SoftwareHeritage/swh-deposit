@@ -212,8 +212,8 @@ the loader-core
 origin_metadata table:
 ```
 id                                      bigint        PK
-origin                                  bigint        
-discovery_date                          date         
+origin                                  bigint
+discovery_date                          date
 provider_id                             bigint        FK      // (from provider table)
 tool_id                                 bigint        FK     // indexer_configuration_id tool used for extraction
 metadata                                jsonb                // before translation
