@@ -18,11 +18,11 @@ import datetime
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import DepositRequest
+from .models import Deposit
 from .config import SWHDefaultConfig
 
 
-@receiver(post_save, sender=DepositRequest)
+@receiver(post_save, sender=Deposit)
 def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
                                       update_fields, **kwargs):
     """Check the status is ready for check.
