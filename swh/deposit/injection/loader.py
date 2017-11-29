@@ -30,8 +30,15 @@ class DepositLoader(loader.TarLoader):
     - update the deposit's status accordingly
 
     """
+    CONFIG_BASE_FILENAME = 'loader/deposit'
+
+    ADDITIONAL_CONFIG = {
+        'extraction_dir': ('str', '/tmp/swh.deposit.injection/'),
+    }
+
     def __init__(self, client=None):
-        super().__init__()
+        super().__init__(
+            logging_class='swh.deposit.injection.loader.DepositLoader')
         self.client = client if client else DepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
