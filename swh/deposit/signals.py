@@ -64,7 +64,7 @@ def post_deposit_save(sender, instance, created, raw, using,
         check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
         task = create_oneshot_task_dict(
             'swh-deposit-archive-checks',
-            archive_check_url=check_url)
+            deposit_check_url=check_url)
     else:  # instance.status == DEPOSIT_STATUS_READY:
         # schedule loading
         from swh.deposit.config import PRIVATE_GET_RAW_CONTENT

@@ -88,6 +88,7 @@ swh/deposit/migrations/0003_temporaryarchive.py
 swh/deposit/migrations/0004_delete_temporaryarchive.py
 swh/deposit/migrations/0005_auto_20171019_1436.py
 swh/deposit/migrations/0006_depositclient_url.py
+swh/deposit/migrations/0007_auto_20171129_1609.py
 swh/deposit/migrations/__init__.py
 swh/deposit/service/__init__.py
 swh/deposit/service/clean_temporary_directory.py
