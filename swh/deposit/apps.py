@@ -13,4 +13,4 @@ class DepositConfig(AppConfig):
         super().ready()
 
         # install the signal permitting to trigger the status' check
-        from .signals import deposit_on_status_ready_for_check  # noqa
+        from .signals import post_deposit_save  # noqa

@@ -13,28 +13,27 @@
 
 """
 
-import datetime
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import Deposit
-from .config import SWHDefaultConfig
+from .config import SWHDefaultConfig, DEPOSIT_STATUS_READY
+from .config import DEPOSIT_STATUS_READY_FOR_CHECKS
 
 
 @receiver(post_save, sender=Deposit)
-def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
-                                      update_fields, **kwargs):
-    """Check the status is ready for check.
-    If so, try and check the associated archives.
-    If not, move along.
+def post_deposit_save(sender, instance, created, raw, using,
+                      update_fields, **kwargs):
+    """When a deposit is saved, check for the deposit's status change and
+       schedule actions accordingly.
 
-    When
-        Triggered when a deposit is saved.
+       When the status passes to ready-for-checks, schedule checks.
+       When the status pass to ready, schedule loading.  Otherwise, do
+       nothing.
 
     Args:
-        sender (DepositRequest): The model class
-        instance (DepositRequest): The actual instance being saved
+        sender (Deposit): The model class
+        instance (Deposit): The actual instance being saved
         created (bool): True if a new record was created
         raw (bool): True if the model is saved exactly as presented
                     (i.e. when loading a fixture). One should not
@@ -50,24 +49,35 @@ def deposit_on_status_ready_for_check(sender, instance, created, raw, using,
     if not default_config.config['checks']:
         return
 
-    # Schedule oneshot task for checking archives
-    from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
+    if instance.status not in {DEPOSIT_STATUS_READY_FOR_CHECKS,
+                               DEPOSIT_STATUS_READY}:
+        return
+
     from django.core.urlresolvers import reverse
+    from swh.scheduler.utils import create_oneshot_task_dict
 
-    args = [instance.deposit.collection.name, instance.deposit.id]
-    archive_check_url = reverse(
-        PRIVATE_CHECK_DEPOSIT, args=args)
+    args = [instance.collection.name, instance.id]
 
-    task = {
-        'policy': 'oneshot',
-        'type': 'swh-deposit-archive-checks',
-        'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
-        'arguments': {
-            'args': [],
-            'kwargs': {
-                'archive_check_url': archive_check_url,
-            },
-        }
-    }
+    if instance.status == DEPOSIT_STATUS_READY_FOR_CHECKS:
+        # schedule archive check
+        from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
+        check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
+        task = create_oneshot_task_dict(
+            'swh-deposit-archive-checks',
+            archive_check_url=check_url)
+    else:  # instance.status == DEPOSIT_STATUS_READY:
+        # schedule loading
+        from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
+        from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
+        from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+        archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+        meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
+
+        task = create_oneshot_task_dict(
+            'swh-deposit-archive-ingestion',
+            archive_url=archive_url,
+            deposit_meta_url=meta_url,
+            deposit_update_url=update_url)
 
     default_config.scheduler.create_tasks([task])

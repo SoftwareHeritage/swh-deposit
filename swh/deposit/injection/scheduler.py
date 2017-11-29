@@ -18,6 +18,7 @@ from swh.core import utils
 from swh.core.config import SWHConfig
 from swh.deposit.config import setup_django_for, DEPOSIT_STATUS_READY
 from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.scheduler.utils import get_task, create_oneshot_task_dict
 
 
 class SWHScheduling(SWHConfig, metaclass=ABCMeta):
@@ -67,8 +68,7 @@ class SWHCeleryScheduling(SWHScheduling):
             task_name = 'swh.deposit.injection.tasks.DepositChecksTsk'
         else:
             task_name = 'swh.deposit.injection.tasks.LoadDepositArchiveTsk'
-        from swh.scheduler import utils
-        self.task = utils.get_task(task_name)
+        self.task = get_task(task_name)
 
     def _convert(self, deposits):
         """Convert tuple to celery task signature.
@@ -118,30 +118,19 @@ class SWHSchedulerScheduling(SWHScheduling):
         """Convert tuple to one-shot scheduling tasks.
 
         """
-        import datetime
         for archive_url, meta_url, update_url, check_url in deposits:
             if self.check:
-                type = 'swh-deposit-archive-checks'
-                kwargs = {
-                    'deposit_check_url': check_url
-                }
+                task = create_oneshot_task_dict(
+                    'swh-deposit-archive-checks',
+                    deposit_check_url=check_url)
             else:
-                type = 'swh-deposit-archive-ingestion'
-                kwargs = {
-                    'archive_url': archive_url,
-                    'deposit_meta_url': meta_url,
-                    'deposit_update_url': update_url,
-                }
+                task = create_oneshot_task_dict(
+                    'swh-deposit-archive-ingestion',
+                    archive_url=archive_url,
+                    deposit_meta_url=meta_url,
+                    deposit_update_url=update_url)
 
-            yield {
-                'policy': 'oneshot',
-                'type': type,
-                'next_run': datetime.datetime.now(tz=datetime.timezone.utc),
-                'arguments': {
-                    'args': [],
-                    'kwargs': kwargs,
-                }
-            }
+            yield task
 
     def schedule(self, deposits):
         """Schedule the new deposit injection through swh.scheduler's api.
@@ -181,15 +170,10 @@ def prepare_task_arguments(check):
 
     for deposit in get_deposit_by(status):
         args = [deposit.collection.name, deposit.id]
-        archive_url = reverse(
-            PRIVATE_GET_RAW_CONTENT, args=args)
-        meta_url = reverse(
-            PRIVATE_GET_DEPOSIT_METADATA, args=args)
-        update_url = reverse(
-            PRIVATE_PUT_DEPOSIT, args=args)
-        check_url = reverse(
-            PRIVATE_CHECK_DEPOSIT, args=args)
-
+        archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+        meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+        update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
+        check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
         yield archive_url, meta_url, update_url, check_url
 
 
