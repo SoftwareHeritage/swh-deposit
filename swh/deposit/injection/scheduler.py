@@ -125,7 +125,7 @@ class SWHSchedulerScheduling(SWHScheduling):
                     deposit_check_url=check_url)
             else:
                 task = create_oneshot_task_dict(
-                    'swh-deposit-archive-ingestion',
+                    'swh-deposit-archive-injection',
                     archive_url=archive_url,
                     deposit_meta_url=meta_url,
                     deposit_update_url=update_url)
