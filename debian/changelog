@@ -1,8 +1,10 @@
-swh-deposit (0.0.29-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.30-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.30
+  * swh.deposit.signals: Fix wrong task scheduling argument
+  * swh.deposit.migration: Remove default value
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 29 Nov 2017 15:22:36 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 29 Nov 2017 18:34:29 +0100
 
 swh-deposit (0.0.29-1~swh1) unstable-swh; urgency=medium
 
