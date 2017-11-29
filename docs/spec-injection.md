@@ -22,14 +22,15 @@ identifier.
 Some of those metadata will also be included in the `origin_metadata`
 table.
 
-
- origin                              |      https://hal.inria.fr/hal-id
--------------------------------------|----------------------------------------
- origin_visit                        | 1 :reception_date
- occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)
- revision                            | synthetic_revision (tarball)
- directory                           | upper level of the uncompressed archive
-
+```
+origin                              |      https://hal.inria.fr/hal-id       |
+------------------------------------|----------------------------------------|
+origin_visit                        | 1 :reception_date                      |
+origin_metadata                     | aggregated metadata                    |
+occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)  |
+revision                            | synthetic_revision (tarball)           |
+directory                           | upper level of the uncompressed archive|
+```
 
 ### Questions raised concerning injection
 
@@ -121,14 +122,15 @@ authenticate client. Also, a client can access collections:
   are:
 
 ``` text
-    'partial',      -- the deposit is new or partially received since it
-                    -- can be done in multiple requests
-    'expired',      -- deposit has been there too long and is now deemed
-                    -- ready to be garbage collected
-    'ready',        -- deposit is fully received and ready for injection
-    'injecting,     -- injection is ongoing on swh's side
-    'success',      -- injection is successful
-    'failure'       -- injection is a failure
+    'partial',          -- the deposit is new or partially received since it
+                        -- can be done in multiple requests
+    'expired',          -- deposit has been there too long and is now deemed
+                        -- ready to be garbage collected
+    'ready-for-checks'  -- ready for checks to ensure data coherency
+    'ready',            -- deposit is fully received, checked, and ready for injection
+    'injecting,         -- injection is ongoing on swh's side
+    'success',          -- injection is successful
+    'failure'           -- injection is a failure
 ```
 
 A deposit is stateful and can be made in multiple requests:
@@ -167,9 +169,9 @@ of:
 
 #### SWH Identifier returned
 
-    swh-<client-name>-<synthetic-revision-id>
+    The synthetic revision id
 
-    e.g: swh-hal-47dc6b4636c7f6cba0df83e3d5490bf4334d987e
+    e.g: 47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
 ### Scheduling injection
 
@@ -200,12 +202,19 @@ with graceful delays for further scheduling.
 `origin_metadata` table before translation as part of the injection
 process and an indexation process should be scheduled.
 
+- provider_id and tool_id are resolved by the prepare_metadata method in the
+loader-core
+
+- the origin_metadata entry is sent to storage by the send_origin_metadata in
+the loader-core
+
+
 origin_metadata table:
 ```
 id                                      bigint        PK
-origin                                  bigint        
-discovery_date                          date         
+origin                                  bigint
+discovery_date                          date
 provider_id                             bigint        FK      // (from provider table)
+tool_id                                 bigint        FK     // indexer_configuration_id tool used for extraction
 metadata                                jsonb                // before translation
-indexer_configuration_id                bigint        FK  // tool used for extraction
 ```

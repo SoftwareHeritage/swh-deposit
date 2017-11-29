@@ -7,7 +7,7 @@ from rest_framework.parsers import JSONParser
 
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
-from ...models import Deposit, DEPOSIT_STATUS_DETAIL, format_swh_id
+from ...models import Deposit, DEPOSIT_STATUS_DETAIL
 
 
 class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
@@ -65,7 +65,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         deposit.status = req.data['status']  # checks already done before
         swh_id = req.data.get('revision_id')
         if swh_id:
-            deposit.swh_id = format_swh_id(collection_name, swh_id)
+            deposit.swh_id = swh_id
         deposit.save()
 
         return {}

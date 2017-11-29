@@ -23,6 +23,7 @@ from django.conf.urls import url
 from ..config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import SD_IRI, COL_IRI, STATE_IRI, PRIVATE_GET_RAW_CONTENT
 from ..config import PRIVATE_PUT_DEPOSIT, PRIVATE_GET_DEPOSIT_METADATA
+from ..config import PRIVATE_CHECK_DEPOSIT
 from .deposit import SWHDeposit
 from .deposit_status import SWHDepositStatus
 from .deposit_update import SWHUpdateMetadataDeposit
@@ -32,7 +33,7 @@ from .service_document import SWHServiceDocument
 from .private.deposit_read import SWHDepositReadArchives
 from .private.deposit_read import SWHDepositReadMetadata
 from .private.deposit_update_status import SWHUpdateStatusDeposit
-
+from .private.deposit_check import SWHChecksDeposit
 
 urlpatterns = [
     # PUBLIC API
@@ -88,4 +89,9 @@ urlpatterns = [
     url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/meta/$',
         SWHDepositReadMetadata.as_view(),
         name=PRIVATE_GET_DEPOSIT_METADATA),
+    # Check archive and metadata information on a specific deposit
+    # -> GET
+    url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/check/$',
+        SWHChecksDeposit.as_view(),
+        name=PRIVATE_CHECK_DEPOSIT),
 ]

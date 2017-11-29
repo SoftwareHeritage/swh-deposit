@@ -58,8 +58,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
                       args=[self.collection.name, self.deposit.id])
 
         expected_status = 'success'
-        revision_id = '47dc6b4636c7f6cba0df83e3d5490bf4334d987e'
-        expected_id = 'swh-hal-%s' % revision_id
+        expected_id = revision_id = '47dc6b4636c7f6cba0df83e3d5490bf4334d987e'
         response = self.client.put(
             url,
             content_type='application/json',

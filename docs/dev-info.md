@@ -54,6 +54,7 @@ Add the following to `../private-data.yaml`:
     user_ptr_id: 1
     collections:
       - 1
+    url: https://hal.inria.fr
 
 ```
 

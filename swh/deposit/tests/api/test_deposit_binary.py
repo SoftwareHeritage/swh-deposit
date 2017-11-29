@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 
 from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import COL_IRI, EM_IRI
-from swh.deposit.config import DEPOSIT_STATUS_READY
+from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_zip
@@ -178,7 +178,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -487,7 +487,7 @@ and other stuff</description>
         response_content = parse_xml(BytesIO(response.content))
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -542,7 +542,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
