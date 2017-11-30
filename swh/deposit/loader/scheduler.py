@@ -23,7 +23,7 @@ from swh.scheduler.utils import get_task, create_oneshot_task_dict
 
 class SWHScheduling(SWHConfig, metaclass=ABCMeta):
     """Base swh scheduling class to aggregate the schedule deposit
-       injection.
+       loading.
 
     """
     CONFIG_BASE_FILENAME = 'deposit/server'
@@ -42,7 +42,7 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
 
     @abstractmethod
     def schedule(self, deposits):
-        """Schedule the new deposit injection.
+        """Schedule the new deposit loading.
 
         Args:
             data (dict): Deposit aggregated data
@@ -55,7 +55,7 @@ class SWHScheduling(SWHConfig, metaclass=ABCMeta):
 
 
 class SWHCeleryScheduling(SWHScheduling):
-    """Deposit injection as Celery task scheduling.
+    """Deposit loading as Celery task scheduling.
 
     """
     def __init__(self, config=None):
@@ -65,9 +65,9 @@ class SWHCeleryScheduling(SWHScheduling):
         self.dry_run = self.config['dry_run']
         self.check = self.config['check']
         if self.check:
-            task_name = 'swh.deposit.injection.tasks.ChecksDepositTsk'
+            task_name = 'swh.deposit.loader.tasks.ChecksDepositTsk'
         else:
-            task_name = 'swh.deposit.injection.tasks.LoadDepositArchiveTsk'
+            task_name = 'swh.deposit.loader.tasks.LoadDepositArchiveTsk'
         self.task = get_task(task_name)
 
     def _convert(self, deposits):
@@ -84,7 +84,7 @@ class SWHCeleryScheduling(SWHScheduling):
                              deposit_update_url=update_url)
 
     def schedule(self, deposits):
-        """Schedule the new deposit injection directly through celery.
+        """Schedule the new deposit loading directly through celery.
 
         Args:
             depositdata (dict): Deposit aggregated information.
@@ -100,7 +100,7 @@ class SWHCeleryScheduling(SWHScheduling):
 
 
 class SWHSchedulerScheduling(SWHScheduling):
-    """Deposit injection through SWH's task scheduling interface.
+    """Deposit loading through SWH's task scheduling interface.
 
     """
     ADDITIONAL_CONFIG = {}
@@ -125,7 +125,7 @@ class SWHSchedulerScheduling(SWHScheduling):
                     deposit_check_url=check_url)
             else:
                 task = create_oneshot_task_dict(
-                    'swh-deposit-archive-injection',
+                    'swh-deposit-archive-loading',
                     archive_url=archive_url,
                     deposit_meta_url=meta_url,
                     deposit_update_url=update_url)
@@ -133,7 +133,7 @@ class SWHSchedulerScheduling(SWHScheduling):
             yield task
 
     def schedule(self, deposits):
-        """Schedule the new deposit injection through swh.scheduler's api.
+        """Schedule the new deposit loading through swh.scheduler's api.
 
         Args:
             deposits (dict): Deposit aggregated information.
@@ -178,7 +178,7 @@ def prepare_task_arguments(check):
 
 
 @click.command(
-    help='Schedule one-shot deposit injections')
+    help='Schedule one-shot deposit loadings')
 @click.option('--platform', default='development',
               help='development or production platform')
 @click.option('--scheduling-method', default='celery',

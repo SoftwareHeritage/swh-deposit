@@ -12,7 +12,7 @@ from nose.plugins.attrib import attr
 from rest_framework.test import APITestCase
 
 from swh.model import hashutil
-from swh.deposit.injection.loader import DepositLoader
+from swh.deposit.loader import loader
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
 from swh.deposit.config import PRIVATE_PUT_DEPOSIT
@@ -168,7 +168,8 @@ class TestLoaderUtils(unittest.TestCase):
             self.assertEquals(expected_revisions[rev_id], directory_id)
 
 
-class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage, DepositLoader):
+class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage,
+                                loader.DepositLoader):
     """Loader to test.
 
        It inherits from the actual deposit loader to actually test its

@@ -50,7 +50,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             self.assertEquals(deposit.status, _status)
 
     @istest
-    def update_deposit_with_success_injection_and_swh_id(self):
+    def update_deposit_with_success_loading_and_swh_id(self):
         """Existing status for update should return a 204 response
 
         """

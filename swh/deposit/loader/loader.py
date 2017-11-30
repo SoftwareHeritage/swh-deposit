@@ -33,12 +33,12 @@ class DepositLoader(loader.TarLoader):
     CONFIG_BASE_FILENAME = 'loader/deposit'
 
     ADDITIONAL_CONFIG = {
-        'extraction_dir': ('str', '/tmp/swh.deposit.injection/'),
+        'extraction_dir': ('str', '/tmp/swh.deposit.loader/'),
     }
 
     def __init__(self, client=None):
         super().__init__(
-            logging_class='swh.deposit.injection.loader.DepositLoader')
+            logging_class='swh.deposit.loader.loader.DepositLoader')
         self.client = client if client else DepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
@@ -49,7 +49,7 @@ class DepositLoader(loader.TarLoader):
             deposit_update_url=deposit_update_url)
 
     def prepare(self, *, archive_url, deposit_meta_url, deposit_update_url):
-        """Prepare the injection by first retrieving the deposit's raw archive
+        """Prepare the loading by first retrieving the deposit's raw archive
            content.
 
         """
