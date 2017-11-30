@@ -1,3 +1,10 @@
+swh-deposit (0.0.32-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.32
+  * Migrate swh.deposit.injection module to swh.deposit.loader
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 30 Nov 2017 16:27:19 +0100
+
 swh-deposit (0.0.31-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.31
