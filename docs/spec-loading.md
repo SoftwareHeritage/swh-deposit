@@ -1,13 +1,13 @@
-# Injection specification (draft)
+# Loading specification (draft)
 
-This part discusses the deposit injection part on the server side.
+This part discusses the deposit loading part on the server side.
 
-## Tarball Injection
+## Tarball Loading
 
 The `swh-loader-tar` module is already able to inject tarballs in swh
 with very limited metadata (mainly the origin).
 
-The injection of the deposit will use the deposit's associated data:
+The loading of the deposit will use the deposit's associated data:
 - the metadata
 - the archive(s)
 
@@ -17,7 +17,7 @@ To that revision will be associated the metadata. Those will be
 included in the hash computation, thus resulting in a unique
 identifier.
 
-### Injection mapping
+### Loading mapping
 
 Some of those metadata will also be included in the `origin_metadata`
 table.
@@ -32,7 +32,7 @@ revision                            | synthetic_revision (tarball)           |
 directory                           | upper level of the uncompressed archive|
 ```
 
-### Questions raised concerning injection
+### Questions raised concerning loading
 
 - A deposit has one origin, yet an origin can have multiple deposits?
 
@@ -47,7 +47,7 @@ To create a new version of a software (already deposited), the client
 must prior to this create a new deposit.
 
 
-Illustration First deposit injection:
+Illustration First deposit loading:
 
 HAL's deposit 01535619 = SWH's deposit **01535619-1**
 
@@ -85,7 +85,7 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 - one dedicated database to store the deposit's state - swh-deposit
 
 - one dedicated temporary objstorage to store archives before
-  injection
+  loading
 
 - one client to test the communication with SWORD protocol
 
@@ -111,11 +111,11 @@ authenticate client. Also, a client can access collections:
 **deposit** table:
   - id (bigint): deposit's identifier
   - reception_date (date): First deposit's reception date
-  - complete_data (date): Date when the deposit is deemed complete and ready for injection
+  - complete_data (date): Date when the deposit is deemed complete and ready for loading
   - collection (id): The collection the deposit belongs to
   - external id (text): client's internal identifier (e.g hal's id, etc...).
   - client_id (id) : Client which did the deposit
-  - swh_id (str) : swh identifier result once the injection is complete
+  - swh_id (str) : swh identifier result once the loading is complete
   - status (enum): The deposit's current status
 
 - As mentioned, a deposit can have a status, whose possible values
@@ -127,10 +127,10 @@ authenticate client. Also, a client can access collections:
     'expired',          -- deposit has been there too long and is now deemed
                         -- ready to be garbage collected
     'ready-for-checks'  -- ready for checks to ensure data coherency
-    'ready',            -- deposit is fully received, checked, and ready for injection
-    'injecting,         -- injection is ongoing on swh's side
-    'success',          -- injection is successful
-    'failure'           -- injection is a failure
+    'ready-for-load',   -- deposit is fully received, checked, and ready for loading
+    'loading',          -- loading is ongoing on swh's side
+    'success',          -- loading is successful
+    'failure'           -- loading is a failure
 ```
 
 A deposit is stateful and can be made in multiple requests:
@@ -151,11 +151,11 @@ upload part).
 
 When the deposit is complete (status `ready`), those `metadata` and
 `archive` deposit requests will be read and aggregated. They will then
-be sent as parameters to the injection routine.
+be sent as parameters to the loading routine.
 
-During injection, some of those metadata are kept in the
+During loading, some of those metadata are kept in the
 `origin_metadata` table and some other are stored in the `revision`
-table (see [metadata injection](#metadata-injection)).
+table (see [metadata loading](#metadata-loading)).
 
 The only update actions occurring on the deposit table are in regards
 of:
@@ -165,7 +165,7 @@ of:
   - `injecting` -> {`success`/`failure`}
 - `complete_date` when the deposit is finalized (when the status is
   changed to ready)
-- `swh-id` is populated once we have the injection result
+- `swh-id` is populated once we have the loading result
 
 #### SWH Identifier returned
 
@@ -173,33 +173,33 @@ of:
 
     e.g: 47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
-### Scheduling injection
+### Scheduling loading
 
 All `archive` and `metadata` deposit requests should be aggregated
-before injection.
+before loading.
 
-The injection should be scheduled via the scheduler's api.
+The loading should be scheduled via the scheduler's api.
 
-Only `ready` deposit are concerned by the injection.
+Only `ready` deposit are concerned by the loading.
 
-When the injection is done and successful, the deposit entry is
+When the loading is done and successful, the deposit entry is
 updated:
 - `status` is updated to `success`
 - `swh-id` is populated with the resulting hash
   (cf. [swh identifier](#swh-identifier-returned))
-- `complete_date` is updated to the injection's finished time
+- `complete_date` is updated to the loading's finished time
 
-When the injection is failed, the deposit entry is updated:
+When the loading is failed, the deposit entry is updated:
 - `status` is updated to `failure`
 - `swh-id` and `complete_data` remains as is
 
 *Note:* As a further improvement, we may prefer having a retry policy
 with graceful delays for further scheduling.
 
-### Metadata injection
+### Metadata loading
 
 - the metadata received with the deposit should be kept in the
-`origin_metadata` table before translation as part of the injection
+`origin_metadata` table before translation as part of the loading
 process and an indexation process should be scheduled.
 
 - provider_id and tool_id are resolved by the prepare_metadata method in the

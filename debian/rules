@@ -11,9 +11,9 @@ override_dh_install:
 	dh_install
 	rm -v $(CURDIR)/debian/python3-*/usr/lib/python*/dist-packages/swh/__init__.py
 	for pyvers in $(shell py3versions -vr); do \
-		mkdir -p $(CURDIR)/debian/python3-swh.deposit.injection/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection ; \
-		mv $(CURDIR)/debian/python3-swh.deposit/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection/* \
-		   $(CURDIR)/debian/python3-swh.deposit.injection/usr/lib/python$$pyvers/dist-packages/swh/deposit/injection/ ; \
+		mkdir -p $(CURDIR)/debian/python3-swh.deposit.loader/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader ; \
+		mv $(CURDIR)/debian/python3-swh.deposit/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader/* \
+		   $(CURDIR)/debian/python3-swh.deposit.loader/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader/ ; \
 	done
 
 override_dh_auto_test:

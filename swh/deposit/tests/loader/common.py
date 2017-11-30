@@ -5,7 +5,7 @@
 
 import json
 
-from swh.deposit.injection.client import DepositClient
+from swh.deposit.loader.client import DepositClient
 
 
 CLIENT_TEST_CONFIG = {
