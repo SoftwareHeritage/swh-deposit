@@ -4,16 +4,15 @@
 # See top-level LICENSE file for more information
 
 from swh.scheduler.task import Task
-from swh.deposit.injection.loader import DepositLoader
-from swh.deposit.injection.checker import DepositChecker
+from swh.deposit.loader import loader, checker
 
 
 class LoadDepositArchiveTsk(Task):
-    """Deposit archive injection task described by the following steps:
+    """Deposit archive loading task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
           locally in a temporary directory
-       2. Trigger the injection
+       2. Trigger the loading
        3. clean up the temporary directory
        4. Update the deposit's status according to result using the
           deposit's private update status api
@@ -27,11 +26,11 @@ class LoadDepositArchiveTsk(Task):
         Args: see :func:`DepositLoader.load`.
 
         """
-        loader = DepositLoader()
-        loader.log = self.log
-        loader.load(archive_url=archive_url,
-                    deposit_meta_url=deposit_meta_url,
-                    deposit_update_url=deposit_update_url)
+        _loader = loader.DepositLoader()
+        _loader.log = self.log
+        _loader.load(archive_url=archive_url,
+                     deposit_meta_url=deposit_meta_url,
+                     deposit_update_url=deposit_update_url)
 
 
 class ChecksDepositTsk(Task):
@@ -46,6 +45,6 @@ class ChecksDepositTsk(Task):
         Args: see :func:`DepositChecker.check`.
 
         """
-        checker = DepositChecker()
-        checker.log = self.log
-        checker.check(deposit_check_url)
+        _checker = checker.DepositChecker()
+        _checker.log = self.log
+        _checker.check(deposit_check_url)

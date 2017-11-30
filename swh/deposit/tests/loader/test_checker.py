@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from swh.deposit.models import Deposit
 from swh.deposit.config import PRIVATE_CHECK_DEPOSIT, DEPOSIT_STATUS_READY
 from swh.deposit.config import DEPOSIT_STATUS_REJECTED
-from swh.deposit.injection.checker import DepositChecker
+from swh.deposit.loader.checker import DepositChecker
 from django.core.urlresolvers import reverse
 
 

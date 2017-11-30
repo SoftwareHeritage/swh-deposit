@@ -75,7 +75,7 @@ def post_deposit_save(sender, instance, created, raw, using,
         update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
 
         task = create_oneshot_task_dict(
-            'swh-deposit-archive-injection',
+            'swh-deposit-archive-loading',
             archive_url=archive_url,
             deposit_meta_url=meta_url,
             deposit_update_url=update_url)

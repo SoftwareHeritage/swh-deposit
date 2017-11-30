@@ -30,7 +30,7 @@ AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
 DEPOSIT_STATUS_REJECTED = 'rejected'
 DEPOSIT_STATUS_PARTIAL = 'partial'
-DEPOSIT_STATUS_READY = 'ready'
+DEPOSIT_STATUS_READY = 'ready-for-load'
 DEPOSIT_STATUS_READY_FOR_CHECKS = 'ready-for-checks'
 
 

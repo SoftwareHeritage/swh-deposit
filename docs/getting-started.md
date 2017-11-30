@@ -326,7 +326,7 @@ Response:
        xmlns:dcterms="http://purl.org/dc/terms/">
     <deposit_id>9</deposit_id>
     <deposit_status>ready</deposit_status>
-    <deposit_status_detail>deposit is fully received and ready for injection</deposit_status_detail>
+    <deposit_status_detail>deposit is fully received and ready for loading</deposit_status_detail>
 </entry>
 
 ```

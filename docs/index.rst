@@ -10,7 +10,7 @@ Software Heritage Deposit
    getting-started.md
    spec-api.md
    metadata.md
-   spec-injection.md
+   spec-loading.md
    dev-info.md
    sys-info.md
 

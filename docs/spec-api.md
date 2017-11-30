@@ -65,7 +65,7 @@ point on:
 
 - `/1/<collection-name>/<deposit-id>/status/`  *state iri*  (a.k.a [STATE-IRI](#state-iri-the-sword-statement-iri))
 
-  *Goal:*: Display deposit's status in regards to injection
+  *Goal:*: Display deposit's status in regards to loading
 
 - `/1/<collection-name>/<deposit-id>/content/`  *content iri* (a.k.a [CONT-FILE-IRI](#cont-iri-the-content-iri))
 
@@ -153,12 +153,12 @@ exceeded the limit size imposed by swh repository deposit)
 [7.] Operation status can be read through a GET query to the *state
    iri*.
 
-### Server: Triggering injection
+### Server: Triggering loading
 
 Once the status `ready` is reached for a deposit, the server will
 inject the archive(s) sent and the associated metadata.
 
-This is described in the [injection document](./spec-injection.html).
+This is described in the [loading document](./spec-loading.html).
 
 ## API overview
 
@@ -542,7 +542,7 @@ situation:
 
 Using an objstorage, the server stores the archive in a temporary
 location.  It's deemed temporary the time the deposit is completed
-(status becomes `ready`) and the injection finishes.
+(status becomes `ready`) and the loading finishes.
 
 The server also persists requests' information in a database.
 
@@ -571,7 +571,7 @@ archive, metadata, or both). The client wants to update information
 for that previous deposit (possibly in multiple steps as well).
 
 The important thing to note here is that, as long as the deposit is in
-status `partial`, the injection did not start.  Thus, the client can
+status `partial`, the loading did not start.  Thus, the client can
 update information (replace or add new archive, new metadata, even
 delete) for that same `partial` deposit.
 
@@ -580,7 +580,7 @@ change the deposit's information (a 403 will be returned in that
 case).
 
 Then aggregation of all those deposit's information will later be used
-for the actual injection.
+for the actual loading.
 
 Providing the collection name, and the identifier of the previous
 deposit id received from the deposit receipt, the client executes a
@@ -594,7 +594,7 @@ After validation of the body request, the server:
 
 - Asynchronously, the server will inject the archive uploaded and the
   associated metadata. An operation status endpoint *state iri*
-  permits the client to query the injection operation status.
+  permits the client to query the loading operation status.
 
 #### Possible update endpoints
 
