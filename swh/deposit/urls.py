@@ -39,6 +39,7 @@ def index(req):
 urlpatterns = [
     url(r'^$', index, name='home'),
     url(r'^1/', include('swh.deposit.api.urls')),
+    url(r'^1/private/', include('swh.deposit.api.private.urls')),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

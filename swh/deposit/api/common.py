@@ -6,15 +6,14 @@
 import hashlib
 
 from abc import ABCMeta, abstractmethod
-
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
 
 from swh.model import hashutil
 
@@ -40,6 +39,7 @@ class SWHAPIView(APIView):
        authentication check
 
     """
+    authentication_classes = (BasicAuthentication, )
     permission_classes = (IsAuthenticated, )
 
 
@@ -48,6 +48,7 @@ class SWHPrivateAPIView(SWHAPIView):
        (for the private ones).
 
     """
+    authentication_classes = ()
     permission_classes = (AllowAny, )
 
 
