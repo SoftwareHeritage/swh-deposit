@@ -23,8 +23,8 @@ setup(
     scripts=[],   # scripts to package
     install_requires=parse_requirements(),
     extras_require={
-        'loader': ['swh.loader.core >= 0.0.19',
-                   'swh.scheduler >= 0.0.17',
+        'loader': ['swh.loader.core >= 0.0.25',
+                   'swh.scheduler >= 0.0.19',
                    'requests'],
     },
     setup_requires=['vcversioner'],
