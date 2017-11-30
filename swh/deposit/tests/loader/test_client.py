@@ -11,7 +11,7 @@ import unittest
 from nose.plugins.attrib import attr
 from nose.tools import istest
 
-from swh.deposit.injection.client import DepositClient
+from swh.deposit.loader.client import DepositClient
 
 from .common import CLIENT_TEST_CONFIG
 

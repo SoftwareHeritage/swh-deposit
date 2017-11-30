@@ -43,7 +43,7 @@ DEPOSIT_STATUS = [
     (DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_READY_FOR_CHECKS),
     (DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY),
     ('rejected', 'rejected'),
-    ('injecting', 'injecting'),
+    ('loading', 'loading'),
     ('success', 'success'),
     ('failure', 'failure'),
 ]
@@ -58,11 +58,11 @@ DEPOSIT_STATUS_DETAIL = {
     DEPOSIT_STATUS_READY_FOR_CHECKS: 'Deposit is ready for additional checks '
                                      '(tarball ok, etc...)',
     DEPOSIT_STATUS_READY: 'Deposit is fully received, checked, and '
-                          'ready for injection',
+                          'ready for loading',
     'rejected': 'Deposit failed the checks',
-    'injecting': "Injection is ongoing on swh's side",
-    'success': 'Injection is successful',
-    'failure': 'Injection is a failure',
+    'loading': "Loading is ongoing on swh's side",
+    'success': 'Loading is successful',
+    'failure': 'Loading is a failure',
 }
 
 
@@ -93,7 +93,7 @@ class Deposit(models.Model):
 
     # First deposit reception date
     reception_date = models.DateTimeField(auto_now_add=True)
-    # Date when the deposit is deemed complete and ready for injection
+    # Date when the deposit is deemed complete and ready for loading
     complete_date = models.DateTimeField(null=True)
     # collection concerned by the deposit
     collection = models.ForeignKey(
@@ -102,9 +102,9 @@ class Deposit(models.Model):
     external_id = models.TextField()
     # Deposit client
     client = models.ForeignKey('DepositClient', models.DO_NOTHING)
-    # SWH's injection result identifier
+    # SWH's loading result identifier
     swh_id = models.TextField(blank=True, null=True)
-    # Deposit's status regarding injection
+    # Deposit's status regarding loading
     status = models.TextField(
         choices=DEPOSIT_STATUS,
         default=DEPOSIT_STATUS_PARTIAL)
