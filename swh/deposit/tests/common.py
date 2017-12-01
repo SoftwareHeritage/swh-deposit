@@ -366,7 +366,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
     def _update_deposit_with_status(self, deposit_id, status_partial=False):
         """Add to a given deposit another archive and update its current
-           status to `ready` (by default).
+           status to `ready-for-checks` (by default).
 
         Returns:
             deposit id
@@ -385,7 +385,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         return deposit_id
 
     def create_deposit_ready(self):
-        """Create a complex deposit (2 requests) in status `ready`.
+        """Create a complex deposit (2 requests) in status `ready-for-checks`.
 
         """
         deposit_id = self.create_simple_deposit_partial()

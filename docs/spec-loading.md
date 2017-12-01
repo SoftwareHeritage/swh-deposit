@@ -149,9 +149,10 @@ They can be either of type `metadata` (atom entry, multipart's atom
 entry part) or of type `archive` (binary upload, multipart's binary
 upload part).
 
-When the deposit is complete (status `ready`), those `metadata` and
-`archive` deposit requests will be read and aggregated. They will then
-be sent as parameters to the loading routine.
+When the deposit is complete (status `ready-for-checks`), those
+`metadata` and `archive` deposit requests will be read and
+aggregated. They will then be sent as parameters to the loading
+routine.
 
 During loading, some of those metadata are kept in the
 `origin_metadata` table and some other are stored in the `revision`
@@ -160,11 +161,12 @@ table (see [metadata loading](#metadata-loading)).
 The only update actions occurring on the deposit table are in regards
 of:
 - status changing:
-  - `partial` -> {`expired`/`ready`},
-  - `ready` -> `injecting`,
-  - `injecting` -> {`success`/`failure`}
+  - `partial` -> {`expired`/`ready-for-checks`},
+  - `ready-for-checks` -> {`rejected`/`ready-for-load`},
+  - `ready-for-load` -> `loading`
+  - `loading` -> {`success`/`failure`}
 - `complete_date` when the deposit is finalized (when the status is
-  changed to ready)
+  changed to `ready-for-checks`)
 - `swh-id` is populated once we have the loading result
 
 #### SWH Identifier returned
@@ -180,7 +182,7 @@ before loading.
 
 The loading should be scheduled via the scheduler's api.
 
-Only `ready` deposit are concerned by the loading.
+Only `ready-for-checks` deposit are concerned by the loading.
 
 When the loading is done and successful, the deposit entry is
 updated:
