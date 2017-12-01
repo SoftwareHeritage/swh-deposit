@@ -268,6 +268,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                 codemeta + 'name':
                     'CeCILL Free Software License Agreement v1.1'
             },
+            codemeta + 'author': {
+                codemeta + 'name': 'Morane Gruenpeter'
+            },
             codemeta + 'programmingLanguage': 'C',
             codemeta + 'applicationCategory': 'test',
             codemeta + 'dateCreated': '2017-05-03T16:08:47+02:00',

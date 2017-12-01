@@ -11,7 +11,7 @@ from rest_framework import status
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
-from ...config import ARCHIVE_TYPE
+from ...config import ARCHIVE_TYPE, METADATA_TYPE
 from ...models import Deposit, DepositRequest
 
 
@@ -21,6 +21,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
     Only GET is supported.
 
     """
+
     def deposit_requests(self, deposit):
         """Given a deposit, yields its associated deposit_request
 
@@ -62,7 +63,21 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             True if metadata is ok, False otherwise.
 
         """
-        # FIXME: Define checks to implement
+        must_meta = ['url', 'external_identifier', ['name', 'title'], 'author']
+        # checks only for must metadata on all metadata requests
+        for mm in must_meta:
+            found = False
+            for k in metadata:
+                if isinstance(mm, list):
+                    for p in mm:
+                        if p in k:
+                            found = True
+                            break
+                elif mm in k:
+                    found = True
+                    break
+            if not found:
+                return False
         return True
 
     def process_get(self, req, collection_name, deposit_id):
@@ -79,16 +94,18 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
+        all_metadata = {}
         # will check each deposit request for the deposit
         for dr in self.deposit_requests(deposit):
             if dr.type.name == ARCHIVE_TYPE:
                 deposit_status = self._check_archive(dr.archive)
-            else:
-                deposit_status = self._check_metadata(dr.metadata)
-
+            elif dr.type.name == METADATA_TYPE:
+                # aggregating all metadata requests for check on complete set
+                all_metadata.update(dr.metadata)
             if not deposit_status:
                 break
 
+        deposit_status = self._check_metadata(all_metadata)
         # if problem in any deposit requests, the deposit is rejected
         if not deposit_status:
             deposit.status = DEPOSIT_STATUS_REJECTED

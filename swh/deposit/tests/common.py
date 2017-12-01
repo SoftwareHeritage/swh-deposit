@@ -95,6 +95,16 @@ class FileSystemCreationRoutine(TestCase):
         self.archive = create_arborescence_zip(
             self.root_path, 'archive1', 'file1', b'some content in file')
 
+        self.atom_entry = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <updated>2017-10-07T15:17:08Z</updated>
+                <author>some awesome author</author>
+                <url>http://test.test.fr</url>
+        </entry>"""
+
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.root_path)
@@ -136,6 +146,22 @@ class FileSystemCreationRoutine(TestCase):
 
         # then
         assert response.status_code == status.HTTP_201_CREATED
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
+
+    def update_binary_deposit(self, deposit_id, status_partial=False):
+        # update existing deposit with atom entry metadata
+        response = self.client.post(
+            reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id]),
+            content_type='application/atom+xml;type=entry',
+            data=self.codemeta_entry_data1,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=status_partial)
+
+        # then
+        # assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
         deposit_id = response_content[
             '{http://www.w3.org/2005/Atom}deposit_id']
@@ -220,14 +246,14 @@ class CommonCreationRoutine(TestCase):
         super().setUp()
 
         self.atom_entry_data0 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>some-external-id</external_identifier>
-</entry>"""
+        <entry xmlns="http://www.w3.org/2005/Atom">
+            <external_identifier>some-external-id</external_identifier>
+        </entry>"""
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>anotherthing</external_identifier>
-</entry>"""
+        <entry xmlns="http://www.w3.org/2005/Atom">
+            <external_identifier>anotherthing</external_identifier>
+        </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom">
@@ -236,12 +262,14 @@ class CommonCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
+                <url>http://test.test.fr</url>
         </entry>"""
 
         self.codemeta_entry_data0 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom"
                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
                 <title>Awesome Compiler</title>
+                <url>http://test.test.fr</url>
                 <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
@@ -278,6 +306,9 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
     <name>HAL</name>
     <email>hal@ccsd.cnrs.fr</email>
   </author>
+  <codemeta:author>
+    <codemeta:name>Morane Gruenpeter</codemeta:name>
+  </codemeta:author>
 </entry>"""
 
     def create_invalid_deposit(self):
