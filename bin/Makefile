@@ -4,6 +4,8 @@ ARCHIVE2=../../swh-model.zip
 STATUS=false
 PARTIAL_STATUS=true
 UPDATE_STATUS='success'
+ATOM_ENTRY=../../atom-entry.xml
+EXTERNAL_ID='external-id'
 
 create-archives:
 	7z a $(ARCHIVE) $(FOLDER)
@@ -11,6 +13,9 @@ create-archives:
 
 new:
 	./create_deposit.sh $(ARCHIVE) $(STATUS)
+
+new-complete:
+	./create_deposit_with_metadata.sh $(ARCHIVE) $(ATOM_ENTRY) $(STATUS) $(EXTERNAL_ID)
 
 new-partial:
 	make new STATUS=$(PARTIAL_STATUS) ARCHIVE=$(ARCHIVE)
