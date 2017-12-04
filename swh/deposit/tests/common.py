@@ -16,7 +16,6 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, EM_IRI, EDIT_SE_IRI
-from swh.deposit.config import DEPOSIT_STATUS_REJECTED
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
@@ -311,12 +310,11 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
   </codemeta:author>
 </entry>"""
 
-    def create_invalid_deposit(self):
+    def create_invalid_deposit(self, external_id='some-external-id-1'):
         url = reverse(COL_IRI, args=[self.collection.name])
 
         data = b'some data which is clearly not a zip file'
         md5sum = hashlib.md5(data).hexdigest()
-        external_id = 'some-external-id-1'
 
         # when
         response = self.client.post(
@@ -337,20 +335,24 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         return deposit_id
 
-    def create_deposit_with_status_rejected(self):
-        deposit_id = self.create_invalid_deposit()
+    def create_deposit_with_status(
+            self, status, external_id='some-external-id-1', swh_id=None):
+        deposit_id = self.create_invalid_deposit(external_id)
 
-        # We cannot create rejected deposit in test context (we
-        # flipped off the checks in the configuration so all deposits
-        # have the status ready-for-checks). Update in place the
-        # deposit with such status
+        # We cannot create some form of deposit with a given status in
+        # test context ('rejected' for example). As flipped off the
+        # checks in the configuration so all deposits have the status
+        # ready-for-checks). Update in place the deposit with such
+        # status
         deposit = Deposit.objects.get(pk=deposit_id)
-        deposit.status = DEPOSIT_STATUS_REJECTED
+        deposit.status = status
+        if swh_id:
+            deposit.swh_id = swh_id
         deposit.save()
 
         return deposit_id
 
-    def create_simple_deposit_partial(self):
+    def create_simple_deposit_partial(self, external_id='some-external-id'):
         """Create a simple deposit (1 request) in `partial` state and returns
         its new identifier.
 
@@ -362,7 +364,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0,
-            HTTP_SLUG='external-id',
+            HTTP_SLUG=external_id,
             HTTP_IN_PROGRESS='true')
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -415,19 +417,21 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         assert response.status_code == status.HTTP_201_CREATED
         return deposit_id
 
-    def create_deposit_ready(self):
+    def create_deposit_ready(self, external_id='some-external-id'):
         """Create a complex deposit (2 requests) in status `ready-for-checks`.
 
         """
-        deposit_id = self.create_simple_deposit_partial()
+        deposit_id = self.create_simple_deposit_partial(
+            external_id=external_id)
         deposit_id = self._update_deposit_with_status(deposit_id)
         return deposit_id
 
-    def create_deposit_partial(self):
+    def create_deposit_partial(self, external_id='some-external-id'):
         """Create a complex deposit (2 requests) in status `partial`.
 
         """
-        deposit_id = self.create_simple_deposit_partial()
+        deposit_id = self.create_simple_deposit_partial(
+            external_id=external_id)
         deposit_id = self._update_deposit_with_status(
             deposit_id, status_partial=True)
         return deposit_id

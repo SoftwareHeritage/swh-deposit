@@ -32,6 +32,8 @@ DEPOSIT_STATUS_REJECTED = 'rejected'
 DEPOSIT_STATUS_PARTIAL = 'partial'
 DEPOSIT_STATUS_READY = 'ready-for-load'
 DEPOSIT_STATUS_READY_FOR_CHECKS = 'ready-for-checks'
+DEPOSIT_STATUS_LOAD_SUCCESS = 'success'
+DEPOSIT_STATUS_LOAD_FAILURE = 'failure'
 
 
 def setup_django_for(platform):

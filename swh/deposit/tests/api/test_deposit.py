@@ -13,6 +13,8 @@ from rest_framework.test import APITestCase
 
 from swh.deposit.config import COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_REJECTED
 from swh.deposit.config import DEPOSIT_STATUS_PARTIAL
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE
 from swh.deposit.models import Deposit, DepositClient, DepositCollection
 from swh.deposit.parsers import parse_xml
 
@@ -101,7 +103,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
     @istest
     def act_on_deposit_rejected_is_not_permitted(self):
-        deposit_id = self.create_deposit_with_status_rejected()
+        deposit_id = self.create_deposit_with_status(DEPOSIT_STATUS_REJECTED)
 
         deposit = Deposit.objects.get(pk=deposit_id)
         assert deposit.status == DEPOSIT_STATUS_REJECTED
@@ -117,3 +119,45 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             response.content.decode('utf-8'),
             "You can only act on deposit with status &#39;%s&#39;" % (
                 DEPOSIT_STATUS_PARTIAL, ))
+
+    @istest
+    def add_deposit_with_parent(self):
+        # given multiple deposit already loaded
+        deposit_id = self.create_deposit_with_status(
+            status=DEPOSIT_STATUS_LOAD_SUCCESS,
+            external_id='some-external-id')
+
+        deposit1 = Deposit.objects.get(pk=deposit_id)
+        self.assertIsNotNone(deposit1)
+        self.assertEquals(deposit1.external_id, 'some-external-id')
+        self.assertEquals(deposit1.status, DEPOSIT_STATUS_LOAD_SUCCESS)
+
+        deposit_id2 = self.create_deposit_with_status(
+            status=DEPOSIT_STATUS_LOAD_SUCCESS,
+            external_id='some-external-id')
+
+        deposit2 = Deposit.objects.get(pk=deposit_id2)
+        self.assertIsNotNone(deposit2)
+        self.assertEquals(deposit2.external_id, 'some-external-id')
+        self.assertEquals(deposit2.status, DEPOSIT_STATUS_LOAD_SUCCESS)
+
+        deposit_id3 = self.create_deposit_with_status(
+            status=DEPOSIT_STATUS_LOAD_FAILURE,
+            external_id='some-external-id')
+
+        deposit3 = Deposit.objects.get(pk=deposit_id3)
+        self.assertIsNotNone(deposit3)
+        self.assertEquals(deposit3.external_id, 'some-external-id')
+        self.assertEquals(deposit3.status, DEPOSIT_STATUS_LOAD_FAILURE)
+
+        # when
+        deposit_id3 = self.create_simple_deposit_partial(
+            external_id='some-external-id')
+
+        # then
+        deposit4 = Deposit.objects.get(pk=deposit_id3)
+
+        self.assertIsNotNone(deposit4)
+        self.assertEquals(deposit4.external_id, 'some-external-id')
+        self.assertEquals(deposit4.status, DEPOSIT_STATUS_PARTIAL)
+        self.assertEquals(deposit4.parent, deposit2)
