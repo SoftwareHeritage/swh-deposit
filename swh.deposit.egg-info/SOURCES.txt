@@ -91,9 +91,8 @@ swh/deposit/migrations/0005_auto_20171019_1436.py
 swh/deposit/migrations/0006_depositclient_url.py
 swh/deposit/migrations/0007_auto_20171129_1609.py
 swh/deposit/migrations/0008_auto_20171130_1513.py
+swh/deposit/migrations/0009_deposit_parent.py
 swh/deposit/migrations/__init__.py
-swh/deposit/service/__init__.py
-swh/deposit/service/clean_temporary_directory.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
 swh/deposit/settings/development.py

@@ -13,7 +13,7 @@ from django.http import FileResponse
 from rest_framework import status
 
 from swh.loader.tar import tarball
-from swh.model import hashutil, identifiers
+from swh.model import identifiers
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest
@@ -203,11 +203,9 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'metadata': metadata,
         }
 
-        parent_revision = deposit.swh_id
-        if parent_revision:
-            data['revision'] = {
-                'parents': [hashutil.hash_to_bytes(parent_revision)]
-            }
+        if deposit.parent:
+            parent_revision = deposit.parent.swh_id
+            data['revision']['parents'] = [parent_revision]
 
         data['occurrence'] = {
             'branch': 'master'

@@ -14,7 +14,8 @@ from django.db import models
 from django.utils.timezone import now
 
 from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY_FOR_CHECKS
-from .config import DEPOSIT_STATUS_PARTIAL
+from .config import DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
+from .config import DEPOSIT_STATUS_LOAD_FAILURE
 
 
 class Dbversion(models.Model):
@@ -44,8 +45,8 @@ DEPOSIT_STATUS = [
     (DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY),
     ('rejected', 'rejected'),
     ('loading', 'loading'),
-    ('success', 'success'),
-    ('failure', 'failure'),
+    (DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_SUCCESS),
+    (DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_FAILURE),
 ]
 
 
@@ -61,8 +62,8 @@ DEPOSIT_STATUS_DETAIL = {
                           'ready for loading',
     'rejected': 'Deposit failed the checks',
     'loading': "Loading is ongoing on swh's side",
-    'success': 'Loading is successful',
-    'failure': 'Loading is a failure',
+    DEPOSIT_STATUS_LOAD_SUCCESS: 'Loading is successful',
+    DEPOSIT_STATUS_LOAD_FAILURE: 'Loading is a failure',
 }
 
 
@@ -108,6 +109,8 @@ class Deposit(models.Model):
     status = models.TextField(
         choices=DEPOSIT_STATUS,
         default=DEPOSIT_STATUS_PARTIAL)
+    # deposit can have one parent
+    parent = models.ForeignKey('self', null=True)
 
     class Meta:
         db_table = 'deposit'

@@ -4,7 +4,7 @@ djangorestframework
 djangorestframework-xml
 swh.core>=0.0.14
 swh.loader.core>=0.0.25
-swh.loader.tar>=0.0.29
+swh.loader.tar>=0.0.31
 swh.scheduler>=0.0.19
 vcversioner
 

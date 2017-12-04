@@ -20,14 +20,14 @@ from swh.model import hashutil
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
 from ..config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_PARTIAL
-
-from ..models import Deposit, DepositRequest, DepositCollection
-from ..models import DepositRequestType, DepositClient
-from ..parsers import parse_xml
+from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
 from ..errors import make_error_response_from_dict, FORBIDDEN
 from ..errors import NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
+from ..models import Deposit, DepositRequest, DepositCollection
+from ..models import DepositRequestType, DepositClient
+from ..parsers import parse_xml
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
@@ -153,11 +153,21 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             status_type = DEPOSIT_STATUS_PARTIAL
 
         if not deposit_id:
+            try:
+                # find a deposit parent (same external id, status load
+                # to success)
+                deposit_parent = Deposit.objects.filter(
+                    external_id=external_id,
+                    status=DEPOSIT_STATUS_LOAD_SUCCESS).order_by('-id')[0:1].get()  # noqa
+            except Deposit.DoesNotExist:
+                deposit_parent = None
+
             deposit = Deposit(collection=self._collection,
                               external_id=external_id,
                               complete_date=complete_date,
                               status=status_type,
-                              client=self._client)
+                              client=self._client,
+                              parent=deposit_parent)
         else:
             deposit = Deposit.objects.get(pk=deposit_id)
 
