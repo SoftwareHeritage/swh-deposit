@@ -16,7 +16,6 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, EM_IRI, EDIT_SE_IRI
-from swh.deposit.config import DEPOSIT_STATUS_REJECTED
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
@@ -95,6 +94,16 @@ class FileSystemCreationRoutine(TestCase):
         self.archive = create_arborescence_zip(
             self.root_path, 'archive1', 'file1', b'some content in file')
 
+        self.atom_entry = b"""<?xml version="1.0"?>
+            <entry xmlns="http://www.w3.org/2005/Atom">
+                <title>Awesome Compiler</title>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <external_identifier>1785io25c695</external_identifier>
+                <updated>2017-10-07T15:17:08Z</updated>
+                <author>some awesome author</author>
+                <url>http://test.test.fr</url>
+        </entry>"""
+
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.root_path)
@@ -136,6 +145,22 @@ class FileSystemCreationRoutine(TestCase):
 
         # then
         assert response.status_code == status.HTTP_201_CREATED
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+        return deposit_id
+
+    def update_binary_deposit(self, deposit_id, status_partial=False):
+        # update existing deposit with atom entry metadata
+        response = self.client.post(
+            reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id]),
+            content_type='application/atom+xml;type=entry',
+            data=self.codemeta_entry_data1,
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=status_partial)
+
+        # then
+        # assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
         deposit_id = response_content[
             '{http://www.w3.org/2005/Atom}deposit_id']
@@ -220,14 +245,14 @@ class CommonCreationRoutine(TestCase):
         super().setUp()
 
         self.atom_entry_data0 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>some-external-id</external_identifier>
-</entry>"""
+        <entry xmlns="http://www.w3.org/2005/Atom">
+            <external_identifier>some-external-id</external_identifier>
+        </entry>"""
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-    <external_identifier>anotherthing</external_identifier>
-</entry>"""
+        <entry xmlns="http://www.w3.org/2005/Atom">
+            <external_identifier>anotherthing</external_identifier>
+        </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom">
@@ -236,12 +261,14 @@ class CommonCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
+                <url>http://test.test.fr</url>
         </entry>"""
 
         self.codemeta_entry_data0 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom"
                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
                 <title>Awesome Compiler</title>
+                <url>http://test.test.fr</url>
                 <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
@@ -278,14 +305,16 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
     <name>HAL</name>
     <email>hal@ccsd.cnrs.fr</email>
   </author>
+  <codemeta:author>
+    <codemeta:name>Morane Gruenpeter</codemeta:name>
+  </codemeta:author>
 </entry>"""
 
-    def create_invalid_deposit(self):
+    def create_invalid_deposit(self, external_id='some-external-id-1'):
         url = reverse(COL_IRI, args=[self.collection.name])
 
         data = b'some data which is clearly not a zip file'
         md5sum = hashlib.md5(data).hexdigest()
-        external_id = 'some-external-id-1'
 
         # when
         response = self.client.post(
@@ -306,20 +335,24 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         return deposit_id
 
-    def create_deposit_with_status_rejected(self):
-        deposit_id = self.create_invalid_deposit()
+    def create_deposit_with_status(
+            self, status, external_id='some-external-id-1', swh_id=None):
+        deposit_id = self.create_invalid_deposit(external_id)
 
-        # We cannot create rejected deposit in test context (we
-        # flipped off the checks in the configuration so all deposits
-        # have the status ready-for-checks). Update in place the
-        # deposit with such status
+        # We cannot create some form of deposit with a given status in
+        # test context ('rejected' for example). As flipped off the
+        # checks in the configuration so all deposits have the status
+        # ready-for-checks). Update in place the deposit with such
+        # status
         deposit = Deposit.objects.get(pk=deposit_id)
-        deposit.status = DEPOSIT_STATUS_REJECTED
+        deposit.status = status
+        if swh_id:
+            deposit.swh_id = swh_id
         deposit.save()
 
         return deposit_id
 
-    def create_simple_deposit_partial(self):
+    def create_simple_deposit_partial(self, external_id='some-external-id'):
         """Create a simple deposit (1 request) in `partial` state and returns
         its new identifier.
 
@@ -331,7 +364,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0,
-            HTTP_SLUG='external-id',
+            HTTP_SLUG=external_id,
             HTTP_IN_PROGRESS='true')
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -366,7 +399,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
     def _update_deposit_with_status(self, deposit_id, status_partial=False):
         """Add to a given deposit another archive and update its current
-           status to `ready` (by default).
+           status to `ready-for-checks` (by default).
 
         Returns:
             deposit id
@@ -384,19 +417,21 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         assert response.status_code == status.HTTP_201_CREATED
         return deposit_id
 
-    def create_deposit_ready(self):
-        """Create a complex deposit (2 requests) in status `ready`.
+    def create_deposit_ready(self, external_id='some-external-id'):
+        """Create a complex deposit (2 requests) in status `ready-for-checks`.
 
         """
-        deposit_id = self.create_simple_deposit_partial()
+        deposit_id = self.create_simple_deposit_partial(
+            external_id=external_id)
         deposit_id = self._update_deposit_with_status(deposit_id)
         return deposit_id
 
-    def create_deposit_partial(self):
+    def create_deposit_partial(self, external_id='some-external-id'):
         """Create a complex deposit (2 requests) in status `partial`.
 
         """
-        deposit_id = self.create_simple_deposit_partial()
+        deposit_id = self.create_simple_deposit_partial(
+            external_id=external_id)
         deposit_id = self._update_deposit_with_status(
             deposit_id, status_partial=True)
         return deposit_id

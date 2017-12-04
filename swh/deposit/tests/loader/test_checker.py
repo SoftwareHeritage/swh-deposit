@@ -38,6 +38,8 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         """
         # 1. create a deposit with archive and metadata
         deposit_id = self.create_simple_binary_deposit()
+        deposit_id = self.update_binary_deposit(deposit_id,
+                                                status_partial=False)
 
         args = [self.collection.name, deposit_id]
         deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
