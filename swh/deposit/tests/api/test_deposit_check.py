@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import json
+import unittest
 
 from django.core.urlresolvers import reverse
 from nose.tools import istest
@@ -16,6 +17,7 @@ from ...config import DEPOSIT_STATUS_READY, PRIVATE_CHECK_DEPOSIT
 from ...config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_REJECTED
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ..common import FileSystemCreationRoutine
+from ...api.private.deposit_check import SWHChecksDeposit
 
 
 @attr('fs')
@@ -96,3 +98,47 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(data['status'], DEPOSIT_STATUS_READY)
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_READY)
+
+
+class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
+    @istest
+    def check_metadata_ok(self):
+        actual_check = self._check_metadata({
+            'url': 'something',
+            'external_identifier': 'something-else',
+            'name': 'foo',
+            'author': 'someone',
+        })
+
+        self.assertTrue(actual_check)
+
+    @istest
+    def check_metadata_ok2(self):
+        actual_check = self._check_metadata({
+            'url': 'something',
+            'external_identifier': 'something-else',
+            'title': 'bar',
+            'author': 'someone',
+        })
+
+        self.assertTrue(actual_check)
+
+    @istest
+    def check_metadata_ko(self):
+        actual_check = self._check_metadata({
+            'url': 'something',
+            'external_identifier': 'something-else',
+            'author': 'someone',
+        })
+
+        self.assertFalse(actual_check)
+
+    @istest
+    def check_metadata_ko2(self):
+        actual_check = self._check_metadata({
+            'url': 'something',
+            'external_identifier': 'something-else',
+            'title': 'foobar',
+        })
+
+        self.assertFalse(actual_check)

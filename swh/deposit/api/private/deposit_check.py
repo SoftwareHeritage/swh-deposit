@@ -98,14 +98,15 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         # will check each deposit request for the deposit
         for dr in self.deposit_requests(deposit):
             if dr.type.name == ARCHIVE_TYPE:
-                deposit_status = self._check_archive(dr.archive)
+                archives_status = self._check_archive(dr.archive)
             elif dr.type.name == METADATA_TYPE:
                 # aggregating all metadata requests for check on complete set
                 all_metadata.update(dr.metadata)
-            if not deposit_status:
+            if not archives_status:
                 break
 
-        deposit_status = self._check_metadata(all_metadata)
+        metadatas_status = self._check_metadata(all_metadata)
+        deposit_status = archives_status and metadatas_status
         # if problem in any deposit requests, the deposit is rejected
         if not deposit_status:
             deposit.status = DEPOSIT_STATUS_REJECTED
