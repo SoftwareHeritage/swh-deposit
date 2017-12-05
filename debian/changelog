@@ -1,8 +1,10 @@
-swh-deposit (0.0.33-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.34-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.34
+  * d/control: Bump to latest version
+  * Fix client config typo for local url
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 04 Dec 2017 18:59:50 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 05 Dec 2017 15:43:59 +0100
 
 swh-deposit (0.0.33-1~swh1) unstable-swh; urgency=medium
 

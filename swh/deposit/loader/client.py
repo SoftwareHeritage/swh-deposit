@@ -21,7 +21,7 @@ class DepositClient(SWHConfig):
     """
     CONFIG_BASE_FILENAME = 'deposit/client'
     DEFAULT_CONFIG = {
-        'url': ('str', 'http://localhost:8000'),
+        'url': ('str', 'http://localhost:5006'),
         'auth': ('dict', {})  # with optional 'username'/'password' keys
     }
 
