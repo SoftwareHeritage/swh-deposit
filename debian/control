@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 9),
                python3-django-nose,
                python3-vcversioner,
                python3-swh.core (>= 0.0.14~),
-               python3-swh.loader.core (>= 0.0.25~),
+               python3-swh.loader.core (>= 0.0.26~),
                python3-swh.loader.tar (>= 0.0.31~),
                python3-swh.scheduler (>= 0.0.19~),
                python3-django,
@@ -34,7 +34,7 @@ Package: python3-swh.deposit.loader
 Conflict: python3-swh.deposit.injection
 Architecture: all
 Depends: python3-swh.core (>= 0.0.14~),
-         python3-swh.loader.core (>= 0.0.25~),
+         python3-swh.loader.core (>= 0.0.26~),
          python3-swh.loader.tar (>= 0.0.31~),
          python3-swh.scheduler (>= 0.0.19~),
          python3-requests,
