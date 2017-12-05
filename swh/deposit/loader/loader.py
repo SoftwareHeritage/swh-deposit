@@ -69,7 +69,7 @@ class DepositLoader(loader.TarLoader):
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
 
-        self.client.status_update(deposit_update_url, 'injecting')
+        self.client.status_update(deposit_update_url, 'loading')
 
         super().prepare(tar_path=archive,
                         origin=origin,
