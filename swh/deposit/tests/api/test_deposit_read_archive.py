@@ -12,7 +12,7 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.loader.tar import tarball
+from swh.core import tarball
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests import TEST_CONFIG
 
