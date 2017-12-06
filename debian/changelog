@@ -1,3 +1,11 @@
+swh-deposit (0.0.36-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.36
+  * swh.deposit.api.private: Deposit's author is swh
+  * d/control: Bump to latest dependencies version
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 06 Dec 2017 12:21:45 +0100
+
 swh-deposit (0.0.35-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.35
