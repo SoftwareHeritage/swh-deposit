@@ -1,4 +1,4 @@
-swh.core >= 0.0.14
-swh.loader.tar >= 0.0.31
+swh.core >= 0.0.36
+swh.loader.tar >= 0.0.32
 swh.loader.core >= 0.0.26
 swh.scheduler >= 0.0.19

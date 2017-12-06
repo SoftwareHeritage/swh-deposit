@@ -16,6 +16,7 @@ from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.config import DEPOSIT_STATUS_PARTIAL
 
 
+from ...config import SWH_PERSON
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
 
@@ -70,12 +71,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'synthetic': True,
                 'committer_date': None,
                 'message': ': Deposit %s in collection hal' % deposit_id,
-                'author': {
-                    'fullname': '', 'email': '', 'name': ''
-                },
-                'committer': {
-                    'fullname': '', 'email': '', 'name': ''
-                },
+                'author': SWH_PERSON,
+                'committer': SWH_PERSON,
                 'date': None,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
@@ -154,12 +151,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'synthetic': True,
                 'date': None,
                 'committer_date': None,
-                'author': {
-                    'fullname': '', 'email': '', 'name': ''
-                },
-                'committer': {
-                    'fullname': '', 'email': '', 'name': ''
-                },
+                'author': SWH_PERSON,
+                'committer': SWH_PERSON,
                 'type': 'tar',
                 'message': ': Deposit %s in collection hal' % deposit_id,
                 'metadata': {

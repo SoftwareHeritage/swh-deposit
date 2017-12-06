@@ -35,6 +35,13 @@ DEPOSIT_STATUS_READY_FOR_CHECKS = 'ready-for-checks'
 DEPOSIT_STATUS_LOAD_SUCCESS = 'success'
 DEPOSIT_STATUS_LOAD_FAILURE = 'failure'
 
+# Revision author for deposit
+SWH_PERSON = {
+    'name': 'Software Heritage',
+    'fullname': 'Software Heritage',
+    'email': 'robot@softwareheritage.org'
+}
+
 
 def setup_django_for(platform):
     """Setup function for command line tools (swh.deposit.create_user,

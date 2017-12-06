@@ -12,9 +12,10 @@ from contextlib import contextmanager
 from django.http import FileResponse
 from rest_framework import status
 
-from swh.loader.tar import tarball
+from swh.core import tarball
 from swh.model import identifiers
 
+from ...config import SWH_PERSON
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit, DepositRequest
 
@@ -177,11 +178,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         # revision
 
         fullname = deposit.client.get_full_name()
-        author_committer = {
-            'name': deposit.client.last_name,
-            'fullname': fullname,
-            'email': deposit.client.email,
-        }
+        author_committer = SWH_PERSON
 
         # metadata provider
         self.provider['provider_name'] = deposit.client.last_name
