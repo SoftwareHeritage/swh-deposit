@@ -21,7 +21,7 @@ from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
-from swh.loader.tar import tarball
+from swh.core import tarball
 
 
 def create_arborescence_zip(root_path, archive_name, filename, content,

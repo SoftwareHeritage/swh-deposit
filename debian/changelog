@@ -1,8 +1,10 @@
-swh-deposit (0.0.35-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.36-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.36
+  * swh.deposit.api.private: Deposit's author is swh
+  * d/control: Bump to latest dependencies version
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 05 Dec 2017 19:23:40 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 06 Dec 2017 12:21:45 +0100
 
 swh-deposit (0.0.35-1~swh1) unstable-swh; urgency=medium
 
