@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from django.http import FileResponse
 from rest_framework import status
 
-from swh.loader.tar import tarball
+from swh.core import tarball
 from swh.model import identifiers
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
