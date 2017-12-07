@@ -1,3 +1,10 @@
+swh-deposit (0.0.37-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.37
+  * Adapt to latest dependency on loader-core and storage
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 07 Dec 2017 15:30:32 +0100
+
 swh-deposit (0.0.36-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.36
