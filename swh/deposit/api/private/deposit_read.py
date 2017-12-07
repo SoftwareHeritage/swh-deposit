@@ -128,9 +128,9 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             'metadata': {}
         }),
         'tool': ('dict', {
-            'tool_name': 'swh-deposit',
-            'tool_version': '0.0.1',
-            'tool_configuration': {
+            'name': 'swh-deposit',
+            'version': '0.0.1',
+            'configuration': {
                 'sword_version': '2'
             }
         })
