@@ -10,7 +10,8 @@ from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.models import Deposit
+from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
+from swh.deposit.models import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
@@ -66,7 +67,35 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                          DEPOSIT_STATUS_READY_FOR_CHECKS)
         self.assertEqual(
             r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
-            'Deposit is ready for additional checks (tarball ok, etc...)')
+            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_READY_FOR_CHECKS])
+
+    @istest
+    def status_with_swh_id(self):
+        _status = DEPOSIT_STATUS_LOAD_SUCCESS
+        _swh_id = '548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
+
+        # given
+        deposit_id = self.create_deposit_with_status(
+            status=_status,
+            swh_id=_swh_id)
+
+        url = reverse(STATE_IRI, args=[self.collection.name, deposit_id])
+
+        # when
+        status_response = self.client.get(url)
+
+        # then
+        self.assertEqual(status_response.status_code, status.HTTP_200_OK)
+        r = parse_xml(BytesIO(status_response.content))
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
+                         deposit_id)
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
+                         _status)
+        self.assertEqual(
+            r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
+            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS])
+        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_swh_id'],
+                         _swh_id)
 
     @istest
     def status_on_unknown_deposit(self):
