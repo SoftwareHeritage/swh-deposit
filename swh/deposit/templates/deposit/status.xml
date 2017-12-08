@@ -4,4 +4,5 @@
     <deposit_id>{{ deposit_id }}</deposit_id>
     <deposit_status>{{ status }}</deposit_status>
     <deposit_status_detail>{{ status_detail }}</deposit_status_detail>
+    {% if swh_id is not None %}<deposit_swh_id>{{ swh_id }}</deposit_swh_id>{% endif %}
 </entry>
