@@ -41,6 +41,9 @@ class SWHDepositStatus(SWHBaseDeposit):
             'status_detail': DEPOSIT_STATUS_DETAIL[deposit.status],
         }
 
+        if deposit.swh_id:
+            context['swh_id'] = deposit.swh_id
+
         return render(req, 'deposit/status.xml',
                       context=context,
                       content_type='application/xml',
