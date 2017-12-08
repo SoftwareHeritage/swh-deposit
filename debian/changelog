@@ -1,8 +1,9 @@
-swh-deposit (0.0.37-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.38-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.38
+  * Provide existing swh id in the status api when it exists
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 07 Dec 2017 15:30:32 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 08 Dec 2017 09:41:21 +0100
 
 swh-deposit (0.0.37-1~swh1) unstable-swh; urgency=medium
 
