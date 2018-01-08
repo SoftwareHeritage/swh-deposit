@@ -71,6 +71,8 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+        self.assertEqual(data['details'],
+                         'Some archive(s) and metadata failed the checks.')
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
