@@ -63,22 +63,16 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             True if metadata is ok, False otherwise.
 
         """
-        must_meta = ['url', 'external_identifier', ['name', 'title'], 'author']
-        # checks only for must metadata on all metadata requests
-        for mm in must_meta:
-            found = False
-            for k in metadata:
-                if isinstance(mm, list):
-                    for p in mm:
-                        if p in k:
-                            found = True
-                            break
-                elif mm in k:
-                    found = True
-                    break
-            if not found:
-                return False
-        return True
+        required_fields = (('url',),
+                           ('external_identifier',),
+                           ('name', 'title'),
+                           ('author',))
+
+        result = all(any(name in field
+                         for field in metadata
+                         for name in possible_names)
+                     for possible_names in required_fields)
+        return result
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
