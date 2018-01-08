@@ -1,3 +1,10 @@
+swh-deposit (0.0.40-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.40
+  * Fix corner case on deposit checks and clarify intents on checks
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 08 Jan 2018 18:21:38 +0100
+
 swh-deposit (0.0.39-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.39
