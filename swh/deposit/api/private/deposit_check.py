@@ -89,6 +89,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         all_metadata = {}
+        archives_status = False
         # will check each deposit request for the deposit
         for dr in self.deposit_requests(deposit):
             if dr.type.name == ARCHIVE_TYPE:
