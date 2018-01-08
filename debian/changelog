@@ -1,8 +1,12 @@
-swh-deposit (0.0.38-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.39-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.39
+  * Amend detail status message
+  * docs: Fix url
+  * Fix check of deposit without content scenario
+  * Refactor metadata check with pythonic function
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 08 Dec 2017 09:41:21 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 08 Jan 2018 12:43:15 +0100
 
 swh-deposit (0.0.38-1~swh1) unstable-swh; urgency=medium
 
