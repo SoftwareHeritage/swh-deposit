@@ -5,7 +5,7 @@ a shell client.
 
 The api is rooted at https://deposit.softwareheritage.org.
 
-For more details, see the [main README](./README.md).
+For more details, see the [main documentation](./index.html).
 
 ## Requirements
 
@@ -235,7 +235,7 @@ but it will be answered with a 403 forbidden answer.
 
 ### Multi-steps deposit
 
-1. Create a deposit
+#### Create a deposit
 
 We will use the collection IRI again as the starting point.
 
@@ -262,7 +262,7 @@ curl -i --user <client-name>:<pass> \
 
 The expected answer is the same as the previous sample.
 
-2. Update deposit's metadata
+#### Update deposit's metadata
 
 To update a deposit, we can either add some more archives, some more
 metadata or replace existing ones.
@@ -307,7 +307,7 @@ Content-Type: application/xml
 </entry>
 ```
 
-3. Check the deposit's state
+#### Check the deposit's state
 
 You need to check the STATE-IRI endpoint (/1/<collection-name>/10/status/).
 
