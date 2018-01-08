@@ -52,18 +52,20 @@ DEPOSIT_STATUS = [
 
 """Possible status and the detailed meaning."""
 DEPOSIT_STATUS_DETAIL = {
-    DEPOSIT_STATUS_PARTIAL: 'Deposit is new or partially received since it can'
-                            ' be done in multiple requests',
+    DEPOSIT_STATUS_PARTIAL: 'Deposit is partially received. To finalize it, '
+                            'In-Progress header should be false',
     'expired': 'Deposit has been there too long and is now '
                'deemed ready to be garbage collected',
     DEPOSIT_STATUS_READY_FOR_CHECKS: 'Deposit is ready for additional checks '
-                                     '(tarball ok, etc...)',
+                                     '(tarball ok, metadata, etc...)',
     DEPOSIT_STATUS_READY: 'Deposit is fully received, checked, and '
                           'ready for loading',
     'rejected': 'Deposit failed the checks',
     'loading': "Loading is ongoing on swh's side",
-    DEPOSIT_STATUS_LOAD_SUCCESS: 'Loading is successful',
-    DEPOSIT_STATUS_LOAD_FAILURE: 'Loading is a failure',
+    DEPOSIT_STATUS_LOAD_SUCCESS: 'The deposit has been successfully '
+                                 'loaded into the Software Heritage archive',
+    DEPOSIT_STATUS_LOAD_FAILURE: 'The deposit loading into the '
+                                 'Software Heritage archive failed',
 }
 
 
