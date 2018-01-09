@@ -79,7 +79,8 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             return True
 
     def _check_deposit_metadata(self, deposit):
-        """Given a deposit, check each deposit request of type metadata.
+        """Given a deposit, check each deposit request of type metadata,
+           by aggregating all metadata requests one bundle.
 
         Args:
             The deposit to check metadata for.
@@ -91,11 +92,10 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         metadata = {}
         for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
             metadata.update(dr.metadata)
-
         return self._check_metadata(metadata)
 
     def _check_metadata(self, metadata):
-        """Check to execute on all metadata.
+        """Check to execute on all metadata and keeps metadata_url for url validation.
 
         Args:
             metadata (): Metadata to actually check
@@ -113,7 +113,17 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
                          for field in metadata
                          for name in possible_names)
                      for possible_names in required_fields)
+        urls = []
+        for field in metadata:
+            if 'url' in field:
+                urls.append(metadata[field])
+        self.metadata_url = urls
         return result
+
+    def _check_url(self, client_url, metadata_urls):
+        validatation = any(client_url in url
+                           for url in metadata_urls)
+        return validatation
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
@@ -129,6 +139,8 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
+        client_url = deposit.client.url
+        self.metadata_url = None         # created in _check_metadata
         problems = []
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
@@ -140,7 +152,11 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if not metadata_status:
             problems.append('metadata')
 
-        deposit_status = archives_status and metadata_status
+        url_status = self._check_url(client_url, self.metadata_url)
+        if not url_status:
+            problems.append('url')
+
+        deposit_status = archives_status and metadata_status and url_status
 
         # if any problems arose, the deposit is rejected
         if not deposit_status:

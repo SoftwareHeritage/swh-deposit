@@ -101,7 +101,7 @@ class FileSystemCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr</url>
         </entry>"""
 
     def tearDown(self):
@@ -187,7 +187,7 @@ class BasicTestCase(TestCase):
             deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
-        _url = 'https://hal.test.fr/'
+        _url = 'https://hal-test.archives-ouvertes.fr/'
         # set collection up
         _collection = DepositCollection(name=_name)
         _collection.save()
@@ -261,14 +261,14 @@ class CommonCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr/id</url>
         </entry>"""
 
         self.codemeta_entry_data0 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom"
                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
                 <title>Awesome Compiler</title>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr/1785io25c695</url>
                 <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
