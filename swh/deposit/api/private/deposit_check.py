@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -78,9 +78,8 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         else:
             return True
 
-    def _check_deposit_metadata(self, deposit):
-        """Given a deposit, check each deposit request of type metadata,
-           by aggregating all metadata requests one bundle.
+    def _metadata_get(self, deposit):
+        """Given a deposit, aggregate all metadata requests.
 
         Args:
             The deposit to check metadata for.
@@ -92,13 +91,13 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         metadata = {}
         for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
             metadata.update(dr.metadata)
-        return self._check_metadata(metadata)
+        return metadata
 
     def _check_metadata(self, metadata):
-        """Check to execute on all metadata and keeps metadata_url for url validation.
+        """Check to execute on all metadata for mandatory field presence.
 
         Args:
-            metadata (): Metadata to actually check
+            metadata (dict): Metadata to actually check
 
         Returns:
             True if metadata is ok, False otherwise.
@@ -113,17 +112,25 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
                          for field in metadata
                          for name in possible_names)
                      for possible_names in required_fields)
-        urls = []
-        for field in metadata:
-            if 'url' in field:
-                urls.append(metadata[field])
-        self.metadata_url = urls
         return result
 
-    def _check_url(self, client_url, metadata_urls):
-        validatation = any(client_url in url
-                           for url in metadata_urls)
-        return validatation
+    def _check_url(self, client_url, metadata):
+        """Check compatibility between client_url and url field in metadata
+
+        Args:
+            client_url (str): url associated with the deposit's client
+            metadata (dict): Metadata where to find url
+        Returns:
+            True if url is ok, False otherwise.
+
+        """
+        metadata_urls = []
+        for field in metadata:
+            if 'url' in field:
+                metadata_urls.append(metadata[field])
+
+        return any(client_url in url
+                   for url in metadata_urls)
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
@@ -140,7 +147,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         client_url = deposit.client.url
-        self.metadata_url = None         # created in _check_metadata
+        metadata = self._metadata_get(deposit)
         problems = []
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
@@ -148,11 +155,11 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if not archives_status:
             problems.append('archive(s)')
 
-        metadata_status = self._check_deposit_metadata(deposit)
+        metadata_status = self._check_metadata(metadata)
         if not metadata_status:
             problems.append('metadata')
 
-        url_status = self._check_url(client_url, self.metadata_url)
+        url_status = self._check_url(client_url, metadata)
         if not url_status:
             problems.append('url')
 
