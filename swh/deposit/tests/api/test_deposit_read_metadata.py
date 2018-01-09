@@ -52,6 +52,9 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'origin_metadata': {
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
                         'some-external-id'
                 },
                 'provider': {
@@ -77,6 +80,9 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'date': None,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
                         'some-external-id'
                 },
                 'type': 'tar'
@@ -133,7 +139,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'origin_metadata': {
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
-                    'some-external-id'
+                    'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
+                        'some-external-id'
                 },
                 'provider': {
                     'provider_name': '',
@@ -159,7 +168,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'message': ': Deposit %s in collection hal' % deposit_id,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
-                    'some-external-id'
+                    'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
+                        'some-external-id'
                 },
                 'parents': [swh_id]
             },

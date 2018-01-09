@@ -151,6 +151,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         return metadata
 
+    def _retrieve_url(self, deposit, metadata):
+        client_url = deposit.client.url
+        for field in metadata:
+            if 'url' in field:
+                if client_url in metadata[field]:
+                    return metadata[field]
+
     def aggregate(self, deposit, requests):
         """Aggregate multiple data on deposit into one unified data dictionary.
 
@@ -167,12 +174,12 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # Retrieve tarballs/metadata information
         metadata = self._aggregate_metadata(deposit, requests)
-
+        # create origin_url from metadata only after deposit_check validates it
+        origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
         data['origin'] = {
             'type': 'deposit',
-            'url': os.path.join(deposit.client.url.rstrip('/'),
-                                deposit.external_id),
+            'url': origin_url
         }
 
         # revision
