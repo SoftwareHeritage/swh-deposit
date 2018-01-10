@@ -102,6 +102,7 @@ swh/deposit/settings/testing.py
 swh/deposit/static/robots.txt
 swh/deposit/static/css/bootstrap-responsive.min.css
 swh/deposit/static/css/style.css
+swh/deposit/static/img/arrow-up-small.png
 swh/deposit/static/img/swh-logo-deposit.png
 swh/deposit/static/img/swh-logo-deposit.svg
 swh/deposit/static/img/icons/swh-logo-32x32.png
