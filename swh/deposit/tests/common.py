@@ -187,14 +187,16 @@ class BasicTestCase(TestCase):
             deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
-        _url = 'https://hal-test.archives-ouvertes.fr/'
+        _provider_url = 'https://hal-test.archives-ouvertes.fr/'
+        _domain = 'archives-ouvertes.fr/'
         # set collection up
         _collection = DepositCollection(name=_name)
         _collection.save()
         # set user/client up
         _client = DepositClient.objects.create_user(username=_name,
                                                     password=_name,
-                                                    url=_url)
+                                                    provider_url=_provider_url,
+                                                    domain=_domain)
         _client.collections = [_collection.id]
         _client.save()
 

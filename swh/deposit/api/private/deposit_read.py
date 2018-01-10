@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 The Software Heritage developers
+# Copyright (C) 2017    -2018 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -152,10 +152,10 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         return metadata
 
     def _retrieve_url(self, deposit, metadata):
-        client_url = deposit.client.url
+        client_domain = deposit.client.domain
         for field in metadata:
             if 'url' in field:
-                if client_url in metadata[field]:
+                if client_domain in metadata[field]:
                     return metadata[field]
 
     def aggregate(self, deposit, requests):
@@ -189,7 +189,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # metadata provider
         self.provider['provider_name'] = deposit.client.last_name
-        self.provider['provider_url'] = deposit.client.url
+        self.provider['provider_url'] = deposit.client.provider_url
 
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (

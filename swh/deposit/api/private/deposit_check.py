@@ -114,11 +114,11 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
                      for possible_names in required_fields)
         return result
 
-    def _check_url(self, client_url, metadata):
-        """Check compatibility between client_url and url field in metadata
+    def _check_url(self, client_domain, metadata):
+        """Check compatibility between client_domain and url field in metadata
 
         Args:
-            client_url (str): url associated with the deposit's client
+            client_domain (str): url associated with the deposit's client
             metadata (dict): Metadata where to find url
         Returns:
             True if url is ok, False otherwise.
@@ -129,7 +129,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             if 'url' in field:
                 metadata_urls.append(metadata[field])
 
-        return any(client_url in url
+        return any(client_domain in url
                    for url in metadata_urls)
 
     def process_get(self, req, collection_name, deposit_id):
@@ -146,7 +146,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
-        client_url = deposit.client.url
+        client_domain = deposit.client.domain
         metadata = self._metadata_get(deposit)
         problems = []
         # will check each deposit's associated request (both of type
@@ -159,7 +159,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if not metadata_status:
             problems.append('metadata')
 
-        url_status = self._check_url(client_url, metadata)
+        url_status = self._check_url(client_domain, metadata)
         if not url_status:
             problems.append('url')
 
