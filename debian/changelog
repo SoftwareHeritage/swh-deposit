@@ -1,3 +1,11 @@
+swh-deposit (0.0.41-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.41
+  * swh.deposit.checks: Add url validation
+  * swh.deposit: Add splash screen to homepage
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 10 Jan 2018 12:12:43 +0100
+
 swh-deposit (0.0.40-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.40
