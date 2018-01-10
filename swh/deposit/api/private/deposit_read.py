@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017    -2018 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -151,6 +151,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         return metadata
 
+    def _retrieve_url(self, deposit, metadata):
+        client_domain = deposit.client.domain
+        for field in metadata:
+            if 'url' in field:
+                if client_domain in metadata[field]:
+                    return metadata[field]
+
     def aggregate(self, deposit, requests):
         """Aggregate multiple data on deposit into one unified data dictionary.
 
@@ -167,12 +174,12 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # Retrieve tarballs/metadata information
         metadata = self._aggregate_metadata(deposit, requests)
-
+        # create origin_url from metadata only after deposit_check validates it
+        origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
         data['origin'] = {
             'type': 'deposit',
-            'url': os.path.join(deposit.client.url.rstrip('/'),
-                                deposit.external_id),
+            'url': origin_url
         }
 
         # revision
@@ -182,7 +189,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # metadata provider
         self.provider['provider_name'] = deposit.client.last_name
-        self.provider['provider_url'] = deposit.client.url
+        self.provider['provider_url'] = deposit.client.provider_url
 
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
