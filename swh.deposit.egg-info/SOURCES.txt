@@ -92,6 +92,7 @@ swh/deposit/migrations/0006_depositclient_url.py
 swh/deposit/migrations/0007_auto_20171129_1609.py
 swh/deposit/migrations/0008_auto_20171130_1513.py
 swh/deposit/migrations/0009_deposit_parent.py
+swh/deposit/migrations/0010_auto_20180110_0953.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
@@ -99,7 +100,17 @@ swh/deposit/settings/development.py
 swh/deposit/settings/production.py
 swh/deposit/settings/testing.py
 swh/deposit/static/robots.txt
+swh/deposit/static/css/bootstrap-responsive.min.css
+swh/deposit/static/css/style.css
+swh/deposit/static/img/swh-logo-deposit.png
+swh/deposit/static/img/swh-logo-deposit.svg
+swh/deposit/static/img/icons/swh-logo-32x32.png
+swh/deposit/static/img/icons/swh-logo-deposit-180x180.png
+swh/deposit/static/img/icons/swh-logo-deposit-192x192.png
+swh/deposit/static/img/icons/swh-logo-deposit-270x270.png
 swh/deposit/templates/__init__.py
+swh/deposit/templates/homepage.html
+swh/deposit/templates/layout.html
 swh/deposit/templates/deposit/__init__.py
 swh/deposit/templates/deposit/content.xml
 swh/deposit/templates/deposit/deposit_receipt.xml

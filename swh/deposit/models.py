@@ -75,7 +75,8 @@ class DepositClient(User):
     """
     collections = ArrayField(models.IntegerField(), null=True)
     objects = UserManager()
-    url = models.TextField(null=False)
+    provider_url = models.TextField(null=False)
+    domain = models.TextField(null=False)
 
     class Meta:
         db_table = 'deposit_client'
@@ -85,6 +86,8 @@ class DepositClient(User):
             'id': self.id,
             'collections': self.collections,
             'username': super().username,
+            'domain': self.domain,
+            'provider_url': self.provider_url,
         })
 
 

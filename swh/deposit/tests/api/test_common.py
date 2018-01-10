@@ -24,7 +24,7 @@ class IndexNoAuthCase(APITestCase, BasicTestCase):
         url = reverse('home')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, b'SWH Deposit API')
+        self.assertIn(b'The Software Heritage Deposit', response.content)
 
 
 class IndexWithAuthCase(WithAuthTestCase, APITestCase, BasicTestCase):
@@ -39,4 +39,4 @@ class IndexWithAuthCase(WithAuthTestCase, APITestCase, BasicTestCase):
         url = reverse('home')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, b'SWH Deposit API')
+        self.assertIn(b'The Software Heritage Deposit', response.content)

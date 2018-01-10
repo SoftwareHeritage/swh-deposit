@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -101,7 +101,7 @@ class FileSystemCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr</url>
         </entry>"""
 
     def tearDown(self):
@@ -187,14 +187,16 @@ class BasicTestCase(TestCase):
             deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
-        _url = 'https://hal.test.fr/'
+        _provider_url = 'https://hal-test.archives-ouvertes.fr/'
+        _domain = 'archives-ouvertes.fr/'
         # set collection up
         _collection = DepositCollection(name=_name)
         _collection.save()
         # set user/client up
         _client = DepositClient.objects.create_user(username=_name,
                                                     password=_name,
-                                                    url=_url)
+                                                    provider_url=_provider_url,
+                                                    domain=_domain)
         _client.collections = [_collection.id]
         _client.save()
 
@@ -247,11 +249,14 @@ class CommonCreationRoutine(TestCase):
         self.atom_entry_data0 = b"""<?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom">
             <external_identifier>some-external-id</external_identifier>
+            <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
         </entry>"""
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom">
             <external_identifier>anotherthing</external_identifier>
+            <url>https://hal-test.archives-ouvertes.fr/anotherthing</url>
+
         </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>
@@ -261,14 +266,14 @@ class CommonCreationRoutine(TestCase):
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>
                 <author>some awesome author</author>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr/id</url>
         </entry>"""
 
         self.codemeta_entry_data0 = b"""<?xml version="1.0"?>
             <entry xmlns="http://www.w3.org/2005/Atom"
                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
                 <title>Awesome Compiler</title>
-                <url>http://test.test.fr</url>
+                <url>https://hal-test.archives-ouvertes.fr/1785io25c695</url>
                 <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
                 <external_identifier>1785io25c695</external_identifier>
                 <updated>2017-10-07T15:17:08Z</updated>

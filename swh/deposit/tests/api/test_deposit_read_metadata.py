@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -45,18 +45,22 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         expected_meta = {
             'origin': {
-                'url': 'https://hal.test.fr/some-external-id',
+                'url': 'https://hal-test.archives-ouvertes.fr/' +
+                       'some-external-id',
                 'type': 'deposit'
             },
             'origin_metadata': {
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
                         'some-external-id'
                 },
                 'provider': {
                     'provider_name': '',
                     'provider_type': 'deposit_client',
-                    'provider_url': 'https://hal.test.fr/',
+                    'provider_url': 'https://hal-test.archives-ouvertes.fr/',
                     'metadata': {}
                 },
                 'tool': {
@@ -76,6 +80,9 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'date': None,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
+                        'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
                         'some-external-id'
                 },
                 'type': 'tar'
@@ -125,18 +132,22 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         expected_meta = {
             'origin': {
-                'url': 'https://hal.test.fr/some-external-id',
+                'url': 'https://hal-test.archives-ouvertes.fr/' +
+                       'some-external-id',
                 'type': 'deposit'
             },
             'origin_metadata': {
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
-                    'some-external-id'
+                    'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
+                        'some-external-id'
                 },
                 'provider': {
                     'provider_name': '',
                     'provider_type': 'deposit_client',
-                    'provider_url': 'https://hal.test.fr/',
+                    'provider_url': 'https://hal-test.archives-ouvertes.fr/',
                     'metadata': {}
                 },
                 'tool': {
@@ -157,7 +168,10 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'message': ': Deposit %s in collection hal' % deposit_id,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
-                    'some-external-id'
+                    'some-external-id',
+                    '{http://www.w3.org/2005/Atom}url':
+                        'https://hal-test.archives-ouvertes.fr/' +
+                        'some-external-id'
                 },
                 'parents': [swh_id]
             },
