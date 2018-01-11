@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 import json
-import zipfile
+import patoolib
 
 from rest_framework import status
 
@@ -55,25 +55,24 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             return False
 
         for dr in requests:
-            check = self._check_archive(dr.archive)
+            check = self._check_archive(dr.archive.path)
             if not check:
                 return False
         return True
 
-    def _check_archive(self, archive):
+    def _check_archive(self, archive_path):
         """Check that a given archive is actually ok for reading.
 
         Args:
-            archive (File): Archive to check
+            archive_path (str): Archive to check
 
         Returns:
             True if archive is successfully read, False otherwise.
 
         """
         try:
-            zf = zipfile.ZipFile(archive.path)
-            zf.infolist()
-        except Exception as e:
+            patoolib.test_archive(archive_path, verbosity=-1)
+        except:
             return False
         else:
             return True
