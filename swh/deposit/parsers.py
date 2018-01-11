@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,11 +14,18 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework_xml.parsers import XMLParser
 
 
-class SWHFileUploadParser(FileUploadParser):
+class SWHFileUploadZipParser(FileUploadParser):
     """File upload parser limited to zip archive.
 
     """
     media_type = 'application/zip'
+
+
+class SWHFileUploadTarParser(FileUploadParser):
+    """File upload parser limited to zip archive.
+
+    """
+    media_type = 'application/x-tar'
 
 
 class SWHXMLParser(XMLParser):

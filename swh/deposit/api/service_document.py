@@ -1,11 +1,12 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from django.shortcuts import render
 
-from .common import SWHBaseDeposit, ACCEPT_PACKAGINGS, ACCEPT_CONTENT_TYPES
+from .common import SWHBaseDeposit, ACCEPT_PACKAGINGS
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..models import DepositClient, DepositCollection
 
 
@@ -21,7 +22,7 @@ class SWHServiceDocument(SWHBaseDeposit):
         context = {
             'max_upload_size': self.config['max_upload_size'],
             'accept_packagings': ACCEPT_PACKAGINGS,
-            'accept_content_types': ACCEPT_CONTENT_TYPES,
+            'accept_content_types': ACCEPT_ARCHIVE_CONTENT_TYPES,
             'collections': collections,
         }
         return render(req, 'deposit/service_document.xml',

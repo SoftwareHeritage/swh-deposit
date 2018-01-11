@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -206,8 +206,8 @@ and other stuff</description>
                          ('Location', 'http://testserver' + edit_se_iri))
 
     @istest
-    def post_deposit_binary_upload_only_supports_zip(self):
-        """Binary upload without content_type application/zip should return 415
+    def post_deposit_binary_upload_supports_zip_or_tar(self):
+        """Binary upload with content-type not in [zip,x-tar] should return 415
 
         """
         # given
@@ -396,7 +396,7 @@ and other stuff</description>
         # second post
         response = self.client.post(
             url,
-            content_type='application/zip',  # as zip
+            content_type='application/x-tar',  # as zip
             data=self.archive['data'],
             # + headers
             CONTENT_LENGTH=self.archive['length'],
