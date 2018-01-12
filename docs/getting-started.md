@@ -78,6 +78,7 @@ Content-Type: application/xml
         <collection href="https://deposit.softwareheritage.org/1/<collection-name>/">
             <atom:title><client-name> Software Collection</atom:title>
             <accept>application/zip</accept>
+            <accept>application/x-tar</accept>
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>
@@ -124,7 +125,7 @@ A single deposit translates to a multipart deposit request.
 
 This means, in swh's deposit's terms, sending exactly one POST query
 with:
-- 1 archive (`content-type application/zip`)
+- 1 archive (content-type `application/zip` or `application/x-tar`)
 - 1 atom xml content (`content-type: application/atom+xml;type=entry`)
 
 The supported archive, for now are limited to zip files.  Those
@@ -250,10 +251,10 @@ The following command:
 
 ``` Shell
 curl -i --user <client-name>:<pass> \
-    --data-binary @swh/deposit.zip \
+    --data-binary @swh/deposit.tar.gz \
     -H 'In-Progress: true' \
     -H 'Content-MD5: 0faa1ecbf9224b9bf48a7c691b8c2b6f' \
-    -H 'Content-Disposition: attachment; filename=[deposit.zip]' \
+    -H 'Content-Disposition: attachment; filename=[deposit.tar.gz]' \
     -H 'Slug: some-external-id' \
     -H 'Packaging: http://purl.org/net/sword/package/SimpleZIP' \
     -H 'Content-type: application/zip' \

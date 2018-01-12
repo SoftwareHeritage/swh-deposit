@@ -205,7 +205,7 @@ Host: deposit.softwareheritage.org
 
 The server returns its abilities with the service document in xml format:
 - protocol sword version v2
-- accepted mime types: application/zip
+- accepted mime types: application/zip, application/x-tar
 - upload max size accepted. Beyond that point, it's expected the
   client splits its tarball into multiple ones
 - the collection the client can act upon (swh supports only one
@@ -231,6 +231,7 @@ The current answer for example for the
         <collection href="https://deposit.softwareherigage.org/1/hal/">
             <atom:title>SWH Software Archive</atom:title>
             <accept>application/zip</accept>
+            <accept>application/x-tar</accept>
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:mediation>false</sword:mediation>
