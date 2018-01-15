@@ -13,8 +13,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from ...models import Deposit
-from ...config import DEPOSIT_STATUS_READY, PRIVATE_CHECK_DEPOSIT
-from ...config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_REJECTED
+from ...config import DEPOSIT_STATUS_VERIFIED, PRIVATE_CHECK_DEPOSIT
+from ...config import DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ..common import FileSystemCreationRoutine
 from ...api.private.deposit_check import SWHChecksDeposit
@@ -40,7 +40,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
                                                 status_partial=False)
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_DEPOSITED)
 
         url = reverse(PRIVATE_CHECK_DEPOSIT,
                       args=[self.collection.name, deposit.id])
@@ -49,9 +49,9 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(data['status'], DEPOSIT_STATUS_READY)
+        self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
 
     @istest
     def deposit_ko(self):
@@ -61,7 +61,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         deposit_id = self.create_invalid_deposit()
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_DEPOSITED)
 
         url = reverse(PRIVATE_CHECK_DEPOSIT,
                       args=[self.collection.name, deposit.id])
@@ -89,7 +89,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEquals(deposit_id, deposit_id_metadata)
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_DEPOSITED)
 
         url = reverse(PRIVATE_CHECK_DEPOSIT,
                       args=[self.collection.name, deposit.id])
@@ -98,9 +98,9 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(data['status'], DEPOSIT_STATUS_READY)
+        self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
 
 
 class CheckMetadata(unittest.TestCase, SWHChecksDeposit):

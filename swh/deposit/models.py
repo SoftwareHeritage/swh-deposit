@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -13,7 +13,7 @@ from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.timezone import now
 
-from .config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY_FOR_CHECKS
+from .config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED
 from .config import DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
 from .config import DEPOSIT_STATUS_LOAD_FAILURE
 
@@ -41,8 +41,8 @@ class Dbversion(models.Model):
 DEPOSIT_STATUS = [
     (DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_PARTIAL),
     ('expired', 'expired'),
-    (DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_READY_FOR_CHECKS),
-    (DEPOSIT_STATUS_READY, DEPOSIT_STATUS_READY),
+    (DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_DEPOSITED),
+    (DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_VERIFIED),
     ('rejected', 'rejected'),
     ('loading', 'loading'),
     (DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_SUCCESS),
@@ -56,10 +56,10 @@ DEPOSIT_STATUS_DETAIL = {
                             'In-Progress header should be false',
     'expired': 'Deposit has been there too long and is now '
                'deemed ready to be garbage collected',
-    DEPOSIT_STATUS_READY_FOR_CHECKS: 'Deposit is ready for additional checks '
-                                     '(tarball ok, metadata, etc...)',
-    DEPOSIT_STATUS_READY: 'Deposit is fully received, checked, and '
-                          'ready for loading',
+    DEPOSIT_STATUS_DEPOSITED: 'Deposit is ready for additional checks '
+                              '(tarball ok, metadata, etc...)',
+    DEPOSIT_STATUS_VERIFIED: 'Deposit is fully received, checked, and '
+                             'ready for loading',
     'rejected': 'Deposit failed the checks',
     'loading': "Loading is ongoing on swh's side",
     DEPOSIT_STATUS_LOAD_SUCCESS: 'The deposit has been successfully '

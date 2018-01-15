@@ -8,6 +8,7 @@ from rest_framework.parsers import JSONParser
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
 from ...models import Deposit, DEPOSIT_STATUS_DETAIL
+from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
 
 
 class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
@@ -38,7 +39,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
             msg = 'Possible status in %s' % list(DEPOSIT_STATUS_DETAIL.keys())
             return make_error_dict(BAD_REQUEST, msg)
 
-        if status == 'success':
+        if status == DEPOSIT_STATUS_LOAD_SUCCESS:
             swh_id = data.get('revision_id')
             if not swh_id:
                 msg = 'Updating status to %s requires a revision_id key' % (

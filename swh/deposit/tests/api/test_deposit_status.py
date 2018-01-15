@@ -16,7 +16,7 @@ from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
 from ..common import CommonCreationRoutine
-from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_READY_FOR_CHECKS
+from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_DEPOSITED
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
@@ -64,10 +64,10 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
                          deposit.id)
         self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
-                         DEPOSIT_STATUS_READY_FOR_CHECKS)
+                         DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(
             r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
-            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_READY_FOR_CHECKS])
+            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
 
     @istest
     def status_with_swh_id(self):

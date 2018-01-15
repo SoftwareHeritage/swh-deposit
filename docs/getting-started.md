@@ -27,7 +27,7 @@ The use cases are:
 
 - one single deposit step: The user posts in one query (one deposit) a
   software source code archive and associated metadata (deposit is
-  finalized with status `ready-for-checks`).
+  finalized with status `deposited`).
 
   This will demonstrate the multipart query.
 
@@ -35,7 +35,7 @@ The use cases are:
   steps):
   1. Create an incomplete deposit (status `partial`)
   2. Update a deposit (and finalize it, so the status becomes
-     `ready-for-checks`)
+     `deposited`)
   3. Check the deposit's state
 
   This will demonstrate the stateful nature of the sword protocol.
@@ -206,7 +206,7 @@ Content-Type: application/xml
     <deposit_id>9</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
     <deposit_archive>payload</deposit_archive>
-    <deposit_status>ready-for-checks</deposit_status>
+    <deposit_status>deposited</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/<collection-name>/10/metadata/" />
@@ -230,9 +230,9 @@ Explaining this response:
   etc...)  It also explains the deposit identifier to be 9 (which is
   useful for the remaining example).
 
-Note: As the deposit is in `ready-for-checks` status, you cannot
-actually update anything after this query.  Well, the client can try,
-but it will be answered with a 403 forbidden answer.
+Note: As the deposit is in `deposited` status, you cannot actually
+update anything after this query.  Well, the client can try, but it
+will be answered with a 403 forbidden answer.
 
 ### Multi-steps deposit
 
@@ -326,7 +326,7 @@ Response:
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/">
     <deposit_id>9</deposit_id>
-    <deposit_status>ready-for-checks</deposit_status>
+    <deposit_status>deposited</deposit_status>
     <deposit_status_detail>deposit is fully received and ready for loading</deposit_status_detail>
 </entry>
 

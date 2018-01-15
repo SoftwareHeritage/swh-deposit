@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.config import COL_IRI
-from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase
@@ -151,7 +151,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -219,7 +219,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -318,7 +318,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
 
         # deposit_id did not change
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)

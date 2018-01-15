@@ -10,7 +10,7 @@ from rest_framework import status
 
 
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
-from ...config import DEPOSIT_STATUS_READY, DEPOSIT_STATUS_REJECTED
+from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
 from ...config import ARCHIVE_TYPE, METADATA_TYPE
 from ...models import Deposit, DepositRequest
 
@@ -168,7 +168,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if not deposit_status:
             deposit.status = DEPOSIT_STATUS_REJECTED
         else:
-            deposit.status = DEPOSIT_STATUS_READY
+            deposit.status = DEPOSIT_STATUS_VERIFIED
         deposit.save()
 
         return (status.HTTP_200_OK,

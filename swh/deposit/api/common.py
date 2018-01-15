@@ -19,7 +19,7 @@ from swh.model import hashutil
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
-from ..config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_PARTIAL
+from ..config import DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
@@ -147,7 +147,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_READY_FOR_CHECKS
+            status_type = DEPOSIT_STATUS_DEPOSITED
         else:
             complete_date = None
             status_type = DEPOSIT_STATUS_PARTIAL
@@ -588,7 +588,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_READY_FOR_CHECKS
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
         return {

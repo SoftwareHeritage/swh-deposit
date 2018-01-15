@@ -122,15 +122,15 @@ authenticate client. Also, a client can access collections:
   are:
 
 ``` text
-    'partial',          -- the deposit is new or partially received since it
-                        -- can be done in multiple requests
-    'expired',          -- deposit has been there too long and is now deemed
-                        -- ready to be garbage collected
-    'ready-for-checks'  -- ready for checks to ensure data coherency
-    'ready-for-load',   -- deposit is fully received, checked, and ready for loading
-    'loading',          -- loading is ongoing on swh's side
-    'success',          -- loading is successful
-    'failure'           -- loading is a failure
+    'partial',   -- the deposit is new or partially received since it
+                 -- can be done in multiple requests
+    'expired',   -- deposit has been there too long and is now deemed
+                 -- ready to be garbage collected
+    'deposited'  -- deposit complete, it is ready to be checked to ensure data consistency
+    'verified',  -- deposit is fully received, checked, and ready for loading
+    'loading',   -- loading is ongoing on swh's side
+    'done',      -- loading is successful
+    'failed'     -- loading is a failure
 ```
 
 A deposit is stateful and can be made in multiple requests:
@@ -149,10 +149,9 @@ They can be either of type `metadata` (atom entry, multipart's atom
 entry part) or of type `archive` (binary upload, multipart's binary
 upload part).
 
-When the deposit is complete (status `ready-for-checks`), those
-`metadata` and `archive` deposit requests will be read and
-aggregated. They will then be sent as parameters to the loading
-routine.
+When the deposit is complete (status `deposited`), those `metadata`
+and `archive` deposit requests will be read and aggregated. They will
+then be sent as parameters to the loading routine.
 
 During loading, some of those metadata are kept in the
 `origin_metadata` table and some other are stored in the `revision`
@@ -161,12 +160,12 @@ table (see [metadata loading](#metadata-loading)).
 The only update actions occurring on the deposit table are in regards
 of:
 - status changing:
-  - `partial` -> {`expired`/`ready-for-checks`},
-  - `ready-for-checks` -> {`rejected`/`ready-for-load`},
-  - `ready-for-load` -> `loading`
-  - `loading` -> {`success`/`failure`}
+  - `partial` -> {`expired`/`deposited`},
+  - `deposited` -> {`rejected`/`verified`},
+  - `verified` -> `loading`
+  - `loading` -> {`done`/`failed`}
 - `complete_date` when the deposit is finalized (when the status is
-  changed to `ready-for-checks`)
+  changed to `deposited`)
 - `swh-id` is populated once we have the loading result
 
 #### SWH Identifier returned
@@ -182,17 +181,17 @@ before loading.
 
 The loading should be scheduled via the scheduler's api.
 
-Only `ready-for-checks` deposit are concerned by the loading.
+Only `deposited` deposit are concerned by the loading.
 
 When the loading is done and successful, the deposit entry is
 updated:
-- `status` is updated to `success`
+- `status` is updated to `done`
 - `swh-id` is populated with the resulting hash
   (cf. [swh identifier](#swh-identifier-returned))
 - `complete_date` is updated to the loading's finished time
 
 When the loading is failed, the deposit entry is updated:
-- `status` is updated to `failure`
+- `status` is updated to `failed`
 - `swh-id` and `complete_data` remains as is
 
 *Note:* As a further improvement, we may prefer having a retry policy

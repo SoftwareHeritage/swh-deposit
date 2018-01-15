@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
-from swh.deposit.config import PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_READY
+from swh.deposit.config import PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_VERIFIED
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..common import BasicTestCase
 
 
@@ -21,12 +22,12 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
     """
     def setUp(self):
         super().setUp()
-        deposit = Deposit(status=DEPOSIT_STATUS_READY,
+        deposit = Deposit(status=DEPOSIT_STATUS_VERIFIED,
                           collection=self.collection,
                           client=self.user)
         deposit.save()
         self.deposit = Deposit.objects.get(pk=deposit.id)
-        assert self.deposit.status == DEPOSIT_STATUS_READY
+        assert self.deposit.status == DEPOSIT_STATUS_VERIFIED
 
     @istest
     def update_deposit_status(self):
@@ -36,7 +37,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         url = reverse(PRIVATE_PUT_DEPOSIT,
                       args=[self.collection.name, self.deposit.id])
 
-        possible_status = set(DEPOSIT_STATUS_DETAIL.keys()) - set(['success'])
+        possible_status = set(DEPOSIT_STATUS_DETAIL.keys()) - set(
+            [DEPOSIT_STATUS_LOAD_SUCCESS])
 
         for _status in possible_status:
             response = self.client.put(
@@ -57,7 +59,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         url = reverse(PRIVATE_PUT_DEPOSIT,
                       args=[self.collection.name, self.deposit.id])
 
-        expected_status = 'success'
+        expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
         expected_id = revision_id = '47dc6b4636c7f6cba0df83e3d5490bf4334d987e'
         response = self.client.put(
             url,
@@ -105,7 +107,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
     @istest
     def update_deposit_status_success_without_swh_id_fail(self):
-        """Providing 'success' status without swh_id should return a 400
+        """Providing successful status without swh_id should return a 400
 
         """
         url = reverse(PRIVATE_PUT_DEPOSIT,
@@ -114,6 +116,6 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         response = self.client.put(
             url,
             content_type='application/json',
-            data=json.dumps({'status': 'success'}))
+            data=json.dumps({'status': DEPOSIT_STATUS_LOAD_SUCCESS}))
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

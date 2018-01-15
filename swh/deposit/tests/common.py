@@ -132,7 +132,7 @@ class FileSystemCreationRoutine(TestCase):
             status_partial=True)
 
         # Add a second archive to the deposit
-        # update its status to DEPOSIT_STATUS_READY
+        # update its status to DEPOSIT_STATUS_VERIFIED
         response = self.client.post(
             reverse(EM_IRI, args=[self.collection.name, deposit_id]),
             content_type='application/zip',
@@ -347,7 +347,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         # We cannot create some form of deposit with a given status in
         # test context ('rejected' for example). As flipped off the
         # checks in the configuration so all deposits have the status
-        # ready-for-checks). Update in place the deposit with such
+        # deposited). Update in place the deposit with such
         # status
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.status = status
@@ -404,7 +404,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
     def _update_deposit_with_status(self, deposit_id, status_partial=False):
         """Add to a given deposit another archive and update its current
-           status to `ready-for-checks` (by default).
+           status to `deposited` (by default).
 
         Returns:
             deposit id
@@ -423,7 +423,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         return deposit_id
 
     def create_deposit_ready(self, external_id='some-external-id'):
-        """Create a complex deposit (2 requests) in status `ready-for-checks`.
+        """Create a complex deposit (2 requests) in status `deposited`.
 
         """
         deposit_id = self.create_simple_deposit_partial(
