@@ -11,8 +11,15 @@ This implementation will permit interaction between a client (a
 repository) and a server (SWH repository) to permit deposits of
 software source code archives and associated metadata.
 
-*Note:* In the following document, we will use the `archive` or
-`software source code archive` interchangeably.
+*Note:*
+  - In the following document, we will use the `archive` or `software
+    source code archive` interchangeably.
+  - The supported archive formats are:
+    - zip: common zip archive (no multi-disk zip files).
+    - tar: tar archive without compression or optionally any of the
+           following compression algorithm gzip (.tar.gz, .tgz), bzip2
+           (.tar.bz2) , or lzma (.tar.lzma)
+
 
 ## Collection
 
@@ -205,7 +212,9 @@ Host: deposit.softwareheritage.org
 
 The server returns its abilities with the service document in xml format:
 - protocol sword version v2
-- accepted mime types: application/zip, application/x-tar
+- accepted mime types: application/zip (zip), application/x-tar (tar
+  archive with any of the following optional compression algorithm
+  gzip, bzip2, or lzma)
 - upload max size accepted. Beyond that point, it's expected the
   client splits its tarball into multiple ones
 - the collection the client can act upon (swh supports only one
