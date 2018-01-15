@@ -1,9 +1,11 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from rest_framework.parsers import JSONParser
+
+from swh.model.identifiers import persistent_identifier, REVISION
 
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
@@ -66,7 +68,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         deposit.status = req.data['status']  # checks already done before
         swh_id = req.data.get('revision_id')
         if swh_id:
-            deposit.swh_id = swh_id
+            deposit.swh_id = persistent_identifier(REVISION, swh_id)
         deposit.save()
 
         return {}

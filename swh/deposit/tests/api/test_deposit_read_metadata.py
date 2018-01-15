@@ -100,13 +100,14 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         """
         swh_id = 'da78a9d4cf1d5d29873693fd496142e3a18c20fa'
+        swh_persistent_id = 'swh:1:rev:%s' % swh_id
         deposit_id1 = self.create_deposit_with_status(
             status=DEPOSIT_STATUS_LOAD_SUCCESS,
             external_id='some-external-id',
-            swh_id=swh_id)
+            swh_id=swh_persistent_id)
 
         deposit_parent = Deposit.objects.get(pk=deposit_id1)
-        self.assertEquals(deposit_parent.swh_id, swh_id)
+        self.assertEquals(deposit_parent.swh_id, swh_persistent_id)
         self.assertEquals(deposit_parent.external_id, 'some-external-id')
         self.assertEquals(deposit_parent.status, DEPOSIT_STATUS_LOAD_SUCCESS)
 
