@@ -167,14 +167,17 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         # if any problems arose, the deposit is rejected
         if not deposit_status:
             deposit.status = DEPOSIT_STATUS_REJECTED
+            response = {
+                'status': deposit.status,
+                'details': 'Some %s failed the checks.' % (
+                    ' and '.join(problems), ),
+            }
         else:
             deposit.status = DEPOSIT_STATUS_VERIFIED
+            response = {
+                'status': deposit.status,
+            }
+
         deposit.save()
 
-        return (status.HTTP_200_OK,
-                json.dumps({
-                    'status': deposit.status,
-                    'details': 'Some %s failed the checks.' % (
-                        ' and '.join(problems), ),
-                }),
-                'application/json')
+        return status.HTTP_200_OK, json.dumps(response), 'application/json'
