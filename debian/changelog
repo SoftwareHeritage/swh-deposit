@@ -1,8 +1,12 @@
-swh-deposit (0.0.42-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.43-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.43
+  * swh.deposit.api: Deposit returns persistent identifiers
+  * swh.deposit.api: Rename deposit statuses
+  * swh.deposit: Support standard tarball formats (.tar.*)
+  * docs: Update documentation about new archive format support
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 10 Jan 2018 16:25:48 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 17 Jan 2018 12:02:20 +0100
 
 swh-deposit (0.0.42-1~swh1) unstable-swh; urgency=medium
 

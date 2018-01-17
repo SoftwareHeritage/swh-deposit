@@ -12,7 +12,8 @@ from nose.plugins.attrib import attr
 from nose.tools import istest
 
 from swh.deposit.loader.client import DepositClient
-
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE
 from .common import CLIENT_TEST_CONFIG
 
 
@@ -196,13 +197,14 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
                                        _client=_client)
 
         deposit_client.status_update('/update/status',
-                                     'success', revision_id='some-revision-id')
+                                     DEPOSIT_STATUS_LOAD_SUCCESS,
+                                     revision_id='some-revision-id')
 
         self.assertEquals(_client.args,
                           ('http://nowhere:9000/update/status', ))
         self.assertEquals(_client.kwargs, {
             'json': {
-                'status': 'success',
+                'status': DEPOSIT_STATUS_LOAD_SUCCESS,
                 'revision_id': 'some-revision-id',
             }
         })
@@ -216,13 +218,14 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
         deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
                                        _client=_client)
 
-        deposit_client.status_update('/update/status/fail', 'failure')
+        deposit_client.status_update('/update/status/fail',
+                                     DEPOSIT_STATUS_LOAD_FAILURE)
 
         self.assertEquals(_client.args,
                           ('http://nowhere:9000/update/status/fail', ))
         self.assertEquals(_client.kwargs, {
             'json': {
-                'status': 'failure',
+                'status': DEPOSIT_STATUS_LOAD_FAILURE,
             }
         })
 

@@ -11,8 +11,15 @@ This implementation will permit interaction between a client (a
 repository) and a server (SWH repository) to permit deposits of
 software source code archives and associated metadata.
 
-*Note:* In the following document, we will use the `archive` or
-`software source code archive` interchangeably.
+*Note:*
+  - In the following document, we will use the `archive` or `software
+    source code archive` interchangeably.
+  - The supported archive formats are:
+    - zip: common zip archive (no multi-disk zip files).
+    - tar: tar archive without compression or optionally any of the
+           following compression algorithm gzip (.tar.gz, .tgz), bzip2
+           (.tar.bz2) , or lzma (.tar.lzma)
+
 
 ## Collection
 
@@ -155,19 +162,18 @@ exceeded the limit size imposed by swh repository deposit)
 
 ### Server: Triggering deposit checks
 
-Once the status `ready-for-checks` is reached for a deposit, checks
-for the associated archive(s) and metadata will be triggered.  If
-those checks fail, the status is changed to `rejected` and nothing
-more happens there. Otherwise, the status is changed to
-`ready-for-load`.
+Once the status `deposited` is reached for a deposit, checks for the
+associated archive(s) and metadata will be triggered.  If those checks
+fail, the status is changed to `rejected` and nothing more happens
+there. Otherwise, the status is changed to `verified`.
 
 ### Server: Triggering deposit load
 
-Once the status `ready-for-load` is reached for a deposit, loading the
+Once the status `verified` is reached for a deposit, loading the
 deposit with its associated metadata will be triggered.
 
-The loading will result on status update, either `success` or
-`failure` (depending on the loading's status).
+The loading will result on status update, either `done` or `failed`
+(depending on the loading's status).
 
 This is described in the [loading document](./spec-loading.html).
 
@@ -205,7 +211,9 @@ Host: deposit.softwareheritage.org
 
 The server returns its abilities with the service document in xml format:
 - protocol sword version v2
-- accepted mime types: application/zip
+- accepted mime types: application/zip (zip), application/x-tar (tar
+  archive with any of the following optional compression algorithm
+  gzip, bzip2, or lzma)
 - upload max size accepted. Beyond that point, it's expected the
   client splits its tarball into multiple ones
 - the collection the client can act upon (swh supports only one
@@ -231,6 +239,7 @@ The current answer for example for the
         <collection href="https://deposit.softwareherigage.org/1/hal/">
             <atom:title>SWH Software Archive</atom:title>
             <accept>application/zip</accept>
+            <accept>application/x-tar</accept>
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:mediation>false</sword:mediation>
@@ -341,7 +350,7 @@ Content-Type: application/xml
     <deposit_id>10</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
     <deposit_archive>None</deposit_archive>
-    <deposit_status>ready-for-checks</deposit_status>
+    <deposit_status>deposited</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/10/metadata/" />
@@ -441,7 +450,7 @@ Content-Type: application/xml
     <deposit_id>9</deposit_id>
     <deposit_date>Sept. 26, 2017, 10:11 a.m.</deposit_date>
     <deposit_archive>payload</deposit_archive>
-    <deposit_status>ready-for-checks</deposit_status>
+    <deposit_status>deposited</deposit_status>
 
     <!-- Edit-IRI -->
     <link rel="edit" href="/1/hal/9/metadata/" />
@@ -553,7 +562,7 @@ situation:
 
 Using an objstorage, the server stores the archive in a temporary
 location.  It's deemed temporary the time the deposit is completed
-(status becomes `ready-for-checks`) and the loading finishes.
+(status becomes `deposited`) and the loading finishes.
 
 The server also persists requests' information in a database.
 
@@ -586,7 +595,7 @@ status `partial`, the loading did not start.  Thus, the client can
 update information (replace or add new archive, new metadata, even
 delete) for that same `partial` deposit.
 
-When the deposit status changes to `ready-for-checks`, the client can
+When the deposit status changes to `deposited`, the client can
 no longer change the deposit's information (a 403 will be returned in
 that case).
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017    -2018 The Software Heritage developers
+# Copyright (C) 2017-2018 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -208,7 +208,11 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         }
 
         if deposit.parent:
-            parent_revision = deposit.parent.swh_id
+            swh_persistent_id = deposit.parent.swh_id
+            persistent_identifier = identifiers.parse_persistent_identifier(
+                swh_persistent_id)
+            parent_revision = persistent_identifier['object_id']
+
             data['revision']['parents'] = [parent_revision]
 
         data['occurrence'] = {

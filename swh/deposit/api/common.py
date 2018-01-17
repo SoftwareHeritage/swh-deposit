@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -19,7 +19,7 @@ from swh.model import hashutil
 
 from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
-from ..config import DEPOSIT_STATUS_READY_FOR_CHECKS, DEPOSIT_STATUS_PARTIAL
+from ..config import DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
 from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
@@ -31,7 +31,7 @@ from ..parsers import parse_xml
 
 
 ACCEPT_PACKAGINGS = ['http://purl.org/net/sword/package/SimpleZip']
-ACCEPT_CONTENT_TYPES = ['application/zip']
+ACCEPT_ARCHIVE_CONTENT_TYPES = ['application/zip', 'application/x-tar']
 
 
 class SWHAPIView(APIView):
@@ -147,7 +147,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         if in_progress is False:
             complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_READY_FOR_CHECKS
+            status_type = DEPOSIT_STATUS_DEPOSITED
         else:
             complete_date = None
             status_type = DEPOSIT_STATUS_PARTIAL
@@ -451,7 +451,8 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         content_types_present = set()
 
         data = {
-            'application/zip': None,  # expected archive
+            'application/zip': None,  # expected either zip
+            'application/x-tar': None,  # or x-tar
             'application/atom+xml': None,
         }
         for key, value in req.FILES.items():
@@ -459,10 +460,10 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             if fh.content_type in content_types_present:
                 return make_error_dict(
                     ERROR_CONTENT,
-                    'Only 1 application/zip archive and 1 '
-                    'atom+xml entry is supported (as per sword2.0 '
+                    'Only 1 application/zip (or application/x-tar) archive '
+                    'and 1 atom+xml entry is supported (as per sword2.0 '
                     'specification)',
-                    'You provided more than 1 application/zip '
+                    'You provided more than 1 application/(zip|x-tar) '
                     'or more than 1 application/atom+xml content-disposition '
                     'header in the multipart deposit')
 
@@ -472,13 +473,17 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if len(content_types_present) != 2:
             return make_error_dict(
                 ERROR_CONTENT,
-                'You must provide both 1 application/zip '
-                'and 1 atom+xml entry for multipart deposit',
-                'You need to provide only 1 application/zip '
+                'You must provide both 1 application/zip (or '
+                'application/x-tar) and 1 atom+xml entry for multipart '
+                'deposit',
+                'You need to provide only 1 application/(zip|x-tar) '
                 'and 1 application/atom+xml content-disposition header '
                 'in the multipart deposit')
 
         filehandler = data['application/zip']
+        if not filehandler:
+            filehandler = data['application/x-tar']
+
         precondition_status_response = self._check_preconditions_on(
             filehandler,
             headers['content-md5sum'])
@@ -583,7 +588,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_READY_FOR_CHECKS
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
         return {
