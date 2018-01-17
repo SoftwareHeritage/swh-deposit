@@ -68,7 +68,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         deposit.status = req.data['status']  # checks already done before
         swh_id = req.data.get('revision_id')
         if swh_id:
-            deposit.swh_id = persistent_identifier(REVISION, swh_id)
+            deposit.swh_id = persistent_identifier(REVISION, {'id': swh_id})
         deposit.save()
 
         return {}
