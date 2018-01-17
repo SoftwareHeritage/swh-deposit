@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,7 +7,7 @@ from nose.tools import istest
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit
-from swh.deposit.config import PRIVATE_CHECK_DEPOSIT, DEPOSIT_STATUS_READY
+from swh.deposit.config import PRIVATE_CHECK_DEPOSIT, DEPOSIT_STATUS_VERIFIED
 from swh.deposit.config import DEPOSIT_STATUS_REJECTED
 from swh.deposit.loader.checker import DepositChecker
 from django.core.urlresolvers import reverse
@@ -33,7 +33,7 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
     @istest
     def check_deposit_ready(self):
-        """Check a valid deposit ready-for-checks should result in ready state
+        """Check a valid deposit deposited should result in ready state
 
         """
         # 1. create a deposit with archive and metadata
@@ -49,12 +49,12 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_READY)
-        self.assertEquals(actual_status, DEPOSIT_STATUS_READY)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
+        self.assertEquals(actual_status, DEPOSIT_STATUS_VERIFIED)
 
     @istest
     def check_deposit_rejected(self):
-        """Check an invalid deposit ready-for-checks should result in rejected
+        """Check an invalid deposit deposited should result in rejected
 
         """
         # 1. create a deposit with archive and metadata

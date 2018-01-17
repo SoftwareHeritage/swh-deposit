@@ -3,7 +3,7 @@ ARCHIVE=../../swh-deposit.zip
 ARCHIVE2=../../swh-model.zip
 STATUS=false
 PARTIAL_STATUS=true
-UPDATE_STATUS='success'
+UPDATE_STATUS='done'
 ATOM_ENTRY=../../atom-entry.xml
 EXTERNAL_ID='external-id'
 

@@ -1,14 +1,15 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from rest_framework import status
 
-from .common import SWHPostDepositAPI
+from .common import SWHPostDepositAPI, ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import EDIT_SE_IRI
 from ..errors import make_error_dict, BAD_REQUEST
-from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
+from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
+from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
@@ -21,7 +22,8 @@ class SWHDeposit(SWHPostDepositAPI):
 
     """
     parser_classes = (SWHMultiPartParser,
-                      SWHFileUploadParser,
+                      SWHFileUploadZipParser,
+                      SWHFileUploadTarParser,
                       SWHAtomEntryParser)
 
     def additional_checks(self, req, headers, collection_name,
@@ -81,7 +83,7 @@ class SWHDeposit(SWHPostDepositAPI):
 
         """
         assert deposit_id is None
-        if req.content_type == 'application/zip':
+        if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
             data = self._binary_upload(req, headers, collection_name)
         elif req.content_type.startswith('multipart/'):
             data = self._multipart_upload(req, headers, collection_name)

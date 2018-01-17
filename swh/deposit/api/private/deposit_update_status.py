@@ -1,13 +1,16 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from rest_framework.parsers import JSONParser
 
+from swh.model.identifiers import persistent_identifier, REVISION
+
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
 from ...models import Deposit, DEPOSIT_STATUS_DETAIL
+from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
 
 
 class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
@@ -38,7 +41,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
             msg = 'Possible status in %s' % list(DEPOSIT_STATUS_DETAIL.keys())
             return make_error_dict(BAD_REQUEST, msg)
 
-        if status == 'success':
+        if status == DEPOSIT_STATUS_LOAD_SUCCESS:
             swh_id = data.get('revision_id')
             if not swh_id:
                 msg = 'Updating status to %s requires a revision_id key' % (
@@ -65,7 +68,7 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         deposit.status = req.data['status']  # checks already done before
         swh_id = req.data.get('revision_id')
         if swh_id:
-            deposit.swh_id = swh_id
+            deposit.swh_id = persistent_identifier(REVISION, {'id': swh_id})
         deposit.save()
 
         return {}

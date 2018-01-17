@@ -54,6 +54,8 @@ class DepositLoader(loader.TarLoader):
 
         """
         self.deposit_update_url = deposit_update_url
+        self.client.status_update(deposit_update_url, 'loading')
+
         temporary_directory = tempfile.TemporaryDirectory()
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
@@ -68,8 +70,6 @@ class DepositLoader(loader.TarLoader):
         occurrence = metadata['occurrence']
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
-
-        self.client.status_update(deposit_update_url, 'loading')
 
         super().prepare(tar_path=archive,
                         origin=origin,
@@ -98,15 +98,15 @@ class DepositLoader(loader.TarLoader):
     def post_load(self, success=True):
         """Updating the deposit's status according to its loading status.
 
-        If not successful, we update its status to failure.
-        Otherwise, we update its status to 'success' and pass along
-        its associated revision.
+        If not successful, we update its status to 'failed'.
+        Otherwise, we update its status to 'done' and pass along its
+        associated revision.
 
         """
         try:
             if not success:
                 self.client.status_update(self.deposit_update_url,
-                                          status='failure')
+                                          status='failed')
                 return
             # first retrieve the new revision
             [rev_id] = self.objects['revision'].keys()
@@ -115,7 +115,7 @@ class DepositLoader(loader.TarLoader):
                 # then update the deposit's status to success with its
                 # revision-id
                 self.client.status_update(self.deposit_update_url,
-                                          status='success',
+                                          status='done',
                                           revision_id=rev_id_hex)
         except:
             self.log.exception(

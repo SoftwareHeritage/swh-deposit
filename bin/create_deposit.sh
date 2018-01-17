@@ -8,6 +8,7 @@ NAME=$(basename ${ARCHIVE})
 MD5=$(md5sum ${ARCHIVE} | cut -f 1 -d' ')
 
 PROGRESS=${2-'false'}
+TYPE=${3-'application/zip'}
 
 curl -i -u "$CREDS" \
      -X POST \
@@ -16,6 +17,5 @@ curl -i -u "$CREDS" \
      -H "Content-MD5: ${MD5}" \
      -H "Content-Disposition: attachment; filename=${NAME}" \
      -H 'Slug: external-id' \
-     -H 'Packaging: http://purl.org/net/sword/package/SimpleZip' \
-     -H 'Content-type: application/zip' \
+     -H "Content-type: ${TYPE}" \
      ${SERVER}/1/${COLLECTION}/

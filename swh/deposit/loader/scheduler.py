@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -16,8 +16,8 @@ from celery import group
 
 from swh.core import utils
 from swh.core.config import SWHConfig
-from swh.deposit.config import setup_django_for, DEPOSIT_STATUS_READY
-from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.deposit.config import setup_django_for, DEPOSIT_STATUS_VERIFIED
+from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.scheduler.utils import get_task, create_oneshot_task_dict
 
 
@@ -164,9 +164,9 @@ def prepare_task_arguments(check):
     from django.core.urlresolvers import reverse
 
     if check:
-        status = DEPOSIT_STATUS_READY_FOR_CHECKS
+        status = DEPOSIT_STATUS_DEPOSITED
     else:
-        status = DEPOSIT_STATUS_READY
+        status = DEPOSIT_STATUS_VERIFIED
 
     for deposit in get_deposit_by(status):
         args = [deposit.collection.name, deposit.id]

@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from swh.deposit.config import COL_IRI
-from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase
@@ -103,8 +103,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                          status.HTTP_400_BAD_REQUEST)
 
     @istest
-    def post_deposit_multipart(self):
-        """one multipart deposit should be accepted
+    def post_deposit_multipart_zip(self):
+        """one multipart deposit (zip+xml) should be accepted
 
         """
         # given
@@ -151,7 +151,75 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
+        self.assertEqual(deposit.external_id, external_id)
+        self.assertEqual(deposit.collection, self.collection)
+        self.assertEqual(deposit.client, self.user)
+        self.assertIsNone(deposit.swh_id)
+
+        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+        self.assertEquals(len(deposit_requests), 2)
+        for deposit_request in deposit_requests:
+            self.assertEquals(deposit_request.deposit, deposit)
+            if deposit_request.type.name == 'archive':
+                self.assertRegex(deposit_request.archive.name,
+                                 self.archive['name'])
+            else:
+                self.assertEquals(
+                    deposit_request.metadata[
+                        '{http://www.w3.org/2005/Atom}id'],
+                    'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+
+    @istest
+    def post_deposit_multipart_tar(self):
+        """one multipart deposit (tar+xml) should be accepted
+
+        """
+        # given
+        url = reverse(COL_IRI, args=[self.collection.name])
+
+        # from django.core.files import uploadedfile
+        data_atom_entry = self.data_atom_entry_ok
+
+        archive = InMemoryUploadedFile(
+            BytesIO(self.archive['data']),
+            field_name=self.archive['name'],
+            name=self.archive['name'],
+            content_type='application/x-tar',
+            size=self.archive['length'],
+            charset=None)
+
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(data_atom_entry),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(data_atom_entry),
+            charset='utf-8')
+
+        external_id = 'external-id'
+
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false',
+            HTTP_SLUG=external_id)
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response_content = parse_xml(BytesIO(response.content))
+        deposit_id = response_content[
+            '{http://www.w3.org/2005/Atom}deposit_id']
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -250,7 +318,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
 
         # deposit_id did not change
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -277,13 +345,11 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
 
-        # from django.core.files import uploadedfile
-
         archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(BytesIO(archive_content),
                                        field_name='archive0',
                                        name='archive0',
-                                       content_type='application/zip',
+                                       content_type='application/x-tar',
                                        size=len(archive_content),
                                        charset=None)
 
@@ -291,7 +357,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         other_archive = InMemoryUploadedFile(BytesIO(other_archive_content),
                                              field_name='atom0',
                                              name='atom0',
-                                             content_type='application/zip',
+                                             content_type='application/x-tar',
                                              size=len(other_archive_content),
                                              charset='utf-8')
 
