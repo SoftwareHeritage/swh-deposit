@@ -1,5 +1,4 @@
 vcversioner
-
 click
 Django
 djangorestframework

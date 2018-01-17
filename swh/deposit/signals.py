@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -17,8 +17,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import Deposit
-from .config import SWHDefaultConfig, DEPOSIT_STATUS_READY
-from .config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from .config import SWHDefaultConfig, DEPOSIT_STATUS_VERIFIED
+from .config import DEPOSIT_STATUS_DEPOSITED
 
 
 @receiver(post_save, sender=Deposit)
@@ -27,7 +27,7 @@ def post_deposit_save(sender, instance, created, raw, using,
     """When a deposit is saved, check for the deposit's status change and
        schedule actions accordingly.
 
-       When the status passes to ready-for-checks, schedule checks.
+       When the status passes to deposited, schedule checks.
        When the status pass to ready, schedule loading.  Otherwise, do
        nothing.
 
@@ -49,8 +49,8 @@ def post_deposit_save(sender, instance, created, raw, using,
     if not default_config.config['checks']:
         return
 
-    if instance.status not in {DEPOSIT_STATUS_READY_FOR_CHECKS,
-                               DEPOSIT_STATUS_READY}:
+    if instance.status not in {DEPOSIT_STATUS_DEPOSITED,
+                               DEPOSIT_STATUS_VERIFIED}:
         return
 
     from django.core.urlresolvers import reverse
@@ -58,14 +58,14 @@ def post_deposit_save(sender, instance, created, raw, using,
 
     args = [instance.collection.name, instance.id]
 
-    if instance.status == DEPOSIT_STATUS_READY_FOR_CHECKS:
+    if instance.status == DEPOSIT_STATUS_DEPOSITED:
         # schedule archive check
         from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
         check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
         task = create_oneshot_task_dict(
             'swh-deposit-archive-checks',
             deposit_check_url=check_url)
-    else:  # instance.status == DEPOSIT_STATUS_READY:
+    else:  # instance.status == DEPOSIT_STATUS_VERIFIED:
         # schedule loading
         from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
         from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA

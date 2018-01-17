@@ -61,6 +61,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
         <collection href="https://deposit.softwareheritage.org/1/%s/">
             <atom:title>%s Software Collection</atom:title>
             <accept>application/zip</accept>
+            <accept>application/x-tar</accept>
             <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
             <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
             <sword:treatment>Collect, Preserve, Share</sword:treatment>

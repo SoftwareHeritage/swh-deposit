@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,9 +6,11 @@
 from rest_framework import status
 
 from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
 from ..errors import make_error_response, BAD_REQUEST
-from ..parsers import SWHFileUploadParser, SWHAtomEntryParser
+from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
+from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
@@ -21,7 +23,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     HTTP verbs supported: PUT, POST, DELETE
 
     """
-    parser_classes = (SWHFileUploadParser, )
+    parser_classes = (SWHFileUploadZipParser, SWHFileUploadTarParser, )
 
     def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
@@ -35,9 +37,10 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
             204 No content
 
         """
-        if req.content_type != 'application/zip':
-            return make_error_response(req, BAD_REQUEST,
-                                       'Only application/zip is supported!')
+        if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
+            msg = 'Packaging format supported is restricted to %s' % (
+                ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
+            return make_error_response(req, BAD_REQUEST, msg)
 
         return self._binary_upload(req, headers, collection_name,
                                    deposit_id=deposit_id,

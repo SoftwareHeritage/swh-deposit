@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 
 from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import COL_IRI, EM_IRI
-from swh.deposit.config import DEPOSIT_STATUS_READY_FOR_CHECKS
+from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_zip
@@ -178,7 +178,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -206,8 +206,8 @@ and other stuff</description>
                          ('Location', 'http://testserver' + edit_se_iri))
 
     @istest
-    def post_deposit_binary_upload_only_supports_zip(self):
-        """Binary upload without content_type application/zip should return 415
+    def post_deposit_binary_upload_supports_zip_or_tar(self):
+        """Binary upload with content-type not in [zip,x-tar] should return 415
 
         """
         # given
@@ -396,7 +396,7 @@ and other stuff</description>
         # second post
         response = self.client.post(
             url,
-            content_type='application/zip',  # as zip
+            content_type='application/x-tar',  # as zip
             data=self.archive['data'],
             # + headers
             CONTENT_LENGTH=self.archive['length'],
@@ -487,7 +487,7 @@ and other stuff</description>
         response_content = parse_xml(BytesIO(response.content))
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
@@ -542,7 +542,7 @@ and other stuff</description>
             '{http://www.w3.org/2005/Atom}deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_READY_FOR_CHECKS)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(deposit.external_id, external_id)
         self.assertEqual(deposit.collection, self.collection)
         self.assertEqual(deposit.client, self.user)
