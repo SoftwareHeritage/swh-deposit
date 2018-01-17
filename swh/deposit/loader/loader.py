@@ -54,6 +54,8 @@ class DepositLoader(loader.TarLoader):
 
         """
         self.deposit_update_url = deposit_update_url
+        self.client.status_update(deposit_update_url, 'loading')
+
         temporary_directory = tempfile.TemporaryDirectory()
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
@@ -68,8 +70,6 @@ class DepositLoader(loader.TarLoader):
         occurrence = metadata['occurrence']
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
-
-        self.client.status_update(deposit_update_url, 'loading')
 
         super().prepare(tar_path=archive,
                         origin=origin,
