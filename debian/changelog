@@ -1,3 +1,9 @@
+swh-deposit (0.0.43-1~swh1~bpo9+1) stretch-swh; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 17 Jan 2018 12:02:20 +0100
+
 swh-deposit (0.0.43-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.43
