@@ -7,12 +7,12 @@ Software Heritage Deposit
    :maxdepth: 3
    :caption: Contents:
 
-   getting-started.md
-   spec-api.md
-   metadata.md
-   spec-loading.md
-   dev-info.md
-   sys-info.md
+   getting-started.rst
+   spec-api.rst
+   metadata.rst
+   spec-loading.rst
+   dev-info.rst
+   sys-info.rst
 
 Indices and tables
 ==================
