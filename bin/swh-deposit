@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2018  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
+
+"""Script to demonstrate software deposit scenario to
+https://deposit.sofwareheritage.org.
+
+Use: ./swh-deposit --help
+
+"""
+
+import os
+import click
+import logging
+import uuid
+
+
+from swh.deposit.loader.client import DepositClient
+
+
+class InputError(ValueError):
+    """Input script error
+
+    """
+    pass
+
+
+def generate_slug(prefix='swh-sample'):
+    """Generate a slug (sample purposes).
+
+    """
+    return '%s-%s' % (prefix, uuid.uuid4())
+
+
+def binary_deposit(config):
+    deposit_url = config['collection']
+    filepath = config['archive']
+    slug = config['slug']
+    client = config['client']
+    in_progress = config['partial']
+
+    return client.deposit_binary_post(
+        deposit_url, filepath, slug, in_progress)
+
+
+def parse_cli_options(archive, username, password, metadata, binary,
+                      collection, slug, partial, deposit_id, url):
+    """Parse the cli options.
+
+    if any issues is detected, an InputError exception is raised
+    explaining the issue.
+
+    """
+    if not os.path.exists(archive):
+        raise InputError('Software Archive %s must exist!' % archive)
+
+    if not metadata:
+        metadata = '%s.metadata.xml' % archive
+
+    if not binary and metadata:
+        raise InputError('Software Archive metadata %s must exist!' % metadata)
+
+    client = DepositClient({
+        'url': url,
+        'auth': {
+            'username': username,
+            'password': password
+        },
+    })
+
+    if not collection:
+        try:
+            # retrieve user's collection
+            sd_content = client.service_document_get()
+            collection = sd_content['collection']
+        except Exception:
+            raise InputError('Connection problem with deposit server %s' % (
+                url, ))
+
+    if not slug:
+        # generate slug
+        slug = generate_slug()
+
+    return {
+        'archive': archive,
+        'username': username,
+        'password': password,
+        'metadata': metadata,
+        'collection': collection,
+        'slug': slug,
+        'partial': partial,
+        'client': client,
+        'url': url,
+    }
+
+
+def make_deposit(config):
+    """Evaluate the configuration.
+
+    """
+    print(config)
+
+
+@click.command(help='Software Heritage Deposit client')
+@click.argument('archive', required=1)
+@click.option('--username', required=1,
+              help="Mandatory user's name")
+@click.option('--password', required=1,
+              help="Mandatory user's associated password")
+@click.option('--metadata', default="je-suis-gpl.metadata.xml",
+              help="""Optional path to an xml metadata file.
+                      If not provided, this will use a file named
+                      <archive>.metadata.xml""")
+@click.option('--binary/--no-binary', default=False,
+              help='Binary deposit only')
+@click.option('--collection',
+              help="""Optional user's collection.
+                      If not provided, this will be retrieved.""")
+@click.option('--slug',
+              help="""External system information identifier.
+                      If not provided, it will be generated""")
+@click.option('--partial', type=click.BOOL,
+              help='The deposit will be partial (as in not finished)')
+@click.option('--deposit-id', type=click.INT,
+              help='Update an existing partial deposit with its identifier')
+@click.option('--url', default='http://localhost:5006/1')
+@click.option('--dry-run/--no-dry-run', default=False)
+@click.option('--verbose/--no-verbose', default=False)
+def main(archive, username, password,
+         metadata=None, binary=False, collection=None, slug=None,
+         partial=False, deposit_id=None, url='http://localhost:5006/1',
+         dry_run=True, verbose=False):
+
+    log = logging.getLogger('swh-deposit')
+    log.addHandler(logging.StreamHandler())
+    _loglevel = logging.DEBUG if verbose else logging.INFO
+    log.setLevel(_loglevel)
+
+    if dry_run:
+        log.info("**DRY RUN**")
+
+    config = {}
+
+    try:
+        log.debug('Parsing cli options')
+        config = parse_cli_options(archive, username, password,
+                                   metadata, binary, collection, slug,
+                                   partial, deposit_id, url)
+
+    except InputError as e:
+        log.error('Problem during parsing options: %s' % e)
+        return 1
+
+    if dry_run:
+        log.info("Parsed configuration: %s" % (
+            config, ))
+
+    log.debug('Executing deposit')
+    if binary:
+        log.debug('Binary deposit')
+        if not dry_run:
+            binary_deposit(config)
+    else:
+        pass
+
+
+if __name__ == '__main__':
+    main()

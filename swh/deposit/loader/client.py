@@ -1,14 +1,18 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Module in charge of defining a swh-deposit client
+"""Module in charge of defining an swh-deposit client
 
 """
 
+import hashlib
+import os
 import requests
+
 from swh.core.config import SWHConfig
+from lxml import etree
 
 
 class DepositClient(SWHConfig):
@@ -22,7 +26,7 @@ class DepositClient(SWHConfig):
     CONFIG_BASE_FILENAME = 'deposit/client'
     DEFAULT_CONFIG = {
         'url': ('str', 'http://localhost:5006'),
-        'auth': ('dict', {})  # with optional 'username'/'password' keys
+        'auth': ('dict', {}),  # with optional 'username'/'password' keys
     }
 
     def __init__(self, config=None, _client=requests):
@@ -148,3 +152,68 @@ class DepositClient(SWHConfig):
             log.error(msg)
 
         raise ValueError(msg)
+
+    def service_document_get(self, log=None):
+        sd_url = '/servicedocument/'
+        r = self.do('get', sd_url)
+        if r.ok:
+            tree = etree.fromstring(r.text)
+            collections = tree.xpath(
+                '/x:service/x:workspace/x:collection',
+                namespaces={'x': 'http://www.w3.org/2007/app'})
+            items = dict(collections[0].items())
+            collection = items['href'].rsplit(self.base_url)[1]
+            return {
+                'collection': collection
+            }
+
+        msg = 'Service document failure at %s' % sd_url
+        if log:
+            log.error(msg)
+
+        raise ValueError(msg)
+
+    def deposit_binary_post(self, deposit_url, filepath, slug,
+                            in_progress=False, log=None):
+        md5sum = hashlib.md5(open(filepath, 'rb').read()).hexdigest()
+        filename = os.path.basename(filepath)
+
+        extension = filename.split('.')[-1]
+        if 'zip' in extension:
+            content_type = 'application/zip'
+        else:
+            content_type = 'application/x-tar'
+
+        headers = {
+            'SLUG': slug,
+            'CONTENT_MD5': md5sum,
+            'IN-PROGRESS': str(in_progress),
+            'CONTENT-TYPE': content_type,
+            'CONTENT-DISPOSITION': 'attachment; filename=%s' % filename,
+        }
+
+        with open(filepath, 'rb') as f:
+            r = self.do('post', deposit_url, data=f, headers=headers)
+
+        if r.ok:
+            tree = etree.fromstring(r.text)
+            vals = tree.xpath(
+                '/x:entry/x:deposit_id',
+                namespaces={'x': 'http://www.w3.org/2005/Atom'})
+            deposit_id = vals[0].text
+
+            return {
+                'deposit_id': deposit_id,
+            }
+
+        msg = 'Binary posting deposit failure at %s' % deposit_url
+        if log:
+            log.error(msg)
+
+        raise ValueError(msg)
+
+    def deposit_atom_post(self, deposit_url, log=None):
+        pass
+
+    def deposit_multipart_post(self, deposit_url, log=None):
+        pass
