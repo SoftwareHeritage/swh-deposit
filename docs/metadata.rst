@@ -3,9 +3,7 @@ Deposit metadata
 
 When making a software deposit into the SWH archive, one can add
 information describing the software artifact and the software project.
-and the metadata will be translated to the `CodeMeta
-v.2 <https://doi.org/10.5063/SCHEMA/CODEMETA-2.0>`__ vocabulary if
-possible.
+
 
 Metadata requirements
 ---------------------
@@ -180,3 +178,10 @@ Using Atom with DublinCore and CodeMeta (multi-schema entry)
         <codemeta:programmingLanguage>language 1</codemeta:programmingLanguage>
         <codemeta:programmingLanguage>language 2</codemeta:programmingLanguage>
     </entry>
+
+Note
+----
+We aim on harmonizing the metadata from different origins and thus
+metadata will be translated to the `CodeMeta
+v.2 <https://doi.org/10.5063/SCHEMA/CODEMETA-2.0>`__ vocabulary if
+possible.
