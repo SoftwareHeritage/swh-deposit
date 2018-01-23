@@ -58,7 +58,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
 
     <workspace>
         <atom:title>The Software Heritage (SWH) Archive</atom:title>
-        <collection href="https://deposit.softwareheritage.org/1/%s/">
+        <collection href="http://testserver/1/%s/">
             <atom:title>%s Software Collection</atom:title>
             <accept>application/zip</accept>
             <accept>application/x-tar</accept>
@@ -68,7 +68,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
             <sword:mediation>false</sword:mediation>
             <sword:metadataRelevantHeader>false</sword:metadataRelevantHeader>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-            <sword:service>https://deposit.softwareheritage.org/1/%s/</sword:service>
+            <sword:service>http://testserver/1/%s/</sword:service>
         </collection>
     </workspace>
 </service>
