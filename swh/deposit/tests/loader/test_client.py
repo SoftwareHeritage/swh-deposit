@@ -11,7 +11,7 @@ import unittest
 from nose.plugins.attrib import attr
 from nose.tools import istest
 
-from swh.deposit.client import DepositClient
+from swh.deposit.client import ApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE
 from .common import CLIENT_TEST_CONFIG
@@ -43,7 +43,7 @@ class FakeRequestClientGet:
 
 
 @attr('fs')
-class DepositClientReadArchiveTest(unittest.TestCase):
+class ApiDepositClientReadArchiveTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.temporary_directory = tempfile.mkdtemp(dir='/tmp')
@@ -63,8 +63,8 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             stream=(s for s in stream_content))
         _client = FakeRequestClientGet(response)
 
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         archive_path = os.path.join(self.temporary_directory, 'test.archive')
         archive_path = deposit_client.archive_get('/some/url', archive_path)
@@ -96,7 +96,7 @@ class DepositClientReadArchiveTest(unittest.TestCase):
             'username': 'user',
             'password': 'pass'
         }
-        deposit_client = DepositClient(_config, _client=_client)
+        deposit_client = ApiDepositClient(_config, _client=_client)
 
         archive_path = os.path.join(self.temporary_directory, 'test.archive')
         archive_path = deposit_client.archive_get('/some/url', archive_path)
@@ -120,8 +120,8 @@ class DepositClientReadArchiveTest(unittest.TestCase):
         """
         response = StreamedResponse(ok=False, stream=None)
         _client = FakeRequestClientGet(response)
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         with self.assertRaisesRegex(
                 ValueError,
@@ -141,7 +141,7 @@ class JsonResponse:
         return self.response
 
 
-class DepositClientReadMetadataTest(unittest.TestCase):
+class ApiDepositClientReadMetadataTest(unittest.TestCase):
     @istest
     def metadata_get(self):
         """Reading archive should write data in temporary directory
@@ -153,8 +153,8 @@ class DepositClientReadMetadataTest(unittest.TestCase):
             ok=True,
             response=expected_response)
         _client = FakeRequestClientGet(response)
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         actual_metadata = deposit_client.metadata_get('/metadata')
 
@@ -166,8 +166,8 @@ class DepositClientReadMetadataTest(unittest.TestCase):
 
         """
         _client = FakeRequestClientGet(JsonResponse(ok=False, response=None))
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
         with self.assertRaisesRegex(
                 ValueError,
                 'Problem when retrieving metadata at'):
@@ -186,15 +186,15 @@ class FakeRequestClientPut:
         self.kwargs = kwargs
 
 
-class DepositClientStatusUpdateTest(unittest.TestCase):
+class ApiDepositClientStatusUpdateTest(unittest.TestCase):
     @istest
     def status_update(self):
         """Update status
 
         """
         _client = FakeRequestClientPut()
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         deposit_client.status_update('/update/status',
                                      DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -215,8 +215,8 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
 
         """
         _client = FakeRequestClientPut()
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         deposit_client.status_update('/update/status/fail',
                                      DEPOSIT_STATUS_LOAD_FAILURE)
@@ -230,7 +230,7 @@ class DepositClientStatusUpdateTest(unittest.TestCase):
         })
 
 
-class DepositClientCheckTest(unittest.TestCase):
+class ApiDepositClientCheckTest(unittest.TestCase):
     @istest
     def check(self):
         """When check ok, this should return the deposit's status
@@ -238,8 +238,8 @@ class DepositClientCheckTest(unittest.TestCase):
         """
         _client = FakeRequestClientGet(
             JsonResponse(ok=True, response={'status': 'something'}))
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         r = deposit_client.check('/check')
 
@@ -255,8 +255,8 @@ class DepositClientCheckTest(unittest.TestCase):
         """
         _client = FakeRequestClientGet(
             JsonResponse(ok=False, response=None))
-        deposit_client = DepositClient(config=CLIENT_TEST_CONFIG,
-                                       _client=_client)
+        deposit_client = ApiDepositClient(config=CLIENT_TEST_CONFIG,
+                                          _client=_client)
 
         with self.assertRaisesRegex(
                 ValueError,

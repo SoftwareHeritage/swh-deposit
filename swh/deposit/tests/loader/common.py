@@ -5,7 +5,7 @@
 
 import json
 
-from swh.deposit.client import DepositClient
+from swh.deposit.client import ApiDepositClient
 
 
 CLIENT_TEST_CONFIG = {
@@ -14,7 +14,7 @@ CLIENT_TEST_CONFIG = {
 }
 
 
-class SWHDepositTestClient(DepositClient):
+class SWHDepositTestClient(ApiDepositClient):
     """Deposit test client to permit overriding the default request
        client.
 

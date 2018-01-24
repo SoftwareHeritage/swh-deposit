@@ -17,7 +17,7 @@ import logging
 import uuid
 
 
-from . import DepositClient
+from . import ApiDepositClient
 
 
 class InputError(ValueError):
@@ -72,7 +72,7 @@ def parse_cli_options(archive, username, password, metadata,
     if not binary_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
-    client = DepositClient({
+    client = ApiDepositClient({
         'url': url,
         'auth': {
             'username': username,

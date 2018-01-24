@@ -11,7 +11,7 @@ from swh.model import hashutil
 from swh.loader.tar import loader
 from swh.loader.core.loader import SWHLoader
 
-from ..client import DepositClient
+from ..client import ApiDepositClient
 
 
 class DepositLoader(loader.TarLoader):
@@ -39,7 +39,7 @@ class DepositLoader(loader.TarLoader):
     def __init__(self, client=None):
         super().__init__(
             logging_class='swh.deposit.loader.loader.DepositLoader')
-        self.client = client if client else DepositClient()
+        self.client = client if client else ApiDepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
         SWHLoader.load(

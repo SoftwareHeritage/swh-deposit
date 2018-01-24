@@ -15,7 +15,7 @@ from swh.core.config import SWHConfig
 from lxml import etree
 
 
-class DepositClient(SWHConfig):
+class ApiDepositClient(SWHConfig):
     """Deposit client to:
 
     - read a given deposit's archive(s)
