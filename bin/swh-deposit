@@ -122,7 +122,6 @@ def do_binary_deposit(config, dry_run, log):
 
     """
     log.debug('Binary deposit')
-
     deposit_url = config['collection']
     filepath = config['archive']
     slug = config['slug']
@@ -184,7 +183,7 @@ def do_multipart_deposit(config, dry_run, log):
 @click.option('--slug',
               help="""External system information identifier.
                       If not provided, it will be generated""")
-@click.option('--partial', type=click.BOOL,
+@click.option('--partial/--no-partial', default=False,
               help='The deposit will be partial (as in not finished)')
 @click.option('--deposit-id', type=click.INT,
               help='Update an existing partial deposit with its identifier')
@@ -235,7 +234,8 @@ def main(archive, username, password,
 
     deposit_type = config['deposit_type']
     r = deposit_fn[deposit_type](config)
-    log.info(r)
+    if r:
+        log.info(r)
 
 
 if __name__ == '__main__':

@@ -182,23 +182,61 @@ class DepositClient(SWHConfig):
                     'error': r.status_code
                 }
 
-    def deposit_binary(self, deposit_url, filepath, slug, in_progress=False,
-                       log=None):
+    def _compute_information_on(self, filepath, is_archive=True):
+        """Given a filepath, compute necessary information on that file.
+
+        Args:
+            filepath (str): Path to a file
+            is_archive (bool): is it an archive or not?
+
+        Returns:
+            dict with keys:
+                'content-type': content type associated
+                'md5sum': md5 sum
+                'filename': filename
+        """
         md5sum = hashlib.md5(open(filepath, 'rb').read()).hexdigest()
         filename = os.path.basename(filepath)
 
-        extension = filename.split('.')[-1]
-        if 'zip' in extension:
-            content_type = 'application/zip'
+        if is_archive:
+            extension = filename.split('.')[-1]
+            if 'zip' in extension:
+                content_type = 'application/zip'
+            else:
+                content_type = 'application/x-tar'
         else:
-            content_type = 'application/x-tar'
+            content_type = None
+
+        return {
+            'content-type': content_type,
+            'md5sum': md5sum,
+            'filename': filename,
+        }
+
+    def _parse_deposit_xml(self, xml_content):
+        """Given an xml content as string, returns a deposit dict.
+
+        """
+        tree = etree.fromstring(xml_content)
+        vals = tree.xpath(
+            '/x:entry/x:deposit_id',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_id = vals[0].text
+
+        return {'deposit_id': deposit_id}
+
+    def deposit_binary(self, deposit_url, filepath, slug, in_progress=False,
+                       log=None):
+
+        info = self._compute_information_on(filepath)
 
         headers = {
             'SLUG': slug,
-            'CONTENT_MD5': md5sum,
+            'CONTENT_MD5': info['md5sum'],
             'IN-PROGRESS': str(in_progress),
-            'CONTENT-TYPE': content_type,
-            'CONTENT-DISPOSITION': 'attachment; filename=%s' % filename,
+            'CONTENT-TYPE': info['content_type'],
+            'CONTENT-DISPOSITION': 'attachment; filename=%s' % (
+                info['filename'], ),
         }
 
         try:
@@ -216,15 +254,7 @@ class DepositClient(SWHConfig):
             }
         else:
             if r.ok:
-                tree = etree.fromstring(r.text)
-                vals = tree.xpath(
-                    '/x:entry/x:deposit_id',
-                    namespaces={'x': 'http://www.w3.org/2005/Atom'})
-                deposit_id = vals[0].text
-
-                return {
-                    'deposit_id': deposit_id,
-                }
+                return self._parse_deposit_xml(r.text)
             else:
                 return {
                     'deposit_id': None,
@@ -255,15 +285,7 @@ class DepositClient(SWHConfig):
             }
         else:
             if r.ok:
-                tree = etree.fromstring(r.text)
-                vals = tree.xpath(
-                    '/x:entry/x:deposit_id',
-                    namespaces={'x': 'http://www.w3.org/2005/Atom'})
-                deposit_id = vals[0].text
-
-                return {
-                    'deposit_id': deposit_id,
-                }
+                return self._parse_deposit_xml(r.text)
             else:
                 return {
                     'deposit_id': None,
@@ -272,8 +294,44 @@ class DepositClient(SWHConfig):
 
     def deposit_multipart(self, deposit_url, archive_path, metadata_path,
                           slug, in_progress, log=None):
+        info = self._compute_information_on(archive_path)
+        info_meta = self._compute_information_on(metadata_path,
+                                                 is_archive=False)
 
-        return {
-            'deposit_id': None,
-            'error': None,
+        files = [
+            ('file',
+             (info['filename'],
+              open(archive_path, 'rb'),
+              info['content-type'])),
+            ('atom',
+             (info_meta['filename'],
+              open(metadata_path, 'rb'),
+              'application/atom+xml')),
+        ]
+
+        headers = {
+            'SLUG': slug,
+            'CONTENT_MD5': info['md5sum'],
+            'IN-PROGRESS': str(in_progress),
         }
+
+        try:
+            r = self.do('post', deposit_url, files=files, headers=headers)
+        except Exception as e:
+            msg = 'Multipart posting deposit failure at %s: %s' % (
+                deposit_url, e)
+            if log:
+                log.error(msg)
+
+            return {
+                'deposit_id': None,
+                'error': msg,
+            }
+        else:
+            if r.ok:
+                return self._parse_deposit_xml(r.text)
+            else:
+                return {
+                    'deposit_id': None,
+                    'error': r.status_code
+                }
