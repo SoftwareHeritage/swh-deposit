@@ -31,25 +31,27 @@ Collection
 SWORD defines a ``collection`` concept. In SWH's case, this collection
 refers to a group of deposits. A ``deposit`` is some form of software
 source code archive(s) associated with metadata.
-
-Example
-~~~~~~~
-
-As part of the
-`HAL <https://hal.archives-ouvertes.fr/>`__-`SWH <https://www.softwareheritage.org>`__
-collaboration, we define a ``HAL collection`` to which the ``hal``
-client will have access to.
+By default the client's collection will have the client's name.
 
 Limitations
 -----------
 * upload limitation of 100Mib
 * no mediation
 
+API overview
+------------
+
+API access is over HTTPS.
+
+The API is protected through basic authentication.
+
+The API endpoints are rooted at https://deposit.softwareheritage.org/1/.
+
+Data is sent and received as XML (as specified in the SWORD 2.0
+specification).
+
 Endpoints
 ---------
-
-Here are the defined endpoints this document will refer to from this
-point on:
 
 * ``/1/servicedocument/`` *service document iri* (a.k.a `SD-IRI
   <#sd-iri-the-service-document-iri>`__)
@@ -83,23 +85,9 @@ point on:
   *Goal:*: Display information on the content's representation in the sword
   server
 
-API overview
-------------
 
-API access is over HTTPS.
-
-The API is protected through basic authentication.
-
-The API endpoints are rooted at https://deposit.softwareheritage.org/1/.
-
-Data is sent and received as XML (as specified in the SWORD 2.0
-specification).
-
-In the following chapters, we will described the different endpoints
-`through the use cases described previously. <#use-cases>`__
-
-[2] Service document
-~~~~~~~~~~~~~~~~
+Service document request
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Endpoint: GET /1/servicedocument/
 
@@ -163,8 +151,8 @@ The current answer for example for the `HAL archive
         </workspace>
     </service>
 
-[3\|5] Deposit creation/update
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Deposit creation/update
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The client can send deposit creation/update through a series of deposit
 requests to the following endpoints:
@@ -450,8 +438,8 @@ Deposit Creation - server point of view
 The server receives the request(s) and does minimal checking on the
 input prior to any saving operations.
 
-[3\|5\|6.1] Validation of the header and body request
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Validation of the header and body request
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Any kind of errors can happen, here is the list depending on the
 situation:

@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-This is a a short guide for how to prepare and push a software deposit with
+This is a guide for how to prepare and push a software deposit with
 the swh-deposit commands.
 
 The api is rooted at https://deposit.softwareheritage.org.
@@ -25,7 +25,7 @@ information. <https://www.softwareheritage.org/contact/>`__
 
 Prepare a deposit
 -----------------
-* compress the files in a supported archive formats:
+* compress the files in a supported archive format:
   - zip: common zip archive (no multi-disk zip files).
   - tar: tar archive without compression or optionally any of the
          following compression algorithm gzip (.tar.gz, .tgz), bzip2
@@ -36,7 +36,8 @@ Prepare a deposit
   - specify *MUST* metadata (url, authors, software name and
   the external\_identifier)
   - add all available information under the  compatible metadadata term
-  Example of minimal atom entry file:
+
+  An example of an atom entry file with CodeMeta terms:
 
   .. code:: xml
 
@@ -44,7 +45,7 @@ Prepare a deposit
     <entry xmlns="http://www.w3.org/2005/Atom"
              xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         <title>Je suis GPL</title>
-        <external_identifier>ext-id</external_identifier>
+        <external_identifier>12345</external_identifier>
         <codemeta:url>forge.softwareheritage.org/source/jesuisgpl/</codemeta:url>
         <codemeta:description>Yes, this is another implementation of
         "Hello, world!” when you run it.</codemeta:description>
@@ -53,8 +54,12 @@ Prepare a deposit
             <codemeta:url>https://www.gnu.org/licenses/gpl.html</codemeta:url>
         </codemeta:license>
         <codemeta:author>
-            <codemeta:name> Reuben Thomas and Sami Kerola </codemeta:name>
-            <codemeta:jobTitle> Maintainers </codemeta:affiliation>
+            <codemeta:name> Reuben Thomas </codemeta:name>
+            <codemeta:jobTitle> Maintainer </codemeta:affiliation>
+        </codemeta:author>
+        <codemeta:author>
+            <codemeta:name> Sami Kerola </codemeta:name>
+            <codemeta:jobTitle> Maintainer </codemeta:affiliation>
         </codemeta:author>
     </entry>
 
@@ -62,18 +67,15 @@ Prepare a deposit
 Check authentication with a service document request
 ----------------------------------------------------
 
-Start with a simple request to check authentication credentials and the
-*collection iri* onto which the deposit will be pushed  .
-
-For example:
+Start with a simple request to check credentials and retrieve the
+*collection iri* onto which the deposit will be pushed .
 
 .. code:: shell
 
     curl -i --user <name>:<pass> https://deposit.softwareheritage.org/1/servicedocument/
 
-If everything went well, you should have received a response similar to
-this:
-
+ The successful response:
+^^^^^^^^^^^^^^^^^^^^^^^^
 .. code:: shell
 
     HTTP/1.0 200 OK
@@ -105,16 +107,8 @@ this:
         </workspace>
     </service>
 
-* ``HTTP/1.0 200 OK``: the query is successful and returns a body response
-* ``Content-Type: application/xml``: The body response is in xml format
-* body: it is a service document describing that the client ``<client-name>``
-  has a collection named ``<collection-name>``. That collection is available at
-  the *collection iri* ``/1/<collection-name>/`` (through POST query).
-
-At this level, if something went wrong, this should be authentication
-related. So the response would have been a 401 Unauthorized access.
-Something like:
-
+The error response 401 for Unauthorized access:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code:: shell
 
     curl -i https://deposit.softwareheritage.org/1/<collection-name>/
@@ -255,11 +249,11 @@ considered as completed and its status will be changed to ``deposited``.
 
 .. code:: shell
 $ swh-deposit --username 'name' --password 'secret' \
-          --deposit-id 42 last-foo.tar.gz
+              --deposit-id 42 last-foo.tar.gz
 
 
 Update deposit
------------------
+----------------
 * replace deposit :
   - only possible if the deposit status is ``partial``
   - by using the --replace argument
@@ -268,8 +262,8 @@ Update deposit
                 --deposit-id 11 updated-je-suis-gpl.tar.gz
 
 * update a loaded deposit with a new version
-  - by using the external-id slug which will link the new deposit
-    with its parent deposit
+  - by using the external-id with the --slug argument which will link the
+  new deposit with its parent deposit
 
 .. code:: shell
 
@@ -277,10 +271,10 @@ Update deposit
 
 
 
-Check the deposit's state
+Check the deposit's status
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can check the status of the deposit with this request:
+You can check the status of the deposit by using the --deposit-id argument:
 
 .. code:: shell
 
@@ -306,3 +300,7 @@ The different statuses:
 - *loading*: loading in-progress
 - *done*: loading completed successfully
 - *failed*: the deposit loading has failed
+
+When the the deposit has been loaded into the archive it will be marked ``done``
+and in the response will be also available the <deposit_swh_id>.
+For more information about the swh-id go to .....
