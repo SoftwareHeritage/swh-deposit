@@ -223,7 +223,12 @@ class ApiDepositClient(SWHConfig):
             namespaces={'x': 'http://www.w3.org/2005/Atom'})
         deposit_id = vals[0].text
 
-        return {'deposit_id': deposit_id}
+        vals = tree.xpath(
+            '/x:entry/x:deposit_status',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_status = vals[0].text
+
+        return {'deposit_id': deposit_id, 'deposit_status': deposit_status}
 
     def deposit_binary(self, deposit_url, filepath, slug, in_progress=False,
                        log=None):
