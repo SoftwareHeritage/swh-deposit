@@ -234,7 +234,7 @@ class ApiDepositClient(SWHConfig):
             'SLUG': slug,
             'CONTENT_MD5': info['md5sum'],
             'IN-PROGRESS': str(in_progress),
-            'CONTENT-TYPE': info['content_type'],
+            'CONTENT-TYPE': info['content-type'],
             'CONTENT-DISPOSITION': 'attachment; filename=%s' % (
                 info['filename'], ),
         }

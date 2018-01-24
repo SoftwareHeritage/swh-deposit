@@ -190,8 +190,8 @@ def do_multipart_deposit(config, dry_run, log):
 @click.option('--verbose/--no-verbose', default=False)
 def main(archive, username, password,
          metadata=None, binary_deposit=False, metadata_deposit=False,
-         collection=None, slug=None,
-         partial=False, deposit_id=None, url='http://localhost:5006/1',
+         collection=None, slug=None, partial=False,
+         deposit_id=None, url='https://deposit.softwareheritage.org/1',
          dry_run=True, verbose=False):
 
     log = logging.getLogger('swh-deposit')
