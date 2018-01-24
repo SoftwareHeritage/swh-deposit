@@ -91,7 +91,7 @@ class DepositLoader(loader.TarLoader):
         try:
             self.send_origin_metadata(origin_id, visit_date, provider_id,
                                       tool_id, metadata)
-        except:
+        except Exception:
             self.log.exception('Problem when storing origin_metadata')
             raise
 
@@ -117,7 +117,7 @@ class DepositLoader(loader.TarLoader):
                 self.client.status_update(self.deposit_update_url,
                                           status='done',
                                           revision_id=rev_id_hex)
-        except:
+        except Exception:
             self.log.exception(
                 'Problem when trying to update the deposit\'s status')
 
