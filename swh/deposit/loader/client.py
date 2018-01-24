@@ -153,28 +153,37 @@ class DepositClient(SWHConfig):
 
         raise ValueError(msg)
 
-    def service_document_get(self, log=None):
+    def service_document(self, log=None):
         sd_url = '/servicedocument/'
-        r = self.do('get', sd_url)
-        if r.ok:
-            tree = etree.fromstring(r.text)
-            collections = tree.xpath(
-                '/x:service/x:workspace/x:collection',
-                namespaces={'x': 'http://www.w3.org/2007/app'})
-            items = dict(collections[0].items())
-            collection = items['href'].rsplit(self.base_url)[1]
+        try:
+            r = self.do('get', sd_url)
+        except Exception as e:
+            msg = 'Service document failure at %s: %s' % (sd_url, e)
+            if log:
+                log.error(msg)
             return {
-                'collection': collection
+                'collection': None,
+                'error': msg,
             }
+        else:
+            if r.ok:
+                tree = etree.fromstring(r.text)
+                collections = tree.xpath(
+                    '/x:service/x:workspace/x:collection',
+                    namespaces={'x': 'http://www.w3.org/2007/app'})
+                items = dict(collections[0].items())
+                collection = items['href'].rsplit(self.base_url)[1]
+                return {
+                    'collection': collection
+                }
+            else:
+                return {
+                    'collection': None,
+                    'error': r.status_code
+                }
 
-        msg = 'Service document failure at %s' % sd_url
-        if log:
-            log.error(msg)
-
-        raise ValueError(msg)
-
-    def deposit_binary_post(self, deposit_url, filepath, slug,
-                            in_progress=False, log=None):
+    def deposit_binary(self, deposit_url, filepath, slug, in_progress=False,
+                       log=None):
         md5sum = hashlib.md5(open(filepath, 'rb').read()).hexdigest()
         filename = os.path.basename(filepath)
 
@@ -192,28 +201,79 @@ class DepositClient(SWHConfig):
             'CONTENT-DISPOSITION': 'attachment; filename=%s' % filename,
         }
 
-        with open(filepath, 'rb') as f:
-            r = self.do('post', deposit_url, data=f, headers=headers)
+        try:
+            with open(filepath, 'rb') as f:
+                r = self.do('post', deposit_url, data=f, headers=headers)
 
-        if r.ok:
-            tree = etree.fromstring(r.text)
-            vals = tree.xpath(
-                '/x:entry/x:deposit_id',
-                namespaces={'x': 'http://www.w3.org/2005/Atom'})
-            deposit_id = vals[0].text
+        except Exception as e:
+            msg = 'Binary posting deposit failure at %s: %s' % (deposit_url, e)
+            if log:
+                log.error(msg)
 
             return {
-                'deposit_id': deposit_id,
+                'deposit_id': None,
+                'error': msg,
             }
+        else:
+            if r.ok:
+                tree = etree.fromstring(r.text)
+                vals = tree.xpath(
+                    '/x:entry/x:deposit_id',
+                    namespaces={'x': 'http://www.w3.org/2005/Atom'})
+                deposit_id = vals[0].text
 
-        msg = 'Binary posting deposit failure at %s' % deposit_url
-        if log:
-            log.error(msg)
+                return {
+                    'deposit_id': deposit_id,
+                }
+            else:
+                return {
+                    'deposit_id': None,
+                    'error': r.status_code
+                }
 
-        raise ValueError(msg)
+    def deposit_metadata(self, deposit_url, filepath, slug, in_progress,
+                         log=None):
+        headers = {
+            'SLUG': slug,
+            'IN-PROGRESS': str(in_progress),
+            'CONTENT-TYPE': 'application/atom+xml;type=entry',
+        }
 
-    def deposit_atom_post(self, deposit_url, log=None):
-        pass
+        try:
+            with open(filepath, 'rb') as f:
+                r = self.do('post', deposit_url, data=f, headers=headers)
 
-    def deposit_multipart_post(self, deposit_url, log=None):
-        pass
+        except Exception as e:
+            msg = 'Metadata posting deposit failure at %s: %s' % (
+                deposit_url, e)
+            if log:
+                log.error(msg)
+
+            return {
+                'deposit_id': None,
+                'error': msg,
+            }
+        else:
+            if r.ok:
+                tree = etree.fromstring(r.text)
+                vals = tree.xpath(
+                    '/x:entry/x:deposit_id',
+                    namespaces={'x': 'http://www.w3.org/2005/Atom'})
+                deposit_id = vals[0].text
+
+                return {
+                    'deposit_id': deposit_id,
+                }
+            else:
+                return {
+                    'deposit_id': None,
+                    'error': r.status_code
+                }
+
+    def deposit_multipart(self, deposit_url, archive_path, metadata_path,
+                          slug, in_progress, log=None):
+
+        return {
+            'deposit_id': None,
+            'error': None,
+        }
