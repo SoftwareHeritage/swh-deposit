@@ -14,6 +14,9 @@ override_dh_install:
 		mkdir -p $(CURDIR)/debian/python3-swh.deposit.loader/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader ; \
 		mv $(CURDIR)/debian/python3-swh.deposit/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader/* \
 		   $(CURDIR)/debian/python3-swh.deposit.loader/usr/lib/python$$pyvers/dist-packages/swh/deposit/loader/ ; \
+		mkdir -p $(CURDIR)/debian/python3-swh.deposit.client/usr/lib/python$$pyvers/dist-packages/swh/deposit/client ; \
+		mv $(CURDIR)/debian/python3-swh.deposit/usr/lib/python$$pyvers/dist-packages/swh/deposit/client/* \
+		   $(CURDIR)/debian/python3-swh.deposit.client/usr/lib/python$$pyvers/dist-packages/swh/deposit/client/ ; \
 	done
 
 override_dh_auto_test:
