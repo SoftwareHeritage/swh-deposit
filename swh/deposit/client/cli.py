@@ -7,7 +7,7 @@
 """Script to demonstrate software deposit scenario to
 https://deposit.sofwareheritage.org.
 
-Use: ./swh-deposit --help
+Use: python3 -m swh.deposit.client.cli --help
 
 """
 
@@ -17,7 +17,7 @@ import logging
 import uuid
 
 
-from swh.deposit.loader.client import DepositClient
+from . import DepositClient
 
 
 class InputError(ValueError):

@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,7 @@ import unittest
 from nose.plugins.attrib import attr
 from nose.tools import istest
 
-from swh.deposit.loader.client import DepositClient
+from swh.deposit.client import DepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE
 from .common import CLIENT_TEST_CONFIG
