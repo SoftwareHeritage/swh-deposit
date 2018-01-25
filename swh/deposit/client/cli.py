@@ -17,7 +17,7 @@ import logging
 import uuid
 
 
-from . import ApiDepositClient
+from . import PublicApiDepositClient
 
 
 class InputError(ValueError):
@@ -36,7 +36,7 @@ def generate_slug(prefix='swh-sample'):
 
 def parse_cli_options(archive, username, password, metadata,
                       binary_deposit, metadata_deposit,
-                      collection, slug, partial, deposit_id, url):
+                      collection, slug, partial, deposit_id, replace, url):
     """Parse the cli options and make sure the combination is acceptable.
        If not, an InputError exception is raised explaining the issue.
 
@@ -72,7 +72,7 @@ def parse_cli_options(archive, username, password, metadata,
     if not binary_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
-    client = ApiDepositClient({
+    client = PublicApiDepositClient({
         'url': url,
         'auth': {
             'username': username,
@@ -80,26 +80,15 @@ def parse_cli_options(archive, username, password, metadata,
         },
     })
 
-    if collection:  # transpose to the right collection path
-        collection = '/%s/' % collection
-
-    if not collection:
         # retrieve user's collection
         sd_content = client.service_document()
         if 'error' in sd_content:
             raise InputError(sd_content['error'])
-        collection = sd_content['collection']
+        collection = sd_content['collection'].replace('/', '')
 
     if not slug:
         # generate slug
         slug = generate_slug()
-
-    if binary_deposit:
-        deposit_type = 'binary'
-    elif metadata_deposit:
-        deposit_type = 'metadata'
-    else:
-        deposit_type = 'multipart'
 
     return {
         'archive': archive,
@@ -111,52 +100,25 @@ def parse_cli_options(archive, username, password, metadata,
         'partial': partial,
         'client': client,
         'url': url,
-        'deposit_type': deposit_type,
     }
 
 
-def do_binary_deposit(config, dry_run, log):
-    """Execute the binary deposit.
+def make_deposit(config, dry_run, log):
+    """Delegate the actual deposit to the deposit client.
 
     """
-    log.debug('Binary deposit')
-    deposit_url = config['collection']
-    filepath = config['archive']
-    slug = config['slug']
+    log.debug('New deposit execution')
+
     client = config['client']
-    in_progress = config['partial']
-
-    if not dry_run:
-        return client.deposit_binary(deposit_url, filepath, slug, in_progress)
-    return {}
-
-
-def do_metadata_deposit(config, dry_run, log):
-    log.debug('Metadata deposit')
-    deposit_url = config['collection']
-    filepath = config['metadata']
-    slug = config['slug']
-    client = config['client']
-    in_progress = config['partial']
-
-    if not dry_run:
-        r = client.deposit_metadata(deposit_url, filepath, slug, in_progress)
-        return r
-    return {}
-
-
-def do_multipart_deposit(config, dry_run, log):
-    log.debug('Multipart deposit')
-    client = config['client']
-    deposit_url = config['collection']
+    collection = config['collection']
     archive_path = config['archive']
     metadata_path = config['metadata']
     slug = config['slug']
-    client = config['client']
     in_progress = config['partial']
+    client = config['client']
     if not dry_run:
-        r = client.deposit_multipart(deposit_url, archive_path, metadata_path,
-                                     slug, in_progress)
+        r = client.deposit(collection, archive_path, slug,
+                           metadata_path, in_progress, log)
         return r
     return {}
 
@@ -218,20 +180,7 @@ def main(archive, username, password,
         log.info("Parsed configuration: %s" % (
             config, ))
 
-    deposit_fn = {
-        'binary':
-            lambda config, dry_run=dry_run, log=log: do_binary_deposit(
-                config, dry_run, log),
-        'metadata':
-            lambda config, dry_run=dry_run, log=log: do_metadata_deposit(
-                config, dry_run, log),
-        'multipart':
-            lambda config, dry_run=dry_run, log=log: do_multipart_deposit(
-                config, dry_run, log),
-    }
-
-    deposit_type = config['deposit_type']
-    r = deposit_fn[deposit_type](config)
+    r = make_deposit(config, dry_run, log)
     if r:
         log.info(r)
 

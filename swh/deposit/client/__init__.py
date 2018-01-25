@@ -153,6 +153,11 @@ class ApiDepositClient(SWHConfig):
 
         raise ValueError(msg)
 
+
+class PublicApiDepositClient(ApiDepositClient):
+    """Public api deposit client.
+
+    """
     def service_document(self, log=None):
         sd_url = '/servicedocument/'
         try:
@@ -230,11 +235,26 @@ class ApiDepositClient(SWHConfig):
 
         return {'deposit_id': deposit_id, 'deposit_status': deposit_status}
 
-    def deposit_binary(self, deposit_url, filepath, slug, in_progress=False,
-                       log=None):
+    def deposit(self, collection, archive_path, slug,
+                metadata_path=None, in_progress=False, log=None):
+        """Post a new deposit
 
-        info = self._compute_information_on(filepath)
+        """
+        deposit_url = '/%s/' % collection
+        if archive_path and not metadata_path:
+            return self.deposit_binary(deposit_url, archive_path, slug,
+                                       in_progress, log)
+        elif not archive_path and metadata_path:
+            return self.deposit_metadata(deposit_url, metadata_path, slug,
+                                         in_progress, log)
+        else:
+            return self.deposit_multipart(deposit_url, archive_path,
+                                          metadata_path, slug, in_progress,
+                                          log)
 
+    def deposit_binary(self, deposit_url, archive_path, slug,
+                       in_progress=False, log=None):
+        info = self._compute_information_on(archive_path)
         headers = {
             'SLUG': slug,
             'CONTENT_MD5': info['md5sum'],
@@ -245,7 +265,7 @@ class ApiDepositClient(SWHConfig):
         }
 
         try:
-            with open(filepath, 'rb') as f:
+            with open(archive_path, 'rb') as f:
                 r = self.do('post', deposit_url, data=f, headers=headers)
 
         except Exception as e:
@@ -266,7 +286,7 @@ class ApiDepositClient(SWHConfig):
                     'error': r.status_code
                 }
 
-    def deposit_metadata(self, deposit_url, filepath, slug, in_progress,
+    def deposit_metadata(self, deposit_url, metadata_path, slug, in_progress,
                          log=None):
         headers = {
             'SLUG': slug,
@@ -275,7 +295,7 @@ class ApiDepositClient(SWHConfig):
         }
 
         try:
-            with open(filepath, 'rb') as f:
+            with open(metadata_path, 'rb') as f:
                 r = self.do('post', deposit_url, data=f, headers=headers)
 
         except Exception as e:
