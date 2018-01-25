@@ -128,34 +128,36 @@ def make_deposit(config, dry_run, log):
 @click.command(help='Software Heritage Deposit client')
 @click.argument('archive', required=1)
 @click.option('--username', required=1,
-              help="Mandatory user's name")
+              help="(Mandatory) User's name")
 @click.option('--password', required=1,
-              help="Mandatory user's associated password")
+              help="(Mandatory) User's associated password")
 @click.option('--metadata',
-              help="""Optional path to an xml metadata file.
-                      If not provided, this will use a file named
-                      <archive>.metadata.xml""")
+              help="(Optional) Path to xml metadata file. If not provided, this will use a file named <archive>.metadata.xml")  # noqa
 @click.option('--binary-deposit/--no-binary-deposit', default=False,
-              help='Software archive only deposit')
+              help='(Optional) Software archive only deposit')
 @click.option('--metadata-deposit/--no-metadata-deposit', default=False,
-              help='Metadata only deposit')
+              help='(Optional) Metadata only deposit')
 @click.option('--collection',
-              help="""Optional user's collection.
-                      If not provided, this will be retrieved.""")
+              help="(Optional) User's collection. If not provided, this will be fetched.")  # noqa
 @click.option('--slug',
-              help="""External system information identifier.
-                      If not provided, it will be generated""")
+              help="""(Optional) External system information identifier. If not provided, it will be generated""")  # noqa
 @click.option('--partial/--no-partial', default=False,
-              help='The deposit will be partial (as in not finished)')
-@click.option('--deposit-id', type=click.INT,
-              help='Update an existing partial deposit with its identifier')
-@click.option('--url', default='http://localhost:5006/1')
-@click.option('--dry-run/--no-dry-run', default=False)
-@click.option('--verbose/--no-verbose', default=False)
+              help='(Optional) The deposit will be partial, other deposits will have to take place to finalize it.')  # noqa
+@click.option('--deposit-id', default=None,
+              help='(Optional) Update an existing partial deposit with its identifier')  # noqa
+@click.option('--replace/--no-replace', default=False,
+              help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
+@click.option('--url', default='http://localhost:5006/1',
+              help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
+@click.option('--dry-run/--no-dry-run', default=False,
+              help='(Optional) No-op deposit')
+@click.option('--verbose/--no-verbose', default=False,
+              help='Verbose mode')
 def main(archive, username, password,
          metadata=None, binary_deposit=False, metadata_deposit=False,
          collection=None, slug=None, partial=False,
-         deposit_id=None, url='https://deposit.softwareheritage.org/1',
+         deposit_id=None, replace=False,
+         url='https://deposit.softwareheritage.org/1',
          dry_run=True, verbose=False):
 
     log = logging.getLogger('swh-deposit')
