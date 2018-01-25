@@ -9,6 +9,8 @@ https://deposit.sofwareheritage.org.
 
 Use: python3 -m swh.deposit.client.cli --help
 
+Documentation: https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html  # noqa
+
 """
 
 import os
