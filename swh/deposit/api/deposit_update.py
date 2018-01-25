@@ -28,8 +28,6 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
 
-        +header: Metadata-relevant (to extract metadata from the archive)
-
         source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         #protocoloperations_editingcontent_binary
 
@@ -49,8 +47,6 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_post(self, req, headers, collection_name, deposit_id):
         """Add new content to the existing deposit.
 
-        +header: Metadata-relevant (to extract metadata from the archive)
-
         source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         #protocoloperations_addingcontent_mediaresource
 
@@ -61,9 +57,10 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
             Body: [optional Deposit Receipt]
 
         """
-        if req.content_type != 'application/zip':
-            return make_error_response(req, BAD_REQUEST,
-                                       'Only application/zip is supported!')
+        if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
+            msg = 'Packaging format supported is restricted to %s' % (
+                ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
+            return make_error_response(req, BAD_REQUEST, msg)
 
         return (status.HTTP_201_CREATED, CONT_FILE_IRI,
                 self._binary_upload(req, headers, collection_name, deposit_id))
