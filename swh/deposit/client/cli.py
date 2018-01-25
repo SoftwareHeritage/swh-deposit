@@ -58,6 +58,7 @@ def parse_cli_options(archive, username, password, metadata,
             'client': instantiated class
             'url': deposit's server main entry point
             'deposit_type': deposit's type (binary, multipart, metadata)
+            'deposit_id': optional deposit identifier
 
     """
     if binary_deposit and metadata_deposit:
@@ -65,14 +66,27 @@ def parse_cli_options(archive, username, password, metadata,
         binary_deposit = False
         metadata_deposit = False
 
-    if not os.path.exists(archive):
+    if archive and not os.path.exists(archive):
         raise InputError('Software Archive %s must exist!' % archive)
 
-    if not metadata:
+    if archive and not metadata:
         metadata = '%s.metadata.xml' % archive
+
+    if metadata_deposit:
+        archive = None
+
+    if binary_deposit:
+        metadata = None
+
+    if metadata_deposit and not metadata:
+        raise InputError("Metadata deposit filepath must be provided for a metadata deposit")  # noqa
 
     if not binary_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
+
+    if replace and not deposit_id:
+        raise InputError(
+            'To update an existing deposit, you must provide its id')
 
     client = PublicApiDepositClient({
         'url': url,
@@ -82,6 +96,7 @@ def parse_cli_options(archive, username, password, metadata,
         },
     })
 
+    if not collection:
         # retrieve user's collection
         sd_content = client.service_document()
         if 'error' in sd_content:
@@ -102,14 +117,16 @@ def parse_cli_options(archive, username, password, metadata,
         'partial': partial,
         'client': client,
         'url': url,
+        'deposit_id': deposit_id,
+        'replace': replace,
     }
 
 
-def make_deposit(config, dry_run, log):
+def deposit_create(config, dry_run, log):
     """Delegate the actual deposit to the deposit client.
 
     """
-    log.debug('New deposit execution')
+    log.debug('Create deposit')
 
     client = config['client']
     collection = config['collection']
@@ -119,14 +136,36 @@ def make_deposit(config, dry_run, log):
     in_progress = config['partial']
     client = config['client']
     if not dry_run:
-        r = client.deposit(collection, archive_path, slug,
-                           metadata_path, in_progress, log)
+        r = client.deposit(collection, slug, archive_path, metadata_path,
+                           in_progress, log)
         return r
     return {}
 
 
-@click.command(help='Software Heritage Deposit client')
-@click.argument('archive', required=1)
+def deposit_update(config, dry_run, log):
+    """Delegate the actual deposit to the deposit client.
+
+    """
+    log.debug('Update deposit')
+
+    client = config['client']
+    collection = config['collection']
+    deposit_id = config['deposit_id']
+    archive_path = config['archive']
+    metadata_path = config['metadata']
+    slug = config['slug']
+    in_progress = config['partial']
+    replace = config['replace']
+    client = config['client']
+    if not dry_run:
+        r = client.deposit_update(collection, deposit_id, slug, archive_path,
+                                  metadata_path, in_progress, replace, log)
+        return r
+    return {}
+
+
+@click.command(help='Software Heritage Deposit client helper')
+@click.option('--archive', '(Optional) Software archive to deposit')
 @click.option('--username', required=1,
               help="(Mandatory) User's name")
 @click.option('--password', required=1,
@@ -174,7 +213,8 @@ def main(archive, username, password,
         log.debug('Parsing cli options')
         config = parse_cli_options(
             archive, username, password, metadata, binary_deposit,
-            metadata_deposit, collection, slug, partial, deposit_id, url)
+            metadata_deposit, collection, slug, partial, deposit_id,
+            replace, url)
 
     except InputError as e:
         log.error('Problem during parsing options: %s' % e)
@@ -184,7 +224,13 @@ def main(archive, username, password,
         log.info("Parsed configuration: %s" % (
             config, ))
 
-    r = make_deposit(config, dry_run, log)
+    deposit_id = config['deposit_id']
+
+    if not deposit_id:
+        r = deposit_create(config, dry_run, log)
+    else:
+        r = deposit_update(config, dry_run, log)
+
     if r:
         log.info(r)
 
