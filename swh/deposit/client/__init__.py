@@ -235,25 +235,28 @@ class PublicApiDepositClient(ApiDepositClient):
 
         return {'deposit_id': deposit_id, 'deposit_status': deposit_status}
 
+    def _compute_deposit_url(self, collection):
+        return '/%s/' % collection
+
     def deposit(self, collection, archive_path, slug,
                 metadata_path=None, in_progress=False, log=None):
         """Post a new deposit
 
         """
-        deposit_url = '/%s/' % collection
         if archive_path and not metadata_path:
-            return self.deposit_binary(deposit_url, archive_path, slug,
+            return self.deposit_binary(collection, archive_path, slug,
                                        in_progress, log)
         elif not archive_path and metadata_path:
-            return self.deposit_metadata(deposit_url, metadata_path, slug,
+            return self.deposit_metadata(collection, metadata_path, slug,
                                          in_progress, log)
         else:
-            return self.deposit_multipart(deposit_url, archive_path,
+            return self.deposit_multipart(collection, archive_path,
                                           metadata_path, slug, in_progress,
                                           log)
 
-    def deposit_binary(self, deposit_url, archive_path, slug,
+    def deposit_binary(self, collection, archive_path, slug,
                        in_progress=False, log=None):
+        deposit_url = self._compute_deposit_url(collection)
         info = self._compute_information_on(archive_path)
         headers = {
             'SLUG': slug,
@@ -286,8 +289,9 @@ class PublicApiDepositClient(ApiDepositClient):
                     'error': r.status_code
                 }
 
-    def deposit_metadata(self, deposit_url, metadata_path, slug, in_progress,
+    def deposit_metadata(self, collection, metadata_path, slug, in_progress,
                          log=None):
+        deposit_url = self._compute_deposit_url(collection)
         headers = {
             'SLUG': slug,
             'IN-PROGRESS': str(in_progress),
@@ -317,8 +321,9 @@ class PublicApiDepositClient(ApiDepositClient):
                     'error': r.status_code
                 }
 
-    def deposit_multipart(self, deposit_url, archive_path, metadata_path,
+    def deposit_multipart(self, collection, archive_path, metadata_path,
                           slug, in_progress, log=None):
+        deposit_url = self._compute_deposit_url(collection)
         info = self._compute_information_on(archive_path)
         info_meta = self._compute_information_on(metadata_path,
                                                  is_archive=False)
