@@ -272,9 +272,9 @@ class PublicApiDepositClient(ApiDepositClient):
     def _compute_multipart_url(self, collection, deposit_id):
         return self._compute_metadata_url(collection, deposit_id)
 
-    def deposit(self, collection, slug, archive_path=None,
-                metadata_path=None, in_progress=False, log=None):
-        """Post a new deposit
+    def deposit_create(self, collection, slug, archive_path=None,
+                       metadata_path=None, in_progress=False, log=None):
+        """Create a new deposit.
 
         """
         if archive_path and not metadata_path:
@@ -425,7 +425,7 @@ class PublicApiDepositClient(ApiDepositClient):
     def deposit_update(self, collection, deposit_id, slug, archive_path=None,
                        metadata_path=None, in_progress=False,
                        replace=False, log=None):
-        """Post a new deposit
+        """Update an existing deposit.
 
         """
         if archive_path and not metadata_path:

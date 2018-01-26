@@ -55,7 +55,8 @@ def parse_cli_options(archive, username, password, metadata,
 
            - A deposit update needs a deposit_id to be provided
 
-        This won't prevent all cases though.
+        This won't prevent all failure cases though. The remaining
+        errors are already dealt with the underlying api client.
 
     Raises:
         InputError explaining the issue
@@ -151,8 +152,8 @@ def deposit_create(config, dry_run, log):
     in_progress = config['partial']
     client = config['client']
     if not dry_run:
-        r = client.deposit(collection, slug, archive_path, metadata_path,
-                           in_progress, log)
+        r = client.deposit_create(collection, slug, archive_path,
+                                  metadata_path, in_progress, log)
         return r
     return {}
 
@@ -180,11 +181,12 @@ def deposit_update(config, dry_run, log):
 
 
 @click.command()
-@click.option('--archive', '(Optional) Software archive to deposit')
 @click.option('--username', required=1,
               help="(Mandatory) User's name")
 @click.option('--password', required=1,
               help="(Mandatory) User's associated password")
+@click.option('--archive',
+              help='(Optional) Software archive to deposit')
 @click.option('--metadata',
               help="(Optional) Path to xml metadata file. If not provided, this will use a file named <archive>.metadata.xml")  # noqa
 @click.option('--binary-deposit/--no-binary-deposit', default=False,
@@ -207,11 +209,10 @@ def deposit_update(config, dry_run, log):
               help='(Optional) No-op deposit')
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
-def main(archive, username, password,
-         metadata=None, binary_deposit=False, metadata_deposit=False,
-         collection=None, slug=None, partial=False,
-         deposit_id=None, replace=False,
-         url='https://deposit.softwareheritage.org/1',
+def main(username, password, archive=None, metadata=None,
+         binary_deposit=False, metadata_deposit=False,
+         collection=None, slug=None, partial=False, deposit_id=None,
+         replace=False, url='https://deposit.softwareheritage.org/1',
          dry_run=True, verbose=False):
     """Software Heritage Deposit client - Create (or update partial)
 deposit through the command line.
