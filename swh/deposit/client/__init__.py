@@ -158,7 +158,24 @@ class PublicApiDepositClient(ApiDepositClient):
     """Public api deposit client.
 
     """
+    def _parse_service_document_xml(self, xml_content):
+        """Parse service document's success response.
+
+        """
+        tree = etree.fromstring(xml_content.encode('utf-8'))
+        collections = tree.xpath(
+            '/x:service/x:workspace/x:collection',
+            namespaces={'x': 'http://www.w3.org/2007/app'})
+        items = dict(collections[0].items())
+        collection = items['href'].rsplit(self.base_url)[1]
+        return {
+            'collection': collection
+        }
+
     def service_document(self, log=None):
+        """Retrieve service document endpoint's information.
+
+        """
         sd_url = '/servicedocument/'
         try:
             r = self.do('get', sd_url)
@@ -172,20 +189,14 @@ class PublicApiDepositClient(ApiDepositClient):
             }
         else:
             if r.ok:
-                tree = etree.fromstring(r.text)
-                collections = tree.xpath(
-                    '/x:service/x:workspace/x:collection',
-                    namespaces={'x': 'http://www.w3.org/2007/app'})
-                items = dict(collections[0].items())
-                collection = items['href'].rsplit(self.base_url)[1]
-                return {
-                    'collection': collection
-                }
+                return self._parse_service_document_xml(r.text)
             else:
-                return {
+                error = self._parse_deposit_error(r.text)
+                error.update({
                     'collection': None,
-                    'error': r.status_code
-                }
+                    'status': r.status_code,
+                })
+                return error
 
     def _compute_information(self, filepath, in_progress, slug,
                              is_archive=True):
