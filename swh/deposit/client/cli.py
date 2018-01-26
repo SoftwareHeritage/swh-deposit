@@ -36,9 +36,10 @@ def generate_slug(prefix='swh-sample'):
     return '%s-%s' % (prefix, uuid.uuid4())
 
 
-def parse_cli_options(archive, username, password, metadata,
+def parse_cli_options(username, password, archive, metadata,
                       binary_deposit, metadata_deposit,
-                      collection, slug, partial, deposit_id, replace, url):
+                      collection, slug, partial, deposit_id, replace,
+                      url, status):
     """Parse the cli options and make sure the combination is acceptable*.
        If not, an InputError exception is raised explaining the issue.
 
@@ -77,6 +78,9 @@ def parse_cli_options(archive, username, password, metadata,
             'deposit_id': optional deposit identifier
 
     """
+    if status and not deposit_id:
+        raise InputError("Deposit id must be provided for status check")
+
     if binary_deposit and metadata_deposit:
         # too many flags use, remove redundant ones (-> multipart deposit)
         binary_deposit = False
@@ -97,7 +101,7 @@ def parse_cli_options(archive, username, password, metadata,
     if metadata_deposit and not metadata:
         raise InputError("Metadata deposit filepath must be provided for a metadata deposit")  # noqa
 
-    if not binary_deposit and not os.path.exists(metadata):
+    if not status and not binary_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
     if replace and not deposit_id:
@@ -248,9 +252,9 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     try:
         log.debug('Parsing cli options')
         config = parse_cli_options(
-            archive, username, password, metadata, binary_deposit,
+            username, password, archive, metadata, binary_deposit,
             metadata_deposit, collection, slug, partial, deposit_id,
-            replace, url)
+            replace, url, status)
 
     except InputError as e:
         log.error('Problem during parsing options: %s' % e)
