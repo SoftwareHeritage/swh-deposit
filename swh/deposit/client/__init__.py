@@ -269,7 +269,7 @@ class PublicApiDepositClient(ApiDepositClient):
         if detail:
             detail = detail.strip()
 
-        return {'summary': summary, 'detail': detail}
+        return {'error': summary, 'detail': detail}
 
     def _compute_deposit_url(self, collection):
         return '/%s/' % collection

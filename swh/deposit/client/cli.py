@@ -116,7 +116,8 @@ def parse_cli_options(archive, username, password, metadata,
         # retrieve user's collection
         sd_content = client.service_document()
         if 'error' in sd_content:
-            raise InputError(sd_content['error'])
+            raise InputError('Service document retrieval: %s' % (
+                sd_content['error'], ))
         collection = sd_content['collection'].replace('/', '')
 
     if not slug:
