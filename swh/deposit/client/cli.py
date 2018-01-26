@@ -37,7 +37,7 @@ def generate_slug(prefix='swh-sample'):
 
 
 def parse_cli_options(username, password, archive, metadata,
-                      binary_deposit, metadata_deposit,
+                      archive_deposit, metadata_deposit,
                       collection, slug, partial, deposit_id, replace,
                       url, status):
     """Parse the cli options and make sure the combination is acceptable*.
@@ -81,9 +81,9 @@ def parse_cli_options(username, password, archive, metadata,
     if status and not deposit_id:
         raise InputError("Deposit id must be provided for status check")
 
-    if binary_deposit and metadata_deposit:
+    if archive_deposit and metadata_deposit:
         # too many flags use, remove redundant ones (-> multipart deposit)
-        binary_deposit = False
+        archive_deposit = False
         metadata_deposit = False
 
     if archive and not os.path.exists(archive):
@@ -95,13 +95,13 @@ def parse_cli_options(username, password, archive, metadata,
     if metadata_deposit:
         archive = None
 
-    if binary_deposit:
+    if archive_deposit:
         metadata = None
 
     if metadata_deposit and not metadata:
         raise InputError("Metadata deposit filepath must be provided for a metadata deposit")  # noqa
 
-    if not status and not binary_deposit and not os.path.exists(metadata):
+    if not status and not archive_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
     if replace and not deposit_id:
@@ -203,7 +203,7 @@ def deposit_update(config, dry_run, log):
               help='(Optional) Software archive to deposit')
 @click.option('--metadata',
               help="(Optional) Path to xml metadata file. If not provided, this will use a file named <archive>.metadata.xml")  # noqa
-@click.option('--binary-deposit/--no-binary-deposit', default=False,
+@click.option('--archive-deposit/--no-archive-deposit', default=False,
               help='(Optional) Software archive only deposit')
 @click.option('--metadata-deposit/--no-metadata-deposit', default=False,
               help='(Optional) Metadata only deposit')
@@ -226,7 +226,7 @@ def deposit_update(config, dry_run, log):
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
 def main(username, password, archive=None, metadata=None,
-         binary_deposit=False, metadata_deposit=False,
+         archive_deposit=False, metadata_deposit=False,
          collection=None, slug=None, partial=False, deposit_id=None,
          replace=False, status=False,
          url='https://deposit.softwareheritage.org/1', dry_run=True,
@@ -252,7 +252,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     try:
         log.debug('Parsing cli options')
         config = parse_cli_options(
-            username, password, archive, metadata, binary_deposit,
+            username, password, archive, metadata, archive_deposit,
             metadata_deposit, collection, slug, partial, deposit_id,
             replace, url, status)
 
