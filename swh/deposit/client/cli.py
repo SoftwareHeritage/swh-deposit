@@ -139,6 +139,17 @@ def parse_cli_options(archive, username, password, metadata,
     }
 
 
+def deposit_status(config, dry_run, log):
+    log.debug('Status deposit')
+    client = config['client']
+    collection = config['collection']
+    deposit_id = config['deposit_id']
+    if not dry_run:
+        r = client.deposit_status(collection, deposit_id, log)
+        return r
+    return {}
+
+
 def deposit_create(config, dry_run, log):
     """Delegate the actual deposit to the deposit client.
 
@@ -204,6 +215,8 @@ def deposit_update(config, dry_run, log):
               help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
 @click.option('--url', default='http://localhost:5006/1',
               help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
+@click.option('--status/--no-status', default=False,
+              help="(Optional) Deposit's status")
 @click.option('--dry-run/--no-dry-run', default=False,
               help='(Optional) No-op deposit')
 @click.option('--verbose/--no-verbose', default=False,
@@ -211,8 +224,9 @@ def deposit_update(config, dry_run, log):
 def main(username, password, archive=None, metadata=None,
          binary_deposit=False, metadata_deposit=False,
          collection=None, slug=None, partial=False, deposit_id=None,
-         replace=False, url='https://deposit.softwareheritage.org/1',
-         dry_run=True, verbose=False):
+         replace=False, status=False,
+         url='https://deposit.softwareheritage.org/1', dry_run=True,
+         verbose=False):
     """Software Heritage Deposit client - Create (or update partial)
 deposit through the command line.
 
@@ -248,13 +262,14 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     deposit_id = config['deposit_id']
 
-    if not deposit_id:
-        r = deposit_create(config, dry_run, log)
-    else:
+    if status and deposit_id:
+        r = deposit_status(config, dry_run, log)
+    elif not status and deposit_id:
         r = deposit_update(config, dry_run, log)
+    elif not status and not deposit_id:
+        r = deposit_create(config, dry_run, log)
 
-    if r:
-        log.info(r)
+    log.info(r)
 
 
 if __name__ == '__main__':

@@ -265,9 +265,10 @@ class PublicApiDepositClient(ApiDepositClient):
         vals = tree.xpath(
             '/x:error/x:verboseDescription',
             namespaces={'x': 'http://purl.org/net/sword/'})
-        detail = vals[0].text
-        if detail:
-            detail = detail.strip()
+        if vals:
+            detail = vals[0].text.strip()
+        else:
+            detail = None
 
         return {'error': summary, 'detail': detail}
 
@@ -546,6 +547,73 @@ class PublicApiDepositClient(ApiDepositClient):
                 error = self._parse_deposit_error(r.text)
                 error.update({
                     'deposit_id': None,
+                    'status': r.status_code,
+                })
+                return error
+
+    def _parse_deposit_status_xml(self, xml_content):
+        """Given an xml content as string, returns a deposit dict.
+
+        """
+        tree = etree.fromstring(xml_content.encode('utf-8'))
+        vals = tree.xpath(
+            '/x:entry/x:deposit_id',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_id = vals[0].text
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_status',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_status = vals[0].text
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_status_detail',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_status_detail = vals[0].text
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_swh_id',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        if vals:
+            deposit_swh_id = vals[0].text
+        else:
+            deposit_swh_id = None
+
+        return {
+            'deposit_id': deposit_id,
+            'deposit_status': deposit_status,
+            'deposit_status_detail': deposit_status_detail,
+            'deposit_swh_id': deposit_swh_id,
+        }
+
+    def deposit_status(self, collection, deposit_id, log=None):
+        deposit_url = '/%s/%s/status/' % (collection, deposit_id)
+
+        try:
+            r = self.do('get', deposit_url)
+        except Exception as e:
+            msg = 'Deposit status retrieval failure at %s: %s' % (
+                deposit_url, e)
+            if log:
+                log.error(msg)
+
+            return {
+                'deposit_id': deposit_id,
+                'deposit_status': None,
+                'deposit_status_detail': None,
+                'deposit_swh_id': None,
+                'error': msg,
+            }
+        else:
+            if r.ok:
+                return self._parse_deposit_status_xml(r.text)
+            else:
+                error = self._parse_deposit_error(r.text)
+                error.update({
+                    'deposit_id': deposit_id,
+                    'deposit_status': None,
+                    'deposit_status_detail': None,
+                    'deposit_swh_id': None,
                     'status': r.status_code,
                 })
                 return error
