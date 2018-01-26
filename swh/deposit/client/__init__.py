@@ -247,7 +247,17 @@ class PublicApiDepositClient(ApiDepositClient):
             '/x:entry/x:deposit_status',
             namespaces={'x': 'http://www.w3.org/2005/Atom'})
         deposit_status = vals[0].text
-        return {'deposit_id': deposit_id, 'deposit_status': deposit_status}
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_date',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        deposit_date = vals[0].text
+
+        return {
+            'deposit_id': deposit_id,
+            'deposit_status': deposit_status,
+            'deposit_date': deposit_date,
+        }
 
     def _parse_deposit_error(self, xml_content):
         """Parse xml error response to a dict.
