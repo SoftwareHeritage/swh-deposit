@@ -151,7 +151,6 @@ def deposit_create(config, dry_run, log):
     metadata_path = config['metadata']
     slug = config['slug']
     in_progress = config['partial']
-    client = config['client']
     if not dry_run:
         r = client.deposit_create(collection, slug, archive_path,
                                   metadata_path, in_progress, log)
@@ -173,7 +172,6 @@ def deposit_update(config, dry_run, log):
     slug = config['slug']
     in_progress = config['partial']
     replace = config['replace']
-    client = config['client']
     if not dry_run:
         r = client.deposit_update(collection, deposit_id, slug, archive_path,
                                   metadata_path, in_progress, replace, log)
