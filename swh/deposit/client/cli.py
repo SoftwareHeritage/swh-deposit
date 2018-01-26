@@ -39,8 +39,23 @@ def generate_slug(prefix='swh-sample'):
 def parse_cli_options(archive, username, password, metadata,
                       binary_deposit, metadata_deposit,
                       collection, slug, partial, deposit_id, replace, url):
-    """Parse the cli options and make sure the combination is acceptable.
+    """Parse the cli options and make sure the combination is acceptable*.
        If not, an InputError exception is raised explaining the issue.
+
+       By acceptable, we mean:
+
+           - A multipart deposit (create or update) needs both an
+             existing software archive and an existing metadata file
+
+           - A binary deposit (create/update) needs an existing
+             software archive
+
+           - A metadata deposit (create/update) needs an existing
+             metadata file
+
+           - A deposit update needs a deposit_id to be provided
+
+        This won't prevent all cases though.
 
     Raises:
         InputError explaining the issue
@@ -164,7 +179,7 @@ def deposit_update(config, dry_run, log):
     return {}
 
 
-@click.command(help='Software Heritage Deposit client helper')
+@click.command()
 @click.option('--archive', '(Optional) Software archive to deposit')
 @click.option('--username', required=1,
               help="(Mandatory) User's name")
@@ -198,6 +213,13 @@ def main(archive, username, password,
          deposit_id=None, replace=False,
          url='https://deposit.softwareheritage.org/1',
          dry_run=True, verbose=False):
+    """Software Heritage Deposit client - Create (or update partial)
+deposit through the command line.
+
+More documentation can be found at
+https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
+
+    """
 
     log = logging.getLogger('swh-deposit')
     log.addHandler(logging.StreamHandler())
