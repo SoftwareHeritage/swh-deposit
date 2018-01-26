@@ -11,16 +11,14 @@ import hashlib
 import os
 import requests
 
-from swh.core.config import SWHConfig
+from abc import ABCMeta, abstractmethod
 from lxml import etree
 
+from swh.core.config import SWHConfig
 
-class ApiDepositClient(SWHConfig):
-    """Deposit client to:
 
-    - read a given deposit's archive(s)
-    - read a given deposit's metadata
-    - update a given deposit's status
+class BaseApiDepositClient(SWHConfig):
+    """Deposit client base class
 
     """
     CONFIG_BASE_FILENAME = 'deposit/client'
@@ -67,6 +65,15 @@ class ApiDepositClient(SWHConfig):
         full_url = '%s%s' % (self.base_url.rstrip('/'), url)
         return method_fn(full_url, *args, **kwargs)
 
+
+class ApiDepositClient(BaseApiDepositClient):
+    """Private API deposit client to:
+
+    - read a given deposit's archive(s)
+    - read a given deposit's metadata
+    - update a given deposit's status
+
+    """
     def archive_get(self, archive_update_url, archive_path, log=None):
         """Retrieve the archive from the deposit to a local directory.
 
@@ -154,23 +161,48 @@ class ApiDepositClient(SWHConfig):
         raise ValueError(msg)
 
 
-class _DepositClient(ApiDepositClient):
+class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
+    """Base Deposit client to access the public api.
+
+    """
     def __init__(self, config, error_msg=None, empty_result={}):
         super().__init__(config)
         self.error_msg = error_msg
         self.empty_result = empty_result
 
+    @abstractmethod
     def compute_url(self, *args, **kwargs):
+        """Compute api url endpoint to query."""
         pass
 
+    @abstractmethod
     def compute_method(self, *args, **kwargs):
+        """Http method to use on the url"""
         pass
 
+    @abstractmethod
     def parse_result_ok(self, xml_content):
+        """Given an xml result from the api endpoint, parse it and returns a
+           dict.
+
+        """
         pass
 
-    def _parse_result_error(self, xml_content):
-        """Parse xml error response to a dict.
+    def compute_information(self, *args, **kwargs):
+        """Compute some more information given the inputs (e.g http headers,
+           ...)
+
+        """
+        return {}
+
+    def parse_result_error(self, xml_content):
+        """Given an error response in xml, parse it into a dict.
+
+        Returns:
+            dict with following keys:
+
+                'error': The error message
+                'detail': Some more detail about the error if any
 
         """
         tree = etree.fromstring(xml_content.encode('utf-8'))
@@ -192,23 +224,41 @@ class _DepositClient(ApiDepositClient):
 
         return {'error': summary, 'detail': detail}
 
+    def do_execute(self, method, url, info):
+        """Execute the http query to url using method and info information.
+
+        By default, execute a simple query to url with the http
+        method.  Override this in daughter class to improve the
+        default behavior if needed.
+
+        """
+        return self.do(method, url)
+
     def execute(self, *args, **kwargs):
+        """Main endpoint to prepare and execute the http query to the api.
+
+        """
         url = self.compute_url(*args, **kwargs)
         method = self.compute_method(*args, **kwargs)
+        info = self.compute_information(*args, **kwargs)
 
         try:
-            r = self.do(method, url)
+            r = self.do_execute(method, url, info)
         except Exception as e:
             msg = self.error_msg % (url, e)
             r = self.empty_result
             r.update({
                 'error': msg,
             })
+            return r
         else:
             if r.ok:
-                return self._parse_result_ok(r.text)
+                if int(r.status_code) == 204:  # 204 returns no body
+                    return {'status': r.status_code}
+                else:
+                    return self.parse_result_ok(r.text)
             else:
-                error = self._parse_result_error(r.text)
+                error = self.parse_result_error(r.text)
                 empty = self.empty_result
                 error.update(empty)
                 error.update({
@@ -217,7 +267,7 @@ class _DepositClient(ApiDepositClient):
                 return error
 
 
-class ServiceDocumentDepositClient(_DepositClient):
+class ServiceDocumentDepositClient(BaseDepositClient):
     """Service Document information retrieval.
 
     """
@@ -232,7 +282,7 @@ class ServiceDocumentDepositClient(_DepositClient):
     def compute_method(self, *args, **kwargs):
         return 'get'
 
-    def _parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content):
         """Parse service document's success response.
 
         """
@@ -247,8 +297,8 @@ class ServiceDocumentDepositClient(_DepositClient):
         }
 
 
-class StatusDepositClient(_DepositClient):
-    """Status information retrieval.
+class StatusDepositClient(BaseDepositClient):
+    """Status information on a deposit.
 
     """
     def __init__(self, config):
@@ -260,14 +310,13 @@ class StatusDepositClient(_DepositClient):
                              'deposit_swh_id': None,
                          })
 
-    def compute_url(self, *args, **kwargs):
-        collection, deposit_id = args
+    def compute_url(self, collection, deposit_id):
         return '/%s/%s/status/' % (collection, deposit_id)
 
     def compute_method(self, *args, **kwargs):
         return 'get'
 
-    def _parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content):
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -303,56 +352,25 @@ class StatusDepositClient(_DepositClient):
         }
 
 
-class PublicApiDepositClient(ApiDepositClient):
-    """Public api deposit client.
+class BaseCreateDepositClient(BaseDepositClient):
+    """Deposit client base class to post new deposit.
 
     """
-    def service_document(self, log=None):
-        """Retrieve service document endpoint's information.
+    def __init__(self, config):
+        super().__init__(config,
+                         error_msg='Post Deposit failure at %s: %s',
+                         empty_result={
+                             'deposit_id': None,
+                             'deposit_status': None,
+                         })
 
-        """
-        return ServiceDocumentDepositClient(self.config).execute()
+    def compute_url(self, collection, *args, **kwargs):
+        return '/%s/' % collection
 
-    def deposit_status(self, collection, deposit_id, log=None):
-        return StatusDepositClient(self.config).execute(
-            collection, deposit_id)
+    def compute_method(self, *args, **kwargs):
+        return 'post'
 
-    def _compute_information(self, filepath, in_progress, slug,
-                             is_archive=True):
-        """Given a filepath, compute necessary information on that file.
-
-        Args:
-            filepath (str): Path to a file
-            is_archive (bool): is it an archive or not?
-
-        Returns:
-            dict with keys:
-                'content-type': content type associated
-                'md5sum': md5 sum
-                'filename': filename
-        """
-        md5sum = hashlib.md5(open(filepath, 'rb').read()).hexdigest()
-        filename = os.path.basename(filepath)
-
-        if is_archive:
-            extension = filename.split('.')[-1]
-            if 'zip' in extension:
-                content_type = 'application/zip'
-            else:
-                content_type = 'application/x-tar'
-        else:
-            content_type = None
-
-        return {
-            'slug': slug,
-            'in_progress': in_progress,
-            'content-type': content_type,
-            'md5sum': md5sum,
-            'filename': filename,
-            'filepath': filepath,
-        }
-
-    def _parse_deposit_xml(self, xml_content):
+    def parse_result_ok(self, xml_content):
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -378,58 +396,58 @@ class PublicApiDepositClient(ApiDepositClient):
             'deposit_date': deposit_date,
         }
 
-    def _parse_deposit_error(self, xml_content):
-        """Parse xml error response to a dict.
+    def _compute_information(self, collection, filepath, in_progress, slug,
+                             is_archive=True):
+        """Given a filepath, compute necessary information on that file.
 
+        Args:
+            filepath (str): Path to a file
+            is_archive (bool): is it an archive or not?
+
+        Returns:
+            dict with keys:
+                'content-type': content type associated
+                'md5sum': md5 sum
+                'filename': filename
         """
-        tree = etree.fromstring(xml_content.encode('utf-8'))
-        vals = tree.xpath('/x:error/y:summary', namespaces={
-            'x': 'http://purl.org/net/sword/',
-            'y': 'http://www.w3.org/2005/Atom'
-        })
-        summary = vals[0].text
-        if summary:
-            summary = summary.strip()
+        filename = os.path.basename(filepath)
 
-        vals = tree.xpath(
-            '/x:error/x:verboseDescription',
-            namespaces={'x': 'http://purl.org/net/sword/'})
-        if vals:
-            detail = vals[0].text.strip()
+        if is_archive:
+            md5sum = hashlib.md5(open(filepath, 'rb').read()).hexdigest()
+            extension = filename.split('.')[-1]
+            if 'zip' in extension:
+                content_type = 'application/zip'
+            else:
+                content_type = 'application/x-tar'
         else:
-            detail = None
+            content_type = None
+            md5sum = None
 
-        return {'error': summary, 'detail': detail}
+        return {
+            'slug': slug,
+            'in_progress': in_progress,
+            'content-type': content_type,
+            'md5sum': md5sum,
+            'filename': filename,
+            'filepath': filepath,
+        }
 
-    def _compute_deposit_url(self, collection):
-        return '/%s/' % collection
+    def compute_information(self, *args, **kwargs):
+        collection, filepath, in_progress, slug = args
+        is_archive = kwargs.get('is_archive', True)
+        info = self._compute_information(collection, filepath, in_progress,
+                                         slug, is_archive=is_archive)
+        info['headers'] = self.compute_headers(info)
+        return info
 
-    def _compute_binary_url(self, collection, deposit_id):
-        return '/%s/%s/media/' % (collection, deposit_id)
+    def do_execute(self, method, url, info):
+        with open(info['filepath'], 'rb') as f:
+            return self.do(method, url, data=f, headers=info['headers'])
 
-    def _compute_metadata_url(self, collection, deposit_id):
-        return '/%s/%s/metadata/' % (collection, deposit_id)
 
-    def _compute_multipart_url(self, collection, deposit_id):
-        return self._compute_metadata_url(collection, deposit_id)
-
-    def deposit_create(self, collection, slug, archive_path=None,
-                       metadata_path=None, in_progress=False, log=None):
-        """Create a new deposit.
-
-        """
-        if archive_path and not metadata_path:
-            return self.deposit_binary(collection, archive_path, slug,
-                                       in_progress, log)
-        elif not archive_path and metadata_path:
-            return self.deposit_metadata(collection, metadata_path, slug,
-                                         in_progress, log)
-        else:
-            return self.deposit_multipart(collection, archive_path,
-                                          metadata_path, slug, in_progress,
-                                          log)
-
-    def _binary_headers(self, info):
+class CreateArchiveDepositClient(BaseCreateDepositClient):
+    """Post an archive (binary) deposit client."""
+    def compute_headers(self, info):
         return {
             'SLUG': info['slug'],
             'CONTENT_MD5': info['md5sum'],
@@ -439,74 +457,43 @@ class PublicApiDepositClient(ApiDepositClient):
                 info['filename'], ),
         }
 
-    def deposit_binary(self, collection, archive_path, slug,
-                       in_progress=False, log=None):
-        deposit_url = self._compute_deposit_url(collection)
-        info = self._compute_information(archive_path, in_progress, slug)
-        headers = self._binary_headers(info)
 
-        try:
-            with open(archive_path, 'rb') as f:
-                r = self.do('post', deposit_url, data=f, headers=headers)
+class UpdateArchiveDepositClient(CreateArchiveDepositClient):
+    """Update (add/replace) an archive (binary) deposit client."""
+    def compute_url(self, *args, **kwargs):
+        collection = args[0]
+        deposit_id = kwargs['deposit_id']
+        return '/%s/%s/media/' % (collection, deposit_id)
 
-        except Exception as e:
-            msg = 'Binary posting deposit failure at %s: %s' % (deposit_url, e)
-            if log:
-                log.error(msg)
+    def compute_method(self, *args, **kwargs):
+        replace = kwargs['replace']
+        return 'put' if replace else 'post'
 
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
 
-    def _metadata_headers(self, info):
+class CreateMetadataDepositClient(BaseCreateDepositClient):
+    """Post a metadata deposit client."""
+    def compute_headers(self, info):
         return {
             'SLUG': info['slug'],
             'IN-PROGRESS': str(info['in_progress']),
             'CONTENT-TYPE': 'application/atom+xml;type=entry',
         }
 
-    def deposit_metadata(self, collection, metadata_path, slug, in_progress,
-                         log=None):
-        deposit_url = self._compute_deposit_url(collection)
-        headers = self._metadata_headers(
-            {'slug': slug, 'in_progress': in_progress})
 
-        try:
-            with open(metadata_path, 'rb') as f:
-                r = self.do('post', deposit_url, data=f, headers=headers)
+class UpdateMetadataDepositClient(CreateMetadataDepositClient):
+    """Update (add/replace) a metadata deposit client."""
+    def compute_url(self, *args, **kwargs):
+        collection = args[0]
+        deposit_id = kwargs['deposit_id']
+        return '/%s/%s/metadata/' % (collection, deposit_id)
 
-        except Exception as e:
-            msg = 'Metadata posting deposit failure at %s: %s' % (
-                deposit_url, e)
-            if log:
-                log.error(msg)
+    def compute_method(self, *args, **kwargs):
+        replace = kwargs['replace']
+        return 'put' if replace else 'post'
 
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
 
+class CreateMultipartDepositClient(BaseCreateDepositClient):
+    """Create a multipart deposit client."""
     def _multipart_info(self, info, info_meta):
         files = [
             ('file',
@@ -527,155 +514,71 @@ class PublicApiDepositClient(ApiDepositClient):
 
         return files, headers
 
-    def deposit_multipart(self, collection, archive_path, metadata_path,
-                          slug, in_progress, log=None):
-        deposit_url = self._compute_deposit_url(collection)
-        info = self._compute_information(archive_path, in_progress, slug)
+    def compute_information(self, *args, **kwargs):
+        collection, archive_path, metadata_path, in_progress, slug = args
+        info = self._compute_information(
+            collection, archive_path, in_progress, slug)
         info_meta = self._compute_information(
-            metadata_path, in_progress, slug, is_archive=False)
+            collection, metadata_path, in_progress, slug, is_archive=False)
         files, headers = self._multipart_info(info, info_meta)
+        return {'files': files, 'headers': headers}
 
-        try:
-            r = self.do('post', deposit_url, files=files, headers=headers)
-        except Exception as e:
-            msg = 'Multipart posting deposit failure at %s: %s' % (
-                deposit_url, e)
-            if log:
-                log.error(msg)
+    def do_execute(self, method, url, info):
+        return self.do(
+            method, url, files=info['files'], headers=info['headers'])
 
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
+
+class UpdateMultipartDepositClient(CreateMultipartDepositClient):
+    """Update a multipart deposit client."""
+    def compute_url(self, *args, **kwargs):
+        collection = args[0]
+        deposit_id = kwargs['deposit_id']
+        return '/%s/%s/metadata/' % (collection, deposit_id)
+
+    def compute_method(self, *args, **kwargs):
+        replace = kwargs['replace']
+        return 'put' if replace else 'post'
+
+
+class PublicApiDepositClient(BaseApiDepositClient):
+    """Public api deposit client."""
+    def service_document(self, log=None):
+        """Retrieve service document endpoint's information."""
+        return ServiceDocumentDepositClient(self.config).execute()
+
+    def deposit_status(self, collection, deposit_id, log=None):
+        """Retrieve status information on a deposit."""
+        return StatusDepositClient(self.config).execute(
+            collection, deposit_id)
+
+    def deposit_create(self, collection, slug, archive_path=None,
+                       metadata_path=None, in_progress=False, log=None):
+        """Create a new deposit (archive, metadata, both as multipart)."""
+        if archive_path and not metadata_path:
+            return CreateArchiveDepositClient(self.config).execute(
+                collection, archive_path, in_progress, slug)
+        elif not archive_path and metadata_path:
+            return CreateMetadataDepositClient(self.config).execute(
+                collection, metadata_path, in_progress, slug,
+                is_archive=False)
         else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
-
-    # replace   PUT    EM    binary
-    # !replace  POST   EM    binary
-    # replace   PUT    EDIT  multipart ; atom
-    # !replace  POST   EDIT  multipart ; atom
+            return CreateMultipartDepositClient(self.config).execute(
+                collection, archive_path, metadata_path, in_progress,
+                slug)
 
     def deposit_update(self, collection, deposit_id, slug, archive_path=None,
                        metadata_path=None, in_progress=False,
                        replace=False, log=None):
-        """Update an existing deposit.
-
-        """
+        """Update (add/replace) existing deposit (archive, metadata, both)."""
         if archive_path and not metadata_path:
-            return self.deposit_binary_update(
-                collection, deposit_id, archive_path, slug,
-                in_progress, replace, log)
+            return UpdateArchiveDepositClient(self.config).execute(
+                collection, archive_path, in_progress, slug,
+                deposit_id=deposit_id, replace=replace, log=log)
         elif not archive_path and metadata_path:
-            return self.deposit_metadata_update(
-                collection, deposit_id, metadata_path, slug,
-                in_progress, replace, log)
+            return UpdateMetadataDepositClient(self.config).execute(
+                collection, metadata_path, in_progress, slug,
+                deposit_id=deposit_id, replace=replace, log=log)
         else:
-            return self.deposit_multipart_update(
-                collection, deposit_id, archive_path, metadata_path, slug,
-                in_progress, replace, log)
-
-    def deposit_binary_update(self, collection, deposit_id, archive_path,
-                              slug, in_progress, replace, log=None):
-        method = 'put' if replace else 'post'
-        deposit_url = self._compute_binary_url(collection, deposit_id)
-
-        info = self._compute_information(archive_path, in_progress, slug)
-        headers = self._binary_headers(info)
-
-        try:
-            with open(archive_path, 'rb') as f:
-                r = self.do(method, deposit_url, data=f, headers=headers)
-
-        except Exception as e:
-            msg = 'Binary deposit updating failure at %s: %s' % (
-                deposit_url, e)
-            if log:
-                log.error(msg)
-
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
-
-    def deposit_metadata_update(self, collection, deposit_id, metadata_path,
-                                slug, in_progress, replace, log=None):
-        method = 'put' if replace else 'post'
-        deposit_url = self._compute_metadata_url(collection, deposit_id)
-        headers = self._metadata_headers(
-            {'slug': slug, 'in_progress': in_progress})
-
-        try:
-            with open(metadata_path, 'rb') as f:
-                r = self.do(method, deposit_url, data=f, headers=headers)
-
-        except Exception as e:
-            msg = 'Metadata deposit updating deposit failure at %s: %s' % (
-                deposit_url, e)
-            if log:
-                log.error(msg)
-
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
-
-    def deposit_multipart_update(self, collection, deposit_id, archive_path,
-                                 metadata_path, slug, in_progress, replace,
-                                 log=None):
-        method = 'put' if replace else 'post'
-        deposit_url = self._compute_multipart_url(collection, deposit_id)
-        info = self._compute_information(archive_path, in_progress, slug)
-        info_meta = self._compute_information(metadata_path, in_progress, slug,
-                                              is_archive=False)
-        files, headers = self._multipart_info(info, info_meta)
-
-        try:
-            r = self.do(method, deposit_url, files=files, headers=headers)
-        except Exception as e:
-            msg = 'Multipart deposit updating failure at %s: %s' % (
-                deposit_url, e)
-            if log:
-                log.error(msg)
-
-            return {
-                'deposit_id': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_deposit_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'deposit_id': None,
-                    'status': r.status_code,
-                })
-                return error
+            return UpdateMultipartDepositClient(self.config).execute(
+                collection, archive_path, metadata_path, in_progress,
+                slug, deposit_id=deposit_id, replace=replace, log=log)
