@@ -1,5 +1,5 @@
-Bootstrap swh-deposit on production
-===================================
+Deployment of the swh-deposit 
+=============================
 
 As usual, the debian packaged is created and uploaded to the swh debian
 repository. Once the package is installed, we need to do a few things in

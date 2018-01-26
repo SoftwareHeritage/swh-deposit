@@ -1,4 +1,4 @@
-Develop on swh-deposit
+Hacking on swh-deposit
 ======================
 
 There are multiple modes to run and test the server locally:

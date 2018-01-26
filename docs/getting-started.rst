@@ -66,71 +66,6 @@ Prepare a deposit
     </entry>
 
 
-Check authentication with a service document request
-----------------------------------------------------
-
-Start with a simple request to check credentials and retrieve the
-*collection iri* onto which the deposit will be pushed .
-
-.. code:: shell
-
-    curl -i --user <name>:<pass> https://deposit.softwareheritage.org/1/servicedocument/
-
-
-The successful response:
-^^^^^^^^^^^^^^^^^^^^^^^^
-.. code:: shell
-
-    HTTP/1.0 200 OK
-    Server: WSGIServer/0.2 CPython/3.5.3
-    Content-Type: application/xml
-
-    <?xml version="1.0" ?>
-    <service xmlns:dcterms="http://purl.org/dc/terms/"
-        xmlns:sword="http://purl.org/net/sword/terms/"
-        xmlns:atom="http://www.w3.org/2005/Atom"
-        xmlns="http://www.w3.org/2007/app">
-
-        <sword:version>2.0</sword:version>
-        <sword:maxUploadSize>209715200</sword:maxUploadSize>
-
-        <workspace>
-            <atom:title>The Software Heritage (SWH) Archive</atom:title>
-            <collection href="https://deposit.softwareheritage.org/1/<collection-name>/">
-                <atom:title><client-name> Software Collection</atom:title>
-                <accept>application/zip</accept>
-                <accept>application/x-tar</accept>
-                <sword:collectionPolicy>Collection Policy</sword:collectionPolicy>
-                <dcterms:abstract>Software Heritage Archive</dcterms:abstract>
-                <sword:treatment>Collect, Preserve, Share</sword:treatment>
-                <sword:mediation>false</sword:mediation>
-                <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
-                <sword:service>https://deposit.softwareheritage.org/1/<collection-name>/</sword:service>
-            </collection>
-        </workspace>
-    </service>
-
-The error response 401 for Unauthorized access:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. code:: shell
-
-    curl -i https://deposit.softwareheritage.org/1/<collection-name>/
-    HTTP/1.1 401 Unauthorized
-    Content-Type: application/xml
-
-    <?xml version="1.0" encoding="utf-8"?>
-    <sword:error xmlns="http://www.w3.org/2005/Atom"
-           xmlns:sword="http://purl.org/net/sword/">
-        <summary>Invalid username/password.</summary>
-        <sword:treatment>processing failed</sword:treatment>
-
-        <sword:verboseDescription>
-            API is protected by basic authentication
-        </sword:verboseDescription>
-
-    </sword:error>
-
-
 Push deposit
 ------------
 You can push a deposit with:
@@ -140,7 +75,7 @@ You can push a deposit with:
   The user posts in one query a software
   source code archive and associated metadata.
   The deposit is directly marked with status ``deposited``.
-* a multipart deposit:
+* a multisteps deposit:
 
   1. Create an incomplete deposit (marked with status ``partial``)
   2. Add data to a deposit (in multiple requests if needed)
@@ -172,50 +107,47 @@ minimal deposit
 
 .. code:: shell
 
- $ swh-deposit --username 'name' --password 'pass' je-suis-gpl.tgz
+ $ swh-deposit ---username name --password secret \
+               --archive je-suis-gpl.tgz
 
 with the client's identifier
 
 .. code:: shell
 
- $ swh-deposit --username 'name' --password 'pass' je-suis-gpl.tgz --sulg '123456'
+ $ swh-deposit --username name --password secret \
+               --archive je-suis-gpl.tgz \
+               --sulg '123456'
 
 deposit to a specific client's collection
 
 .. code:: shell
 
- $ swh-deposit --username 'name' --password 'pass' je-suis-gpl.tgz --collection 'second-collection'
+ $ swh-deposit --username name --password secret \
+               --archive je-suis-gpl.tgz \
+               --collection 'second-collection'
 
 
 
 You just posted a deposit to your collection on Software Heritage
 
 
-If everything went well, a the successful response will contain the
+If everything went well, the successful response will contain the
 elements below:
 
-* ``HTTP/1.0 201 Created``: the deposit was created successfully
-* Information about the deposit, such as:
+.. code:: shell
 
-  * deposit id
-  * deposit date
-  * deposit status will be ``deposited``
-* Entry points:
-
-  * ``Location: /1/<collection-name>/<deposit-id>/metadata/``: the EDIT-SE-IRI through
-    which we can update a deposit's metadata
-  * ``Location: /1/<collection-name>/<deposit-id>/media/``: the EM-IRI through
-    which we can update a deposit's content
-
-
+  {
+    'deposit_status': 'deposited',
+    'deposit_id': '7'
+  }
 
 Note: As the deposit is in ``deposited`` status, you cannot
 update the deposit after this query. It will be answered with
 a 403 forbidden answer.
 
-multipart deposit
+multisteps deposit
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The steps to create a multipart deposit:
+The steps to create a multisteps deposit:
 
 1. Create an incomplete deposit
 ~~~~~~~~~~~~~~~~~~~
@@ -223,7 +155,7 @@ First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
 
-  $ swh-deposit --username 'name' --password 'secret' --partial \
+  $ swh-deposit --username name --password secret --partial \
                 --archive foo.tar.gz
 
 
@@ -235,20 +167,34 @@ the ``--partial`` argument.
 
 .. code:: shell
 
-  $ swh-deposit --username 'name' --password 'secret' --partial \
-                --deposit-id 42 --archive add-foo.tar.gz
+  $ swh-deposit --username name --password secret --partial \
+                --archive add-foo.tar.gz \
+                --deposit-id 42
 
+
+In case you want to add only content without metadata:
+
+.. code:: shell
+
+  $ swh-deposit --username name --password secret --partial \
+                --archive add-foo.tar.gz \
+                --archive-deposit
+                --deposit-id 42
+
+If you want to add only metadata, use:
+
+.. code:: shell
+
+  $ swh-deposit --username name --password secret --partial \
+                --metadata add-foo.tar.gz.metadata.xml \
+                --metadata-deposit
+                --deposit-id 42
 
 3. Finalize deposit
 ~~~~~~~~~~~~~~~~~~~
 On your last addition, by not declaring it as  ``--partial``, the deposit will be
 considered as completed and its status will be changed to ``deposited``.
 
-.. code:: shell
-
-  $ swh-deposit --username 'name' --password 'secret' \
-                --deposit-id 42 \
-                --archive last-foo.tar.gz
 
 
 Update deposit
@@ -257,10 +203,13 @@ Update deposit
 
   - only possible if the deposit status is ``partial``
   - by using the ``--replace`` argument
+  - you can replace only metadata with the --metadata-deposit flag
+  - or only the archive with --archive-deposit
+  - if none is used, you'll replace metadata and content
 
 .. code:: shell
 
-  $ swh-deposit --username 'name' --password 'secret' --replace\
+  $ swh-deposit --username name --password secret --replace\
                 --deposit-id 11 \
                 --archive updated-je-suis-gpl.tar.gz
 
@@ -271,7 +220,7 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit --username 'name' --password 'pass' --slug '123456' \
+  $ swh-deposit --username name --password secret --slug '123456' \
                 --archive je-suis-gpl-v2.tgz
 
 
@@ -283,19 +232,17 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-$ swh-deposit --login 'name' --pass 'secret' --deposit-id '11' --status
+$ swh-deposit --username name --password secret --deposit-id '11' --status
 
-Response:
+.. code:: json
 
-.. code:: xml
-
-    <entry xmlns="http://www.w3.org/2005/Atom"
-           xmlns:sword="http://purl.org/net/sword/"
-           xmlns:dcterms="http://purl.org/dc/terms/">
-        <deposit_id>9</deposit_id>
-        <deposit_status>deposited</deposit_status>
-        <deposit_status_detail>deposit is fully received and ready for loading</deposit_status_detail>
-    </entry>
+  {
+    'deposit_id': '11',
+    'deposit_status': 'deposited',
+    'deposit_swh_id': None,
+    'deposit_status_detail': 'Deposit is ready for additional checks \
+                              (tarball ok, metadata, etc...)'
+  }
 
 The different statuses:
 
@@ -311,13 +258,12 @@ When the deposit has been loaded into the archive, the status will be
 marked ``done``. In the response, will also be available the
 <deposit_swh_id>. For example:
 
-.. code:: xml
+.. code:: json
 
-<entry xmlns="http://www.w3.org/2005/Atom"
-       xmlns:sword="http://purl.org/net/sword/"
-       xmlns:dcterms="http://purl.org/dc/terms/">
-    <deposit_id>55</deposit_id>
-    <deposit_status>done</deposit_status>
-    <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
-    <deposit_swh_id>swh:1:rev:34898aa991c90b447c27d2ac1fc09f5c8f12783e</deposit_swh_id>
-</entry>
+ {
+  'deposit_id': '11',
+  'deposit_status': 'done',
+  'deposit_swh_id': 'swh:1:rev:34898aa991c90b447c27d2ac1fc09f5c8f12783e',
+  'deposit_status_detail': 'The deposit has been successfully \
+                            loaded into the Software Heritage archive'
+ }
