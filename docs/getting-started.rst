@@ -15,10 +15,10 @@ You need to be referenced on SWH's client list to have:
 
 * a credential (needed for the basic authentication step)
 
-  - in this document we reference ``<name>`` as the client's name and ``<pass>``
- as its associated authentication password.
-* an associated collection (by default the client's name is the collection
-name)
+  - in this document we reference ``<name>`` as the client's name and
+ ``<pass>`` as its associated authentication password.
+
+ * an associated collection
 
 
 `Contact us for more
@@ -32,12 +32,12 @@ Prepare a deposit
   - tar: tar archive without compression or optionally any of the
          following compression algorithm gzip (.tar.gz, .tgz), bzip2
          (.tar.bz2) , or lzma (.tar.lzma)
-* prepare a metadata file (more details `here <./metadata.html>`__.):
+* prepare a metadata file (`more details <./metadata.html>`__.):
 
-  - specify metadata schema/vocabulry (CodeMeta is recommended)
+  - specify metadata schema/vocabulary (CodeMeta is recommended)
   - specify *MUST* metadata (url, authors, software name and
     the external\_identifier)
-  - add all available information under the  compatible metadadata term
+  - add all available information under the compatible metadata term
 
   An example of an atom entry file with CodeMeta terms:
 
@@ -115,17 +115,18 @@ The error response 401 for Unauthorized access:
 .. code:: shell
 
     curl -i https://deposit.softwareheritage.org/1/<collection-name>/
-    HTTP/1.0 401 Unauthorized
-    Server: WSGIServer/0.2 CPython/3.5.3
+    HTTP/1.1 401 Unauthorized
     Content-Type: application/xml
-    WWW-Authenticate: Basic realm=""
-    X-Frame-Options: SAMEORIGIN
 
     <?xml version="1.0" encoding="utf-8"?>
     <sword:error xmlns="http://www.w3.org/2005/Atom"
            xmlns:sword="http://purl.org/net/sword/">
-        <summary>Access to this api needs authentication</summary>
+        <summary>Invalid username/password.</summary>
         <sword:treatment>processing failed</sword:treatment>
+
+        <sword:verboseDescription>
+            API is protected by basic authentication
+        </sword:verboseDescription>
 
     </sword:error>
 
@@ -139,7 +140,7 @@ You can push a deposit with:
   The user posts in one query a software
   source code archive and associated metadata.
   The deposit is directly marked with status ``deposited``.
-* a multi-part deposit:
+* a multipart deposit:
 
   1. Create an incomplete deposit (marked with status ``partial``)
   2. Add data to a deposit (in multiple requests if needed)
@@ -194,7 +195,7 @@ If everything went well, a the successful response will contain the
 elements below:
 
 * ``HTTP/1.0 201 Created``: the deposit was created successfully
-* Inforamtion about the deposit, such as:
+* Information about the deposit, such as:
 
   * deposit id
   * deposit date
@@ -212,9 +213,9 @@ Note: As the deposit is in ``deposited`` status, you cannot
 update the deposit after this query. It will be answered with
 a 403 forbidden answer.
 
-Multi-part deposit
+multipart deposit
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The steps to create a multi-part deposit:
+The steps to create a multipart deposit:
 
 1. Create an incomplete deposit
 ~~~~~~~~~~~~~~~~~~~
@@ -223,7 +224,7 @@ First use the ``--partial`` argument to declare there is more to come
 .. code:: shell
 
   $ swh-deposit --username 'name' --password 'secret' --partial \
-                foo.tar.gz
+                --archive foo.tar.gz
 
 
 2. Add content or metadata to the deposit
@@ -235,7 +236,7 @@ the ``--partial`` argument.
 .. code:: shell
 
   $ swh-deposit --username 'name' --password 'secret' --partial \
-                --deposit-id 42 add-foo.tar.gz
+                --deposit-id 42 --archive add-foo.tar.gz
 
 
 3. Finalize deposit
@@ -246,7 +247,8 @@ considered as completed and its status will be changed to ``deposited``.
 .. code:: shell
 
   $ swh-deposit --username 'name' --password 'secret' \
-                --deposit-id 42 last-foo.tar.gz
+                --deposit-id 42 \
+                --archive last-foo.tar.gz
 
 
 Update deposit
@@ -259,7 +261,8 @@ Update deposit
 .. code:: shell
 
   $ swh-deposit --username 'name' --password 'secret' --replace\
-                --deposit-id 11 updated-je-suis-gpl.tar.gz
+                --deposit-id 11 \
+                --archive updated-je-suis-gpl.tar.gz
 
 * update a loaded deposit with a new version:
 
@@ -268,7 +271,8 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit --username 'name' --password 'pass' je-suis-gpl-v2.tgz --sulg '123456'
+  $ swh-deposit --username 'name' --password 'pass' --slug '123456' \
+                --archive je-suis-gpl-v2.tgz
 
 
 
@@ -303,6 +307,17 @@ The different statuses:
 - *done*: loading completed successfully
 - *failed*: the deposit loading has failed
 
-When the the deposit has been loaded into the archive it will be marked ``done``
-and in the response will be also available the <deposit_swh_id>.
-For more information about the swh-id go to .....
+When the deposit has been loaded into the archive, the status will be
+marked ``done``. In the response, will also be available the
+<deposit_swh_id>. For example:
+
+.. code:: xml
+
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>55</deposit_id>
+    <deposit_status>done</deposit_status>
+    <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
+    <deposit_swh_id>swh:1:rev:34898aa991c90b447c27d2ac1fc09f5c8f12783e</deposit_swh_id>
+</entry>
