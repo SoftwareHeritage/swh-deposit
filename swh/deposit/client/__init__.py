@@ -154,11 +154,81 @@ class ApiDepositClient(SWHConfig):
         raise ValueError(msg)
 
 
-class PublicApiDepositClient(ApiDepositClient):
-    """Public api deposit client.
+class _DepositClient(ApiDepositClient):
+    def __init__(self, config, error_msg=None, empty_result={}):
+        super().__init__(config)
+        self.error_msg = error_msg
+        self.empty_result = empty_result
 
-    """
-    def _parse_service_document_xml(self, xml_content):
+    def compute_url(self, *args, **kwargs):
+        pass
+
+    def compute_method(self, *args, **kwargs):
+        pass
+
+    def parse_result_ok(self, xml_content):
+        pass
+
+    def _parse_result_error(self, xml_content):
+        """Parse xml error response to a dict.
+
+        """
+        tree = etree.fromstring(xml_content.encode('utf-8'))
+        vals = tree.xpath('/x:error/y:summary', namespaces={
+            'x': 'http://purl.org/net/sword/',
+            'y': 'http://www.w3.org/2005/Atom'
+        })
+        summary = vals[0].text
+        if summary:
+            summary = summary.strip()
+
+        vals = tree.xpath(
+            '/x:error/x:verboseDescription',
+            namespaces={'x': 'http://purl.org/net/sword/'})
+        detail = vals[0].text
+        if detail:
+            detail = detail.strip()
+
+        return {'summary': summary, 'detail': detail}
+
+    def execute(self, *args, **kwargs):
+        url = self.compute_url(*args, **kwargs)
+        method = self.compute_method(*args, **kwargs)
+
+        try:
+            r = self.do(method, url)
+        except Exception as e:
+            msg = self.error_msg % (url, e)
+            r = self.empty_result
+            r.update({
+                'error': msg,
+            })
+        else:
+            if r.ok:
+                return self._parse_result_ok(r.text)
+            else:
+                error = self._parse_result_error(r.text)
+                r = self.empty_result
+                error.update(r)
+                error.update({
+                    'status': r.status_code,
+                })
+                return error
+
+
+class ServiceDocumentDepositClient(_DepositClient):
+    def __init__(self, config):
+        super().__init__(config,
+                         error_msg='Service document failure at %s: %s',
+                         empty_result={'collection': None})
+
+    def compute_url(self, *args, **kwargs):
+        return '/servicedocument/'
+
+    def compute_method(self, *args, **kwargs):
+        return 'get'
+
+    def _parse_result_ok(self, xml_content):
         """Parse service document's success response.
 
         """
@@ -172,31 +242,16 @@ class PublicApiDepositClient(ApiDepositClient):
             'collection': collection
         }
 
+
+class PublicApiDepositClient(ApiDepositClient):
+    """Public api deposit client.
+
+    """
     def service_document(self, log=None):
         """Retrieve service document endpoint's information.
 
         """
-        sd_url = '/servicedocument/'
-        try:
-            r = self.do('get', sd_url)
-        except Exception as e:
-            msg = 'Service document failure at %s: %s' % (sd_url, e)
-            if log:
-                log.error(msg)
-            return {
-                'collection': None,
-                'error': msg,
-            }
-        else:
-            if r.ok:
-                return self._parse_service_document_xml(r.text)
-            else:
-                error = self._parse_deposit_error(r.text)
-                error.update({
-                    'collection': None,
-                    'status': r.status_code,
-                })
-                return error
+        return ServiceDocumentDepositClient(self.config).execute()
 
     def _compute_information(self, filepath, in_progress, slug,
                              is_archive=True):
