@@ -571,14 +571,18 @@ class PublicApiDepositClient(BaseApiDepositClient):
                        replace=False, log=None):
         """Update (add/replace) existing deposit (archive, metadata, both)."""
         if archive_path and not metadata_path:
-            return UpdateArchiveDepositClient(self.config).execute(
+            r = UpdateArchiveDepositClient(self.config).execute(
                 collection, archive_path, in_progress, slug,
                 deposit_id=deposit_id, replace=replace, log=log)
         elif not archive_path and metadata_path:
-            return UpdateMetadataDepositClient(self.config).execute(
+            r = UpdateMetadataDepositClient(self.config).execute(
                 collection, metadata_path, in_progress, slug,
                 deposit_id=deposit_id, replace=replace, log=log)
         else:
-            return UpdateMultipartDepositClient(self.config).execute(
+            r = UpdateMultipartDepositClient(self.config).execute(
                 collection, archive_path, metadata_path, in_progress,
                 slug, deposit_id=deposit_id, replace=replace, log=log)
+
+        if 'error' in r:
+            return r
+        return self.deposit_status(collection, deposit_id, log=log)
