@@ -560,6 +560,19 @@ class PublicApiDepositClient(BaseApiDepositClient):
                        metadata_path=None, in_progress=False,
                        replace=False, log=None):
         """Update (add/replace) existing deposit (archive, metadata, both)."""
+        r = self.deposit_status(collection, deposit_id, log=log)
+        if 'error' in r:
+            return r
+
+        status = r['deposit_status']
+        if status != 'partial':
+            return {
+                'error': "You can only act on deposit with status 'partial'",
+                'detail': "The deposit %s has status '%s'" % (
+                    deposit_id, status),
+                'deposit_status': status,
+                'deposit_id': deposit_id,
+            }
         if archive_path and not metadata_path:
             r = UpdateArchiveDepositClient(self.config).execute(
                 collection, archive_path, in_progress, slug,
