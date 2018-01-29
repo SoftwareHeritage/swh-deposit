@@ -13,7 +13,7 @@ Requirements
 
 You need to be referenced on SWH's client list to have:
 
-* a credential (needed for the basic authentication step)
+* credentials (needed for the basic authentication step)
 
   - in this document we reference ``<name>`` as the client's name and
  ``<pass>`` as its associated authentication password.
@@ -92,14 +92,16 @@ in one shot, sending exactly one POST query:
 * 1 archive (content-type ``application/zip`` or ``application/x-tar``)
 * 1 metadata file in atom xml format (``content-type: application/atom+xml;type=entry``)
 
-For this, we need to provide:
+For this, we need to provide the:
 
-* the arguments: ``--username 'name' --password 'pass'`` as credentials
-* the name of the archive  (example: ``path/to/archive-name.tgz``)
-* in the same location of the archive and with the following namimg pattern
-  for the metadata file: ``path/to/archive-name.metadata.xml``
-* optionally, the --slug 'your-id' argument, a reference to a unique identifier
-  the client uses for the software object.
+* arguments: ``--username 'name' --password 'pass'`` as credentials
+* archive's path (example: ``--archive path/to/archive-name.tgz``) :
+* (optionally) metadata file's path ``--metadata
+  path/to/file.metadata.xml``. If not provided, the archive's filename
+  will be used to determine the metadata file, e.g:
+  ``path/to/archive-name.tgz.metadata.xml``
+* (optionally) ``--slug 'your-id'`` argument, a reference to a
+  unique identifier the client uses for the software object.
 
 You can do this with the following command:
 
@@ -110,15 +112,15 @@ minimal deposit
  $ swh-deposit ---username name --password secret \
                --archive je-suis-gpl.tgz
 
-with the client's identifier
+with client's external identifier (``slug``)
 
 .. code:: shell
 
  $ swh-deposit --username name --password secret \
                --archive je-suis-gpl.tgz \
-               --slug '123456'
+               --slug 123456
 
-deposit to a specific client's collection
+to a specific client's collection
 
 .. code:: shell
 
@@ -138,12 +140,29 @@ elements below:
 
   {
     'deposit_status': 'deposited',
-    'deposit_id': '7'
+    'deposit_id': '7',
+    'deposit_date': 'Jan. 29, 2018, 12:29 p.m.'
   }
 
-Note: As the deposit is in ``deposited`` status, you cannot
-update the deposit after this query. It will be answered with
-a 403 forbidden answer.
+Note: As the deposit is in ``deposited`` status, you can no longer
+update the deposit after this query. It will be answered with a 403
+forbidden answer.
+
+If something went wrong, an equivalent response will be given with the
+`error` and `detail` keys explaining the issue, e.g.:
+
+.. code:: shell
+
+  {
+    'error': 'Unknown collection name xyz',
+    'detail': None,
+    'deposit_status': None,
+    'deposit_status_detail': None,
+    'deposit_swh_id': None,
+    'status': 404
+  }
+
+
 
 multisteps deposit
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -172,7 +191,7 @@ the ``--partial`` argument.
                 --deposit-id 42
 
 
-In case you want to add only content without metadata:
+In case you want to add only one new archive without metadata:
 
 .. code:: shell
 
@@ -192,20 +211,23 @@ If you want to add only metadata, use:
 
 3. Finalize deposit
 ~~~~~~~~~~~~~~~~~~~
-On your last addition, by not declaring it as  ``--partial``, the deposit will be
-considered as completed and its status will be changed to ``deposited``.
+On your last addition, by not declaring it as ``--partial``, the
+deposit will be considered as completed and its status will be changed
+to ``deposited``.
 
 
 
 Update deposit
 ----------------
-* replace deposit :
+* replace deposit:
 
-  - only possible if the deposit status is ``partial``
-  - by using the ``--replace`` argument
-  - you can replace only metadata with the --metadata-deposit flag
-  - or only the archive with --archive-deposit
-  - if none is used, you'll replace metadata and content
+  - only possible if the deposit status is ``partial`` and
+    ``--deposit-id <id>`` is provided
+  - by using the ``--replace`` flag
+    - ``--metadata-deposit`` replaces associated existing metadata
+    - ``--archive-deposit`` replaces associated archive(s)
+    - by default, with no flag or both, you'll replace associated
+      metadata and archive(s)
 
 .. code:: shell
 
@@ -215,8 +237,8 @@ Update deposit
 
 * update a loaded deposit with a new version:
 
-  - by using the external-id with the ``--slug`` argument which will link the
-    new deposit with its parent deposit
+  - by using the external-id with the ``--slug`` argument, you will
+    link the new deposit with its parent deposit
 
 .. code:: shell
 
