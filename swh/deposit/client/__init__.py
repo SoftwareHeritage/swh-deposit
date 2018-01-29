@@ -288,10 +288,14 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """
         tree = etree.fromstring(xml_content.encode('utf-8'))
         collections = tree.xpath(
-            '/x:service/x:workspace/x:collection',
-            namespaces={'x': 'http://www.w3.org/2007/app'})
-        items = dict(collections[0].items())
-        collection = items['href'].rsplit(self.base_url)[1]
+            '/x:service/x:workspace/x:collection/y:name',
+            namespaces={'x': 'http://www.w3.org/2007/app',
+                        'y': 'http://purl.org/net/sword/terms/'})
+        if collections:
+            collection = collections[0].text
+        else:
+            collection = None
+
         return {
             'collection': collection
         }

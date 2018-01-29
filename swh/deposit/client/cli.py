@@ -132,7 +132,7 @@ def parse_cli_options(username, password, archive, metadata,
         if 'error' in sd_content:
             raise InputError('Service document retrieval: %s' % (
                 sd_content['error'], ))
-        collection = sd_content['collection'].replace('/', '')
+        collection = sd_content['collection']
 
     if not slug:
         # generate slug
