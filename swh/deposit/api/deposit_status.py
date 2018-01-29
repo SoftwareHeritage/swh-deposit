@@ -39,6 +39,7 @@ class SWHDepositStatus(SWHBaseDeposit):
             'deposit_id': deposit.id,
             'status': deposit.status,
             'status_detail': DEPOSIT_STATUS_DETAIL[deposit.status],
+            'swh_id': None,
         }
 
         if deposit.swh_id:

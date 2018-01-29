@@ -72,7 +72,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """
         try:
             patoolib.test_archive(archive_path, verbosity=-1)
-        except:
+        except Exception:
             return False
         else:
             return True

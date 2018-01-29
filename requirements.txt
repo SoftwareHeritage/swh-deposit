@@ -3,3 +3,4 @@ click
 Django
 djangorestframework
 djangorestframework-xml
+lxml
