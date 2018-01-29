@@ -227,7 +227,7 @@ def deposit_update(config, dry_run, log):
               help='(Optional) Update an existing partial deposit with its identifier')  # noqa
 @click.option('--replace/--no-replace', default=False,
               help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
-@click.option('--url', default='http://localhost:5006/1',
+@click.option('--url', default='http://deposit.softwareheritage.org/1',
               help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
 @click.option('--status/--no-status', default=False,
               help="(Optional) Deposit's status")
