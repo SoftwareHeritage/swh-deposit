@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Use: ./swh-deposit --help
+#
+# Documentation: https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html
+
+python3 -m swh.deposit.client.cli $@
