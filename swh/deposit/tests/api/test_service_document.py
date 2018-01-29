@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -69,10 +69,15 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
             <sword:metadataRelevantHeader>false</sword:metadataRelevantHeader>
             <sword:acceptPackaging>http://purl.org/net/sword/package/SimpleZip</sword:acceptPackaging>
             <sword:service>http://testserver/1/%s/</sword:service>
+            <sword:name>%s</sword:name>
         </collection>
     </workspace>
 </service>
-''' % (TEST_CONFIG['max_upload_size'], self.username, self.username, self.username))  # noqa
+''' % (TEST_CONFIG['max_upload_size'],
+       self.username,
+       self.username,
+       self.username,
+       self.username))  # noqa
 
     @istest
     def service_document(self):
