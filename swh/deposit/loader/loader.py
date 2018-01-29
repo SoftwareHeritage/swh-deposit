@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,7 @@ from swh.model import hashutil
 from swh.loader.tar import loader
 from swh.loader.core.loader import SWHLoader
 
-from .client import DepositClient
+from ..client import ApiDepositClient
 
 
 class DepositLoader(loader.TarLoader):
@@ -39,7 +39,7 @@ class DepositLoader(loader.TarLoader):
     def __init__(self, client=None):
         super().__init__(
             logging_class='swh.deposit.loader.loader.DepositLoader')
-        self.client = client if client else DepositClient()
+        self.client = client if client else ApiDepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
         SWHLoader.load(
@@ -91,7 +91,7 @@ class DepositLoader(loader.TarLoader):
         try:
             self.send_origin_metadata(origin_id, visit_date, provider_id,
                                       tool_id, metadata)
-        except:
+        except Exception:
             self.log.exception('Problem when storing origin_metadata')
             raise
 
@@ -117,7 +117,7 @@ class DepositLoader(loader.TarLoader):
                 self.client.status_update(self.deposit_update_url,
                                           status='done',
                                           revision_id=rev_id_hex)
-        except:
+        except Exception:
             self.log.exception(
                 'Problem when trying to update the deposit\'s status')
 

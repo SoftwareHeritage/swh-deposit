@@ -4,15 +4,15 @@ Software Heritage Deposit
 =========================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Contents:
 
-   getting-started.md
-   spec-api.md
-   metadata.md
-   spec-loading.md
-   dev-info.md
-   sys-info.md
+   getting-started.rst
+   spec-api.rst
+   metadata.rst
+   spec-loading.rst
+   dev-info.rst
+   sys-info.rst
 
 Indices and tables
 ==================

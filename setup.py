@@ -20,13 +20,9 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/source/swh-deposit/',
     packages=find_packages(),
-    scripts=[],   # scripts to package
+    scripts=['bin/swh-deposit'],  # scripts to package
     install_requires=parse_requirements(),
-    extras_require={
-        'loader': ['swh.loader.core >= 0.0.25',
-                   'swh.scheduler >= 0.0.19',
-                   'requests'],
-    },
+    extras_require={},
     setup_requires=['vcversioner'],
     vcversioner={},
     include_package_data=True,

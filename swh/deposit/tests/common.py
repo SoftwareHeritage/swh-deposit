@@ -44,13 +44,13 @@ def create_arborescence_zip(root_path, archive_name, filename, content,
     os.mkdir(dir_path)
 
     filepath = os.path.join(dir_path, filename)
-    l = len(content)
+    _length = len(content)
     count = 0
     batch_size = 128
     with open(filepath, 'wb') as f:
         f.write(content)
         if up_to_size:  # fill with blank content up to a given size
-            count += l
+            count += _length
             while count < up_to_size:
                 f.write(b'0'*batch_size)
                 count += batch_size
