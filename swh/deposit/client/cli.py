@@ -103,7 +103,8 @@ def parse_cli_options(username, password, archive, metadata,
         metadata = None
 
     if metadata_deposit and not metadata:
-        raise InputError("Metadata deposit filepath must be provided for a metadata deposit")  # noqa
+        raise InputError(
+            "Metadata deposit filepath must be provided for metadata deposit")
 
     if not status and metadata_deposit and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
