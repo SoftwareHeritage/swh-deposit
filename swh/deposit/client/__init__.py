@@ -218,7 +218,7 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
             '/x:error/x:verboseDescription',
             namespaces={'x': 'http://purl.org/net/sword/'})
         if vals:
-            detail = vals[0].text
+            detail = vals[0].text.strip()
         else:
             detail = None
 
