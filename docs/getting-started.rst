@@ -116,7 +116,7 @@ with the client's identifier
 
  $ swh-deposit --username name --password secret \
                --archive je-suis-gpl.tgz \
-               --sulg '123456'
+               --slug '123456'
 
 deposit to a specific client's collection
 
