@@ -432,9 +432,8 @@ class BaseCreateDepositClient(BaseDepositClient):
             'filepath': filepath,
         }
 
-    def compute_information(self, *args, **kwargs):
-        collection, filepath, in_progress, slug = args
-        is_archive = kwargs.get('is_archive', True)
+    def compute_information(self, collection, filepath, in_progress, slug,
+                            is_archive=True, **kwargs):
         info = self._compute_information(collection, filepath, in_progress,
                                          slug, is_archive=is_archive)
         info['headers'] = self.compute_headers(info)
@@ -460,13 +459,10 @@ class CreateArchiveDepositClient(BaseCreateDepositClient):
 
 class UpdateArchiveDepositClient(CreateArchiveDepositClient):
     """Update (add/replace) an archive (binary) deposit client."""
-    def compute_url(self, *args, **kwargs):
-        collection = args[0]
-        deposit_id = kwargs['deposit_id']
+    def compute_url(self, collection, *args, deposit_id=None, **kwargs):
         return '/%s/%s/media/' % (collection, deposit_id)
 
-    def compute_method(self, *args, **kwargs):
-        replace = kwargs['replace']
+    def compute_method(self, *args, replace=False, **kwargs):
         return 'put' if replace else 'post'
 
 
@@ -482,13 +478,10 @@ class CreateMetadataDepositClient(BaseCreateDepositClient):
 
 class UpdateMetadataDepositClient(CreateMetadataDepositClient):
     """Update (add/replace) a metadata deposit client."""
-    def compute_url(self, *args, **kwargs):
-        collection = args[0]
-        deposit_id = kwargs['deposit_id']
+    def compute_url(self, collection, *args, deposit_id=None, **kwargs):
         return '/%s/%s/metadata/' % (collection, deposit_id)
 
-    def compute_method(self, *args, **kwargs):
-        replace = kwargs['replace']
+    def compute_method(self, *args, replace=False, **kwargs):
         return 'put' if replace else 'post'
 
 
@@ -514,8 +507,8 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
 
         return files, headers
 
-    def compute_information(self, *args, **kwargs):
-        collection, archive_path, metadata_path, in_progress, slug = args
+    def compute_information(self, collection, archive_path, metadata_path,
+                            in_progress, slug, **kwargs):
         info = self._compute_information(
             collection, archive_path, in_progress, slug)
         info_meta = self._compute_information(
@@ -530,13 +523,10 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
 
 class UpdateMultipartDepositClient(CreateMultipartDepositClient):
     """Update a multipart deposit client."""
-    def compute_url(self, *args, **kwargs):
-        collection = args[0]
-        deposit_id = kwargs['deposit_id']
+    def compute_url(self, collection, *args, deposit_id=None, **kwargs):
         return '/%s/%s/metadata/' % (collection, deposit_id)
 
-    def compute_method(self, *args, **kwargs):
-        replace = kwargs['replace']
+    def compute_method(self, *args, replace=False, **kwargs):
         return 'put' if replace else 'post'
 
 
