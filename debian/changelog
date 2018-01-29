@@ -1,3 +1,18 @@
+swh-deposit (0.0.44-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.44
+  * docs: Update getting-started documentations
+  * swh.deposit.api: Add swh_id key to None by default in status
+    endpoint
+  * swh.deposit.api: Fix tar archive permission in update endpoints
+  * swh.deposit.api.private: Fix pep8 violation about catch Exception
+  * swh.deposit.api: Do not hardcode the server uri in service document
+  * endpoint
+  * swh.deposit.client: Add a deposit client
+  * d/control: Create python3-swh.deposit.client package
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 29 Jan 2018 17:41:12 +0100
+
 swh-deposit (0.0.43-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.43
