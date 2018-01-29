@@ -110,7 +110,9 @@ def parse_cli_options(username, password, archive, metadata,
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
     if not status and not archive and not metadata:
-        raise InputError('You should at least mention an action to do')
+        raise InputError(
+            'Please provide an actionable command. See --help for more '
+            'information.')
 
     if replace and not deposit_id:
         raise InputError(
@@ -265,7 +267,11 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             replace, url, status)
 
     except InputError as e:
-        log.error('Problem during parsing options: %s' % e)
+        msg = 'Problem during parsing options: %s' % e
+        r = {
+            'error': msg,
+        }
+        log.info(r)
         return 1
 
     if verbose:
