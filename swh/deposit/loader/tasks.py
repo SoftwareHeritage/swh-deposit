@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -28,9 +28,9 @@ class LoadDepositArchiveTsk(Task):
         """
         _loader = loader.DepositLoader()
         _loader.log = self.log
-        _loader.load(archive_url=archive_url,
-                     deposit_meta_url=deposit_meta_url,
-                     deposit_update_url=deposit_update_url)
+        return _loader.load(archive_url=archive_url,
+                            deposit_meta_url=deposit_meta_url,
+                            deposit_update_url=deposit_update_url)
 
 
 class ChecksDepositTsk(Task):
@@ -47,4 +47,4 @@ class ChecksDepositTsk(Task):
         """
         _checker = checker.DepositChecker()
         _checker.log = self.log
-        _checker.check(deposit_check_url)
+        return _checker.check(deposit_check_url)
