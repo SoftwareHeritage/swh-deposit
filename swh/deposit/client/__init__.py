@@ -66,7 +66,7 @@ class BaseApiDepositClient(SWHConfig):
         return method_fn(full_url, *args, **kwargs)
 
 
-class ApiDepositClient(BaseApiDepositClient):
+class PrivateApiDepositClient(BaseApiDepositClient):
     """Private API deposit client to:
 
     - read a given deposit's archive(s)

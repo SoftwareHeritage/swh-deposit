@@ -84,13 +84,15 @@ def parse_cli_options(username, password, archive, metadata,
     if status and deposit_id:  # status is higher priority over deposit
         archive_deposit = False
         metadata_deposit = False
+        archive = None
+        metadata = None
 
     if archive_deposit and metadata_deposit:
         # too many flags use, remove redundant ones (-> multipart deposit)
         archive_deposit = False
         metadata_deposit = False
 
-    if archive_deposit and archive and not os.path.exists(archive):
+    if archive and not os.path.exists(archive):
         raise InputError('Software Archive %s must exist!' % archive)
 
     if archive and not metadata:
@@ -106,7 +108,7 @@ def parse_cli_options(username, password, archive, metadata,
         raise InputError(
             "Metadata deposit filepath must be provided for metadata deposit")
 
-    if not status and metadata_deposit and not os.path.exists(metadata):
+    if metadata and not os.path.exists(metadata):
         raise InputError('Software Archive metadata %s must exist!' % metadata)
 
     if not status and not archive and not metadata:
