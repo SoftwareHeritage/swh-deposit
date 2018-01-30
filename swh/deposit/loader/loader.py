@@ -42,7 +42,7 @@ class DepositLoader(loader.TarLoader):
         self.client = client if client else PrivateApiDepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
-        SWHLoader.load(
+        return SWHLoader.load(
             self,
             archive_url=archive_url,
             deposit_meta_url=deposit_meta_url,

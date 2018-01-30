@@ -45,12 +45,12 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
 
         # when
-        actual_status = self.checker.check(deposit_check_url=deposit_check_url)
+        actual_result = self.checker.check(deposit_check_url=deposit_check_url)
 
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
-        self.assertEquals(actual_status, DEPOSIT_STATUS_VERIFIED)
+        self.assertEquals(actual_result, {'status': 'eventful'})
 
     @istest
     def check_deposit_rejected(self):
@@ -64,9 +64,9 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
 
         # when
-        actual_status = self.checker.check(deposit_check_url=deposit_check_url)
+        actual_result = self.checker.check(deposit_check_url=deposit_check_url)
 
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
-        self.assertEquals(actual_status, DEPOSIT_STATUS_REJECTED)
+        self.assertEquals(actual_result, {'status': 'eventful'})

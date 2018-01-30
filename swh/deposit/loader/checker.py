@@ -17,4 +17,11 @@ class DepositChecker():
         self.client = client if client else PrivateApiDepositClient()
 
     def check(self, deposit_check_url):
-        return self.client.check(deposit_check_url)
+        try:
+            self.client.check(deposit_check_url)
+        except Exception:
+            self.log.exception("Failure during check on '%s'" % (
+                deposit_check_url, ))
+            return {'status': 'failed'}
+        else:
+            return {'status': 'eventful'}
