@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from ..client import ApiDepositClient
+from ..client import PrivateApiDepositClient
 
 
 class DepositChecker():
@@ -14,7 +14,7 @@ class DepositChecker():
     """
     def __init__(self, client=None):
         super().__init__()
-        self.client = client if client else ApiDepositClient()
+        self.client = client if client else PrivateApiDepositClient()
 
     def check(self, deposit_check_url):
         return self.client.check(deposit_check_url)
