@@ -1,8 +1,10 @@
-swh-deposit (0.0.45-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.46-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.46
+  * swh.deposit.client: Explicit private api client
+  * swh.deposit.client.cli: Fix flag compatibility issue
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 29 Jan 2018 18:09:29 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 30 Jan 2018 12:19:09 +0100
 
 swh-deposit (0.0.45-1~swh1) unstable-swh; urgency=medium
 
