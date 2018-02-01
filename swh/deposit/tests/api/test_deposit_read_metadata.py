@@ -58,7 +58,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                         'some-external-id'
                 },
                 'provider': {
-                    'provider_name': '',
+                    'provider_name': 'hal',
                     'provider_type': 'deposit_client',
                     'provider_url': 'https://hal-test.archives-ouvertes.fr/',
                     'metadata': {}
@@ -74,7 +74,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'revision': {
                 'synthetic': True,
                 'committer_date': None,
-                'message': ': Deposit %s in collection hal' % deposit_id,
+                'message': 'hal: Deposit %s in collection hal' % deposit_id,
                 'author': SWH_PERSON,
                 'committer': SWH_PERSON,
                 'date': None,
@@ -146,7 +146,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                         'some-external-id'
                 },
                 'provider': {
-                    'provider_name': '',
+                    'provider_name': 'hal',
                     'provider_type': 'deposit_client',
                     'provider_url': 'https://hal-test.archives-ouvertes.fr/',
                     'metadata': {}
@@ -166,7 +166,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'author': SWH_PERSON,
                 'committer': SWH_PERSON,
                 'type': 'tar',
-                'message': ': Deposit %s in collection hal' % deposit_id,
+                'message': 'hal: Deposit %s in collection hal' % deposit_id,
                 'metadata': {
                     '{http://www.w3.org/2005/Atom}external_identifier':
                     'some-external-id',
