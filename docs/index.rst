@@ -10,7 +10,6 @@ Software Heritage Deposit
    getting-started.rst
    spec-api.rst
    metadata.rst
-   spec-loading.rst
    dev-info.rst
    sys-info.rst
 
