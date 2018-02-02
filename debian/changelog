@@ -1,3 +1,11 @@
+swh-deposit (0.0.48-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.48
+  * swh.deposit.api.private: Fix revision message missing client name
+  * docs: simplify endpoints and delete all sword text
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 02 Feb 2018 08:37:39 +0100
+
 swh-deposit (0.0.47-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.47
