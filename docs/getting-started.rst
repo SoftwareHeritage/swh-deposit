@@ -4,7 +4,7 @@ Getting Started
 This is a guide for how to prepare and push a software deposit with
 the swh-deposit commands.
 
-The api is rooted at https://deposit.softwareheritage.org.
+The api is rooted at https://deposit.softwareheritage.org/1.
 
 For more details, see the `main documentation <./index.html>`__.
 
@@ -16,9 +16,9 @@ You need to be referenced on SWH's client list to have:
 * credentials (needed for the basic authentication step)
 
   - in this document we reference ``<name>`` as the client's name and
- ``<pass>`` as its associated authentication password.
+    ``<pass>`` as its associated authentication password.
 
- * an associated collection
+* an associated collection
 
 
 `Contact us for more
@@ -43,38 +43,44 @@ Prepare a deposit
 
 .. code:: xml
 
-  <?xml version="1.0"?>
-    <entry xmlns="http://www.w3.org/2005/Atom"
-             xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-        <title>Je suis GPL</title>
-        <external_identifier>12345</external_identifier>
-        <codemeta:url>forge.softwareheritage.org/source/jesuisgpl/</codemeta:url>
-        <codemeta:description>Yes, this is another implementation of
-        "Hello, world!” when you run it.</codemeta:description>
-        <codemeta:license>
-            <codemeta:name>GPL</codemeta:name>
-            <codemeta:url>https://www.gnu.org/licenses/gpl.html</codemeta:url>
-        </codemeta:license>
-        <codemeta:author>
-            <codemeta:name> Reuben Thomas </codemeta:name>
-            <codemeta:jobTitle> Maintainer </codemeta:affiliation>
-        </codemeta:author>
-        <codemeta:author>
-            <codemeta:name> Sami Kerola </codemeta:name>
-            <codemeta:jobTitle> Maintainer </codemeta:affiliation>
-        </codemeta:author>
-    </entry>
+  <?xml version="1.0" encoding="utf-8"?>
+  <entry xmlns="http://www.w3.org/2005/Atom"
+  xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+    <title>Je suis GPL</title>
+    <client>swh</client>
+    <external_identifier>je-suis-gpl</external_identifier>
+    <codemeta:url>https://forge.softwareheritage.org/source/jesuisgpl/</codemeta:url>
+    <codemeta:dateCreated>2018-01-05</codemeta:dateCreated>
+    <codemeta:description>Je suis GPL is a modified version of GNU Hello whose
+      sole purpose is to showcase the usage of
+      Software Heritage for license compliance purposes.</codemeta:description>
+    <codemeta:version>0.1</codemeta:version>
+    <codemeta:runtimePlatform>GNU/Linux</codemeta:runtimePlatform>
+    <codemeta:developmentStatus>stable</codemeta:developmentStatus>
+    <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
+
+    <codemeta:license>
+      <codemeta:name>GNU General Public License v3.0 or later</codemeta:name>
+      <codemeta:url>https://spdx.org/licenses/GPL-3.0-or-later.html</codemeta:url>
+    </codemeta:license>
+    <codemeta:author>
+      <codemeta:name>Stefano Zacchiroli</codemeta:name>
+      <codemeta:jobTitle>Maintainer</codemeta:jobTitle>
+    </codemeta:author>
+  </entry>
+
 
 
 Push deposit
 ------------
 You can push a deposit with:
 
-* a one single deposit (archive + metadata):
+* a single deposit (archive + metadata):
 
   The user posts in one query a software
   source code archive and associated metadata.
   The deposit is directly marked with status ``deposited``.
+
 * a multisteps deposit:
 
   1. Create an incomplete deposit (marked with status ``partial``)
@@ -118,7 +124,7 @@ with client's external identifier (``slug``)
 
  $ swh-deposit --username name --password secret \
                --archive je-suis-gpl.tgz \
-               --slug 123456
+               --slug je-suis-gpl
 
 to a specific client's collection
 
@@ -174,8 +180,9 @@ First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --partial \
-                --archive foo.tar.gz
+  $ swh-deposit --username name --password secret \
+                --archive foo.tar.gz \
+                --partial
 
 
 2. Add content or metadata to the deposit
@@ -186,28 +193,31 @@ the ``--partial`` argument.
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --partial \
+  $ swh-deposit --username name --password secret \
                 --archive add-foo.tar.gz \
-                --deposit-id 42
+                --deposit-id 42 \
+                --partial
 
 
 In case you want to add only one new archive without metadata:
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --partial \
+  $ swh-deposit --username name --password secret \
                 --archive add-foo.tar.gz \
-                --archive-deposit
-                --deposit-id 42
+                --archive-deposit \
+                --deposit-id 42 \
+                --partial \
 
 If you want to add only metadata, use:
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --partial \
+  $ swh-deposit --username name --password secret \
                 --metadata add-foo.tar.gz.metadata.xml \
-                --metadata-deposit
-                --deposit-id 42
+                --metadata-deposit \
+                --deposit-id 42 \
+                --partial
 
 3. Finalize deposit
 ~~~~~~~~~~~~~~~~~~~
@@ -223,7 +233,9 @@ Update deposit
 
   - only possible if the deposit status is ``partial`` and
     ``--deposit-id <id>`` is provided
+
   - by using the ``--replace`` flag
+  
     - ``--metadata-deposit`` replaces associated existing metadata
     - ``--archive-deposit`` replaces associated archive(s)
     - by default, with no flag or both, you'll replace associated
@@ -231,9 +243,10 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --replace\
+  $ swh-deposit --username name --password secret \
                 --deposit-id 11 \
-                --archive updated-je-suis-gpl.tar.gz
+                --archive updated-je-suis-gpl.tgz \
+                --replace
 
 * update a loaded deposit with a new version:
 
@@ -242,8 +255,9 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit --username name --password secret --slug '123456' \
-                --archive je-suis-gpl-v2.tgz
+  $ swh-deposit --username name --password secret \
+                --archive je-suis-gpl-v2.tgz \
+                --slug 'je-suis-gpl' \
 
 
 
@@ -268,13 +282,13 @@ $ swh-deposit --username name --password secret --deposit-id '11' --status
 
 The different statuses:
 
-- *partial* : multipart deposit is still ongoing
-- *deposited*: deposit completed
-- *rejected*: deposit failed the checks
-- *verified*: content and metadata verified
-- *loading*: loading in-progress
-- *done*: loading completed successfully
-- *failed*: the deposit loading has failed
+- **partial**: multipart deposit is still ongoing
+- **deposited**: deposit completed
+- **rejected**: deposit failed the checks
+- **verified**: content and metadata verified
+- **loading**: loading in-progress
+- **done**: loading completed successfully
+- **failed**: the deposit loading has failed
 
 When the deposit has been loaded into the archive, the status will be
 marked ``done``. In the response, will also be available the

@@ -44,9 +44,9 @@ Metadata requirements
   the header
 
 - **the description** of the software deposit *SHOULD* be provided
-  [codemeta:description]
+  [codemeta:description]: short or long description of the software 
 
-- short or long description of the software - **the license/s** of the software
+- **the license/s** of the software
   deposit *SHOULD* be provided [codemeta:license]
 
 - other metadata *MAY* be added with terms defined by the schema in use.
