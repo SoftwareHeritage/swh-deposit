@@ -198,6 +198,7 @@ class BasicTestCase(TestCase):
                                                     provider_url=_provider_url,
                                                     domain=_domain)
         _client.collections = [_collection.id]
+        _client.last_name = _name
         _client.save()
 
         self.collection = _collection

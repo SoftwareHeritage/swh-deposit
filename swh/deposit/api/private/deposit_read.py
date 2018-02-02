@@ -184,7 +184,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
         # revision
 
-        fullname = deposit.client.get_full_name()
+        fullname = deposit.client.username
         author_committer = SWH_PERSON
 
         # metadata provider
