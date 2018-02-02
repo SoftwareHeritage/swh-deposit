@@ -42,6 +42,12 @@ docs/spec-loading.rst
 docs/sys-info.rst
 docs/_static/.placeholder
 docs/_templates/.placeholder
+docs/endpoints/collection.rst
+docs/endpoints/content.rst
+docs/endpoints/service-document.rst
+docs/endpoints/status.rst
+docs/endpoints/update-media.rst
+docs/endpoints/update-metadata.rst
 docs/images/deposit-create-chart.png
 docs/images/deposit-delete-chart.png
 docs/images/deposit-update-chart.png
