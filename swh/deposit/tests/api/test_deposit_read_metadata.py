@@ -87,9 +87,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 },
                 'type': 'tar'
             },
-            'occurrence': {
-                'branch': 'master'
-            }
+            'branch_name': 'master',
         }
 
         self.assertEquals(data, expected_meta)
@@ -176,9 +174,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 },
                 'parents': [swh_id]
             },
-            'occurrence': {
-                'branch': 'master'
-            }
+            'branch_name': 'master',
         }
 
         self.assertEquals(data, expected_meta)
