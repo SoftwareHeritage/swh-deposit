@@ -215,9 +215,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
             data['revision']['parents'] = [parent_revision]
 
-        data['occurrence'] = {
-            'branch': 'master'
-        }
+        data['branch_name'] = 'master'
         data['origin_metadata'] = {
             'provider': self.provider,
             'tool': self.tool,

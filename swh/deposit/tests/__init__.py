@@ -47,14 +47,13 @@ TEST_LOADER_CONFIG = {
     'send_directories': False,
     'send_revisions': False,
     'send_releases': False,
-    'send_occurrences': False,
+    'send_snapshot': False,
 
     'content_packet_size': 10,
     'content_packet_size_bytes': 100 * 1024 * 1024,
     'directory_packet_size': 10,
     'revision_packet_size': 10,
     'release_packet_size': 10,
-    'occurrence_packet_size': 10,
 }
 
 

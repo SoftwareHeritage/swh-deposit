@@ -67,7 +67,7 @@ class DepositLoader(loader.TarLoader):
         origin = metadata['origin']
         visit_date = datetime.datetime.now(tz=datetime.timezone.utc)
         revision = metadata['revision']
-        occurrence = metadata['occurrence']
+        branch_name = metadata['branch_name']
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
 
@@ -75,7 +75,7 @@ class DepositLoader(loader.TarLoader):
                         origin=origin,
                         visit_date=visit_date,
                         revision=revision,
-                        occurrences=[occurrence])
+                        branch_name=branch_name)
 
     def store_metadata(self):
         """Storing the origin_metadata during the load processus.

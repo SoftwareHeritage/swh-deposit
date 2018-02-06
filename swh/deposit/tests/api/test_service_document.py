@@ -44,7 +44,7 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
 
 class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
-    def assertResponseOk(self, response):
+    def assertResponseOk(self, response):  # noqa: N802
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.content.decode('utf-8'),
                           '''<?xml version="1.0" ?>
