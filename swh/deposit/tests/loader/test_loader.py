@@ -149,7 +149,7 @@ class DepositLoaderInhibitsStorage:
 
 
 class TestLoaderUtils(unittest.TestCase):
-    def assertRevisionsOk(self, expected_revisions):
+    def assertRevisionsOk(self, expected_revisions):  # noqa: N802
         """Check the loader's revisions match the expected revisions.
 
         Expects self.loader to be instantiated and ready to be
