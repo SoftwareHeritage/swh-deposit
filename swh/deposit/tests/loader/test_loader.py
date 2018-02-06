@@ -47,7 +47,7 @@ class DepositLoaderInhibitsStorage:
             'directory': [],
             'revision': [],
             'release': [],
-            'occurrence': [],
+            'snapshot': [],
             'tool': [],
             'provider': []
         }
@@ -125,8 +125,8 @@ class DepositLoaderInhibitsStorage:
     def maybe_load_releases(self, releases):
         self._add('release', releases)
 
-    def maybe_load_occurrences(self, occurrences):
-        self._add('occurrence', occurrences)
+    def maybe_load_snapshot(self, snapshot):
+        self._add('snapshot', [snapshot])
 
     def open_fetch_history(self):
         pass
@@ -149,7 +149,7 @@ class DepositLoaderInhibitsStorage:
 
 
 class TestLoaderUtils(unittest.TestCase):
-    def assertRevisionsOk(self, expected_revisions):
+    def assertRevisionsOk(self, expected_revisions):  # noqa: N802
         """Check the loader's revisions match the expected revisions.
 
         Expects self.loader to be instantiated and ready to be
@@ -224,7 +224,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['directory']), 1)
         self.assertEquals(len(self.loader.state['revision']), 1)
         self.assertEquals(len(self.loader.state['release']), 0)
-        self.assertEquals(len(self.loader.state['occurrence']), 1)
+        self.assertEquals(len(self.loader.state['snapshot']), 1)
 
     @istest
     def inject_deposit_verify_metadata(self):
@@ -249,7 +249,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['directory']), 1)
         self.assertEquals(len(self.loader.state['revision']), 1)
         self.assertEquals(len(self.loader.state['release']), 0)
-        self.assertEquals(len(self.loader.state['occurrence']), 1)
+        self.assertEquals(len(self.loader.state['snapshot']), 1)
         self.assertEquals(len(self.loader.state['origin_metadata']), 1)
         self.assertEquals(len(self.loader.state['tool']), 1)
         self.assertEquals(len(self.loader.state['provider']), 1)
