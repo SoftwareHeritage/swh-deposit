@@ -1,8 +1,9 @@
-swh-deposit (0.0.49-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.50-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.50
+  * Bump requirements up for new swh.loader.tar
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Tue, 06 Feb 2018 14:48:53 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 12 Feb 2018 11:21:03 +0100
 
 swh-deposit (0.0.49-1~swh1) unstable-swh; urgency=medium
 
