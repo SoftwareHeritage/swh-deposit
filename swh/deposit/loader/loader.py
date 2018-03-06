@@ -48,6 +48,13 @@ class DepositLoader(loader.TarLoader):
             deposit_meta_url=deposit_meta_url,
             deposit_update_url=deposit_update_url)
 
+    def prepare_origin(self, *args, **kwargs):
+        deposit_meta_url = kwargs['deposit_meta_url']
+        self.metadata = self.client.metadata_get(
+            deposit_meta_url, log=self.log)
+        kwargs['origin'] = self.metadata['origin']
+        return super().prepare_origin(*args, **kwargs)
+
     def prepare(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Prepare the loading by first retrieving the deposit's raw archive
            content.
@@ -62,17 +69,16 @@ class DepositLoader(loader.TarLoader):
         archive = self.client.archive_get(
             archive_url, archive_path, log=self.log)
 
-        metadata = self.client.metadata_get(
-            deposit_meta_url, log=self.log)
-        origin = metadata['origin']
         visit_date = datetime.datetime.now(tz=datetime.timezone.utc)
+
+        metadata = self.metadata
         revision = metadata['revision']
         branch_name = metadata['branch_name']
         self.origin_metadata = metadata['origin_metadata']
         self.prepare_metadata()
 
         super().prepare(tar_path=archive,
-                        origin=origin,
+                        origin=self.origin,
                         visit_date=visit_date,
                         revision=revision,
                         branch_name=branch_name)
