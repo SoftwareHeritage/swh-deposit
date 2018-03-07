@@ -48,12 +48,10 @@ class DepositLoader(loader.TarLoader):
             deposit_meta_url=deposit_meta_url,
             deposit_update_url=deposit_update_url)
 
-    def prepare_origin(self, *args, **kwargs):
-        deposit_meta_url = kwargs['deposit_meta_url']
+    def prepare_origin_visit(self, *, deposit_meta_url, **kwargs):
         self.metadata = self.client.metadata_get(
             deposit_meta_url, log=self.log)
-        kwargs['origin'] = self.metadata['origin']
-        return super().prepare_origin(*args, **kwargs)
+        self.origin = self.metadata['origin']
 
     def prepare(self, *, archive_url, deposit_meta_url, deposit_update_url):
         """Prepare the loading by first retrieving the deposit's raw archive
