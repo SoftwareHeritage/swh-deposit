@@ -1,8 +1,12 @@
-swh-deposit (0.0.50-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.51-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.51
+  * Improve origin_visit initialization step
+  * Properly sandbox the prepare statement so that if it breaks, we can
+  * update appropriately the visit with the correct status
+  * Let the visit date be set in lower layer
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 12 Feb 2018 11:21:04 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 07 Mar 2018 11:07:11 +0100
 
 swh-deposit (0.0.50-1~swh1) unstable-swh; urgency=medium
 
