@@ -13,7 +13,7 @@ Build-Depends: debhelper (>= 9),
                python3-swh.model (>= 0.0.21~),
                python3-swh.loader.core (>= 0.0.32~),
                python3-swh.loader.tar (>= 0.0.35~),
-               python3-swh.scheduler (>= 0.0.19~),
+               python3-swh.scheduler (>= 0.0.26~),
                python3-django,
                python3-click,
                python3-vcversioner,
@@ -29,7 +29,7 @@ Package: python3-swh.deposit
 Architecture: all
 Depends: python3-swh.core (>= 0.0.36~),
          python3-swh.model (>= 0.0.21~),
-         python3-swh.scheduler (>= 0.0.19~),
+         python3-swh.scheduler (>= 0.0.26~),
          patool,
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Server
@@ -51,6 +51,6 @@ Depends: python3-swh.deposit.client (= ${binary:Version}),
          python3-swh.model (>= 0.0.21~),
          python3-swh.loader.core (>= 0.0.32~),
          python3-swh.loader.tar (>= 0.0.35~),
-         python3-swh.scheduler (>= 0.0.19~),
+         python3-swh.scheduler (>= 0.0.26~),
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Loader

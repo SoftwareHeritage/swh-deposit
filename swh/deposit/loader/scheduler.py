@@ -103,15 +103,22 @@ class SWHSchedulerScheduling(SWHScheduling):
     """Deposit loading through SWH's task scheduling interface.
 
     """
-    ADDITIONAL_CONFIG = {}
+    ADDITIONAL_CONFIG = {
+        'scheduler': ('dict', {
+            'cls': 'remote',
+            'args': {
+                'url': 'http://localhost:5008',
+            }
+        })
+    }
 
     def __init__(self, config=None):
         super().__init__()
-        from swh.scheduler.backend import SchedulerBackend
+        from swh.scheduler import get_scheduler
         if config:
             self.config.update(**config)
         self.dry_run = self.config['dry_run']
-        self.scheduler = SchedulerBackend(**self.config)
+        self.scheduler = get_scheduler(**self.config['scheduler'])
         self.check = self.config['check']
 
     def _convert(self, deposits):
