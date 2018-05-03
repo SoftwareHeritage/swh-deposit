@@ -7,6 +7,7 @@ import os
 import logging
 
 from swh.core.config import SWHConfig
+from swh.scheduler import get_scheduler
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
 EDIT_SE_IRI = 'edit_se_iri'
@@ -78,6 +79,12 @@ class SWHDefaultConfig(SWHConfig):
     DEFAULT_CONFIG = {
         'max_upload_size': ('int', 209715200),
         'checks': ('bool', True),
+        'scheduler': ('dict', {
+            'cls': 'remote',
+            'args': {
+                'url': 'http://localhost:5008/'
+            }
+        })
     }
 
     ADDITIONAL_CONFIG = {}
@@ -89,5 +96,4 @@ class SWHDefaultConfig(SWHConfig):
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
         if self.config['checks']:
-            from swh.scheduler.backend import SchedulerBackend
-            self.scheduler = SchedulerBackend()
+            self.scheduler = get_scheduler(**self.config['scheduler'])
