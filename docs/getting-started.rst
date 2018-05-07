@@ -175,7 +175,7 @@ multisteps deposit
 The steps to create a multisteps deposit:
 
 1. Create an incomplete deposit
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
@@ -186,7 +186,7 @@ First use the ``--partial`` argument to declare there is more to come
 
 
 2. Add content or metadata to the deposit
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Continue the deposit by using the ``--deposit-id`` argument given as a response
 for the first step. You can continue adding content or metadata while you use
 the ``--partial`` argument.
@@ -268,7 +268,7 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-$ swh-deposit --username name --password secret --deposit-id '11' --status
+  $ swh-deposit --username name --password secret --deposit-id '11' --status
 
 .. code:: json
 
