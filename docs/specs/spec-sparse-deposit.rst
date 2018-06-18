@@ -16,9 +16,9 @@ as the manifest list.
 +----------------------+-------------------------------------+
 | path                 | swh-id                              |
 +======================+=====================================+
-| ./path/to/file.txt   |  swh:1:cnt:aaaaaaaaaaaaaaaaaaaaa... |
+| path/to/file.txt     |  swh:1:cnt:aaaaaaaaaaaaaaaaaaaaa... |
 +----------------------+-------------------------------------+
-| ./path/to/dir/       |  swh:1:dir:aaaaaaaaaaaaaaaaaaaaa... |
+| path/to/dir/         |  swh:1:dir:aaaaaaaaaaaaaaaaaaaaa... |
 +----------------------+-------------------------------------+
 
 Note: the *name* of the file or the directory is given by the path and is not
@@ -57,20 +57,15 @@ swh namespace:
             <codemeta:affiliation> UPMC </codemeta:affiliation>
         </codemeta:author>
         <swh:deposit>
-          <swh:manifest>
-          <swh:object>
-            <swh:path>./path/to/file.txt</swh:path>
-            <swh:swhid>swh:1:cnt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</swh:swhid>
-          </swh:object>
-          <swh:object>
-            <swh:path>./path/to/second_file.txt</swh:path>
-            <swh:swhid>swh:1:cnt:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb</swh:swhid>
-          </swh:object>
-          <swh:object>
-            <swh:path>./path/to/dir/</swh:path>
-            <swh:swhid>swh:1:dir:ddddddddddddddddddddddddddddddddd</swh:swhid>
-          </swh:object>
-        </swh:manifest>
+          <swh:bindings>
+          <swh:binding source="path/to/file.txt"
+                       destination="swh:1:cnt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"/>
+          <swh:binding source="path/to/second_file.txt
+                       destination="swh:1:cnt:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"/>
+          <swh:binding source="path/to/dir/
+                       destination="swh:1:dir:ddddddddddddddddddddddddddddddddd"/>
+
+        </swh:bindings>
         </swh:deposit>
     </entry>
 

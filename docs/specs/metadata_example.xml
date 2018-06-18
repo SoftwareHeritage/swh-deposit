@@ -28,11 +28,8 @@
             <codemeta:affiliation> UPMC </codemeta:affiliation>
         </codemeta:author>
         <swh:deposit>
-          <swh:manifest>
-          <swh:object>
-            <swh:path>./path/to/file.txt</swh:path>
-            <swh:swhid>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</swh:swhid>
-          </swh:object>
-        </swh:manifest>
+          <swh:bindings>
+          <swh:binding source="path/to/file.txt" destination="aaaaaaaaaaa..."/>
+        </swh:bindings>
         </swh:deposit>
     </entry>

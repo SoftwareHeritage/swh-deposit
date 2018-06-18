@@ -1,5 +1,5 @@
-The meta-deposit
-================
+The metadata-deposit
+====================
 
 Goal
 ----
@@ -54,8 +54,7 @@ swh namespace:
         </codemeta:author>
         <swh:deposit>
           <swh:reference>
-            <swh:type> origin </swh:type>
-            <swh:target> https://github.com/user/repo </swh:target>
+            <swh:origin url='https://github.com/user/repo'/>
           </swh:reference>
         </swh:deposit>
     </entry>
@@ -68,8 +67,7 @@ snapshot
 
   <swh:deposit>
     <swh:reference>
-      <swh:type> snapshot </swh:type>
-      <swh:target> swh:1:snp:aaaaaaaaaaaaaa... </swh:target>
+      <swh:object id="swh:1:snp:aaaaaaaaaaaaaa..."/>
     </swh:reference>
   </swh:deposit>
 
@@ -79,8 +77,7 @@ revision
 
   <swh:deposit>
     <swh:reference>
-      <swh:type> revision </swh:type>
-      <swh:target> swh:1:rev:aaaaa............ </swh:target>
+      <swh:object id="swh:1:rev:aaaaa............"/>
     </swh:reference>
   </swh:deposit>
 
@@ -90,8 +87,7 @@ release
 
   <swh:deposit>
     <swh:reference>
-      <swh:type> release </swh:type>
-      <swh:target> swh:1:rel:aaaaaaaaaaaaaa.... </swh:target>
+      <swh:object id="swh:1:rel:aaaaaaaaaaaaaa...."/>
     </swh:reference>
   </swh:deposit>
 
