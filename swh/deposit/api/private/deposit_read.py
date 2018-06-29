@@ -211,7 +211,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
             swh_persistent_id = deposit.parent.swh_id
             persistent_identifier = identifiers.parse_persistent_identifier(
                 swh_persistent_id)
-            parent_revision = persistent_identifier['object_id']
+            parent_revision = persistent_identifier.object_id
 
             data['revision']['parents'] = [parent_revision]
 
