@@ -8,7 +8,7 @@ from rest_framework import status
 from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
 from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
-from ..errors import make_error_response, BAD_REQUEST
+from ..errors import make_error_dict, BAD_REQUEST
 from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
 from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
@@ -38,7 +38,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
         if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
             msg = 'Packaging format supported is restricted to %s' % (
                 ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
-            return make_error_response(req, BAD_REQUEST, msg)
+            return make_error_dict(BAD_REQUEST, msg)
 
         return self._binary_upload(req, headers, collection_name,
                                    deposit_id=deposit_id,
@@ -60,7 +60,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
         if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
             msg = 'Packaging format supported is restricted to %s' % (
                 ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
-            return make_error_response(req, BAD_REQUEST, msg)
+            return 'unused', 'unused', make_error_dict(BAD_REQUEST, msg)
 
         return (status.HTTP_201_CREATED, CONT_FILE_IRI,
                 self._binary_upload(req, headers, collection_name, deposit_id))

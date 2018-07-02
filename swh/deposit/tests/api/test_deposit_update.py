@@ -308,25 +308,27 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
     @istest
     def post_metadata_to_em_iri_failure(self):
-        """Add archive with wrong content type should return a 400 response
+        """Update (POST) archive with wrong content type should return 400
 
         """
-        deposit_id = self.create_deposit_ready()
-
+        deposit_id = self.create_deposit_partial()  # only update on partial
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
-        response = self.client.put(
+        response = self.client.post(
             update_uri,
-            content_type='application/binary',
+            content_type='application/x-gtar-compressed',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Packaging format supported is restricted to '
+                         'application/zip, application/x-tar')
 
     @istest
     def put_metadata_to_em_iri_failure(self):
-        """Update archive with wrong content type should return 400 response
+        """Update (PUT) archive with wrong content type should return 400
 
         """
         # given
-        deposit_id = self.create_deposit_ready()
+        deposit_id = self.create_deposit_partial()  # only update on partial
         # when
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
         response = self.client.put(
@@ -335,3 +337,6 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data0)
         # then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Packaging format supported is restricted to '
+                         'application/zip, application/x-tar')
