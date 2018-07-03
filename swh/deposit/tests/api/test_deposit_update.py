@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -246,65 +246,70 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
-        url = reverse(EDIT_SE_IRI,
-                      args=['unknown', 999]),
+        url = reverse(EDIT_SE_IRI, args=['test', 1000])
         response = self.client.post(
             url,
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Unknown collection name test')
 
     @istest
     def add_metadata_to_unknown_deposit(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
-        url = reverse(EDIT_SE_IRI,
-                      args=[self.collection.name, 999]),
+        url = reverse(EDIT_SE_IRI, args=[self.collection.name, 999])
         response = self.client.post(
             url,
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Deposit with id 999 does not exist')
 
     @istest
     def replace_metadata_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
-        url = reverse(EDIT_SE_IRI,
-                      args=[self.collection.name, 999]),
+        url = reverse(EDIT_SE_IRI, args=[self.collection.name, 998])
         response = self.client.put(
             url,
             content_type='application/atom+xml;type=entry',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Deposit with id 998 does not exist')
 
     @istest
     def add_archive_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
-        url = reverse(EM_IRI,
-                      args=[self.collection.name, 999]),
+        url = reverse(EM_IRI, args=[self.collection.name, 997])
         response = self.client.post(
             url,
             content_type='application/zip',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Deposit with id 997 does not exist')
 
     @istest
     def replace_archive_to_unknown_deposit(self):
         """Replacing archive to unknown deposit should return a 404 response
 
         """
-        url = reverse(EM_IRI,
-                      args=[self.collection.name, 999]),
+        url = reverse(EM_IRI, args=[self.collection.name, 996])
         response = self.client.put(
             url,
             content_type='application/zip',
             data=self.atom_entry_data0)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Deposit with id 996 does not exist')
 
     @istest
     def post_metadata_to_em_iri_failure(self):

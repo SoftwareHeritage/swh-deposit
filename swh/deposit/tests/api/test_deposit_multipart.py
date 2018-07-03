@@ -376,6 +376,10 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertTrue(
+            'Only 1 application/zip (or application/x-tar) archive' in \
+            response.content.decode('utf-8'))
+
         # when
         archive.seek(0)
         response = self.client.post(
@@ -391,3 +395,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         # then
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertTrue(
+            'You must provide both 1 application/zip (or '
+            'application/x-tar) and 1 atom+xml entry for '
+            'multipart deposit' in response.content.decode('utf-8')
+        )

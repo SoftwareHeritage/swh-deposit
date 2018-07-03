@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -63,6 +63,9 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         response = self.client.post(url)
         self.assertEqual(response.status_code,
                          status.HTTP_403_FORBIDDEN)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'Client hal cannot access collection %s' % (
+                             self.collection2.name, ))
 
     @istest
     def delete_on_col_iri_not_supported(self):
@@ -73,6 +76,8 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         response = self.client.delete(url)
         self.assertEqual(response.status_code,
                          status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertRegex(response.content.decode('utf-8'),
+                         'DELETE method is not supported on this endpoint')
 
     @nottest
     def create_deposit_with_rejection_status(self):
