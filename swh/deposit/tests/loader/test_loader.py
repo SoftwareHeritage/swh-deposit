@@ -232,7 +232,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
         """
         self.deposit_metadata_id = self.add_metadata_to_deposit(
-                                        self.deposit_id)
+            self.deposit_id)
         args = [self.collection.name, self.deposit_metadata_id]
 
         archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
@@ -262,16 +262,20 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                 atom + 'name': 'HAL'
             },
             codemeta + 'url':
-                'https://hal-test.archives-ouvertes.fr/hal-01243065',
-            codemeta + 'runtimePlatform': 'phpstorm',
-            codemeta + 'license': {
-                codemeta + 'name':
-                    'CeCILL Free Software License Agreement v1.1'
-            },
-            codemeta + 'author': {
+            'https://hal-test.archives-ouvertes.fr/hal-01243065',
+            codemeta + 'runtimePlatform': ['phpstorm'],
+            codemeta + 'license': [
+                {
+                    codemeta + 'name': 'GNU General Public License v3.0 only'
+                },
+                {
+                    codemeta + 'name': 'CeCILL Free Software License Agreement v1.1'  # noqa
+                }
+            ],
+            codemeta + 'author': [{
                 codemeta + 'name': 'Morane Gruenpeter'
-            },
-            codemeta + 'programmingLanguage': 'C',
+            }],
+            codemeta + 'programmingLanguage': ['php', 'python', 'C'],
             codemeta + 'applicationCategory': 'test',
             codemeta + 'dateCreated': '2017-05-03T16:08:47+02:00',
             codemeta + 'version': 1,
