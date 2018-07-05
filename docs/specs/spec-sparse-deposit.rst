@@ -8,10 +8,10 @@ already in the SWH archive.
 
 Requirements
 ------------
-To do so, the paths to the missing directories/content must be provided as
-empty paths in the tarball and the list linking each path to the object in the
-archive will be provided as part of the metadata. The list will be refered to
-as the manifest list.
+To do so, a list of paths with targets must be provided in the metadata and
+the paths to the missing directories/content should not be included
+in the tarball. The list will be referred to
+as the manifest list using the entry name 'bindings' in the metadata.
 
 +----------------------+-------------------------------------+
 | path                 | swh-id                              |
@@ -69,10 +69,6 @@ swh namespace:
         </swh:deposit>
     </entry>
 
-The tarball sent with the deposit will contain the following empty paths:
-- path/to/file.txt
-- path/to/second_file.txt
-- path/to/dir/
 
 Deposit verification
 --------------------
@@ -80,25 +76,26 @@ Deposit verification
 After checking the integrity of the deposit content and
 metadata, the following checks should be added:
 
-1. validate the manifest list structure with a swh-id for each path
-2. verify that the paths in the manifest list are explicit and empty in the tarball
-3. verify that the path name corresponds to the object type
-4. locate the identifiers in the SWH archive
+1. validate the manifest list structure with a correct swh-id for each path  (syntax check on the swh-id format)
+2. verify that the path name corresponds to the object type
+3. locate the identifiers in the SWH archive
 
-Each one of the verifications should return a different error with the deposit
+Each failing check should return a different error with the deposit
 and result in a 'rejected' deposit.
 
 Loading procedure
 ------------------
 The injection procedure should include:
 
-- load the tarball data
+- load the tarball new data
 - create new objects using the path name and create links from the path to the
   SWH object using the identifier
 - calculate identifier of the new objects at each level
 - return final swh-id of the new revision
 
-Invariant: the same content should yield the same swhid, that's why a complete
-deposit with all the content and a sparse-deposit with the correct links will
-result with the same root directory swh-id and if the metadata are identical
-also with the same revision swh-id.
+Invariant: the same content should yield the same swh-id,
+that's why a complete deposit with all the content and
+a sparse-deposit with the correct links will result
+with the same root directory swh-id.
+The same is expected with the revision swh-id if the metadata provided is
+identical.

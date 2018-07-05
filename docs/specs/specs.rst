@@ -1,7 +1,7 @@
 .. _swh-deposit-specs:
 
-Software Heritage Deposit Specifications
-========================================
+Blueprint Specifications
+=========================
 
 .. toctree::
    :maxdepth: 1

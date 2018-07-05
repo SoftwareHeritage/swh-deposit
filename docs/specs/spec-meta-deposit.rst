@@ -7,11 +7,13 @@ A client wishes to deposit only metadata about an object in the Software
 Heritage archive.
 
 The meta-deposit is a special deposit where no content is
-deposited and the data transfered to Software Heritage is only
+provided and the data transfered to Software Heritage is only
 the metadata about an object or several objects in the archive.
 
+Requirements
+------------
 The scope of the meta-deposit is different than the
-sparse-deposit, while a sparse-deposit creates a revision with referenced
+sparse-deposit. While a sparse-deposit creates a revision with referenced
 directories and content files, the meta-deposit references one of the following:
 
 - origin
@@ -59,42 +61,24 @@ swh namespace:
         </swh:deposit>
     </entry>
 
-examples by target type
+Examples by target type
 ^^^^^^^^^^^^^^^^^^^^^^^
-snapshot
-*********
+
+With ${type} in {snp (snapshot), rev (revision), rel (release) }:
+
 .. code:: xml
 
   <swh:deposit>
     <swh:reference>
-      <swh:object id="swh:1:snp:aaaaaaaaaaaaaa..."/>
+      <swh:object id="swh:1:${type}:aaaaaaaaaaaaaa..."/>
     </swh:reference>
   </swh:deposit>
 
-revision
-********
-.. code:: xml
 
-  <swh:deposit>
-    <swh:reference>
-      <swh:object id="swh:1:rev:aaaaa............"/>
-    </swh:reference>
-  </swh:deposit>
-
-release
-*******
-.. code:: xml
-
-  <swh:deposit>
-    <swh:reference>
-      <swh:object id="swh:1:rel:aaaaaaaaaaaaaa...."/>
-    </swh:reference>
-  </swh:deposit>
 
 Loading procedure
 ------------------
 
 In this case, the meta-deposit will be injected as a metadata entry at the
-appropriate level (origin_metadata, revision_metadata, etc.) and won't result
-in  the creation of a new object like with the complete deposit and the
-sparse-deposit.
+appropriate level (origin_metadata, revision_metadata, etc.). Contrary to the
+complete and sparse deposit, there will be no object creation.
