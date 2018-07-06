@@ -144,6 +144,7 @@ swh/deposit/tests/api/test_deposit_read_metadata.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
 swh/deposit/tests/api/test_deposit_update_status.py
+swh/deposit/tests/api/test_parser.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/loader/__init__.py
 swh/deposit/tests/loader/common.py

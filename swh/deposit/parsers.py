@@ -8,10 +8,12 @@
 
 """
 
-from decimal import Decimal
+import xmltodict
+
+from django.conf import settings
+from rest_framework.parsers import BaseParser
 from rest_framework.parsers import FileUploadParser
 from rest_framework.parsers import MultiPartParser
-from rest_framework_xml.parsers import XMLParser
 
 
 class SWHFileUploadZipParser(FileUploadParser):
@@ -22,23 +24,29 @@ class SWHFileUploadZipParser(FileUploadParser):
 
 
 class SWHFileUploadTarParser(FileUploadParser):
-    """File upload parser limited to zip archive.
+    """File upload parser limited to tarball (tar, tar.gz, tar.*) archives.
 
     """
     media_type = 'application/x-tar'
 
 
-class SWHXMLParser(XMLParser):
-    def _type_convert(self, value):
-        """Override the default type converter to avoid having decimal in the
-        resulting output.
+class SWHXMLParser(BaseParser):
+    """
+    XML parser.
+    """
+    media_type = 'application/xml'
 
+    def parse(self, stream, media_type=None, parser_context=None):
         """
-        value = super()._type_convert(value)
-        if isinstance(value, Decimal):
-            value = str(value)
-
-        return value
+        Parses the incoming bytestream as XML and returns the resulting data.
+        """
+        parser_context = parser_context or {}
+        encoding = parser_context.get('encoding', settings.DEFAULT_CHARSET)
+        data = xmltodict.parse(stream, encoding=encoding,
+                               process_namespaces=False)
+        if 'entry' in data:
+            data = data['entry']
+        return data
 
 
 class SWHAtomEntryParser(SWHXMLParser):

@@ -123,8 +123,7 @@ class FileSystemCreationRoutine(TestCase):
         # then
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
     def create_complex_binary_deposit(self, status_partial=False):
@@ -146,8 +145,7 @@ class FileSystemCreationRoutine(TestCase):
         # then
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
     def update_binary_deposit(self, deposit_id, status_partial=False):
@@ -162,8 +160,7 @@ class FileSystemCreationRoutine(TestCase):
         # then
         # assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
 
@@ -336,9 +333,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
-
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
     def create_deposit_with_status(
@@ -375,8 +370,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
     def create_deposit_partial_with_data_in_args(self, data):
@@ -399,8 +393,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
     def _update_deposit_with_status(self, deposit_id, status_partial=False):

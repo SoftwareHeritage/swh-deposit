@@ -1,8 +1,12 @@
-swh-deposit (0.0.52-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.53-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.53
+  * swh.deposit.parsers: Fix xml parsing to not lose duplicated entries
+  * swh.deposit.tests: Make sure failing tests are complete
+  * deposit_update: Fix check error during update with wrong mimetype
+  * deposit_read: Persistent identifier representation has changed
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 03 May 2018 15:16:30 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 06 Jul 2018 16:26:08 +0200
 
 swh-deposit (0.0.52-1~swh1) unstable-swh; urgency=medium
 

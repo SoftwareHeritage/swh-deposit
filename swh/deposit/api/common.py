@@ -553,9 +553,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 'Atom entry deposit is supposed to send for metadata. '
                 'If the body is empty, there is no metadata.')
 
-        external_id = req.data.get(
-            '{http://www.w3.org/2005/Atom}external_identifier',
-            headers['slug'])
+        external_id = req.data.get('external_identifier', headers['slug'])
 
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
