@@ -102,8 +102,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         response_content = parse_xml(BytesIO(response.content))
-        actual_state = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_status']
+        actual_state = response_content['deposit_status']
         self.assertEquals(actual_state, DEPOSIT_STATUS_REJECTED)
 
     @istest

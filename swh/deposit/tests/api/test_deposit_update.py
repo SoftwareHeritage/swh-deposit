@@ -130,8 +130,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         self.assertEquals(len(list(requests)), 1)
         metadata = requests[0].metadata
-        self.assertEquals(metadata["{http://www.w3.org/2005/Atom}foobar"],
-                          'bar')
+        self.assertEquals(metadata['foobar'], 'bar')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
@@ -227,8 +226,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         self.assertEquals(len(list(requests)), 3)
         # a new one was added
-        self.assertEquals(requests[1].metadata[
-            "{http://www.w3.org/2005/Atom}foobar"], 'bar')
+        self.assertEquals(requests[1].metadata['foobar'], 'bar')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(

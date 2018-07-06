@@ -5,6 +5,7 @@
 
 import io
 
+from collections import OrderedDict
 from nose.tools import istest
 from rest_framework.test import APITestCase
 
@@ -35,26 +36,21 @@ class ParsingTest(APITestCase):
     </entry>''')
 
         actual_result = SWHXMLParser().parse(xml_no_duplicate)
-        expected_dict = {
-            '{http://www.w3.org/2005/Atom}title':
-            'Awesome Compiler',
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}author':
-            [{'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}affiliation':
-              'Inria',
-              '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-              'author1'}],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}issueTracker':
-            'http://issuetracker.com',
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}license':
-            [{'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-              'GPL3.0',
-              '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}url':
-              'https://opensource.org/licenses/GPL-3.0'}],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}programmingLanguage':
-            ['ocaml'],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}runtimePlatform':
-            ['Python3']
-        }
+        expected_dict = OrderedDict(
+            [('@xmlns', 'http://www.w3.org/2005/Atom'),
+             ('@xmlns:codemeta',
+              'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0'),
+             ('title', 'Awesome Compiler'),
+             ('codemeta:license',
+              OrderedDict([('codemeta:name', 'GPL3.0'),
+                           ('codemeta:url',
+                            'https://opensource.org/licenses/GPL-3.0')])),
+             ('codemeta:runtimePlatform', 'Python3'),
+             ('codemeta:author',
+              OrderedDict([('codemeta:name', 'author1'),
+                           ('codemeta:affiliation', 'Inria')])),
+             ('codemeta:programmingLanguage', 'ocaml'),
+             ('codemeta:issueTracker', 'http://issuetracker.com')])
         self.assertEqual(expected_dict, actual_result)
 
     @istest
@@ -88,29 +84,21 @@ class ParsingTest(APITestCase):
 
         actual_result = SWHXMLParser().parse(xml_with_duplicates)
 
-        expected_dict = {
-            '{http://www.w3.org/2005/Atom}title':
-            'Another Compiler',
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}author': [
-                {'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}affiliation':
-                 'Inria',
-                 '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-                 'author1'},
-                {'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}affiliation':
-                 'Inria',
-                 '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-                 'author2'}],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}license': [
-                {'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-                 'GPL3.0',
-                 '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}url':
-                 'https://opensource.org/licenses/GPL-3.0'},
-                {'{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}name':
-                 'spdx',
-                 '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}url':
-                 'http://spdx.org'}],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}programmingLanguage':
-            [ 'ocaml', 'haskell', 'python3'],
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}runtimePlatform':
-            ['GNU/Linux', 'Un*x'] }
+        expected_dict = OrderedDict([
+            ('@xmlns', 'http://www.w3.org/2005/Atom'),
+            ('@xmlns:codemeta', 'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0'),
+            ('title', 'Another Compiler'),
+            ('codemeta:runtimePlatform', ['GNU/Linux', 'Un*x']),
+            ('codemeta:license',
+             [OrderedDict([('codemeta:name', 'GPL3.0'),
+                           ('codemeta:url',
+                            'https://opensource.org/licenses/GPL-3.0')]),
+              OrderedDict([('codemeta:name', 'spdx'),
+                           ('codemeta:url', 'http://spdx.org')])]),
+            ('codemeta:author',
+             [OrderedDict([('codemeta:name', 'author1'),
+                           ('codemeta:affiliation', 'Inria')]),
+              OrderedDict([('codemeta:name', 'author2'),
+                           ('codemeta:affiliation', 'Inria')])]),
+            ('codemeta:programmingLanguage', ['ocaml', 'haskell', 'python3'])])
         self.assertEqual(expected_dict, actual_result)

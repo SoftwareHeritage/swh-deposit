@@ -147,8 +147,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
@@ -166,8 +165,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                                  self.archive['name'])
             else:
                 self.assertEquals(
-                    deposit_request.metadata[
-                        '{http://www.w3.org/2005/Atom}id'],
+                    deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
 
     @istest
@@ -215,8 +213,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
@@ -234,8 +231,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                                  self.archive['name'])
             else:
                 self.assertEquals(
-                    deposit_request.metadata[
-                        '{http://www.w3.org/2005/Atom}id'],
+                    deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
 
     @istest
@@ -283,8 +279,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'partial')
@@ -303,8 +298,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                                  self.archive['name'])
             else:
                 self.assertEquals(
-                    deposit_request.metadata[
-                        '{http://www.w3.org/2005/Atom}id'],
+                    deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
 
         replace_metadata_uri = response._headers['location'][1]
@@ -333,8 +327,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                                  self.archive['name'])
             else:
                 self.assertEquals(
-                    deposit_request.metadata[
-                        '{http://www.w3.org/2005/Atom}id'],
+                    deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
 
     # FAILURE scenarios
@@ -377,7 +370,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code,
                          status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         self.assertTrue(
-            'Only 1 application/zip (or application/x-tar) archive' in \
+            'Only 1 application/zip (or application/x-tar) archive' in
             response.content.decode('utf-8'))
 
         # when
