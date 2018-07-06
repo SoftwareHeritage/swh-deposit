@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -232,7 +232,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
 
         """
         self.deposit_metadata_id = self.add_metadata_to_deposit(
-                                        self.deposit_id)
+            self.deposit_id)
         args = [self.collection.name, self.deposit_metadata_id]
 
         archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
@@ -254,32 +254,37 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['tool']), 1)
         self.assertEquals(len(self.loader.state['provider']), 1)
 
-        atom = '{http://www.w3.org/2005/Atom}'
-        codemeta = '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}'
+        codemeta = 'codemeta:'
         expected_origin_metadata = {
-            atom + 'author': {
-                atom + 'email': 'hal@ccsd.cnrs.fr',
-                atom + 'name': 'HAL'
+            '@xmlns': 'http://www.w3.org/2005/Atom',
+            '@xmlns:codemeta': 'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0',
+            'author': {
+                'email': 'hal@ccsd.cnrs.fr',
+                'name': 'HAL'
             },
             codemeta + 'url':
-                'https://hal-test.archives-ouvertes.fr/hal-01243065',
+            'https://hal-test.archives-ouvertes.fr/hal-01243065',
             codemeta + 'runtimePlatform': 'phpstorm',
-            codemeta + 'license': {
-                codemeta + 'name':
-                    'CeCILL Free Software License Agreement v1.1'
-            },
+            codemeta + 'license': [
+                {
+                    codemeta + 'name': 'GNU General Public License v3.0 only'
+                },
+                {
+                    codemeta + 'name': 'CeCILL Free Software License Agreement v1.1'  # noqa
+                }
+            ],
             codemeta + 'author': {
                 codemeta + 'name': 'Morane Gruenpeter'
             },
-            codemeta + 'programmingLanguage': 'C',
+            codemeta + 'programmingLanguage': ['php', 'python', 'C'],
             codemeta + 'applicationCategory': 'test',
             codemeta + 'dateCreated': '2017-05-03T16:08:47+02:00',
-            codemeta + 'version': 1,
-            atom + 'external_identifier': 'hal-01243065',
-            atom + 'title': 'Composing a Web of Audio Applications',
+            codemeta + 'version': '1',
+            'external_identifier': 'hal-01243065',
+            'title': 'Composing a Web of Audio Applications',
             codemeta + 'description': 'this is the description',
-            atom + 'id': 'hal-01243065',
-            atom + 'client': 'hal',
+            'id': 'hal-01243065',
+            'client': 'hal',
             codemeta + 'keywords': 'DSP programming,Web',
             codemeta + 'developmentStatus': 'stable'
         }

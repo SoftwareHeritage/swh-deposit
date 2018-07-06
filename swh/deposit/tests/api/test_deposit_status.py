@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -61,13 +61,10 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(status_response.status_code, status.HTTP_200_OK)
         r = parse_xml(BytesIO(status_response.content))
 
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
-                         deposit.id)
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
-                         DEPOSIT_STATUS_DEPOSITED)
-        self.assertEqual(
-            r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
-            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
+        self.assertEqual(int(r['deposit_id']), deposit.id)
+        self.assertEqual(r['deposit_status'], DEPOSIT_STATUS_DEPOSITED)
+        self.assertEqual(r['deposit_status_detail'],
+                         DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
 
     @istest
     def status_with_swh_id(self):
@@ -87,15 +84,11 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         # then
         self.assertEqual(status_response.status_code, status.HTTP_200_OK)
         r = parse_xml(BytesIO(status_response.content))
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_id'],
-                         deposit_id)
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_status'],
-                         _status)
-        self.assertEqual(
-            r['{http://www.w3.org/2005/Atom}deposit_status_detail'],
-            DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS])
-        self.assertEqual(r['{http://www.w3.org/2005/Atom}deposit_swh_id'],
-                         _swh_id)
+        self.assertEqual(int(r['deposit_id']), deposit_id)
+        self.assertEqual(r['deposit_status'], _status)
+        self.assertEqual(r['deposit_status_detail'],
+                         DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS])
+        self.assertEqual(r['deposit_swh_id'], _swh_id)
 
     @istest
     def status_on_unknown_deposit(self):

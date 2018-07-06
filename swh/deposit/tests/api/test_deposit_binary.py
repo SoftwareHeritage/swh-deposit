@@ -174,8 +174,7 @@ and other stuff</description>
         # then
         response_content = parse_xml(BytesIO(response.content))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
@@ -189,15 +188,12 @@ and other stuff</description>
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
 
         response_content = parse_xml(BytesIO(response.content))
-        self.assertEqual(
-            response_content['{http://www.w3.org/2005/Atom}deposit_archive'],
-            self.archive['name'])
-        self.assertEqual(
-            response_content['{http://www.w3.org/2005/Atom}deposit_id'],
-            deposit.id)
-        self.assertEqual(
-            response_content['{http://www.w3.org/2005/Atom}deposit_status'],
-            deposit.status)
+        self.assertEqual(response_content['deposit_archive'],
+                         self.archive['name'])
+        self.assertEqual(int(response_content['deposit_id']),
+                         deposit.id)
+        self.assertEqual(response_content['deposit_status'],
+                         deposit.status)
 
         edit_se_iri = reverse('edit_se_iri',
                               args=[self.collection.name, deposit.id])
@@ -384,8 +380,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -409,8 +404,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id2 = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id2 = response_content['deposit_id']
 
         deposit2 = Deposit.objects.get(pk=deposit_id2)
 
@@ -448,8 +442,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, 'partial')
@@ -538,8 +531,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
