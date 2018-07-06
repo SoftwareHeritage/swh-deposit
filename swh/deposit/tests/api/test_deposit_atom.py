@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -269,15 +269,13 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         dr = DepositRequest.objects.get(deposit=deposit)
 
         self.assertIsNotNone(dr.metadata)
-        sw_version = dr.metadata.get(
-            '{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}softwareVersion')
+        sw_version = dr.metadata.get('codemeta:softwareVersion')
         self.assertEquals(sw_version, '10.4')
 
     @istest
@@ -358,8 +356,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
@@ -399,8 +396,7 @@ and other stuff</description>
 
         response_content = parse_xml(BytesIO(response.content))
 
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
@@ -438,8 +434,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = response_content['deposit_id']
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
@@ -475,8 +470,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
@@ -503,8 +497,7 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response_content = parse_xml(BytesIO(response.content))
-        deposit_id = response_content[
-            '{http://www.w3.org/2005/Atom}deposit_id']
+        deposit_id = int(response_content['deposit_id'])
 
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEqual(deposit.collection, self.collection)
