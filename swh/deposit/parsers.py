@@ -23,7 +23,7 @@ class SWHFileUploadZipParser(FileUploadParser):
 
 
 class SWHFileUploadTarParser(FileUploadParser):
-    """File upload parser limited to zip archive.
+    """File upload parser limited to tarball (tar, tar.gz, tar.*) archives.
 
     """
     media_type = 'application/x-tar'
@@ -53,14 +53,18 @@ class ListXMLParser(XMLParser):
     def parse(self, stream, media_type=None, parser_context=None):
         data = super().parse(
             stream, media_type=media_type, parser_context=parser_context)
-        # Update the special values
+        # Overriding and updating the list values
         for key, value in self._lists.items():
             data[key] = value
         self._reset()
-
         return data
 
     def _xml_convert(self, element):
+        """This patches the default behavior to detect entries that must be
+           list. The current XMLParser's behavior is not correct as it
+           merges entries with the same name.
+
+        """
         children = list(element)
         if len(children) == 0:
             data = self._type_convert(element.text)
