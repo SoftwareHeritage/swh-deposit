@@ -15,7 +15,10 @@ from io import BytesIO
 from nose.plugins.attrib import attr
 from rest_framework import status
 
-from swh.deposit.config import COL_IRI, EM_IRI, EDIT_SE_IRI
+from swh.deposit.config import (COL_IRI, EM_IRI, EDIT_SE_IRI,
+                                DEPOSIT_STATUS_PARTIAL,
+                                DEPOSIT_STATUS_VERIFIED,
+                                DEPOSIT_STATUS_DEPOSITED)
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
 from swh.deposit.models import DepositRequestType
@@ -121,8 +124,14 @@ class FileSystemCreationRoutine(TestCase):
                 self.archive['name'], ))
 
         # then
-        assert response.status_code == status.HTTP_201_CREATED
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_content = parse_xml(BytesIO(response.content))
+        _status = response_content['deposit_status']
+        if status_partial:
+            expected_status = DEPOSIT_STATUS_PARTIAL
+        else:
+            expected_status = DEPOSIT_STATUS_VERIFIED
+        self.assertEqual(_status, expected_status)
         deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
@@ -158,8 +167,14 @@ class FileSystemCreationRoutine(TestCase):
             HTTP_IN_PROGRESS=status_partial)
 
         # then
-        # assert response.status_code == status.HTTP_201_CREATED
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_content = parse_xml(BytesIO(response.content))
+        _status = response_content['deposit_status']
+        if status_partial:
+            expected_status = DEPOSIT_STATUS_PARTIAL
+        else:
+            expected_status = DEPOSIT_STATUS_DEPOSITED
+        self.assertEqual(_status, expected_status)
         deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
@@ -313,7 +328,8 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
   </codemeta:author>
 </entry>"""
 
-    def create_invalid_deposit(self, external_id='some-external-id-1'):
+    def create_deposit_with_invalid_archive(self,
+                                            external_id='some-external-id-1'):
         url = reverse(COL_IRI, args=[self.collection.name])
 
         data = b'some data which is clearly not a zip file'
@@ -338,13 +354,12 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
     def create_deposit_with_status(
             self, status, external_id='some-external-id-1', swh_id=None):
-        deposit_id = self.create_invalid_deposit(external_id)
+        # create an invalid deposit which we will update further down the line
+        deposit_id = self.create_deposit_with_invalid_archive(external_id)
 
         # We cannot create some form of deposit with a given status in
-        # test context ('rejected' for example). As flipped off the
-        # checks in the configuration so all deposits have the status
-        # deposited). Update in place the deposit with such
-        # status
+        # test context ('rejected' for example). Update in place the
+        # deposit with such status to permit some further tests.
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.status = status
         if swh_id:
