@@ -185,7 +185,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         return False, {
             'url': {
                 'summary': "At least one url field must be compatible with the"
-                           "client's domain name. The following url fields "
+                           " client's domain name. The following url fields "
                            "failed the check.",
                 'fields': url_fields,
             }}

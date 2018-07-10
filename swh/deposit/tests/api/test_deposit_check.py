@@ -91,7 +91,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         # url check failure
         self.assertEqual(details['url']['summary'],
                          "At least one url field must be compatible with the"
-                         "client's domain name. The following url fields "
+                         " client's domain name. The following url fields "
                          "failed the check.")
         self.assertEqual(details['url']['fields'], [])
 
