@@ -71,17 +71,6 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
-        expected_error = {
-            'metadata': [
-                {
-                    'fields': ['url', 'external_identifier', 'author'],
-                    'summary': 'Mandatory fields are missing'
-                },
-                {
-                    'fields': [['name', 'title']],
-                    'summary': 'Mandatory alternate fields are missing'
-                }],
-        }
         details = data['details']
         # archive checks failure
         self.assertEqual(len(details['archive']['ids']), 1)
