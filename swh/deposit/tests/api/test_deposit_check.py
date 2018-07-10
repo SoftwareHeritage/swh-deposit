@@ -94,7 +94,6 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(alternate['fields'], ['name or title'])
         # url check failure
         self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
-        self.assertEqual(details['url']['fields'], [])
 
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)

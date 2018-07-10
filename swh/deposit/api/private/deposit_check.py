@@ -20,7 +20,7 @@ ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
 
 MANDATORY_ARCHIVE_UNREADABLE = 'Deposit was rejected because at least one of its associated archives was not readable'  # noqa
 MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
-INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name. The following url fields failed the check"  # noqa
+INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
 
 
 class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
@@ -183,15 +183,19 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """
         url_fields = []
         for field in metadata:
-            url_fields.append(field)
-            if 'url' in field and client_domain in metadata[field]:
-                return True, None
+            if 'url' in field:
+                if client_domain in metadata[field]:
+                    return True, None
+                url_fields.append(field)
 
-        return False, {
+        detail = {
             'url': {
                 'summary': INCOMPATIBLE_URL_FIELDS,
-                'fields': url_fields,
-            }}
+            }
+        }
+        if url_fields:
+            detail['url']['fields'] = url_fields
+        return False, detail
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
