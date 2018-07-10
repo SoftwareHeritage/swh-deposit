@@ -58,10 +58,10 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         """Invalid deposit should fail the checks (-> status rejected)
 
         """
-        deposit_id = self.create_invalid_deposit()
+        deposit_id = self.create_deposit_with_invalid_archive()
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_DEPOSITED)
+        self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
 
         url = reverse(PRIVATE_CHECK_DEPOSIT,
                       args=[self.collection.name, deposit.id])
@@ -71,9 +71,41 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
-        self.assertEqual(data['details'],
-                         'Some archive(s) and metadata and url ' +
-                         'failed the checks.')
+        expected_error = {
+            'metadata': [
+                {
+                    'fields': ['url', 'external_identifier', 'author'],
+                    'summary': 'Mandatory fields are missing'
+                },
+                {
+                    'fields': [['name', 'title']],
+                    'summary': 'Mandatory alternate fields are missing'
+                }],
+        }
+        details = data['details']
+        # archive checks failure
+        self.assertEqual(len(details['archive']['ids']), 1)
+        self.assertEqual(details['archive']['summary'],
+                         'Following deposit request ids are '
+                         'rejected because their associated archive'
+                         ' is not readable')
+        # metadata check failure
+        self.assertEqual(len(details['metadata']), 2)
+        mandatory = details['metadata'][0]
+        self.assertEqual(mandatory['summary'], 'Mandatory fields are missing')
+        self.assertEqual(set(mandatory['fields']),
+                         set(['url', 'external_identifier', 'author']))
+        alternate = details['metadata'][1]
+        self.assertEqual(alternate['summary'],
+                         'Mandatory alternate fields are missing')
+        self.assertEqual(alternate['fields'], [['name', 'title']])
+        # url check failure
+        self.assertEqual(details['url']['summary'],
+                         "At least one url field must be compatible with the"
+                         "client's domain name. The following url fields "
+                         "failed the check.")
+        self.assertEqual(details['url']['fields'], [])
+
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
@@ -98,6 +130,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode('utf-8'))
+
         self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
@@ -106,7 +139,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
 class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
     @istest
     def check_metadata_ok(self):
-        actual_check = self._check_metadata({
+        actual_check, detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
             'name': 'foo',
@@ -114,10 +147,11 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         })
 
         self.assertTrue(actual_check)
+        self.assertIsNone(detail)
 
     @istest
     def check_metadata_ok2(self):
-        actual_check = self._check_metadata({
+        actual_check, detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
             'title': 'bar',
@@ -125,23 +159,45 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         })
 
         self.assertTrue(actual_check)
+        self.assertIsNone(detail)
 
     @istest
     def check_metadata_ko(self):
-        actual_check = self._check_metadata({
+        """Missing optional field should be caught
+
+        """
+        actual_check, error_detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
             'author': 'someone',
         })
 
+        expected_error = {
+            'metadata': [{
+                'summary': 'Mandatory alternate fields are missing',
+                'fields': [('name', 'title')],
+            }]
+        }
         self.assertFalse(actual_check)
+        self.assertEqual(error_detail, expected_error)
 
     @istest
     def check_metadata_ko2(self):
-        actual_check = self._check_metadata({
+        """Missing mandatory fields should be caught
+
+        """
+        actual_check, error_detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
             'title': 'foobar',
         })
 
+        expected_error = {
+            'metadata': [{
+                'summary': 'Mandatory fields are missing',
+                'fields': ['author'],
+            }]
+        }
+
         self.assertFalse(actual_check)
+        self.assertEqual(error_detail, expected_error)

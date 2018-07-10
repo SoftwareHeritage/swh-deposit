@@ -103,6 +103,7 @@ swh/deposit/migrations/0008_auto_20171130_1513.py
 swh/deposit/migrations/0009_deposit_parent.py
 swh/deposit/migrations/0010_auto_20180110_0953.py
 swh/deposit/migrations/0011_auto_20180115_1510.py
+swh/deposit/migrations/0012_deposit_status_detail.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
