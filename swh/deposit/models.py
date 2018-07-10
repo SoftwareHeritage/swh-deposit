@@ -15,7 +15,7 @@ from django.utils.timezone import now
 
 from .config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED
 from .config import DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
-from .config import DEPOSIT_STATUS_LOAD_FAILURE
+from .config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_REJECTED
 
 
 class Dbversion(models.Model):
@@ -114,6 +114,7 @@ class Deposit(models.Model):
     status = models.TextField(
         choices=DEPOSIT_STATUS,
         default=DEPOSIT_STATUS_PARTIAL)
+    status_detail = JSONField(null=True)
     # deposit can have one parent
     parent = models.ForeignKey('self', null=True)
 
@@ -121,14 +122,18 @@ class Deposit(models.Model):
         db_table = 'deposit'
 
     def __str__(self):
-        return str({
+        d = {
             'id': self.id,
             'reception_date': self.reception_date,
             'collection': self.collection.name,
             'external_id': self.external_id,
             'client': self.client.username,
-            'status': self.status
-        })
+            'status': self.status,
+        }
+
+        if self.status in (DEPOSIT_STATUS_REJECTED):
+            d['status_detail'] = self.status_detail
+        return str(d)
 
 
 class DepositRequestType(models.Model):

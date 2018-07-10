@@ -33,7 +33,7 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
     @istest
     def check_deposit_ready(self):
-        """Check a valid deposit deposited should result in ready state
+        """Check on a valid 'deposited' deposit should result in 'verified'
 
         """
         # 1. create a deposit with archive and metadata
@@ -46,7 +46,6 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
         # when
         actual_result = self.checker.check(deposit_check_url=deposit_check_url)
-
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
@@ -54,11 +53,11 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
     @istest
     def check_deposit_rejected(self):
-        """Check an invalid deposit deposited should result in rejected
+        """Check on invalid 'deposited' deposit should result in 'rejected'
 
         """
         # 1. create a deposit with archive and metadata
-        deposit_id = self.create_invalid_deposit()
+        deposit_id = self.create_deposit_with_invalid_archive()
 
         args = [self.collection.name, deposit_id]
         deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
