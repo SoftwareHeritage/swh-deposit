@@ -46,19 +46,36 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             The deposit to check archives for
 
         Returns
-            True if all archives are ok, False otherwise.
+            tuple (status, error_detail): True, None if all archives
+            are ok, (False, <detailed-error>) otherwise.
 
         """
         requests = list(self._deposit_requests(
             deposit, request_type=ARCHIVE_TYPE))
         if len(requests) == 0:  # no associated archive is refused
-            return False
+            return False, {
+                'archive': {
+                    'summary': 'Deposit without archive is rejected.',
+                    'id': deposit.id,
+                }
+            }
 
+        rejected_dr_ids = []
         for dr in requests:
-            check = self._check_archive(dr.archive.path)
+            _path = dr.archive.path
+            check = self._check_archive(_path)
             if not check:
-                return False
-        return True
+                rejected_dr_ids.append(dr.id)
+
+        if rejected_dr_ids:
+            return False, {
+                'archive': {
+                    'summary': 'Following deposit request ids are rejected '
+                               'because their associated archive is not '
+                               'readable',
+                    'ids': rejected_dr_ids,
+                }}
+        return True, None
 
     def _check_archive(self, archive_path):
         """Check that a given archive is actually ok for reading.
@@ -81,10 +98,11 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """Given a deposit, aggregate all metadata requests.
 
         Args:
-            The deposit to check metadata for.
+            deposit (Deposit): The deposit instance to extract
+            metadata from.
 
         Returns:
-            True if the deposit's associated metadata are ok, False otherwise.
+            metadata dict from the deposit.
 
         """
         metadata = {}
@@ -96,22 +114,54 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         """Check to execute on all metadata for mandatory field presence.
 
         Args:
-            metadata (dict): Metadata to actually check
+            metadata (dict): Metadata dictionary to check for mandatory fields
 
         Returns:
-            True if metadata is ok, False otherwise.
+            tuple (status, error_detail): True, None if metadata are
+              ok (False, <detailed-error>) otherwise.
 
         """
-        required_fields = (('url',),
-                           ('external_identifier',),
-                           ('name', 'title'),
-                           ('author',))
+        required_fields = {
+            'url': False,
+            'external_identifier': False,
+            'author': False,
+        }
+        alternate_fields = {
+            ('name', 'title'): False,  # alternate field, at least one
+                                       # of them must be present
+        }
 
-        result = all(any(name in field
-                         for field in metadata
-                         for name in possible_names)
-                     for possible_names in required_fields)
-        return result
+        for field, value in metadata.items():
+            for name in required_fields:
+                if name in field:
+                    required_fields[name] = True
+
+            for possible_names in alternate_fields:
+                for possible_name in possible_names:
+                    if possible_name in field:
+                        alternate_fields[possible_names] = True
+                        continue
+
+        mandatory_result = [k for k, v in required_fields.items() if not v]
+        optional_result = [
+            k for k, v in alternate_fields.items() if not v]
+
+        if mandatory_result == [] and optional_result == []:
+            return True, None
+        detail = []
+        if mandatory_result != []:
+            detail.append({
+                'summary': 'Mandatory fields are missing',
+                'fields': mandatory_result
+            })
+        if optional_result != []:
+            detail.append({
+                'summary': 'Mandatory alternate fields are missing',
+                'fields': optional_result,
+            })
+        return False, {
+            'metadata': detail
+        }
 
     def _check_url(self, client_domain, metadata):
         """Check compatibility between client_domain and url field in metadata
@@ -119,17 +169,26 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         Args:
             client_domain (str): url associated with the deposit's client
             metadata (dict): Metadata where to find url
+
         Returns:
-            True if url is ok, False otherwise.
+            tuple (status, error_detail): True, None if url associated
+              with the deposit's client is ok, (False,
+              <detailed-error>) otherwise.
 
         """
-        metadata_urls = []
+        url_fields = []
         for field in metadata:
-            if 'url' in field:
-                metadata_urls.append(metadata[field])
+            url_fields.append(field)
+            if 'url' in field and client_domain in metadata[field]:
+                return True, None
 
-        return any(client_domain in url
-                   for url in metadata_urls)
+        return False, {
+            'url': {
+                'summary': "At least one url field must be compatible with the"
+                           "client's domain name. The following url fields "
+                           "failed the check.",
+                'fields': url_fields,
+            }}
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
@@ -147,30 +206,30 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         deposit = Deposit.objects.get(pk=deposit_id)
         client_domain = deposit.client.domain
         metadata = self._metadata_get(deposit)
-        problems = []
+        problems = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
-        archives_status = self._check_deposit_archives(deposit)
+        archives_status, error_detail = self._check_deposit_archives(deposit)
         if not archives_status:
-            problems.append('archive(s)')
+            problems.update(error_detail)
 
-        metadata_status = self._check_metadata(metadata)
+        metadata_status, error_detail = self._check_metadata(metadata)
         if not metadata_status:
-            problems.append('metadata')
+            problems.update(error_detail)
 
-        url_status = self._check_url(client_domain, metadata)
+        url_status, error_detail = self._check_url(client_domain, metadata)
         if not url_status:
-            problems.append('url')
+            problems.update(error_detail)
 
         deposit_status = archives_status and metadata_status and url_status
 
         # if any problems arose, the deposit is rejected
         if not deposit_status:
             deposit.status = DEPOSIT_STATUS_REJECTED
+            deposit.status_detail = problems
             response = {
                 'status': deposit.status,
-                'details': 'Some %s failed the checks.' % (
-                    ' and '.join(problems), ),
+                'details': deposit.status_detail,
             }
         else:
             deposit.status = DEPOSIT_STATUS_VERIFIED
