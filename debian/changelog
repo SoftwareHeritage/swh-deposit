@@ -1,3 +1,10 @@
+swh-deposit (0.0.54-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.54
+  * deposit_check: Improve details in failing checks
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 10 Jul 2018 10:23:35 +0200
+
 swh-deposit (0.0.53-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.53
