@@ -12,12 +12,19 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ...models import Deposit
-from ...config import DEPOSIT_STATUS_VERIFIED, PRIVATE_CHECK_DEPOSIT
-from ...config import DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
+from swh.deposit.config import (
+    DEPOSIT_STATUS_VERIFIED, PRIVATE_CHECK_DEPOSIT,
+    DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
+)
+from swh.deposit.api.private.deposit_check import (
+    SWHChecksDeposit,
+    MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
+    MANDATORY_ARCHIVE_UNREADABLE, ALTERNATE_FIELDS_MISSING
+)
+from swh.deposit.models import Deposit
+
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ..common import FileSystemCreationRoutine
-from ...api.private.deposit_check import SWHChecksDeposit
 
 
 @attr('fs')
@@ -73,26 +80,20 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
         details = data['details']
         # archive checks failure
-        self.assertEqual(len(details['archive']['ids']), 1)
+        self.assertEqual(len(details['archive']['fields']), 1)
         self.assertEqual(details['archive']['summary'],
-                         'Following deposit request ids are '
-                         'rejected because their associated archive'
-                         ' is not readable')
+                         MANDATORY_ARCHIVE_UNREADABLE)
         # metadata check failure
         self.assertEqual(len(details['metadata']), 2)
         mandatory = details['metadata'][0]
-        self.assertEqual(mandatory['summary'], 'Mandatory fields are missing')
+        self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
         self.assertEqual(set(mandatory['fields']),
                          set(['url', 'external_identifier', 'author']))
         alternate = details['metadata'][1]
-        self.assertEqual(alternate['summary'],
-                         'Mandatory alternate fields are missing')
-        self.assertEqual(alternate['fields'], [['name', 'title']])
+        self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
+        self.assertEqual(alternate['fields'], ['name or title'])
         # url check failure
-        self.assertEqual(details['url']['summary'],
-                         "At least one url field must be compatible with the"
-                         " client's domain name. The following url fields "
-                         "failed the check.")
+        self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
         self.assertEqual(details['url']['fields'], [])
 
         deposit = Deposit.objects.get(pk=deposit.id)
@@ -164,7 +165,7 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         expected_error = {
             'metadata': [{
                 'summary': 'Mandatory alternate fields are missing',
-                'fields': [('name', 'title')],
+                'fields': ['name or title'],
             }]
         }
         self.assertFalse(actual_check)

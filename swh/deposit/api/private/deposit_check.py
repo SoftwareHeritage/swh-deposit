@@ -15,6 +15,14 @@ from ...config import ARCHIVE_TYPE, METADATA_TYPE
 from ...models import Deposit, DepositRequest
 
 
+MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
+ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
+
+MANDATORY_ARCHIVE_UNREADABLE = 'Deposit was rejected because at least one of its associated archives was not readable'  # noqa
+MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
+INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name. The following url fields failed the check"  # noqa
+
+
 class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
     """Dedicated class to read a deposit's raw archives content.
 
@@ -55,8 +63,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if len(requests) == 0:  # no associated archive is refused
             return False, {
                 'archive': {
-                    'summary': 'Deposit without archive is rejected.',
-                    'id': deposit.id,
+                    'summary': MANDATORY_ARCHIVE_MISSING,
                 }
             }
 
@@ -70,10 +77,8 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         if rejected_dr_ids:
             return False, {
                 'archive': {
-                    'summary': 'Following deposit request ids are rejected '
-                               'because their associated archive is not '
-                               'readable',
-                    'ids': rejected_dr_ids,
+                    'summary': MANDATORY_ARCHIVE_UNREADABLE,
+                    'fields': rejected_dr_ids,
                 }}
         return True, None
 
@@ -144,19 +149,19 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
 
         mandatory_result = [k for k, v in required_fields.items() if not v]
         optional_result = [
-            k for k, v in alternate_fields.items() if not v]
+            ' or '.join(k) for k, v in alternate_fields.items() if not v]
 
         if mandatory_result == [] and optional_result == []:
             return True, None
         detail = []
         if mandatory_result != []:
             detail.append({
-                'summary': 'Mandatory fields are missing',
+                'summary': MANDATORY_FIELDS_MISSING,
                 'fields': mandatory_result
             })
         if optional_result != []:
             detail.append({
-                'summary': 'Mandatory alternate fields are missing',
+                'summary': ALTERNATE_FIELDS_MISSING,
                 'fields': optional_result,
             })
         return False, {
@@ -184,9 +189,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
 
         return False, {
             'url': {
-                'summary': "At least one url field must be compatible with the"
-                           " client's domain name. The following url fields "
-                           "failed the check.",
+                'summary': INCOMPATIBLE_URL_FIELDS,
                 'fields': url_fields,
             }}
 
