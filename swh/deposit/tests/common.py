@@ -18,6 +18,7 @@ from rest_framework import status
 from swh.deposit.config import (COL_IRI, EM_IRI, EDIT_SE_IRI,
                                 DEPOSIT_STATUS_PARTIAL,
                                 DEPOSIT_STATUS_VERIFIED,
+                                DEPOSIT_STATUS_REJECTED,
                                 DEPOSIT_STATUS_DEPOSITED)
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
@@ -353,7 +354,8 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         return deposit_id
 
     def create_deposit_with_status(
-            self, status, external_id='some-external-id-1', swh_id=None):
+            self, status,
+            external_id='some-external-id-1', swh_id=None, status_detail=None):
         # create an invalid deposit which we will update further down the line
         deposit_id = self.create_deposit_with_invalid_archive(external_id)
 
@@ -361,6 +363,8 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         # test context ('rejected' for example). Update in place the
         # deposit with such status to permit some further tests.
         deposit = Deposit.objects.get(pk=deposit_id)
+        if status == DEPOSIT_STATUS_REJECTED:
+            deposit.status_detail = status_detail
         deposit.status = status
         if swh_id:
             deposit.swh_id = swh_id

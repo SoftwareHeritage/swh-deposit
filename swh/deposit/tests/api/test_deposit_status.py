@@ -10,13 +10,15 @@ from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.api.deposit_status import convert_status_detail
+from swh.deposit.config import (COL_IRI, STATE_IRI, DEPOSIT_STATUS_DEPOSITED,
+                                DEPOSIT_STATUS_REJECTED)
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
 from swh.deposit.models import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.parsers import parse_xml
 
 from ..common import BasicTestCase, WithAuthTestCase, FileSystemCreationRoutine
 from ..common import CommonCreationRoutine
-from ...config import COL_IRI, STATE_IRI, DEPOSIT_STATUS_DEPOSITED
 
 
 class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
@@ -112,3 +114,105 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @istest
+    def convert_status_detail_empty(self):
+        actual_status_detail = convert_status_detail({})
+        self.assertIsNone(actual_status_detail)
+
+        actual_status_detail = convert_status_detail({'dummy-keys': []})
+        self.assertIsNone(actual_status_detail)
+
+        actual_status_detail = convert_status_detail(None)
+        self.assertIsNone(actual_status_detail)
+
+    @istest
+    def convert_status_detail(self):
+        status_detail = {
+            'url': {
+                'summary': "At least one url field must be compatible with the client\'s domain name. The following url fields failed the check",  # noqa
+                'fields': ['blahurl', 'testurl'],
+            },
+            'metadata': [
+                {
+                    'summary': 'Mandatory fields missing',
+                    'fields': ['url', 'title'],
+                },
+                {
+                    'summary': 'Alternate fields missing',
+                    'fields': ['name or title', 'url or badurl']
+                }
+            ],
+            'archive': {
+                'summary': 'Unreadable archive',
+                'fields': ['1', '2'],
+            },
+        }
+
+        expected_status_detail = '''- Mandatory fields missing (url, title)
+- Alternate fields missing (name or title, url or badurl)
+- At least one url field must be compatible with the client's domain name. The following url fields failed the check (blahurl, testurl)
+- Unreadable archive (1, 2)
+'''  # noqa
+
+        actual_status_detail = convert_status_detail(status_detail)
+
+        self.assertEqual(actual_status_detail, expected_status_detail)
+
+    @istest
+    def convert_status_detail_2(self):
+        status_detail = {
+            'url': {
+                'summary': 'At least one compatible url field. Failed',
+                'fields': ['testurl'],
+            },
+            'metadata': [
+                {
+                    'summary': 'Mandatory fields missing',
+                    'fields': ['name'],
+                },
+            ],
+        }
+
+        expected_status_detail = '''- Mandatory fields missing (name)
+- At least one compatible url field. Failed (testurl)
+'''
+
+        actual_status_detail = convert_status_detail(status_detail)
+
+        self.assertEqual(actual_status_detail, expected_status_detail)
+
+    @istest
+    def convert_status_detail_3(self):
+        status_detail = {
+            'url': {
+                'summary': 'At least one compatible url field',
+            },
+        }
+
+        expected_status_detail = '- At least one compatible url field\n'
+        actual_status_detail = convert_status_detail(status_detail)
+        self.assertEqual(actual_status_detail, expected_status_detail)
+
+    @istest
+    def status_on_deposit_rejected(self):
+        _status = DEPOSIT_STATUS_REJECTED
+        _swh_id = '548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
+        _status_detail = {'url': {'summary': 'Wrong url'}}
+
+        # given
+        deposit_id = self.create_deposit_with_status(
+            status=_status, swh_id=_swh_id, status_detail=_status_detail)
+
+        url = reverse(STATE_IRI, args=[self.collection.name, deposit_id])
+
+        # when
+        status_response = self.client.get(url)
+
+        # then
+        self.assertEqual(status_response.status_code, status.HTTP_200_OK)
+        r = parse_xml(BytesIO(status_response.content))
+        self.assertEqual(int(r['deposit_id']), deposit_id)
+        self.assertEqual(r['deposit_status'], _status)
+        self.assertEqual(r['deposit_status_detail'], '- Wrong url')
+        self.assertEqual(r['deposit_swh_id'], _swh_id)
