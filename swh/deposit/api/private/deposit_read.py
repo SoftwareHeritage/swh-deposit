@@ -15,9 +15,10 @@ from rest_framework import status
 from swh.core import tarball
 from swh.model import identifiers
 
-from ...config import SWH_PERSON
+from . import DepositReadMixin
+from ...config import SWH_PERSON, ARCHIVE_TYPE, METADATA_TYPE
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
-from ...models import Deposit, DepositRequest
+from ...models import Deposit
 
 
 @contextmanager
@@ -64,7 +65,8 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         yield archive_paths[0]
 
 
-class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
+class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView,
+                             DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.
@@ -87,11 +89,8 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
             path to deposited archives
 
         """
-        deposit = Deposit.objects.get(pk=deposit_id)
-        deposit_requests = DepositRequest.objects.filter(
-            deposit=deposit,
-            type=self.deposit_request_types['archive']).order_by('id')
-
+        deposit_requests = self._deposit_requests(
+            deposit_id, request_type=ARCHIVE_TYPE)
         for deposit_request in deposit_requests:
             yield deposit_request.archive.path
 
@@ -116,10 +115,11 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView):
                                 content_type='application/octet-stream')
 
 
-class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
+class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
+                             DepositReadMixin):
     """Class in charge of aggregating metadata on a deposit.
 
-    """
+ """
     ADDITIONAL_CONFIG = {
         'provider': ('dict', {
             # 'provider_name': '',  # those are not set since read from the
@@ -158,13 +158,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
                 if client_domain in metadata[field]:
                     return metadata[field]
 
-    def aggregate(self, deposit, requests):
+    def aggregate(self, deposit, metadata_requests):
         """Aggregate multiple data on deposit into one unified data dictionary.
 
         Args:
             deposit (Deposit): Deposit concerned by the data aggregation.
-            requests ([DepositRequest]): List of associated requests which
-                                         need aggregation.
+            metadata_requests ([DepositRequest]): List of associated
+                metadata_requests which need aggregation.
 
         Returns:
             Dictionary of data representing the deposit to inject in swh.
@@ -173,7 +173,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
         data = {}
 
         # Retrieve tarballs/metadata information
-        metadata = self._aggregate_metadata(deposit, requests)
+        metadata = self._aggregate_metadata(deposit, metadata_requests)
         # create origin_url from metadata only after deposit_check validates it
         origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
@@ -226,10 +226,10 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView):
 
     def process_get(self, req, collection_name, deposit_id):
         deposit = Deposit.objects.get(pk=deposit_id)
-        requests = DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata'])
+        metadata_requests = self._deposit_requests(
+            deposit, request_type=METADATA_TYPE)
 
-        data = self.aggregate(deposit, requests)
+        data = self.aggregate(deposit, metadata_requests)
         d = {}
         if data:
             d = json.dumps(data)

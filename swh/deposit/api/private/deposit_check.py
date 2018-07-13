@@ -8,12 +8,11 @@ import patoolib
 
 from rest_framework import status
 
-
+from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
 from ...config import ARCHIVE_TYPE, METADATA_TYPE
-from ...models import Deposit, DepositRequest
-
+from ...models import Deposit
 
 MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
 ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
@@ -23,30 +22,12 @@ MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
 INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
 
 
-class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
+class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.
 
     """
-    def _deposit_requests(self, deposit, request_type):
-        """Given a deposit, yields its associated deposit_request
-
-        Args:
-            deposit (Deposit): Deposit to list requests for
-            request_type (str): Archive or metadata type
-
-        Yields:
-            deposit requests of type request_type associated to the deposit
-
-        """
-        deposit_requests = DepositRequest.objects.filter(
-            type=self.deposit_request_types[request_type],
-            deposit=deposit).order_by('id')
-
-        for deposit_request in deposit_requests:
-            yield deposit_request
-
     def _check_deposit_archives(self, deposit):
         """Given a deposit, check each deposit request of type archive.
 
