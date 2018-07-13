@@ -11,7 +11,7 @@ from rest_framework import status
 from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
-from ...config import ARCHIVE_TYPE, METADATA_TYPE
+from ...config import ARCHIVE_TYPE
 from ...models import Deposit
 
 MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
@@ -79,22 +79,6 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
             return False
         else:
             return True
-
-    def _metadata_get(self, deposit):
-        """Given a deposit, aggregate all metadata requests.
-
-        Args:
-            deposit (Deposit): The deposit instance to extract
-            metadata from.
-
-        Returns:
-            metadata dict from the deposit.
-
-        """
-        metadata = {}
-        for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
-            metadata.update(dr.metadata)
-        return metadata
 
     def _check_metadata(self, metadata):
         """Check to execute on all metadata for mandatory field presence.

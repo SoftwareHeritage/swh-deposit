@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 
+from ...config import METADATA_TYPE
 from ...models import DepositRequest, Deposit
 
 
@@ -32,3 +33,19 @@ class DepositReadMixin:
 
         for deposit_request in deposit_requests:
             yield deposit_request
+
+    def _metadata_get(self, deposit):
+        """Given a deposit, aggregate all metadata requests.
+
+        Args:
+            deposit (Deposit): The deposit instance to extract
+            metadata from.
+
+        Returns:
+            metadata dict from the deposit.
+
+        """
+        metadata = {}
+        for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
+            metadata.update(dr.metadata)
+        return metadata

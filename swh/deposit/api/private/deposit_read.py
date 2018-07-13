@@ -16,7 +16,7 @@ from swh.core import tarball
 from swh.model import identifiers
 
 from . import DepositReadMixin
-from ...config import SWH_PERSON, ARCHIVE_TYPE, METADATA_TYPE
+from ...config import SWH_PERSON, ARCHIVE_TYPE
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...models import Deposit
 
@@ -141,16 +141,6 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         self.provider = self.config['provider']
         self.tool = self.config['tool']
 
-    def _aggregate_metadata(self, deposit, metadata_requests):
-        """Retrieve and aggregates metadata information.
-
-        """
-        metadata = {}
-        for req in metadata_requests:
-            metadata.update(req.metadata)
-
-        return metadata
-
     def _retrieve_url(self, deposit, metadata):
         client_domain = deposit.client.domain
         for field in metadata:
@@ -158,22 +148,19 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
                 if client_domain in metadata[field]:
                     return metadata[field]
 
-    def aggregate(self, deposit, metadata_requests):
-        """Aggregate multiple data on deposit into one unified data dictionary.
+    def metadata_read(self, deposit):
+        """Read and aggregate multiple data on deposit into one unified data
+           dictionary.
 
         Args:
             deposit (Deposit): Deposit concerned by the data aggregation.
-            metadata_requests ([DepositRequest]): List of associated
-                metadata_requests which need aggregation.
 
         Returns:
             Dictionary of data representing the deposit to inject in swh.
 
         """
         data = {}
-
-        # Retrieve tarballs/metadata information
-        metadata = self._aggregate_metadata(deposit, metadata_requests)
+        metadata = self._metadata_get(deposit)
         # create origin_url from metadata only after deposit_check validates it
         origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
@@ -226,10 +213,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
 
     def process_get(self, req, collection_name, deposit_id):
         deposit = Deposit.objects.get(pk=deposit_id)
-        metadata_requests = self._deposit_requests(
-            deposit, request_type=METADATA_TYPE)
-
-        data = self.aggregate(deposit, metadata_requests)
+        data = self.metadata_read(deposit)
         d = {}
         if data:
             d = json.dumps(data)
