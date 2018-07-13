@@ -59,7 +59,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
             if not check:
                 errors.append({
                     'summary': error_message,
-                    'fields': archive_request.id
+                    'fields': [archive_request.id]
                 })
 
         if not errors:

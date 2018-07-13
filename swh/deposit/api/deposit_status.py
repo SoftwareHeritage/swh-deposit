@@ -26,10 +26,10 @@ def convert_status_detail(status_detail):
                'summary': <summary-string>,
                'fields': <impacted-fields-list>,
            }],
-           'archive': {
+           'archive': [{
                'summary': <summary-string>,
-               'fields': [],
-           }
+               'fields': <impacted-fields-list>,
+           }]
 
 
         }
@@ -45,19 +45,23 @@ def convert_status_detail(status_detail):
         return None
 
     msg = []
-    if 'metadata' in status_detail:
-        for data in status_detail['metadata']:
-            fields = ', '.join(data['fields'])
-            msg.append('- %s (%s)\n' % (data['summary'], fields))
+    for key in ['metadata', 'archive']:
+        _detail = status_detail.get(key)
+        if _detail:
+            for data in _detail:
+                suffix_msg = ''
+                fields = data.get('fields')
+                if fields:
+                    suffix_msg = ' (%s)' % ', '.join(fields)
+                msg.append('- %s%s\n' % (data['summary'], suffix_msg))
 
-    for key in ['url', 'archive']:
-        if key in status_detail:
-            _detail = status_detail[key]
-            fields = _detail.get('fields')
-            suffix_msg = ''
-            if fields:
-                suffix_msg = ' (%s)' % ', '.join(fields)
-            msg.append('- %s%s\n' % (_detail['summary'], suffix_msg))
+    _detail = status_detail.get('url')
+    if _detail:
+        fields = _detail.get('fields')
+        suffix_msg = ''
+        if fields:
+            suffix_msg = ' (%s)' % ', '.join(fields)
+        msg.append('- %s%s\n' % (_detail['summary'], suffix_msg))
 
     if not msg:
         return None
