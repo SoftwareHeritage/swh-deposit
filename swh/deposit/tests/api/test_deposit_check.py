@@ -19,7 +19,7 @@ from swh.deposit.config import (
 from swh.deposit.api.private.deposit_check import (
     SWHChecksDeposit,
     MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
-    MANDATORY_ARCHIVE_UNREADABLE, ALTERNATE_FIELDS_MISSING
+    MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING
 )
 from swh.deposit.models import Deposit
 
@@ -80,9 +80,9 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
         details = data['details']
         # archive checks failure
-        self.assertEqual(len(details['archive']['fields']), 1)
-        self.assertEqual(details['archive']['summary'],
-                         MANDATORY_ARCHIVE_UNREADABLE)
+        self.assertEqual(len(details['archive']), 1)
+        self.assertEqual(details['archive'][0]['summary'],
+                         MANDATORY_ARCHIVE_UNSUPPORTED)
         # metadata check failure
         self.assertEqual(len(details['metadata']), 2)
         mandatory = details['metadata'][0]

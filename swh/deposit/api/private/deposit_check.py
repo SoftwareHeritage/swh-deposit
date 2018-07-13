@@ -4,9 +4,12 @@
 # See top-level LICENSE file for more information
 
 import json
-import patoolib
+import re
+
 
 from rest_framework import status
+from tarfile import TarFile, is_tarfile
+from zipfile import ZipFile, is_zipfile
 
 from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
@@ -18,6 +21,9 @@ MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
 ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
 
 MANDATORY_ARCHIVE_UNREADABLE = 'Deposit was rejected because at least one of its associated archives was not readable'  # noqa
+MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (e.g contains an archive)'  # noqa
+MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
+
 MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
 INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
 
@@ -43,42 +49,61 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
             deposit, request_type=ARCHIVE_TYPE))
         if len(requests) == 0:  # no associated archive is refused
             return False, {
-                'archive': {
+                'archive': [{
                     'summary': MANDATORY_ARCHIVE_MISSING,
-                }
+                }]
             }
 
-        rejected_dr_ids = []
-        for dr in requests:
-            _path = dr.archive.path
-            check = self._check_archive(_path)
+        errors = []
+        for archive_request in requests:
+            check, error_message = self._check_archive(archive_request)
             if not check:
-                rejected_dr_ids.append(dr.id)
+                errors.append({
+                    'summary': error_message,
+                    'fields': archive_request.id
+                })
 
-        if rejected_dr_ids:
-            return False, {
-                'archive': {
-                    'summary': MANDATORY_ARCHIVE_UNREADABLE,
-                    'fields': rejected_dr_ids,
-                }}
-        return True, None
+        if not errors:
+            return True, None
+        return False, {
+            'archive': errors
+        }
 
-    def _check_archive(self, archive_path):
-        """Check that a given archive is actually ok for reading.
+    def _check_archive(self, archive_request):
+        """Check that a given archive is actually ok:
+        - reading ok
+        - content of the archive at the first level is not only an
+          archive.
 
         Args:
-            archive_path (str): Archive to check
+            archive_path (DepositRequest): Archive to check
 
         Returns:
-            True if archive is successfully read, False otherwise.
+            True if archive is check compliant, False otherwise.
 
         """
+        archive_path = archive_request.archive.path
         try:
-            patoolib.test_archive(archive_path, verbosity=-1)
+            if is_zipfile(archive_path):
+                with ZipFile(archive_path) as f:
+                    files = f.namelist()
+            elif is_tarfile(archive_path):
+                with TarFile(archive_path) as f:
+                    files = f.getnames()
+            else:
+                return False, MANDATORY_ARCHIVE_UNSUPPORTED
+
+            if len(files) > 1:
+                return True, None
+
+            element = files[0]
+            pattern = re.compile(
+                r'.*\.(zip|tar|tar.gz|.xz|tar.xz|Z|.tar.Z|bz2|tar.bz2)$')
+            if pattern.match(element):  # invalid archive in archive
+                return False, MANDATORY_ARCHIVE_INVALID
         except Exception:
-            return False
-        else:
-            return True
+            return False, MANDATORY_ARCHIVE_UNREADABLE
+        return True, None
 
     def _check_metadata(self, metadata):
         """Check to execute on all metadata for mandatory field presence.
