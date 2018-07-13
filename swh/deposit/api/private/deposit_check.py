@@ -5,11 +5,10 @@
 
 import json
 import re
-
+import tarfile
+import zipfile
 
 from rest_framework import status
-from tarfile import TarFile, is_tarfile
-from zipfile import ZipFile, is_zipfile
 
 from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
@@ -84,25 +83,23 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         """
         archive_path = archive_request.archive.path
         try:
-            if is_zipfile(archive_path):
-                with ZipFile(archive_path) as f:
+            if zipfile.is_zipfile(archive_path):
+                with zipfile.ZipFile(archive_path) as f:
                     files = f.namelist()
-            elif is_tarfile(archive_path):
-                with TarFile(archive_path) as f:
+            elif tarfile.is_tarfile(archive_path):
+                with tarfile.open(archive_path) as f:
                     files = f.getnames()
             else:
                 return False, MANDATORY_ARCHIVE_UNSUPPORTED
-
-            if len(files) > 1:
-                return True, None
-
-            element = files[0]
-            pattern = re.compile(
-                r'.*\.(zip|tar|tar.gz|.xz|tar.xz|Z|.tar.Z|bz2|tar.bz2)$')
-            if pattern.match(element):  # invalid archive in archive
-                return False, MANDATORY_ARCHIVE_INVALID
         except Exception:
             return False, MANDATORY_ARCHIVE_UNREADABLE
+        if len(files) > 1:
+            return True, None
+        element = files[0]
+        pattern = re.compile(
+            r'.*\.(zip|tar|tar.gz|.xz|tar.xz|Z|.tar.Z|bz2|tar.bz2)$')
+        if pattern.match(element):  # invalid archive in archive
+            return False, MANDATORY_ARCHIVE_INVALID
         return True, None
 
     def _check_metadata(self, metadata):

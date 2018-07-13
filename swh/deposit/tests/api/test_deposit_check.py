@@ -17,7 +17,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
 )
 from swh.deposit.api.private.deposit_check import (
-    SWHChecksDeposit,
+    SWHChecksDeposit, MANDATORY_ARCHIVE_INVALID,
     MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
     MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING
 )
@@ -61,7 +61,45 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
 
     @istest
-    def deposit_ko(self):
+    def deposit_with_tarball_with_one_tarball_invalid(self):
+        """Deposit with tarball (of 1 tarball) should fail the checks: rejected
+
+        """
+        deposit_id = self.create_deposit_archive_with_archive()
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+
+        url = reverse(PRIVATE_CHECK_DEPOSIT,
+                      args=[self.collection.name, deposit.id])
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+        details = data['details']
+        # archive checks failure
+        self.assertEqual(len(details['archive']), 1)
+        self.assertEqual(details['archive'][0]['summary'],
+                         MANDATORY_ARCHIVE_INVALID)
+        # metadata check failure
+        self.assertEqual(len(details['metadata']), 2)
+        mandatory = details['metadata'][0]
+        self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
+        self.assertEqual(set(mandatory['fields']),
+                         set(['url', 'external_identifier', 'author']))
+        alternate = details['metadata'][1]
+        self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
+        self.assertEqual(alternate['fields'], ['name or title'])
+        # url check failure
+        self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
+
+        deposit = Deposit.objects.get(pk=deposit.id)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
+
+    @istest
+    def deposit_ko_not_a_valid_tarball(self):
         """Invalid deposit should fail the checks (-> status rejected)
 
         """

@@ -7,6 +7,7 @@ import base64
 import hashlib
 import os
 import shutil
+import tarfile
 import tempfile
 
 from django.core.urlresolvers import reverse
@@ -26,6 +27,32 @@ from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
 from swh.core import tarball
+
+
+def compute_info(archive_path):
+    """Given a path, compute information on path.
+
+    """
+    with open(archive_path, 'rb') as f:
+        length = 0
+        sha1sum = hashlib.sha1()
+        md5sum = hashlib.md5()
+        data = b''
+        for chunk in f:
+            sha1sum.update(chunk)
+            md5sum.update(chunk)
+            length += len(chunk)
+            data += chunk
+
+    return {
+        'dir': os.path.dirname(archive_path),
+        'name': os.path.basename(archive_path),
+        'path': archive_path,
+        'length': length,
+        'sha1sum': sha1sum.hexdigest(),
+        'md5sum': md5sum.hexdigest(),
+        'data': data
+    }
 
 
 def create_arborescence_zip(root_path, archive_name, filename, content,
@@ -61,27 +88,17 @@ def create_arborescence_zip(root_path, archive_name, filename, content,
 
     zip_path = dir_path + '.zip'
     zip_path = tarball.compress(zip_path, 'zip', dir_path)
+    return compute_info(zip_path)
 
-    with open(zip_path, 'rb') as f:
-        length = 0
-        sha1sum = hashlib.sha1()
-        md5sum = hashlib.md5()
-        data = b''
-        for chunk in f:
-            sha1sum.update(chunk)
-            md5sum.update(chunk)
-            length += len(chunk)
-            data += chunk
 
-    return {
-        'dir': archive_path_dir,
-        'name': archive_name,
-        'data': data,
-        'path': zip_path,
-        'sha1sum': sha1sum.hexdigest(),
-        'md5sum': md5sum.hexdigest(),
-        'length': length,
-    }
+def create_archive_with_archive(root_path, name, archive):
+    """Create an archive holding another.
+
+    """
+    invalid_archive_path = os.path.join(root_path, name)
+    with tarfile.open(invalid_archive_path, 'w:gz') as _archive:
+        _archive.add(archive['path'], arcname=archive['name'])
+    return compute_info(invalid_archive_path)
 
 
 @attr('fs')
@@ -155,6 +172,29 @@ class FileSystemCreationRoutine(TestCase):
         # then
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
+        deposit_id = int(response_content['deposit_id'])
+        return deposit_id
+
+    def create_deposit_archive_with_archive(self):
+        invalid_archive = create_archive_with_archive(
+            self.root_path, 'invalid.tar.gz', self.archive)
+
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/x-tar',
+            data=invalid_archive['data'],
+            CONTENT_LENGTH=invalid_archive['length'],
+            HTTP_MD5SUM=invalid_archive['md5sum'],
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=False,
+            HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+                invalid_archive['name'], ))
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_content = parse_xml(BytesIO(response.content))
+        _status = response_content['deposit_status']
+        self.assertEqual(_status, DEPOSIT_STATUS_DEPOSITED)
         deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
