@@ -268,8 +268,7 @@ class CommonCreationRoutine(TestCase):
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom">
-            <external_identifier>anotherthing</external_identifier>
-            <url>https://hal-test.archives-ouvertes.fr/anotherthing</url>
+            <author>some awesome author</author>
 
         </entry>"""
 
