@@ -18,13 +18,11 @@ from ...models import Deposit
 
 MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
 ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
-
-MANDATORY_ARCHIVE_UNREADABLE = 'Deposit was rejected because at least one of its associated archives was not readable'  # noqa
-MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (e.g contains an archive)'  # noqa
-MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
-
-MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
 INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
+MANDATORY_ARCHIVE_UNREADABLE = 'At least one of its associated archives is not readable'  # noqa
+MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (i.e contains only one archive)'  # noqa
+MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
+MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
 
 
 class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
