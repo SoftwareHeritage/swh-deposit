@@ -69,16 +69,20 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         }
 
     def _check_archive(self, archive_request):
-        """Check that a given archive is actually ok:
-        - reading ok
-        - content of the archive at the first level is not only an
-          archive.
+        """Check that a deposit associated archive is ok:
+        - readable
+        - supported archive format
+        - content of the archive is not a single archive
+
+        If any of those checks are not ok, return the corresponding
+        failing check.
 
         Args:
             archive_path (DepositRequest): Archive to check
 
         Returns:
-            True if archive is check compliant, False otherwise.
+            (True, None) if archive is check compliant, (False,
+            <detail-error>) otherwise.
 
         """
         archive_path = archive_request.archive.path
