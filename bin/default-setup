@@ -1,3 +1,5 @@
 SERVER=http://127.0.0.1:5006
-CREDS='hal:hal'
+USER='hal'
+PASSWORD='hal'
 COLLECTION=hal
+CREDS="$USER:$PASSWORD"
