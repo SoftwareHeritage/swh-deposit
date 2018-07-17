@@ -52,6 +52,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'origin_metadata': {
                 'metadata': {
                     '@xmlns': 'http://www.w3.org/2005/Atom',
+                    'author': 'some awesome author',
                     'external_identifier':'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -79,6 +80,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'date': None,
                 'metadata': {
                     '@xmlns': 'http://www.w3.org/2005/Atom',
+                    'author': 'some awesome author',
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -136,6 +138,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'origin_metadata': {
                 'metadata': {
                     '@xmlns': 'http://www.w3.org/2005/Atom',
+                    'author': 'some awesome author',
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -164,6 +167,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'message': 'hal: Deposit %s in collection hal' % deposit_id,
                 'metadata': {
                     '@xmlns': 'http://www.w3.org/2005/Atom',
+                    'author': 'some awesome author',
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'

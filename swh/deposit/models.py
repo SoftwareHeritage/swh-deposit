@@ -13,9 +13,11 @@ from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.timezone import now
 
-from .config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED
-from .config import DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
-from .config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_REJECTED
+from .config import (
+    DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_REJECTED
+)
 
 
 class Dbversion(models.Model):
@@ -43,7 +45,7 @@ DEPOSIT_STATUS = [
     ('expired', 'expired'),
     (DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_DEPOSITED),
     (DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_VERIFIED),
-    ('rejected', 'rejected'),
+    (DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_REJECTED),
     ('loading', 'loading'),
     (DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_SUCCESS),
     (DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_FAILURE),
@@ -60,7 +62,7 @@ DEPOSIT_STATUS_DETAIL = {
                               '(tarball ok, metadata, etc...)',
     DEPOSIT_STATUS_VERIFIED: 'Deposit is fully received, checked, and '
                              'ready for loading',
-    'rejected': 'Deposit failed the checks',
+    DEPOSIT_STATUS_REJECTED: 'Deposit failed the checks',
     'loading': "Loading is ongoing on swh's side",
     DEPOSIT_STATUS_LOAD_SUCCESS: 'The deposit has been successfully '
                                  'loaded into the Software Heritage archive',
