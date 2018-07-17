@@ -17,9 +17,10 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
 )
 from swh.deposit.api.private.deposit_check import (
-    SWHChecksDeposit,
+    SWHChecksDeposit, MANDATORY_ARCHIVE_INVALID,
     MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
-    MANDATORY_ARCHIVE_UNREADABLE, ALTERNATE_FIELDS_MISSING
+    MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING,
+    MANDATORY_ARCHIVE_MISSING
 )
 from swh.deposit.models import Deposit
 
@@ -61,8 +62,62 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
 
     @istest
-    def deposit_ko(self):
-        """Invalid deposit should fail the checks (-> status rejected)
+    def deposit_invalid_tarball(self):
+        """Deposit with tarball (of 1 tarball) should fail the checks: rejected
+
+        """
+        for archive_extension in ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz']:
+            deposit_id = self.create_deposit_archive_with_archive(
+                archive_extension)
+
+            deposit = Deposit.objects.get(pk=deposit_id)
+            self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+
+            url = reverse(PRIVATE_CHECK_DEPOSIT,
+                          args=[self.collection.name, deposit.id])
+
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content.decode('utf-8'))
+            self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+            details = data['details']
+            # archive checks failure
+            self.assertEqual(len(details['archive']), 1)
+            self.assertEqual(details['archive'][0]['summary'],
+                             MANDATORY_ARCHIVE_INVALID)
+
+            deposit = Deposit.objects.get(pk=deposit.id)
+            self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
+
+    @istest
+    def deposit_ko_missing_tarball(self):
+        """Deposit without archive should fail the checks: rejected
+
+        """
+        deposit_id = self.create_deposit_ready()  # no archive, only atom
+        deposit = Deposit.objects.get(pk=deposit_id)
+        self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+
+        url = reverse(PRIVATE_CHECK_DEPOSIT,
+                      args=[self.collection.name, deposit.id])
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+        details = data['details']
+        # archive checks failure
+        self.assertEqual(len(details['archive']), 1)
+        self.assertEqual(details['archive'][0]['summary'],
+                         MANDATORY_ARCHIVE_MISSING)
+        deposit = Deposit.objects.get(pk=deposit.id)
+        self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
+
+    @istest
+    def deposit_ko_unsupported_tarball(self):
+        """Deposit with an unsupported tarball should fail the checks: rejected
 
         """
         deposit_id = self.create_deposit_with_invalid_archive()
@@ -80,9 +135,9 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
         details = data['details']
         # archive checks failure
-        self.assertEqual(len(details['archive']['fields']), 1)
-        self.assertEqual(details['archive']['summary'],
-                         MANDATORY_ARCHIVE_UNREADABLE)
+        self.assertEqual(len(details['archive']), 1)
+        self.assertEqual(details['archive'][0]['summary'],
+                         MANDATORY_ARCHIVE_UNSUPPORTED)
         # metadata check failure
         self.assertEqual(len(details['metadata']), 2)
         mandatory = details['metadata'][0]

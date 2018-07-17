@@ -12,7 +12,7 @@ from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.config import EDIT_SE_IRI, EM_IRI
 
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine, create_arborescence_zip
+from ..common import FileSystemCreationRoutine, create_arborescence_archive
 
 
 class DepositUpdateOrReplaceExistingDataTest(
@@ -34,7 +34,7 @@ class DepositUpdateOrReplaceExistingDataTest(
     <foobar>bar</foobar>
 </entry>"""
 
-        self.archive2 = create_arborescence_zip(
+        self.archive2 = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some other content in file')
 
     @istest

@@ -143,16 +143,16 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                     'fields': ['name or title', 'url or badurl']
                 }
             ],
-            'archive': {
+            'archive': [{
                 'summary': 'Unreadable archive',
-                'fields': ['1', '2'],
-            },
+                'fields': ['1'],
+            }],
         }
 
         expected_status_detail = '''- Mandatory fields missing (url, title)
 - Alternate fields missing (name or title, url or badurl)
+- Unreadable archive (1)
 - At least one url field must be compatible with the client's domain name. The following url fields failed the check (blahurl, testurl)
-- Unreadable archive (1, 2)
 '''  # noqa
 
         actual_status_detail = convert_status_detail(status_detail)
@@ -172,9 +172,21 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                     'fields': ['name'],
                 },
             ],
+            'archive': [
+                {
+                    'summary': 'Invalid archive',
+                    'fields': ['2'],
+                },
+                {
+                    'summary': 'Unsupported archive',
+                    'fields': ['1'],
+                }
+            ],
         }
 
         expected_status_detail = '''- Mandatory fields missing (name)
+- Invalid archive (2)
+- Unsupported archive (1)
 - At least one compatible url field. Failed (testurl)
 '''
 
