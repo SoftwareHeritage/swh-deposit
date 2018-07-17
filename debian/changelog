@@ -1,3 +1,14 @@
+swh-deposit (0.0.56-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.56
+  * docs: Update deposit with status rejected documentation
+  * deposit_status: Update the deposit status endpoint with details for
+  * rejected deposit
+  * deposit_check: Reject invalid deposit (associated archive containing
+  * only single archive)
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 17 Jul 2018 13:27:35 +0200
+
 swh-deposit (0.0.55-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.55
