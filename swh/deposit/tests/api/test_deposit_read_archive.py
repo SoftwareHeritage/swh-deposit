@@ -17,7 +17,7 @@ from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests import TEST_CONFIG
 
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine, create_arborescence_zip
+from ..common import FileSystemCreationRoutine, create_arborescence_archive
 
 
 @attr('fs')
@@ -27,7 +27,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
     def setUp(self):
         super().setUp()
-        self.archive2 = create_arborescence_zip(
+        self.archive2 = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some other content in file')
         self.workdir = os.path.join(self.root_path, 'workdir')
 

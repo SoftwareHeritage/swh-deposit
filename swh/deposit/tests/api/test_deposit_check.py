@@ -66,38 +66,29 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         """Deposit with tarball (of 1 tarball) should fail the checks: rejected
 
         """
-        deposit_id = self.create_deposit_archive_with_archive()
+        for archive_extension in ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz']:
+            deposit_id = self.create_deposit_archive_with_archive(
+                archive_extension)
 
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+            deposit = Deposit.objects.get(pk=deposit_id)
+            self.assertEquals(DEPOSIT_STATUS_DEPOSITED, deposit.status)
 
-        url = reverse(PRIVATE_CHECK_DEPOSIT,
-                      args=[self.collection.name, deposit.id])
+            url = reverse(PRIVATE_CHECK_DEPOSIT,
+                          args=[self.collection.name, deposit.id])
 
-        response = self.client.get(url)
+            response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
-        details = data['details']
-        # archive checks failure
-        self.assertEqual(len(details['archive']), 1)
-        self.assertEqual(details['archive'][0]['summary'],
-                         MANDATORY_ARCHIVE_INVALID)
-        # metadata check failure
-        self.assertEqual(len(details['metadata']), 2)
-        mandatory = details['metadata'][0]
-        self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
-        self.assertEqual(set(mandatory['fields']),
-                         set(['url', 'external_identifier', 'author']))
-        alternate = details['metadata'][1]
-        self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
-        self.assertEqual(alternate['fields'], ['name or title'])
-        # url check failure
-        self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content.decode('utf-8'))
+            self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+            details = data['details']
+            # archive checks failure
+            self.assertEqual(len(details['archive']), 1)
+            self.assertEqual(details['archive'][0]['summary'],
+                             MANDATORY_ARCHIVE_INVALID)
 
-        deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
+            deposit = Deposit.objects.get(pk=deposit.id)
+            self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
     @istest
     def deposit_ko_missing_tarball(self):

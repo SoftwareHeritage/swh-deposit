@@ -10,6 +10,7 @@ import zipfile
 
 from rest_framework import status
 
+
 from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
@@ -23,6 +24,14 @@ MANDATORY_ARCHIVE_UNREADABLE = 'At least one of its associated archives is not r
 MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (i.e contains only one archive)'  # noqa
 MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
 MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
+
+ARCHIVE_EXTENSIONS = [
+    'zip', 'tar', 'tar.gz', 'xz', 'tar.xz', 'bz2',
+    'tar.bz2', 'Z', 'tar.Z', 'tgz', '7z'
+]
+
+PATTERN_ARCHIVE_EXTENSION = re.compile(
+    r'.*\.(%s)$' % '|'.join(ARCHIVE_EXTENSIONS))
 
 
 class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
@@ -98,9 +107,8 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         if len(files) > 1:
             return True, None
         element = files[0]
-        pattern = re.compile(
-            r'.*\.(zip|tar|tar.gz|.xz|tar.xz|Z|.tar.Z|bz2|tar.bz2)$')
-        if pattern.match(element):  # invalid archive in archive
+        if PATTERN_ARCHIVE_EXTENSION.match(element):
+            # archive in archive!
             return False, MANDATORY_ARCHIVE_INVALID
         return True, None
 
@@ -122,7 +130,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         }
         alternate_fields = {
             ('name', 'title'): False,  # alternate field, at least one
-                                       # of them must be present
+            # of them must be present
         }
 
         for field, value in metadata.items():

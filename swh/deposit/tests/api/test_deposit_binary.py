@@ -16,7 +16,7 @@ from swh.deposit.config import COL_IRI, EM_IRI
 from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_zip
+from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_archive
 from ..common import FileSystemCreationRoutine
 
 
@@ -329,7 +329,7 @@ and other stuff</description>
         # given
         url = reverse(COL_IRI, args=[self.collection.name])
 
-        archive = create_arborescence_zip(
+        archive = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some content in file',
             up_to_size=TEST_CONFIG['max_upload_size'])
 
@@ -457,7 +457,7 @@ and other stuff</description>
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
 
         # 2nd archive to upload
-        archive2 = create_arborescence_zip(
+        archive2 = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some other content in file')
 
         # uri to update the content
@@ -555,7 +555,7 @@ and other stuff</description>
         # Testing all update/add endpoint should fail
         # since the status is ready
 
-        archive2 = create_arborescence_zip(
+        archive2 = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some content in file 2')
 
         # replacing file is no longer possible since the deposit's

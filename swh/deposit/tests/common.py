@@ -55,10 +55,47 @@ def compute_info(archive_path):
     }
 
 
-def create_arborescence_zip(root_path, archive_name, filename, content,
-                            up_to_size=None):
+def _compress(path, extension, dir_path):
+    """Compress path according to extension
+
+    """
+    if extension == 'zip' or extension == 'tar':
+        return tarball.compress(path, extension, dir_path)
+    elif '.' in extension:
+        split_ext = extension.split('.')
+        if split_ext[0] != 'tar':
+            raise ValueError(
+                'Development error, only zip or tar archive supported, '
+                '%s not supported' % extension)
+
+        # deal with specific tar
+        mode = split_ext[1]
+        supported_mode = ['xz', 'gz', 'bz2']
+        if mode not in supported_mode:
+            raise ValueError(
+                'Development error, only %s supported, %s not supported' % (
+                    supported_mode, mode))
+        files = tarball._ls(dir_path)
+        with tarfile.open(path, 'w:%s' % mode) as t:
+            for fpath, fname in files:
+                t.add(fpath, arcname=fname, recursive=False)
+
+        return path
+
+
+def create_arborescence_archive(root_path, archive_name, filename, content,
+                                up_to_size=None, extension='zip'):
     """Build an archive named archive_name in the root_path.
     This archive contains one file named filename with the content content.
+
+    Args:
+        root_path (str): Location path of the archive to create
+        archive_name (str): Archive's name (without extension)
+        filename (str): Archive's content is only one filename
+        content (bytes): Content of the filename
+        up_to_size (int | None): Fill in the blanks size to oversize
+          or complete an archive's size
+        extension (str): Extension of the archive to write (default is zip)
 
     Returns:
         dict with the keys:
@@ -86,9 +123,9 @@ def create_arborescence_zip(root_path, archive_name, filename, content,
                 f.write(b'0'*batch_size)
                 count += batch_size
 
-    zip_path = dir_path + '.zip'
-    zip_path = tarball.compress(zip_path, 'zip', dir_path)
-    return compute_info(zip_path)
+    _path = '%s.%s' % (dir_path, extension)
+    _path = _compress(_path, extension, dir_path)
+    return compute_info(_path)
 
 
 def create_archive_with_archive(root_path, name, archive):
@@ -112,7 +149,7 @@ class FileSystemCreationRoutine(TestCase):
         self.root_path = '/tmp/swh-deposit/test/build-zip/'
         os.makedirs(self.root_path, exist_ok=True)
 
-        self.archive = create_arborescence_zip(
+        self.archive = create_arborescence_archive(
             self.root_path, 'archive1', 'file1', b'some content in file')
 
         self.atom_entry = b"""<?xml version="1.0"?>
@@ -175,10 +212,17 @@ class FileSystemCreationRoutine(TestCase):
         deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
-    def create_deposit_archive_with_archive(self):
-        invalid_archive = create_archive_with_archive(
-            self.root_path, 'invalid.tar.gz', self.archive)
+    def create_deposit_archive_with_archive(self, archive_extension):
+        # we create the holding archive to a given extension
+        archive = create_arborescence_archive(
+            self.root_path, 'archive1', 'file1', b'some content in file',
+            extension=archive_extension)
 
+        # now we create an archive holding the first created archive
+        invalid_archive = create_archive_with_archive(
+            self.root_path, 'invalid.tar.gz', archive)
+
+        # we deposit it
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/x-tar',
