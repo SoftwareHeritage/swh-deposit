@@ -7,6 +7,7 @@ import base64
 import hashlib
 import os
 import shutil
+import tarfile
 import tempfile
 
 from django.core.urlresolvers import reverse
@@ -28,10 +29,73 @@ from swh.deposit.settings.testing import MEDIA_ROOT
 from swh.core import tarball
 
 
-def create_arborescence_zip(root_path, archive_name, filename, content,
-                            up_to_size=None):
+def compute_info(archive_path):
+    """Given a path, compute information on path.
+
+    """
+    with open(archive_path, 'rb') as f:
+        length = 0
+        sha1sum = hashlib.sha1()
+        md5sum = hashlib.md5()
+        data = b''
+        for chunk in f:
+            sha1sum.update(chunk)
+            md5sum.update(chunk)
+            length += len(chunk)
+            data += chunk
+
+    return {
+        'dir': os.path.dirname(archive_path),
+        'name': os.path.basename(archive_path),
+        'path': archive_path,
+        'length': length,
+        'sha1sum': sha1sum.hexdigest(),
+        'md5sum': md5sum.hexdigest(),
+        'data': data
+    }
+
+
+def _compress(path, extension, dir_path):
+    """Compress path according to extension
+
+    """
+    if extension == 'zip' or extension == 'tar':
+        return tarball.compress(path, extension, dir_path)
+    elif '.' in extension:
+        split_ext = extension.split('.')
+        if split_ext[0] != 'tar':
+            raise ValueError(
+                'Development error, only zip or tar archive supported, '
+                '%s not supported' % extension)
+
+        # deal with specific tar
+        mode = split_ext[1]
+        supported_mode = ['xz', 'gz', 'bz2']
+        if mode not in supported_mode:
+            raise ValueError(
+                'Development error, only %s supported, %s not supported' % (
+                    supported_mode, mode))
+        files = tarball._ls(dir_path)
+        with tarfile.open(path, 'w:%s' % mode) as t:
+            for fpath, fname in files:
+                t.add(fpath, arcname=fname, recursive=False)
+
+        return path
+
+
+def create_arborescence_archive(root_path, archive_name, filename, content,
+                                up_to_size=None, extension='zip'):
     """Build an archive named archive_name in the root_path.
     This archive contains one file named filename with the content content.
+
+    Args:
+        root_path (str): Location path of the archive to create
+        archive_name (str): Archive's name (without extension)
+        filename (str): Archive's content is only one filename
+        content (bytes): Content of the filename
+        up_to_size (int | None): Fill in the blanks size to oversize
+          or complete an archive's size
+        extension (str): Extension of the archive to write (default is zip)
 
     Returns:
         dict with the keys:
@@ -59,29 +123,19 @@ def create_arborescence_zip(root_path, archive_name, filename, content,
                 f.write(b'0'*batch_size)
                 count += batch_size
 
-    zip_path = dir_path + '.zip'
-    zip_path = tarball.compress(zip_path, 'zip', dir_path)
+    _path = '%s.%s' % (dir_path, extension)
+    _path = _compress(_path, extension, dir_path)
+    return compute_info(_path)
 
-    with open(zip_path, 'rb') as f:
-        length = 0
-        sha1sum = hashlib.sha1()
-        md5sum = hashlib.md5()
-        data = b''
-        for chunk in f:
-            sha1sum.update(chunk)
-            md5sum.update(chunk)
-            length += len(chunk)
-            data += chunk
 
-    return {
-        'dir': archive_path_dir,
-        'name': archive_name,
-        'data': data,
-        'path': zip_path,
-        'sha1sum': sha1sum.hexdigest(),
-        'md5sum': md5sum.hexdigest(),
-        'length': length,
-    }
+def create_archive_with_archive(root_path, name, archive):
+    """Create an archive holding another.
+
+    """
+    invalid_archive_path = os.path.join(root_path, name)
+    with tarfile.open(invalid_archive_path, 'w:gz') as _archive:
+        _archive.add(archive['path'], arcname=archive['name'])
+    return compute_info(invalid_archive_path)
 
 
 @attr('fs')
@@ -95,7 +149,7 @@ class FileSystemCreationRoutine(TestCase):
         self.root_path = '/tmp/swh-deposit/test/build-zip/'
         os.makedirs(self.root_path, exist_ok=True)
 
-        self.archive = create_arborescence_zip(
+        self.archive = create_arborescence_archive(
             self.root_path, 'archive1', 'file1', b'some content in file')
 
         self.atom_entry = b"""<?xml version="1.0"?>
@@ -155,6 +209,36 @@ class FileSystemCreationRoutine(TestCase):
         # then
         assert response.status_code == status.HTTP_201_CREATED
         response_content = parse_xml(BytesIO(response.content))
+        deposit_id = int(response_content['deposit_id'])
+        return deposit_id
+
+    def create_deposit_archive_with_archive(self, archive_extension):
+        # we create the holding archive to a given extension
+        archive = create_arborescence_archive(
+            self.root_path, 'archive1', 'file1', b'some content in file',
+            extension=archive_extension)
+
+        # now we create an archive holding the first created archive
+        invalid_archive = create_archive_with_archive(
+            self.root_path, 'invalid.tar.gz', archive)
+
+        # we deposit it
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/x-tar',
+            data=invalid_archive['data'],
+            CONTENT_LENGTH=invalid_archive['length'],
+            HTTP_MD5SUM=invalid_archive['md5sum'],
+            HTTP_SLUG='external-id',
+            HTTP_IN_PROGRESS=False,
+            HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+                invalid_archive['name'], ))
+
+        # then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_content = parse_xml(BytesIO(response.content))
+        _status = response_content['deposit_status']
+        self.assertEqual(_status, DEPOSIT_STATUS_DEPOSITED)
         deposit_id = int(response_content['deposit_id'])
         return deposit_id
 
@@ -268,8 +352,7 @@ class CommonCreationRoutine(TestCase):
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom">
-            <external_identifier>anotherthing</external_identifier>
-            <url>https://hal-test.archives-ouvertes.fr/anotherthing</url>
+            <author>some awesome author</author>
 
         </entry>"""
 

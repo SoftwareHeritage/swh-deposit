@@ -4,49 +4,42 @@
 # See top-level LICENSE file for more information
 
 import json
-import patoolib
+import re
+import tarfile
+import zipfile
 
 from rest_framework import status
 
 
+from . import DepositReadMixin
 from ..common import SWHGetDepositAPI, SWHPrivateAPIView
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
-from ...config import ARCHIVE_TYPE, METADATA_TYPE
-from ...models import Deposit, DepositRequest
-
+from ...config import ARCHIVE_TYPE
+from ...models import Deposit
 
 MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
 ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
-
-MANDATORY_ARCHIVE_UNREADABLE = 'Deposit was rejected because at least one of its associated archives was not readable'  # noqa
-MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
 INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
+MANDATORY_ARCHIVE_UNREADABLE = 'At least one of its associated archives is not readable'  # noqa
+MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (i.e contains only one archive)'  # noqa
+MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
+MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
+
+ARCHIVE_EXTENSIONS = [
+    'zip', 'tar', 'tar.gz', 'xz', 'tar.xz', 'bz2',
+    'tar.bz2', 'Z', 'tar.Z', 'tgz', '7z'
+]
+
+PATTERN_ARCHIVE_EXTENSION = re.compile(
+    r'.*\.(%s)$' % '|'.join(ARCHIVE_EXTENSIONS))
 
 
-class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
+class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.
 
     """
-    def _deposit_requests(self, deposit, request_type):
-        """Given a deposit, yields its associated deposit_request
-
-        Args:
-            deposit (Deposit): Deposit to list requests for
-            request_type (str): Archive or metadata type
-
-        Yields:
-            deposit requests of type request_type associated to the deposit
-
-        """
-        deposit_requests = DepositRequest.objects.filter(
-            type=self.deposit_request_types[request_type],
-            deposit=deposit).order_by('id')
-
-        for deposit_request in deposit_requests:
-            yield deposit_request
-
     def _check_deposit_archives(self, deposit):
         """Given a deposit, check each deposit request of type archive.
 
@@ -62,58 +55,62 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
             deposit, request_type=ARCHIVE_TYPE))
         if len(requests) == 0:  # no associated archive is refused
             return False, {
-                'archive': {
+                'archive': [{
                     'summary': MANDATORY_ARCHIVE_MISSING,
-                }
+                }]
             }
 
-        rejected_dr_ids = []
-        for dr in requests:
-            _path = dr.archive.path
-            check = self._check_archive(_path)
+        errors = []
+        for archive_request in requests:
+            check, error_message = self._check_archive(archive_request)
             if not check:
-                rejected_dr_ids.append(dr.id)
+                errors.append({
+                    'summary': error_message,
+                    'fields': [archive_request.id]
+                })
 
-        if rejected_dr_ids:
-            return False, {
-                'archive': {
-                    'summary': MANDATORY_ARCHIVE_UNREADABLE,
-                    'fields': rejected_dr_ids,
-                }}
-        return True, None
+        if not errors:
+            return True, None
+        return False, {
+            'archive': errors
+        }
 
-    def _check_archive(self, archive_path):
-        """Check that a given archive is actually ok for reading.
+    def _check_archive(self, archive_request):
+        """Check that a deposit associated archive is ok:
+        - readable
+        - supported archive format
+        - valid content: the archive does not contain a single archive file
+
+        If any of those checks are not ok, return the corresponding
+        failing check.
 
         Args:
-            archive_path (str): Archive to check
+            archive_path (DepositRequest): Archive to check
 
         Returns:
-            True if archive is successfully read, False otherwise.
+            (True, None) if archive is check compliant, (False,
+            <detail-error>) otherwise.
 
         """
+        archive_path = archive_request.archive.path
         try:
-            patoolib.test_archive(archive_path, verbosity=-1)
+            if zipfile.is_zipfile(archive_path):
+                with zipfile.ZipFile(archive_path) as f:
+                    files = f.namelist()
+            elif tarfile.is_tarfile(archive_path):
+                with tarfile.open(archive_path) as f:
+                    files = f.getnames()
+            else:
+                return False, MANDATORY_ARCHIVE_UNSUPPORTED
         except Exception:
-            return False
-        else:
-            return True
-
-    def _metadata_get(self, deposit):
-        """Given a deposit, aggregate all metadata requests.
-
-        Args:
-            deposit (Deposit): The deposit instance to extract
-            metadata from.
-
-        Returns:
-            metadata dict from the deposit.
-
-        """
-        metadata = {}
-        for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
-            metadata.update(dr.metadata)
-        return metadata
+            return False, MANDATORY_ARCHIVE_UNREADABLE
+        if len(files) > 1:
+            return True, None
+        element = files[0]
+        if PATTERN_ARCHIVE_EXTENSION.match(element):
+            # archive in archive!
+            return False, MANDATORY_ARCHIVE_INVALID
+        return True, None
 
     def _check_metadata(self, metadata):
         """Check to execute on all metadata for mandatory field presence.
@@ -133,7 +130,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView):
         }
         alternate_fields = {
             ('name', 'title'): False,  # alternate field, at least one
-                                       # of them must be present
+            # of them must be present
         }
 
         for field, value in metadata.items():
