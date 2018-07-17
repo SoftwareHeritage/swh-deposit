@@ -79,7 +79,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         """Check that a deposit associated archive is ok:
         - readable
         - supported archive format
-        - content of the archive is not a single archive
+        - valid content: the archive does not contain a single archive file
 
         If any of those checks are not ok, return the corresponding
         failing check.
