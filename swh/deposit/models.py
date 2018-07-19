@@ -178,6 +178,7 @@ class DepositRequest(models.Model):
     # Deposit request information on the data to inject
     # this can be null when type is 'archive'
     metadata = JSONField(null=True)
+    raw_metadata = models.TextField(null=True)
     # this can be null when type is 'metadata'
     archive = models.FileField(null=True, upload_to=client_directory_path)
 

@@ -16,8 +16,10 @@ from swh.deposit.config import COL_IRI, EM_IRI
 from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from ..common import BasicTestCase, WithAuthTestCase, create_arborescence_archive
-from ..common import FileSystemCreationRoutine
+from ..common import (
+    BasicTestCase, WithAuthTestCase, create_arborescence_archive,
+    FileSystemCreationRoutine
+)
 
 
 class DepositTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
@@ -186,6 +188,8 @@ and other stuff</description>
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertEquals(deposit_request.deposit, deposit)
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
+        self.assertIsNone(deposit_request.metadata)
+        self.assertIsNone(deposit_request.raw_metadata)
 
         response_content = parse_xml(BytesIO(response.content))
         self.assertEqual(response_content['deposit_archive'],

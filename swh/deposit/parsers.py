@@ -55,6 +55,13 @@ class SWHAtomEntryParser(SWHXMLParser):
     """
     media_type = 'application/atom+xml;type=entry'
 
+    def parse(self, stream, media_type=None, parser_context=None):
+        # We do not actually want to parse the stream yet
+        # because we want to keep the raw data as well
+        # this is done later in the atom entry call
+        # (cf. swh.deposit.api.common.SWHBaseDeposit._atom_entry)
+        return stream
+
 
 class SWHMultiPartParser(MultiPartParser):
     """Multipart parser limited to a subset of mediatypes.
