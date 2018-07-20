@@ -5,4 +5,7 @@
     <deposit_status>{{ status }}</deposit_status>
     <deposit_status_detail>{{ status_detail }}</deposit_status_detail>
     {% if swh_id is not None %}<deposit_swh_id>{{ swh_id }}</deposit_swh_id>{% endif %}
+    {% if swh_id_context is not None %}<deposit_swh_id_context>{{ swh_id_context }}</deposit_swh_id_context>{% endif %}
+    {% if swh_anchor_id is not None %}<deposit_swh_anchor_id>{{ swh_anchor_id }}</deposit_swh_anchor_id>{% endif %}
+    {% if swh_anchor_id_context is not None %}<deposit_swh_anchor_id_context>{{ swh_anchor_id_context }}</deposit_swh_anchor_id_context>{% endif %}
 </entry>

@@ -127,18 +127,21 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         raise ValueError(msg)
 
     def status_update(self, update_status_url, status,
-                      revision_id=None):
+                      revision_id=None, directory_id=None):
         """Update the deposit's status.
 
         Args:
             update_status_url (str): the full deposit's archive
             status (str): The status to update the deposit with
             revision_id (str/None): the revision's identifier to update to
+            directory_id (str/None): the directory's identifier to update to
 
         """
         payload = {'status': status}
         if revision_id:
             payload['revision_id'] = revision_id
+        if directory_id:
+            payload['directory_id'] = directory_id
 
         self.do('put', update_status_url, json=payload)
 
@@ -348,11 +351,38 @@ class StatusDepositClient(BaseDepositClient):
         else:
             deposit_swh_id = None
 
+        vals = tree.xpath(
+            '/x:entry/x:deposit_swh_id_context',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        if vals:
+            deposit_swh_id_context = vals[0].text
+        else:
+            deposit_swh_id_context = None
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_swh_anchor_id',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        if vals:
+            deposit_swh_anchor_id = vals[0].text
+        else:
+            deposit_swh_anchor_id = None
+
+        vals = tree.xpath(
+            '/x:entry/x:deposit_swh_anchor_id_context',
+            namespaces={'x': 'http://www.w3.org/2005/Atom'})
+        if vals:
+            deposit_swh_anchor_id_context = vals[0].text
+        else:
+            deposit_swh_anchor_id_context = None
+
         return {
             'deposit_id': deposit_id,
             'deposit_status': deposit_status,
             'deposit_status_detail': deposit_status_detail,
             'deposit_swh_id': deposit_swh_id,
+            'deposit_swh_id_context': deposit_swh_id_context,
+            'deposit_swh_anchor_id': deposit_swh_anchor_id,
+            'deposit_swh_anchor_id_context': deposit_swh_anchor_id_context,
         }
 
 

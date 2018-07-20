@@ -35,10 +35,13 @@ class SWHDepositTestClient(PrivateApiDepositClient):
         r = self.client.get(metadata_url)
         return json.loads(r.content.decode('utf-8'))
 
-    def status_update(self, update_status_url, status, revision_id=None):
+    def status_update(self, update_status_url, status,
+                      revision_id=None, directory_id=None):
         payload = {'status': status}
         if revision_id:
             payload['revision_id'] = revision_id
+        if directory_id:
+            payload['directory_id'] = directory_id
         self.client.put(update_status_url,
                         content_type='application/json',
                         data=json.dumps(payload))

@@ -109,15 +109,23 @@ class DepositLoader(loader.TarLoader):
                 self.client.status_update(self.deposit_update_url,
                                           status='failed')
                 return
-            # first retrieve the new revision
-            [rev_id] = self.objects['revision'].keys()
+
+            revisions = self.objects['revision']
+            # Retrieve the revision
+            [rev_id] = revisions.keys()
+            rev = revisions[rev_id]
             if rev_id:
-                rev_id_hex = hashutil.hash_to_hex(rev_id)
-                # then update the deposit's status to success with its
-                # revision-id
-                self.client.status_update(self.deposit_update_url,
-                                          status='done',
-                                          revision_id=rev_id_hex)
+                rev_id = hashutil.hash_to_hex(rev_id)
+            dir_id = rev['directory']
+            if dir_id:
+                dir_id = hashutil.hash_to_hex(dir_id)
+
+            # update the deposit's status to success with its
+            # revision-id and directory-id
+            self.client.status_update(self.deposit_update_url,
+                                      status='done',
+                                      revision_id=rev_id,
+                                      directory_id=dir_id)
         except Exception:
             self.log.exception(
                 'Problem when trying to update the deposit\'s status')

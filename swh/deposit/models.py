@@ -112,6 +112,9 @@ class Deposit(models.Model):
     client = models.ForeignKey('DepositClient', models.DO_NOTHING)
     # SWH's loading result identifier
     swh_id = models.TextField(blank=True, null=True)
+    swh_id_context = models.TextField(blank=True, null=True)
+    swh_anchor_id = models.TextField(blank=True, null=True)
+    swh_anchor_id_context = models.TextField(blank=True, null=True)
     # Deposit's status regarding loading
     status = models.TextField(
         choices=DEPOSIT_STATUS,
