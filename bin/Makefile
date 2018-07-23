@@ -1,8 +1,8 @@
 DEPOSIT_ID=1
 ARCHIVE=../../swh-deposit.zip
 ARCHIVE2=../../swh-model.zip
-STATUS=false
-PARTIAL_STATUS=true
+STATUS=--no-partial
+PARTIAL_STATUS=--partial
 UPDATE_STATUS='done'
 ATOM_ENTRY=../../atom-entry.xml
 EXTERNAL_ID='external-id'

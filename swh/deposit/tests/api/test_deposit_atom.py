@@ -367,6 +367,8 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
+        self.assertEquals(
+            deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
     @istest
@@ -407,6 +409,8 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
+        self.assertEquals(
+            deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
 
         self.assertFalse(bool(deposit_request.archive))
 
@@ -445,6 +449,8 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
+        self.assertEquals(
+            deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
     @istest
@@ -508,10 +514,25 @@ and other stuff</description>
         self.assertEqual(len(Deposit.objects.all()), 1)
 
         # now 2 associated requests to a same deposit
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+        deposit_requests = DepositRequest.objects.filter(
+            deposit=deposit).order_by('id')
         self.assertEqual(len(deposit_requests), 2)
 
-        for deposit_request in deposit_requests:
+        expected_meta = [
+            {
+                'metadata': parse_xml(self.atom_entry_data1),
+                'raw_metadata': self.atom_entry_data1.decode('utf-8'),
+            },
+            {
+                'metadata': parse_xml(atom_entry_data),
+                'raw_metadata': atom_entry_data.decode('utf-8'),
+            }
+        ]
+
+        for i, deposit_request in enumerate(deposit_requests):
             actual_metadata = deposit_request.metadata
-            self.assertIsNotNone(actual_metadata)
+            self.assertEquals(actual_metadata,
+                              expected_meta[i]['metadata'])
+            self.assertEquals(deposit_request.raw_metadata,
+                              expected_meta[i]['raw_metadata'])
             self.assertFalse(bool(deposit_request.archive))

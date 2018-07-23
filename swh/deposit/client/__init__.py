@@ -10,11 +10,52 @@
 import hashlib
 import os
 import requests
+import xmltodict
 
 from abc import ABCMeta, abstractmethod
-from lxml import etree
 
 from swh.core.config import SWHConfig
+
+
+def _parse(stream, encoding='utf-8'):
+    """Given a xml stream, parse the result.
+
+    Args:
+        stream (bytes/text): The stream to parse
+        encoding (str): The encoding to use if to decode the bytes
+            stream
+
+    Returns:
+        A dict of values corresponding to the parsed xml
+
+    """
+    if isinstance(stream, bytes):
+        stream = stream.decode(encoding)
+    data = xmltodict.parse(stream, encoding=encoding, process_namespaces=False)
+    if 'entry' in data:
+        data = data['entry']
+    return dict(data)
+
+
+def _parse_with_filter(stream, encoding='utf-8', keys=[]):
+    """Given a xml stream, parse the result and filter with keys.
+
+    Args:
+        stream (bytes/text): The stream to parse
+        encoding (str): The encoding to use if to decode the bytes
+            stream
+        keys ([str]): Keys to filter the parsed result
+
+    Returns:
+        A dict of values corresponding to the parsed xml filtered by
+        the keys provided.
+
+    """
+    data = _parse(stream, encoding=encoding)
+    m = {}
+    for key in keys:
+        m[key] = data.get(key)
+    return m
 
 
 class BaseApiDepositClient(SWHConfig):
@@ -127,18 +168,24 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         raise ValueError(msg)
 
     def status_update(self, update_status_url, status,
-                      revision_id=None):
+                      revision_id=None, directory_id=None, origin_url=None):
         """Update the deposit's status.
 
         Args:
             update_status_url (str): the full deposit's archive
             status (str): The status to update the deposit with
             revision_id (str/None): the revision's identifier to update to
+            directory_id (str/None): the directory's identifier to update to
+            origin_url (str/None): deposit's associated origin url
 
         """
         payload = {'status': status}
         if revision_id:
             payload['revision_id'] = revision_id
+        if directory_id:
+            payload['directory_id'] = directory_id
+        if origin_url:
+            payload['origin_url'] = origin_url
 
         self.do('put', update_status_url, json=payload)
 
@@ -205,24 +252,7 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
                 'detail': Some more detail about the error if any
 
         """
-        tree = etree.fromstring(xml_content.encode('utf-8'))
-        vals = tree.xpath('/x:error/y:summary', namespaces={
-            'x': 'http://purl.org/net/sword/',
-            'y': 'http://www.w3.org/2005/Atom'
-        })
-        summary = vals[0].text
-        if summary:
-            summary = summary.strip()
-
-        vals = tree.xpath(
-            '/x:error/x:verboseDescription',
-            namespaces={'x': 'http://purl.org/net/sword/'})
-        if vals:
-            detail = vals[0].text.strip()
-        else:
-            detail = None
-
-        return {'error': summary, 'detail': detail}
+        return _parse_with_filter(xml_content, keys=['summary', 'detail'])
 
     def do_execute(self, method, url, info):
         """Execute the http query to url using method and info information.
@@ -286,19 +316,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """Parse service document's success response.
 
         """
-        tree = etree.fromstring(xml_content.encode('utf-8'))
-        collections = tree.xpath(
-            '/x:service/x:workspace/x:collection/y:name',
-            namespaces={'x': 'http://www.w3.org/2007/app',
-                        'y': 'http://purl.org/net/sword/terms/'})
-        if collections:
-            collection = collections[0].text
-        else:
-            collection = None
-
-        return {
-            'collection': collection
-        }
+        return _parse_with_filter(xml_content, keys=['collection'])
 
 
 class StatusDepositClient(BaseDepositClient):
@@ -324,36 +342,14 @@ class StatusDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        tree = etree.fromstring(xml_content.encode('utf-8'))
-        vals = tree.xpath(
-            '/x:entry/x:deposit_id',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_id = vals[0].text
-
-        vals = tree.xpath(
-            '/x:entry/x:deposit_status',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_status = vals[0].text
-
-        vals = tree.xpath(
-            '/x:entry/x:deposit_status_detail',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_status_detail = vals[0].text
-
-        vals = tree.xpath(
-            '/x:entry/x:deposit_swh_id',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        if vals:
-            deposit_swh_id = vals[0].text
-        else:
-            deposit_swh_id = None
-
-        return {
-            'deposit_id': deposit_id,
-            'deposit_status': deposit_status,
-            'deposit_status_detail': deposit_status_detail,
-            'deposit_swh_id': deposit_swh_id,
-        }
+        return _parse_with_filter(xml_content, keys=[
+            'deposit_id',
+            'deposit_status',
+            'deposit_status_detail',
+            'deposit_swh_id',
+            'deposit_swh_id_context',
+            'deposit_swh_anchor_id',
+            'deposit_swh_anchor_id_context'])
 
 
 class BaseCreateDepositClient(BaseDepositClient):
@@ -378,27 +374,10 @@ class BaseCreateDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        tree = etree.fromstring(xml_content.encode('utf-8'))
-        vals = tree.xpath(
-            '/x:entry/x:deposit_id',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_id = vals[0].text
-
-        vals = tree.xpath(
-            '/x:entry/x:deposit_status',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_status = vals[0].text
-
-        vals = tree.xpath(
-            '/x:entry/x:deposit_date',
-            namespaces={'x': 'http://www.w3.org/2005/Atom'})
-        deposit_date = vals[0].text
-
-        return {
-            'deposit_id': deposit_id,
-            'deposit_status': deposit_status,
-            'deposit_date': deposit_date,
-        }
+        return _parse_with_filter(xml_content, keys=['deposit_id',
+                                                     'deposit_status',
+                                                     'deposit_status_detail',
+                                                     'deposit_date'])
 
     def _compute_information(self, collection, filepath, in_progress, slug,
                              is_archive=True):
