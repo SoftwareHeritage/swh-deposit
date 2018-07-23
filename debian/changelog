@@ -1,3 +1,10 @@
+swh-deposit (0.0.58-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.58
+  * d/*: Update to latest python3-swh.model dependency version
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 23 Jul 2018 14:31:46 +0200
+
 swh-deposit (0.0.57-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.57
