@@ -168,7 +168,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         raise ValueError(msg)
 
     def status_update(self, update_status_url, status,
-                      revision_id=None, directory_id=None):
+                      revision_id=None, directory_id=None, origin_url=None):
         """Update the deposit's status.
 
         Args:
@@ -176,6 +176,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             status (str): The status to update the deposit with
             revision_id (str/None): the revision's identifier to update to
             directory_id (str/None): the directory's identifier to update to
+            origin_url (str/None): deposit's associated origin url
 
         """
         payload = {'status': status}
@@ -183,6 +184,8 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             payload['revision_id'] = revision_id
         if directory_id:
             payload['directory_id'] = directory_id
+        if origin_url:
+            payload['origin_url'] = origin_url
 
         self.do('put', update_status_url, json=payload)
 
