@@ -1,7 +1,6 @@
 Django
 click
 djangorestframework
-lxml
 swh.core>=0.0.36
 swh.loader.core>=0.0.32
 swh.loader.tar>=0.0.35

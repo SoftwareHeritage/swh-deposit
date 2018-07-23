@@ -12,16 +12,19 @@ from nose.plugins.attrib import attr
 from rest_framework.test import APITestCase
 
 from swh.model import hashutil
+from swh.deposit.models import Deposit
 from swh.deposit.loader import loader
-from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
-from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
-from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+from swh.deposit.config import (
+    PRIVATE_GET_RAW_CONTENT, PRIVATE_GET_DEPOSIT_METADATA, PRIVATE_PUT_DEPOSIT
+)
 from django.core.urlresolvers import reverse
+
 
 from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
 from .. import TEST_LOADER_CONFIG
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine
+from ..common import (BasicTestCase, WithAuthTestCase,
+                      CommonCreationRoutine,
+                      FileSystemCreationRoutine)
 
 
 TOOL_ID = 99
@@ -255,6 +258,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['provider']), 1)
 
         codemeta = 'codemeta:'
+        origin_url = 'https://hal-test.archives-ouvertes.fr/hal-01243065'
         expected_origin_metadata = {
             '@xmlns': 'http://www.w3.org/2005/Atom',
             '@xmlns:codemeta': 'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0',
@@ -262,8 +266,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                 'email': 'hal@ccsd.cnrs.fr',
                 'name': 'HAL'
             },
-            codemeta + 'url':
-            'https://hal-test.archives-ouvertes.fr/hal-01243065',
+            codemeta + 'url': origin_url,
             codemeta + 'runtimePlatform': 'phpstorm',
             codemeta + 'license': [
                 {
@@ -292,3 +295,14 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(result['metadata'], expected_origin_metadata)
         self.assertEquals(result['tool_id'], TOOL_ID)
         self.assertEquals(result['provider_id'], PROVIDER_ID)
+
+        deposit = Deposit.objects.get(pk=self.deposit_id)
+
+        self.assertRegex(deposit.swh_id, r'^swh:1:dir:.*')
+        self.assertEquals(deposit.swh_id_context, '%s;origin=%s' % (
+            deposit.swh_id, origin_url
+        ))
+        self.assertRegex(deposit.swh_anchor_id, r'^swh:1:rev:.*')
+        self.assertEquals(deposit.swh_anchor_id_context, '%s;origin=%s' % (
+            deposit.swh_anchor_id, origin_url
+        ))

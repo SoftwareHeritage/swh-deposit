@@ -17,16 +17,22 @@ from rest_framework.views import APIView
 
 from swh.model import hashutil
 
-from ..config import SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from ..config import ARCHIVE_KEY, METADATA_KEY, STATE_IRI
-from ..config import DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL
-from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..errors import MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT
-from ..errors import CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED
-from ..errors import make_error_response_from_dict, FORBIDDEN
-from ..errors import NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
-from ..models import Deposit, DepositRequest, DepositCollection
-from ..models import DepositRequestType, DepositClient
+from ..config import (
+    SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI,
+    ARCHIVE_KEY, METADATA_KEY, RAW_METADATA_KEY, STATE_IRI,
+    DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_LOAD_SUCCESS
+)
+from ..errors import (
+    MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT,
+    CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED,
+    make_error_response_from_dict, FORBIDDEN,
+    NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
+)
+from ..models import (
+    Deposit, DepositRequest, DepositCollection, DepositRequestType,
+    DepositClient
+)
 from ..parsers import parse_xml
 
 
@@ -218,10 +224,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         metadata = deposit_request_data.get(METADATA_KEY)
         if metadata:
+            raw_metadata = deposit_request_data.get(RAW_METADATA_KEY)
             deposit_request = DepositRequest(
                 type=self.deposit_request_types[METADATA_KEY],
                 deposit=deposit,
-                metadata=metadata)
+                metadata=metadata,
+                raw_metadata=raw_metadata)
             deposit_request.save()
 
         assert deposit_request is not None
@@ -405,6 +413,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             'archive': filehandler.name,
         }
 
+    def _read_metadata(self, metadata_stream):
+        """Given a metadata stream, reads the metadata and returns both the
+           parsed and the raw metadata.
+
+        """
+        raw_metadata = metadata_stream.read()
+        metadata = parse_xml(raw_metadata)
+        return raw_metadata, metadata
+
     def _multipart_upload(self, req, headers, collection_name,
                           deposit_id=None, replace_metadata=False,
                           replace_archives=False):
@@ -491,14 +508,17 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if precondition_status_response:
             return precondition_status_response
 
+        raw_metadata, metadata = self._read_metadata(
+            data['application/atom+xml'])
+
         # actual storage of data
-        atom_metadata = parse_xml(data['application/atom+xml'])
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
-            METADATA_KEY: atom_metadata,
+            METADATA_KEY: metadata,
+            RAW_METADATA_KEY: raw_metadata,
         }
         self._deposit_request_put(
             deposit, deposit_request_data, replace_metadata, replace_archives)
@@ -546,20 +566,22 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        if not req.data:
+        raw_metadata, metadata = self._read_metadata(req.data)
+        if not metadata:
             return make_error_dict(
                 BAD_REQUEST,
                 'Empty body request is not supported',
                 'Atom entry deposit is supposed to send for metadata. '
                 'If the body is empty, there is no metadata.')
 
-        external_id = req.data.get('external_identifier', headers['slug'])
+        external_id = metadata.get('external_identifier', headers['slug'])
 
         deposit = self._deposit_put(deposit_id=deposit_id,
                                     in_progress=headers['in-progress'],
                                     external_id=external_id)
+
         self._deposit_request_put(
-            deposit, {METADATA_KEY: req.data},
+            deposit, {METADATA_KEY: metadata, RAW_METADATA_KEY: raw_metadata},
             replace_metadata, replace_archives)
 
         return {

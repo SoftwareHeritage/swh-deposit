@@ -2,5 +2,4 @@ vcversioner
 click
 Django
 djangorestframework
-lxml
 xmltodict

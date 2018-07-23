@@ -4,4 +4,10 @@
 
 DEPOSIT_ID=${1-1}
 
-curl -i -u "${CREDS}" ${SERVER}/1/${COLLECTION}/${DEPOSIT_ID}/status/
+./swh-deposit \
+        --username ${USER} \
+        --password ${PASSWORD} \
+        --collection ${COLLECTION} \
+        --status \
+        --deposit-id ${DEPOSIT_ID} \
+        --url ${SERVER}/1

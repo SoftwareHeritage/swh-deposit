@@ -52,16 +52,23 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             self.assertEquals(deposit.status, _status)
 
     @istest
-    def update_deposit_with_success_loading_and_swh_id(self):
-        """Existing status for update should return a 204 response
+    def update_deposit_status_with_info(self):
+        """Existing status for update with info should return a 204 response
 
         """
         url = reverse(PRIVATE_PUT_DEPOSIT,
                       args=[self.collection.name, self.deposit.id])
 
         expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
+        origin_url = 'something'
+        directory_id = '42a13fc721c8716ff695d0d62fc851d641f3a12b'
         revision_id = '47dc6b4636c7f6cba0df83e3d5490bf4334d987e'
-        expected_id = 'swh:1:rev:%s' % revision_id
+        expected_swh_id = 'swh:1:dir:%s' % directory_id
+        expected_swh_id_context = 'swh:1:dir:%s;origin=%s' % (
+            directory_id, origin_url)
+        expected_swh_anchor_id = 'swh:1:rev:%s' % revision_id
+        expected_swh_anchor_id_context = 'swh:1:rev:%s;origin=%s' % (
+            revision_id, origin_url)
 
         response = self.client.put(
             url,
@@ -69,13 +76,19 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             data=json.dumps({
                 'status': expected_status,
                 'revision_id': revision_id,
+                'directory_id': directory_id,
+                'origin_url': origin_url,
             }))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         deposit = Deposit.objects.get(pk=self.deposit.id)
         self.assertEquals(deposit.status, expected_status)
-        self.assertEquals(deposit.swh_id, expected_id)
+        self.assertEquals(deposit.swh_id, expected_swh_id)
+        self.assertEquals(deposit.swh_id_context, expected_swh_id_context)
+        self.assertEquals(deposit.swh_anchor_id, expected_swh_anchor_id)
+        self.assertEquals(deposit.swh_anchor_id_context,
+                          expected_swh_anchor_id_context)
 
     @istest
     def update_deposit_status_will_fail_with_unknown_status(self):

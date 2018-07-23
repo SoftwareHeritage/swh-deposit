@@ -53,7 +53,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'metadata': {
                     '@xmlns': 'http://www.w3.org/2005/Atom',
                     'author': 'some awesome author',
-                    'external_identifier':'some-external-id',
+                    'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
                 },

@@ -438,7 +438,12 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
     def create_deposit_with_status(
             self, status,
-            external_id='some-external-id-1', swh_id=None, status_detail=None):
+            external_id='some-external-id-1',
+            swh_id=None,
+            swh_id_context=None,
+            swh_anchor_id=None,
+            swh_anchor_id_context=None,
+            status_detail=None):
         # create an invalid deposit which we will update further down the line
         deposit_id = self.create_deposit_with_invalid_archive(external_id)
 
@@ -451,8 +456,13 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         deposit.status = status
         if swh_id:
             deposit.swh_id = swh_id
+        if swh_id_context:
+            deposit.swh_id_context = swh_id_context
+        if swh_anchor_id:
+            deposit.swh_anchor_id = swh_anchor_id
+        if swh_anchor_id_context:
+            deposit.swh_anchor_id_context = swh_anchor_id_context
         deposit.save()
-
         return deposit_id
 
     def create_simple_deposit_partial(self, external_id='some-external-id'):

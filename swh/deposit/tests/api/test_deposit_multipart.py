@@ -163,10 +163,14 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
+                self.assertIsNone(deposit_request.metadata)
+                self.assertIsNone(deposit_request.raw_metadata)
             else:
                 self.assertEquals(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+                self.assertEquals(deposit_request.raw_metadata,
+                                  data_atom_entry.decode('utf-8'))
 
     @istest
     def post_deposit_multipart_tar(self):
@@ -229,10 +233,14 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
+                self.assertIsNone(deposit_request.metadata)
+                self.assertIsNone(deposit_request.raw_metadata)
             else:
                 self.assertEquals(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+                self.assertEquals(deposit_request.raw_metadata,
+                                  data_atom_entry.decode('utf-8'))
 
     @istest
     def post_deposit_multipart_put_to_replace_metadata(self):
@@ -300,6 +308,8 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                 self.assertEquals(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
+                self.assertEquals(deposit_request.raw_metadata,
+                                  data_atom_entry.decode('utf-8'))
 
         replace_metadata_uri = response._headers['location'][1]
         response = self.client.put(
@@ -329,6 +339,9 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                 self.assertEquals(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
+                self.assertEquals(
+                    deposit_request.raw_metadata,
+                    self.data_atom_entry_update_in_place)
 
     # FAILURE scenarios
 

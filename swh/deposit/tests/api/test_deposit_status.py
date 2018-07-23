@@ -69,14 +69,22 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
                          DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
 
     @istest
-    def status_with_swh_id(self):
+    def status_with_swh_information(self):
         _status = DEPOSIT_STATUS_LOAD_SUCCESS
-        _swh_id = '548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
+        _context = 'https://hal.archives-ouvertes.fr/hal-01727745'
+        _swh_id = 'swh:1:dir:42a13fc721c8716ff695d0d62fc851d641f3a12b'
+        _swh_id_context = '%s;%s' % (_swh_id, _context)
+        _swh_anchor_id = 'swh:rev:1:548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
+        _swh_anchor_id_context = '%s;%s' % (_swh_anchor_id, _context)
 
         # given
         deposit_id = self.create_deposit_with_status(
             status=_status,
-            swh_id=_swh_id)
+            swh_id=_swh_id,
+            swh_id_context=_swh_id_context,
+            swh_anchor_id=_swh_anchor_id,
+            swh_anchor_id_context=_swh_anchor_id_context
+        )
 
         url = reverse(STATE_IRI, args=[self.collection.name, deposit_id])
 
@@ -91,6 +99,10 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['deposit_status_detail'],
                          DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS])
         self.assertEqual(r['deposit_swh_id'], _swh_id)
+        self.assertEqual(r['deposit_swh_id_context'], _swh_id_context)
+        self.assertEqual(r['deposit_swh_anchor_id'], _swh_anchor_id)
+        self.assertEqual(r['deposit_swh_anchor_id_context'],
+                         _swh_anchor_id_context)
 
     @istest
     def status_on_unknown_deposit(self):

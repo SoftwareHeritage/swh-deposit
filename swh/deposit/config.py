@@ -23,6 +23,7 @@ PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
 
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'
+RAW_METADATA_KEY = 'raw-metadata'
 
 ARCHIVE_TYPE = 'archive'
 METADATA_TYPE = 'metadata'

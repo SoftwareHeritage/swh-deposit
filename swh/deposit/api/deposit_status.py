@@ -100,10 +100,19 @@ class SWHDepositStatus(SWHBaseDeposit):
             'status': deposit.status,
             'status_detail': status_detail,
             'swh_id': None,
+            'swh_id_context': None,
+            'swh_anchor_id': None,
+            'swh_anchor_id_context': None,
         }
 
         if deposit.swh_id:
             context['swh_id'] = deposit.swh_id
+        if deposit.swh_id_context:
+            context['swh_id_context'] = deposit.swh_id_context
+        if deposit.swh_anchor_id:
+            context['swh_anchor_id'] = deposit.swh_anchor_id
+        if deposit.swh_anchor_id_context:
+            context['swh_anchor_id_context'] = deposit.swh_anchor_id_context
 
         return render(req, 'deposit/status.xml',
                       context=context,
