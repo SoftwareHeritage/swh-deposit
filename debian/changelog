@@ -1,3 +1,13 @@
+swh-deposit (0.0.57-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.57
+  * swh.deposit.client: Simplify client parsing
+  * api/deposit_status: Make swh-id be a directory id derivative
+  * swh.deposit.models: Keep deposit request's raw metadata
+  * bin: Migrate internal script to use the deposit client
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 23 Jul 2018 13:43:23 +0200
+
 swh-deposit (0.0.56-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.56
