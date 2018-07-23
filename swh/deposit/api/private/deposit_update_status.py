@@ -5,7 +5,9 @@
 
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import persistent_identifier, REVISION
+from swh.model.identifiers import (
+    persistent_identifier, REVISION, DIRECTORY
+)
 
 from ..common import SWHPutDepositAPI, SWHPrivateAPIView
 from ...errors import make_error_dict, BAD_REQUEST
@@ -66,9 +68,22 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.status = req.data['status']  # checks already done before
-        swh_id = req.data.get('revision_id')
-        if swh_id:
-            deposit.swh_id = persistent_identifier(REVISION, {'id': swh_id})
+
+        origin_url = req.data.get('origin_url')
+
+        dir_id = req.data.get('directory_id')
+        if dir_id:
+            deposit.swh_id = persistent_identifier(DIRECTORY, dir_id)
+            deposit.swh_id_context = persistent_identifier(
+                DIRECTORY, dir_id, metadata={'origin': origin_url})
+
+        rev_id = req.data.get('revision_id')
+        if rev_id:
+            deposit.swh_anchor_id = persistent_identifier(
+                REVISION, rev_id)
+            deposit.swh_anchor_id_context = persistent_identifier(
+                REVISION, rev_id, metadata={'origin': origin_url})
+
         deposit.save()
 
         return {}
