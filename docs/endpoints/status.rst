@@ -54,10 +54,13 @@ Sample response
         <entry xmlns="http://www.w3.org/2005/Atom"
                xmlns:sword="http://purl.org/net/sword/"
                xmlns:dcterms="http://purl.org/dc/terms/">
-            <deposit_id>150</deposit_id>
+            <deposit_id>160</deposit_id>
             <deposit_status>done</deposit_status>
             <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
-            <deposit_swh_id>swh:1:rev:c648730299c2a4f4df3c1fe6e527ef3681f9527e</deposit_swh_id>
+            <deposit_swh_id>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9</deposit_swh_id>
+            <deposit_swh_id_context>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/</deposit_swh_id>
+            <deposit_swh_anchor_id>swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb</deposit_swh_id>
+            <deposit_swh_anchor_id_context>swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;origin=https://forge.softwareheritage.org/source/jesuisgpl/</deposit_swh_id>
         </entry>
 
     Rejected deposit:
