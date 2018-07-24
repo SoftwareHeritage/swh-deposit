@@ -1,8 +1,11 @@
-swh-deposit (0.0.58-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.59-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.59
+  * deposit.utils: Fix the potential metadata information loss
+  * docs: Add sparse/metadata deposit specs
+  * docs: Update documentation about persistent id with context
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 23 Jul 2018 14:31:46 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 24 Jul 2018 14:15:55 +0200
 
 swh-deposit (0.0.58-1~swh1) unstable-swh; urgency=medium
 
