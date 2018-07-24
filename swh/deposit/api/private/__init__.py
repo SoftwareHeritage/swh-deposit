@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from swh.deposit import utils
 
 from ...config import METADATA_TYPE
 from ...models import DepositRequest, Deposit
@@ -45,7 +46,5 @@ class DepositReadMixin:
             metadata dict from the deposit.
 
         """
-        metadata = {}
-        for dr in self._deposit_requests(deposit, request_type=METADATA_TYPE):
-            metadata.update(dr.metadata)
-        return metadata
+        metadata = self._deposit_requests(deposit, request_type=METADATA_TYPE)
+        return utils.merge((m.metadata for m in metadata))
