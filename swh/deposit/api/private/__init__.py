@@ -46,5 +46,6 @@ class DepositReadMixin:
             metadata dict from the deposit.
 
         """
-        metadata = self._deposit_requests(deposit, request_type=METADATA_TYPE)
-        return utils.merge((m.metadata for m in metadata))
+        metadata = (m.metadata for m in self._deposit_requests(
+            deposit, request_type=METADATA_TYPE))
+        return utils.merge(*metadata)
