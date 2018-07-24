@@ -12,6 +12,7 @@ Software Heritage Deposit
    metadata.rst
    dev-info.rst
    sys-info.rst
+   specs/specs.rst
 
 Indices and tables
 ==================

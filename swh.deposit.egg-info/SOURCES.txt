@@ -31,14 +31,12 @@ debian/rules
 debian/source/format
 docs/.gitignore
 docs/Makefile
-docs/blueprint.rst
 docs/conf.py
 docs/dev-info.rst
 docs/getting-started.rst
 docs/index.rst
 docs/metadata.rst
 docs/spec-api.rst
-docs/spec-loading.rst
 docs/sys-info.rst
 docs/_static/.placeholder
 docs/_templates/.placeholder
@@ -51,6 +49,13 @@ docs/endpoints/update-metadata.rst
 docs/images/deposit-create-chart.png
 docs/images/deposit-delete-chart.png
 docs/images/deposit-update-chart.png
+docs/specs/blueprint.rst
+docs/specs/metadata_example.xml
+docs/specs/spec-loading.rst
+docs/specs/spec-meta-deposit.rst
+docs/specs/spec-sparse-deposit.rst
+docs/specs/specs.rst
+docs/specs/swh.xsd
 resources/deposit/server.yml
 swh/__init__.py
 swh/manage.py
@@ -69,6 +74,7 @@ swh/deposit/models.py
 swh/deposit/parsers.py
 swh/deposit/signals.py
 swh/deposit/urls.py
+swh/deposit/utils.py
 swh/deposit/wsgi.py
 swh/deposit/api/__init__.py
 swh/deposit/api/common.py
@@ -134,6 +140,7 @@ swh/deposit/templates/deposit/status.xml
 swh/deposit/templates/rest_framework/api.html
 swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
+swh/deposit/tests/test_utils.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
 swh/deposit/tests/api/test_deposit.py

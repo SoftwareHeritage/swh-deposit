@@ -348,12 +348,13 @@ class CommonCreationRoutine(TestCase):
         <entry xmlns="http://www.w3.org/2005/Atom">
             <external_identifier>some-external-id</external_identifier>
             <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
+            <author>some awesome author</author>
         </entry>"""
 
         self.atom_entry_data1 = b"""<?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom">
-            <author>some awesome author</author>
-
+            <author>another one</author>
+            <author>no one</author>
         </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>

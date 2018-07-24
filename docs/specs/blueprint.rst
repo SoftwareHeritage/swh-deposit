@@ -8,13 +8,13 @@ Deposit creation
 From client's deposit repository server to SWH's repository server:
 
 1. The client requests for the server's abilities and its associated collection
-  (GET query to the *SD/service document uri*)
+   (GET query to the *SD/service document uri*)
 
 2. The server answers the client with the service document which gives the
-  *collection uri* (also known as *COL/collection IRI*).
+   *collection uri* (also known as *COL/collection IRI*).
 
 3. The client sends a deposit (optionally a zip archive, some metadata or both)
-  through the *collection uri*.
+   through the *collection uri*.
 
   This can be done in:
 
@@ -22,16 +22,16 @@ From client's deposit repository server to SWH's repository server:
   * one POST request (metadata or archive) + other PUT or POST request to the
     *update uris* (*edit-media iri* or *edit iri*)
 
-  1. Server validates the client's input or returns detailed error if any
+  a. Server validates the client's input or returns detailed error if any
 
-  2. Server stores information received (metadata or software archive source
+  b. Server stores information received (metadata or software archive source
      code or both)
 
 4. The server notifies the client it acknowledged the client's request. An
-  ``http 201 Created`` response with a deposit receipt in the body response is
-  sent back. That deposit receipt will hold the necessary information to
-  eventually complete the deposit later on if it was incomplete (also known as
-  status ``partial``).
+   ``http 201 Created`` response with a deposit receipt in the body response is
+   sent back. That deposit receipt will hold the necessary information to
+   eventually complete the deposit later on if it was incomplete (also known as
+   status ``partial``).
 
 Schema representation
 ^^^^^^^^^^^^^^^^^^^^^

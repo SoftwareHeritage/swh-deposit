@@ -82,18 +82,6 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView,
         if not os.path.exists(self.extraction_dir):
             os.makedirs(self.extraction_dir)
 
-    def retrieve_archives(self, deposit_id):
-        """Given a deposit identifier, returns its associated archives' path.
-
-        Yields:
-            path to deposited archives
-
-        """
-        deposit_requests = self._deposit_requests(
-            deposit_id, request_type=ARCHIVE_TYPE)
-        for deposit_request in deposit_requests:
-            yield deposit_request.archive.path
-
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
            content to the client.
@@ -107,9 +95,9 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView,
             Tuple status, stream of content, content-type
 
         """
-        archive_paths = list(self.retrieve_archives(deposit_id))
-        with aggregate_tarballs(self.extraction_dir,
-                                archive_paths) as path:
+        archive_paths = [r.archive.path for r in self._deposit_requests(
+            deposit_id, request_type=ARCHIVE_TYPE)]
+        with aggregate_tarballs(self.extraction_dir, archive_paths) as path:
             return FileResponse(open(path, 'rb'),
                                 status=status.HTTP_200_OK,
                                 content_type='application/octet-stream')

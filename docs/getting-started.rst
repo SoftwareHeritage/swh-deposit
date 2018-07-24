@@ -175,7 +175,7 @@ multisteps deposit
 The steps to create a multisteps deposit:
 
 1. Create an incomplete deposit
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
@@ -186,7 +186,7 @@ First use the ``--partial`` argument to declare there is more to come
 
 
 2. Add content or metadata to the deposit
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Continue the deposit by using the ``--deposit-id`` argument given as a response
 for the first step. You can continue adding content or metadata while you use
 the ``--partial`` argument.
@@ -235,7 +235,7 @@ Update deposit
     ``--deposit-id <id>`` is provided
 
   - by using the ``--replace`` flag
-  
+
     - ``--metadata-deposit`` replaces associated existing metadata
     - ``--archive-deposit`` replaces associated archive(s)
     - by default, with no flag or both, you'll replace associated
@@ -268,7 +268,7 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-$ swh-deposit --username name --password secret --deposit-id '11' --status
+  $ swh-deposit --username name --password secret --deposit-id '11' --status
 
 .. code:: json
 
@@ -292,14 +292,18 @@ The different statuses:
 
 When the deposit has been loaded into the archive, the status will be
 marked ``done``. In the response, will also be available the
-<deposit_swh_id>. For example:
+<deposit_swh_id>, <deposit_swh_id_context>, <deposit_swh_anchor_id>,
+<deposit_swh_anchor_id_context>. For example:
 
 .. code:: json
 
  {
   'deposit_id': '11',
   'deposit_status': 'done',
-  'deposit_swh_id': 'swh:1:rev:34898aa991c90b447c27d2ac1fc09f5c8f12783e',
+  'deposit_swh_id': 'swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9',
+  'deposit_swh_id_context': 'swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/',
+  'deposit_swh_anchor_id': 'swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb',
+  'deposit_swh_anchor_id_context': 'swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;origin=https://forge.softwareheritage.org/source/jesuisgpl/',
   'deposit_status_detail': 'The deposit has been successfully \
                             loaded into the Software Heritage archive'
  }

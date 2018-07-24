@@ -51,8 +51,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             },
             'origin_metadata': {
                 'metadata': {
-                    '@xmlns': 'http://www.w3.org/2005/Atom',
-                    'author': 'some awesome author',
+                    '@xmlns': ['http://www.w3.org/2005/Atom'],
+                    'author': ['some awesome author', 'another one', 'no one'],
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -79,8 +79,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'committer': SWH_PERSON,
                 'date': None,
                 'metadata': {
-                    '@xmlns': 'http://www.w3.org/2005/Atom',
-                    'author': 'some awesome author',
+                    '@xmlns': ['http://www.w3.org/2005/Atom'],
+                    'author': ['some awesome author', 'another one', 'no one'],
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -137,8 +137,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             },
             'origin_metadata': {
                 'metadata': {
-                    '@xmlns': 'http://www.w3.org/2005/Atom',
-                    'author': 'some awesome author',
+                    '@xmlns': ['http://www.w3.org/2005/Atom'],
+                    'author': ['some awesome author', 'another one', 'no one'],
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -166,8 +166,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                 'type': 'tar',
                 'message': 'hal: Deposit %s in collection hal' % deposit_id,
                 'metadata': {
-                    '@xmlns': 'http://www.w3.org/2005/Atom',
-                    'author': 'some awesome author',
+                    '@xmlns': ['http://www.w3.org/2005/Atom'],
+                    'author': ['some awesome author', 'another one', 'no one'],
                     'external_identifier': 'some-external-id',
                     'url': 'https://hal-test.archives-ouvertes.fr/' +
                            'some-external-id'
@@ -177,7 +177,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'branch_name': 'master',
         }
 
-        self.assertEquals(data, expected_meta)
+        self.assertEqual(data, expected_meta)
 
     @istest
     def access_to_nonexisting_deposit_returns_404_response(self):
