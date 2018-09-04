@@ -6,6 +6,7 @@ Makefile
 Makefile.local
 README.md
 requirements-swh.txt
+requirements-test.txt
 requirements.txt
 setup.py
 version.txt
