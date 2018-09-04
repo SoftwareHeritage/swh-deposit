@@ -219,6 +219,41 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(actual_status_detail, expected_status_detail)
 
     @istest
+    def convert_status_detail_edge_case(self):
+        status_detail = {
+            'url': {
+                'summary': 'At least one compatible url field. Failed',
+                'fields': ['testurl'],
+            },
+            'metadata': [
+                {
+                    'summary': 'Mandatory fields missing',
+                    'fields': ['9', 10, 1.212],
+                },
+            ],
+            'archive': [
+                {
+                    'summary': 'Invalid archive',
+                    'fields': ['3'],
+                },
+                {
+                    'summary': 'Unsupported archive',
+                    'fields': [2],
+                }
+            ],
+        }
+
+        expected_status_detail = '''- Mandatory fields missing (9, 10, 1.212)
+- Invalid archive (3)
+- Unsupported archive (2)
+- At least one compatible url field. Failed (testurl)
+'''
+
+        actual_status_detail = convert_status_detail(status_detail)
+
+        self.assertEqual(actual_status_detail, expected_status_detail)
+
+    @istest
     def status_on_deposit_rejected(self):
         _status = DEPOSIT_STATUS_REJECTED
         _swh_id = '548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'

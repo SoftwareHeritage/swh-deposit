@@ -2,10 +2,6 @@
     <entry xmlns="http://www.w3.org/2005/Atom"
              xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
              xmlns:swh="swh.xsd">
-             "{http://www.w3.org/2005/Atom}author": {
-                    "{http://www.w3.org/2005/Atom}email": "hal@ccsd.cnrs.fr",
-                    "{http://www.w3.org/2005/Atom}name": "HAL"
-                },
         <author>
           <name>HAL</name>
           <email>hal@ccsd.cnrs.fr</email>
