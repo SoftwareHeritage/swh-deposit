@@ -27,7 +27,8 @@ part of the identified object.
 A concrete example
 ------------------
 The manifest list is included in the metadata xml atomEntry under the
-swh namespace:
+swh namespace (a link for the published schema will be provided during
+the implementation of the sparse deposit):
 
 .. code:: xml
 

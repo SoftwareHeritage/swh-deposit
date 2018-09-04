@@ -1,8 +1,9 @@
-swh-deposit (0.0.59-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.60-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.60
+  * Fix production issue regarding deposit status endpoint.
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 24 Jul 2018 14:15:55 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 04 Sep 2018 18:30:01 +0200
 
 swh-deposit (0.0.59-1~swh1) unstable-swh; urgency=medium
 

@@ -6,7 +6,7 @@ Goal
 A client wishes to deposit only metadata about an object in the Software
 Heritage archive.
 
-The meta-deposit is a special deposit where no content is
+The metadata-deposit is a special deposit where no content is
 provided and the data transfered to Software Heritage is only
 the metadata about an object or several objects in the archive.
 
@@ -14,7 +14,8 @@ Requirements
 ------------
 The scope of the meta-deposit is different than the
 sparse-deposit. While a sparse-deposit creates a revision with referenced
-directories and content files, the meta-deposit references one of the following:
+directories and content files, the metadata-deposit references one of the
+following:
 
 - origin
 - snapshot
@@ -25,7 +26,8 @@ directories and content files, the meta-deposit references one of the following:
 A complete metadata example
 ---------------------------
 The reference element is included in the metadata xml atomEntry under the
-swh namespace:
+swh namespace (a link for the published schema will be provided during
+the implementation of the metadata deposit):
 
 .. code:: xml
 
@@ -63,11 +65,22 @@ swh namespace:
 
 Examples by target type
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-With ${type} in {snp (snapshot), rev (revision), rel (release) }:
+Reference an origin:
 
 .. code:: xml
 
+  <swh:deposit>
+    <swh:reference>
+      <swh:origin url="swh:1:${type}:aaaaaaaaaaaaaa..."/>
+    </swh:reference>
+  </swh:deposit>
+
+
+Reference a snapshot, revision or release:
+
+.. code:: xml
+
+  With ${type} in {snp (snapshot), rev (revision), rel (release) }:
   <swh:deposit>
     <swh:reference>
       <swh:object id="swh:1:${type}:aaaaaaaaaaaaaa..."/>
@@ -79,6 +92,7 @@ With ${type} in {snp (snapshot), rev (revision), rel (release) }:
 Loading procedure
 ------------------
 
-In this case, the meta-deposit will be injected as a metadata entry at the
-appropriate level (origin_metadata, revision_metadata, etc.). Contrary to the
-complete and sparse deposit, there will be no object creation.
+In this case, the metadata-deposit will be injected as a metadata entry at the
+appropriate level (origin_metadata, revision_metadata, etc.) with the information
+about the contributor of the deposit. Contrary to the complete and sparse
+deposit, there will be no object creation.
