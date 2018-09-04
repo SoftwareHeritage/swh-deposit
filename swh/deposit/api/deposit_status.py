@@ -52,7 +52,7 @@ def convert_status_detail(status_detail):
                 suffix_msg = ''
                 fields = data.get('fields')
                 if fields:
-                    suffix_msg = ' (%s)' % ', '.join(fields)
+                    suffix_msg = ' (%s)' % ', '.join(map(str, fields))
                 msg.append('- %s%s\n' % (data['summary'], suffix_msg))
 
     _detail = status_detail.get('url')
@@ -60,7 +60,7 @@ def convert_status_detail(status_detail):
         fields = _detail.get('fields')
         suffix_msg = ''
         if fields:
-            suffix_msg = ' (%s)' % ', '.join(fields)
+            suffix_msg = ' (%s)' % ', '.join(map(str, fields))
         msg.append('- %s%s\n' % (_detail['summary'], suffix_msg))
 
     if not msg:
