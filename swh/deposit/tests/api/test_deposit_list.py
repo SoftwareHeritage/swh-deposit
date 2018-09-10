@@ -1,0 +1,64 @@
+# Copyright (C) 2017-2018  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
+from django.core.urlresolvers import reverse
+from nose.tools import istest
+from nose.plugins.attrib import attr
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from ...config import DEPOSIT_STATUS_PARTIAL, PRIVATE_LIST_DEPOSITS
+from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+
+
+@attr('fs')
+class CheckDepositStatusesTest(APITestCase, WithAuthTestCase,
+                               BasicTestCase, CommonCreationRoutine):
+    """Check deposit statuses endpoints.
+
+    """
+    def setUp(self):
+        super().setUp()
+
+    @istest
+    def deposit_list(self):
+        """Deposit list api should return the deposits
+
+        """
+        deposit_id = self.create_deposit_partial()
+        deposit_id2 = self.create_deposit_partial()
+
+        # NOTE: does not work as documented
+        # https://docs.djangoproject.com/en/1.11/ref/urlresolvers/#django.core.urlresolvers.reverse  # noqa
+        # url = reverse(PRIVATE_LIST_DEPOSITS, kwargs={'page_size': 1})
+        main_url = reverse(PRIVATE_LIST_DEPOSITS)
+        url = '%s?page_size=1' % main_url
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data['count'], 2)  # 2 deposits
+        expected_next = '%s?page=2&page_size=1' % main_url
+        self.assertTrue(data['next'].endswith(expected_next))
+        self.assertIsNone(data['previous'])
+        self.assertEqual(len(data['results']), 1)  # page of size 1
+        deposit = data['results'][0]
+        self.assertEquals(deposit['id'], deposit_id)
+        self.assertEquals(deposit['status'], DEPOSIT_STATUS_PARTIAL)
+
+        # then 2nd page
+        response2 = self.client.get(expected_next)
+
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        data2 = response2.json()
+
+        self.assertEqual(data2['count'], 2)  # still 2 deposits
+        self.assertIsNone(data2['next'])
+        expected_previous = '%s?page_size=1' % main_url
+        self.assertTrue(data2['previous'].endswith(expected_previous))
+        self.assertEqual(len(data2['results']), 1)  # page of size 1
+        deposit2 = data2['results'][0]
+        self.assertEquals(deposit2['id'], deposit_id2)
+        self.assertEquals(deposit2['status'], DEPOSIT_STATUS_PARTIAL)
