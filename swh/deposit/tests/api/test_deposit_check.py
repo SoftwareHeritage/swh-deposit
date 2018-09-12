@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import json
 import unittest
 
 from django.core.urlresolvers import reverse
@@ -56,7 +55,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
         self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
@@ -79,7 +78,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
             response = self.client.get(url)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            data = json.loads(response.content.decode('utf-8'))
+            data = response.json()
             self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
             details = data['details']
             # archive checks failure
@@ -105,7 +104,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
         details = data['details']
         # archive checks failure
@@ -131,7 +130,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
         self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
         details = data['details']
         # archive checks failure
@@ -173,7 +172,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
 
         self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
         deposit = Deposit.objects.get(pk=deposit.id)
