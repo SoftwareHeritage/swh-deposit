@@ -87,6 +87,7 @@ swh/deposit/api/service_document.py
 swh/deposit/api/urls.py
 swh/deposit/api/private/__init__.py
 swh/deposit/api/private/deposit_check.py
+swh/deposit/api/private/deposit_list.py
 swh/deposit/api/private/deposit_read.py
 swh/deposit/api/private/deposit_update_status.py
 swh/deposit/api/private/urls.py
@@ -149,6 +150,7 @@ swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
 swh/deposit/tests/api/test_deposit_check.py
 swh/deposit/tests/api/test_deposit_delete.py
+swh/deposit/tests/api/test_deposit_list.py
 swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_read_archive.py
 swh/deposit/tests/api/test_deposit_read_metadata.py
