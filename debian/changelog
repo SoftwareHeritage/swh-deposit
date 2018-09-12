@@ -1,3 +1,10 @@
+swh-deposit (0.0.62-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.62
+  * private.deposit_list: Make the endpoint private
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 12 Sep 2018 15:58:21 +0200
+
 swh-deposit (0.0.61-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.61
