@@ -20,6 +20,7 @@ PRIVATE_GET_RAW_CONTENT = 'private-download'
 PRIVATE_CHECK_DEPOSIT = 'check-deposit'
 PRIVATE_PUT_DEPOSIT = 'private-update'
 PRIVATE_GET_DEPOSIT_METADATA = 'private-read'
+PRIVATE_LIST_DEPOSITS = 'private-deposit-list'
 
 ARCHIVE_KEY = 'archive'
 METADATA_KEY = 'metadata'

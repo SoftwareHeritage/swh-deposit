@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import json
 
 from django.core.urlresolvers import reverse
 from nose.tools import istest
@@ -41,7 +40,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                          status.HTTP_200_OK)
         self.assertEquals(response._headers['content-type'][1],
                           'application/json')
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
 
         expected_meta = {
             'origin': {
@@ -127,7 +126,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
                          status.HTTP_200_OK)
         self.assertEquals(response._headers['content-type'][1],
                           'application/json')
-        data = json.loads(response.content.decode('utf-8'))
+        data = response.json()
 
         expected_meta = {
             'origin': {
