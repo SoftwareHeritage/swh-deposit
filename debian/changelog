@@ -1,3 +1,12 @@
+swh-deposit (0.0.63-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.63
+  * deposit_list: Return status_detail as string message and not as
+    nested
+  * dict
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 17 Sep 2018 16:23:58 +0200
+
 swh-deposit (0.0.62-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.62
