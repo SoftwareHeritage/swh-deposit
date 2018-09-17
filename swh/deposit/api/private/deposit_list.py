@@ -34,12 +34,7 @@ class DepositSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deposit
-        # fields = '__all__'
-        fields = ('id', 'reception_date', 'complete_date', 'status',
-                  'collection', 'external_id', 'client',
-                  'swh_id', 'swh_id_context',
-                  'swh_anchor_id', 'swh_anchor_id_context',
-                  'status', 'status_detail', 'parent')
+        fields = '__all__'
 
 
 class DepositList(ListAPIView, SWHPrivateAPIView):
