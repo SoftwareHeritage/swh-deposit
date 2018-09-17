@@ -9,14 +9,17 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from swh.deposit.api.deposit_status import convert_status_detail
+
 from ...config import DEPOSIT_STATUS_PARTIAL, PRIVATE_LIST_DEPOSITS
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+from ...models import Deposit
 
 
 @attr('fs')
-class CheckDepositStatusesTest(APITestCase, WithAuthTestCase,
-                               BasicTestCase, CommonCreationRoutine):
-    """Check deposit statuses endpoints.
+class CheckDepositListTest(APITestCase, WithAuthTestCase,
+                           BasicTestCase, CommonCreationRoutine):
+    """Check deposit list endpoints.
 
     """
     def setUp(self):
@@ -28,6 +31,33 @@ class CheckDepositStatusesTest(APITestCase, WithAuthTestCase,
 
         """
         deposit_id = self.create_deposit_partial()
+        # amend the deposit with a status_detail
+        deposit = Deposit.objects.get(pk=deposit_id)
+        status_detail = {
+            'url': {
+                'summary': 'At least one compatible url field. Failed',
+                'fields': ['testurl'],
+            },
+            'metadata': [
+                {
+                    'summary': 'Mandatory fields missing',
+                    'fields': ['9', 10, 1.212],
+                },
+            ],
+            'archive': [
+                {
+                    'summary': 'Invalid archive',
+                    'fields': ['3'],
+                },
+                {
+                    'summary': 'Unsupported archive',
+                    'fields': [2],
+                }
+            ],
+        }
+        deposit.status_detail = status_detail
+        deposit.save()
+
         deposit_id2 = self.create_deposit_partial()
 
         # NOTE: does not work as documented
@@ -47,6 +77,8 @@ class CheckDepositStatusesTest(APITestCase, WithAuthTestCase,
         deposit = data['results'][0]
         self.assertEquals(deposit['id'], deposit_id)
         self.assertEquals(deposit['status'], DEPOSIT_STATUS_PARTIAL)
+        expected_status_detail = convert_status_detail(status_detail)
+        self.assertEquals(deposit['status_detail'], expected_status_detail)
 
         # then 2nd page
         response2 = self.client.get(expected_next)
