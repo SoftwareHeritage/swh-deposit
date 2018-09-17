@@ -10,7 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 
 from ..common import SWHPrivateAPIView
-from ..deposit_status import convert_status_detail
+from ..converters import convert_status_detail
 from ...models import Deposit
 
 

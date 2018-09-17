@@ -9,7 +9,7 @@ from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.api.deposit_status import convert_status_detail
+from swh.deposit.api.converters import convert_status_detail
 
 from ...config import DEPOSIT_STATUS_PARTIAL, PRIVATE_LIST_DEPOSITS
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
