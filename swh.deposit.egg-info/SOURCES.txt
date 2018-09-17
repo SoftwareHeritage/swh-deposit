@@ -79,6 +79,7 @@ swh/deposit/utils.py
 swh/deposit/wsgi.py
 swh/deposit/api/__init__.py
 swh/deposit/api/common.py
+swh/deposit/api/converters.py
 swh/deposit/api/deposit.py
 swh/deposit/api/deposit_content.py
 swh/deposit/api/deposit_status.py
@@ -145,6 +146,7 @@ swh/deposit/tests/common.py
 swh/deposit/tests/test_utils.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/test_common.py
+swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py

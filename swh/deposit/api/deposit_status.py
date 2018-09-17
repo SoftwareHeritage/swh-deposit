@@ -7,63 +7,10 @@ from django.shortcuts import render
 from rest_framework import status
 
 from .common import SWHBaseDeposit
+from .converters import convert_status_detail
 from ..errors import NOT_FOUND, make_error_response
 from ..errors import make_error_response_from_dict
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
-
-
-def convert_status_detail(status_detail):
-    """Given a status_detail dict, transforms it into a human readable
-       string.
-
-       Dict has the following form (all first level keys are optional):
-       {
-           'url': {
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>
-           },
-           'metadata': [{
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>,
-           }],
-           'archive': [{
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>,
-           }]
-
-
-        }
-
-    Args:
-        status_detail (dict):
-
-    Returns:
-        Status detail as inlined string.
-
-    """
-    if not status_detail:
-        return None
-
-    def _str_fields(data):
-        fields = data.get('fields')
-        if not fields:
-            return ''
-        return ' (%s)' % ', '.join(map(str, fields))
-
-    msg = []
-    for key in ['metadata', 'archive']:
-        _detail = status_detail.get(key)
-        if _detail:
-            for data in _detail:
-                msg.append('- %s%s\n' % (data['summary'], _str_fields(data)))
-
-    _detail = status_detail.get('url')
-    if _detail:
-        msg.append('- %s%s\n' % (_detail['summary'], _str_fields(_detail)))
-
-    if not msg:
-        return None
-    return ''.join(msg)
 
 
 class SWHDepositStatus(SWHBaseDeposit):
