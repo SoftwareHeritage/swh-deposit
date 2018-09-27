@@ -4,7 +4,7 @@ Create deposit
 .. http:post:: /1/<collection-name>/
 
     Create deposit in a collection.
-    
+
     The client sends a deposit request to a specific collection with:
 
     * an archive holding the software source code (binary upload)

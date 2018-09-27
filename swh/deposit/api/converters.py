@@ -8,29 +8,28 @@ def convert_status_detail(status_detail):
     """Given a status_detail dict, transforms it into a human readable
        string.
 
-       Dict has the following form (all first level keys are optional):
-       {
-           'url': {
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>
-           },
-           'metadata': [{
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>,
-           }],
-           'archive': [{
-               'summary': <summary-string>,
-               'fields': <impacted-fields-list>,
-           }]
-
-
-        }
+    Dict has the following form (all first level keys are optional):
+    {
+        'url': {
+            'summary': "summary-string",
+            'fields': [impacted-fields-list]
+        },
+        'metadata': [{
+            'summary': "summary-string",
+            'fields': [impacted-fields-list],
+        }],
+        'archive': [{
+            'summary': "summary-string",
+            'fields': [impacted-fields-list],
+        }]
+    }
 
     Args:
-        status_detail (dict):
+        status_detail (dict): The status detail dict with the syntax
+                              mentioned
 
     Returns:
-        Status detail as inlined string.
+        the status detail as inlined string
 
     """
     if not status_detail:
