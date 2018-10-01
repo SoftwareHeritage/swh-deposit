@@ -7,7 +7,7 @@ A client wishes to deposit only metadata about an object in the Software
 Heritage archive.
 
 The metadata-deposit is a special deposit where no content is
-provided and the data transfered to Software Heritage is only
+provided and the data transferred to Software Heritage is only
 the metadata about an object or several objects in the archive.
 
 Requirements

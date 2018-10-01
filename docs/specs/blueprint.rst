@@ -57,7 +57,7 @@ Updating an existing deposit
 
     This would be the case for example if the client initially posted a
     ``partial`` deposit (e.g. only metadata with no archive, or an archive
-    without metadata, or a splitted archive because the initial one exceeded
+    without metadata, or a split archive because the initial one exceeded
     the limit size imposed by swh repository deposit)
 
 Schema representation
