@@ -10,7 +10,6 @@ from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.api.deposit_status import convert_status_detail
 from swh.deposit.config import (COL_IRI, STATE_IRI, DEPOSIT_STATUS_DEPOSITED,
                                 DEPOSIT_STATUS_REJECTED)
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL

@@ -1,10 +1,13 @@
 .. _swh-deposit:
 
-Software Heritage Deposit
-=========================
+Software Heritage - Deposit
+===========================
+
+Push-based deposit of software source code artifacts to the archive.
+
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    getting-started.rst
@@ -13,6 +16,7 @@ Software Heritage Deposit
    dev-info.rst
    sys-info.rst
    specs/specs.rst
+
 
 Indices and tables
 ==================
