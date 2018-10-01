@@ -26,15 +26,16 @@ following:
 A complete metadata example
 ---------------------------
 The reference element is included in the metadata xml atomEntry under the
-swh namespace (a link for the published schema will be provided during
-the implementation of the metadata deposit):
+swh namespace:
+
+TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
 
 .. code:: xml
 
   <?xml version="1.0"?>
     <entry xmlns="http://www.w3.org/2005/Atom"
              xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-             xmlns:swh="swh.xsd">
+             xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
         <author>
           <name>HAL</name>
           <email>hal@ccsd.cnrs.fr</email>
@@ -71,7 +72,7 @@ Reference an origin:
 
   <swh:deposit>
     <swh:reference>
-      <swh:origin url="swh:1:${type}:aaaaaaaaaaaaaa..."/>
+      <swh:origin url="https://github.com/user/repo"/>
     </swh:reference>
   </swh:deposit>
 

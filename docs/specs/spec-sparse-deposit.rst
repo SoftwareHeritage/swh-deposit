@@ -24,20 +24,23 @@ as the manifest list using the entry name 'bindings' in the metadata.
 Note: the *name* of the file or the directory is given by the path and is not
 part of the identified object.
 
+TODO: see if a trailing "/" is mandatory for implementation.
+
 A concrete example
 ------------------
 The manifest list is included in the metadata xml atomEntry under the
-swh namespace (a link for the published schema will be provided during
-the implementation of the sparse deposit):
+swh namespace:
+
+TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
 
 .. code:: xml
 
   <?xml version="1.0"?>
     <entry xmlns="http://www.w3.org/2005/Atom"
              xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-             xmlns:swh="swh.xsd">
+             xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
         <author>
-          <name>HAL</name>
+          <name>HAL</name>it mandatory to have a trailing "/",
           <email>hal@ccsd.cnrs.fr</email>
         </author>
         <client>hal</client>
@@ -59,12 +62,9 @@ the implementation of the sparse deposit):
         </codemeta:author>
         <swh:deposit>
           <swh:bindings>
-          <swh:binding source="path/to/file.txt"
-                       destination="swh:1:cnt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"/>
-          <swh:binding source="path/to/second_file.txt
-                       destination="swh:1:cnt:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"/>
-          <swh:binding source="path/to/dir/
-                       destination="swh:1:dir:ddddddddddddddddddddddddddddddddd"/>
+          <swh:binding source="path/to/file.txt" destination="swh:1:cnt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"/>
+          <swh:binding source="path/to/second_file.txt destination="swh:1:cnt:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"/>
+          <swh:binding source="path/to/dir/destination="swh:1:dir:ddddddddddddddddddddddddddddddddd"/>
 
         </swh:bindings>
         </swh:deposit>
