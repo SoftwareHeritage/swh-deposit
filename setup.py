@@ -34,8 +34,8 @@ setup(
     scripts=['bin/swh-deposit'],  # scripts to package
     install_requires=parse_requirements() + parse_requirements('swh'),
     test_requires=parse_requirements('test'),
-    extras_require={},
     setup_requires=['vcversioner'],
+    extras_require={'testing': parse_requirements('test')},
     vcversioner={},
     include_package_data=True,
 )
