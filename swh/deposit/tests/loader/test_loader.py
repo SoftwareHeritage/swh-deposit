@@ -7,7 +7,6 @@ import os
 import unittest
 import shutil
 
-from nose.tools import istest
 from nose.plugins.attrib import attr
 from rest_framework.test import APITestCase
 
@@ -206,8 +205,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         super().tearDown()
         shutil.rmtree(TEST_LOADER_CONFIG['extraction_dir'])
 
-    @istest
-    def inject_deposit_ready(self):
+    def test_inject_deposit_ready(self):
         """Load a deposit which is ready
 
         """
@@ -229,8 +227,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(len(self.loader.state['release']), 0)
         self.assertEquals(len(self.loader.state['snapshot']), 1)
 
-    @istest
-    def inject_deposit_verify_metadata(self):
+    def test_inject_deposit_verify_metadata(self):
         """Load a deposit with metadata, test metadata integrity
 
         """

@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -37,8 +36,7 @@ class DepositUpdateOrReplaceExistingDataTest(
         self.archive2 = create_arborescence_archive(
             self.root_path, 'archive2', 'file2', b'some other content in file')
 
-    @istest
-    def replace_archive_to_deposit_is_possible(self):
+    def test_replace_archive_to_deposit_is_possible(self):
         """Replace all archive with another one should return a 204 response
 
         """
@@ -96,8 +94,7 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit, type=self.deposit_request_types['metadata']))
         self.assertEquals(len(requests), 1)
 
-    @istest
-    def replace_metadata_to_deposit_is_possible(self):
+    def test_replace_metadata_to_deposit_is_possible(self):
         """Replace all metadata with another one should return a 204 response
 
         """
@@ -137,8 +134,7 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit, type=self.deposit_request_types['archive']))
         self.assertEquals(len(requests), 1)
 
-    @istest
-    def add_archive_to_deposit_is_possible(self):
+    def test_add_archive_to_deposit_is_possible(self):
         """Add another archive to a deposit return a 201 response
 
         """
@@ -191,8 +187,7 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit, type=self.deposit_request_types['metadata']))
         self.assertEquals(len(requests), 0)
 
-    @istest
-    def add_metadata_to_deposit_is_possible(self):
+    def test_add_metadata_to_deposit_is_possible(self):
         """Add metadata with another one should return a 204 response
 
         """
@@ -239,8 +234,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
     """Failure scenario about add/replace (post/put) query on deposit.
 
     """
-    @istest
-    def add_metadata_to_unknown_collection(self):
+    def test_add_metadata_to_unknown_collection(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
@@ -253,8 +247,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'Unknown collection name test')
 
-    @istest
-    def add_metadata_to_unknown_deposit(self):
+    def test_add_metadata_to_unknown_deposit(self):
         """Replacing metadata to unknown deposit should return a 404 response
 
         """
@@ -267,8 +260,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'Deposit with id 999 does not exist')
 
-    @istest
-    def replace_metadata_to_unknown_deposit(self):
+    def test_replace_metadata_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
@@ -281,8 +273,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'Deposit with id 998 does not exist')
 
-    @istest
-    def add_archive_to_unknown_deposit(self):
+    def test_add_archive_to_unknown_deposit(self):
         """Adding metadata to unknown deposit should return a 404 response
 
         """
@@ -295,8 +286,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'Deposit with id 997 does not exist')
 
-    @istest
-    def replace_archive_to_unknown_deposit(self):
+    def test_replace_archive_to_unknown_deposit(self):
         """Replacing archive to unknown deposit should return a 404 response
 
         """
@@ -309,8 +299,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'Deposit with id 996 does not exist')
 
-    @istest
-    def post_metadata_to_em_iri_failure(self):
+    def test_post_metadata_to_em_iri_failure(self):
         """Update (POST) archive with wrong content type should return 400
 
         """
@@ -325,8 +314,7 @@ class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
                          'Packaging format supported is restricted to '
                          'application/zip, application/x-tar')
 
-    @istest
-    def put_metadata_to_em_iri_failure(self):
+    def test_put_metadata_to_em_iri_failure(self):
         """Update (PUT) archive with wrong content type should return 400
 
         """

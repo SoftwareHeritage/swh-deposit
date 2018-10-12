@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -25,8 +24,7 @@ class CheckDepositListTest(APITestCase, WithAuthTestCase,
     def setUp(self):
         super().setUp()
 
-    @istest
-    def deposit_list(self):
+    def test_deposit_list(self):
         """Deposit list api should return the deposits
 
         """

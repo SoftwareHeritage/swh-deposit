@@ -5,7 +5,6 @@
 
 import unittest
 
-from nose.tools import istest
 
 from swh.deposit import utils
 
@@ -14,8 +13,7 @@ class UtilsTestCase(unittest.TestCase):
     """Utils library
 
     """
-    @istest
-    def merge(self):
+    def test_merge(self):
         """Calling utils.merge on dicts should merge without losing information
 
         """
@@ -59,8 +57,7 @@ class UtilsTestCase(unittest.TestCase):
         }
         self.assertEquals(actual_merge, expected_merge)
 
-    @istest
-    def merge_2(self):
+    def test_merge_2(self):
         d0 = {
             'license': 'gpl2',
             'runtime': {
@@ -86,8 +83,7 @@ class UtilsTestCase(unittest.TestCase):
         actual = utils.merge(d0, d1)
         self.assertEqual(actual, expected)
 
-    @istest
-    def merge_edge_cases(self):
+    def test_merge_edge_cases(self):
         input_dict = {
             'license': ['gpl2', 'gpl3'],
             'runtime': [
@@ -105,8 +101,7 @@ class UtilsTestCase(unittest.TestCase):
         actual = utils.merge(input_dict, input_dict, input_dict)
         self.assertEqual(input_dict, input_dict)
 
-    @istest
-    def merge_one_dict(self):
+    def test_merge_one_dict(self):
         """Merge one dict should result in the same dict value
 
         """
@@ -114,8 +109,7 @@ class UtilsTestCase(unittest.TestCase):
         actual = utils.merge(input_and_expected)
         self.assertEqual(actual, input_and_expected)
 
-    @istest
-    def merge_raise(self):
+    def test_merge_raise(self):
         """Calling utils.merge with any no dict argument should raise
 
         """

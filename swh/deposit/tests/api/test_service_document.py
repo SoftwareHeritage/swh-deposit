@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -17,8 +16,7 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
     """Service document endpoints are protected with basic authentication.
 
     """
-    @istest
-    def service_document_no_authentication_fails(self):
+    def test_service_document_no_authentication_fails(self):
         """Without authentication, service document endpoint should return 401
 
         """
@@ -28,8 +26,7 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @istest
-    def service_document_with_http_accept_should_not_break(self):
+    def test_service_document_with_http_accept_should_not_break(self):
         """Without auth, sd endpoint through browser should return 401
 
         """
@@ -79,8 +76,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
        self.username,
        self.username))  # noqa
 
-    @istest
-    def service_document(self):
+    def test_service_document(self):
         """With authentication, service document list user's collection
 
         """
@@ -92,8 +88,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
         # then
         self.assertResponseOk(response)
 
-    @istest
-    def service_document_with_http_accept_header(self):
+    def test_service_document_with_http_accept_header(self):
         """With authentication, with browser, sd list user's collection
 
         """

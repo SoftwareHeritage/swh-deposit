@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from nose.tools import istest
 from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit
@@ -31,8 +30,7 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         # 3. setup loader with no persistence and that client
         self.checker = DepositChecker(client=checker_client)
 
-    @istest
-    def check_deposit_ready(self):
+    def test_check_deposit_ready(self):
         """Check on a valid 'deposited' deposit should result in 'verified'
 
         """
@@ -51,8 +49,7 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
         self.assertEquals(actual_result, {'status': 'eventful'})
 
-    @istest
-    def check_deposit_rejected(self):
+    def test_check_deposit_rejected(self):
         """Check on invalid 'deposited' deposit should result in 'rejected'
 
         """

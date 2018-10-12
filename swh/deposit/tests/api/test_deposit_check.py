@@ -6,7 +6,6 @@
 import unittest
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from nose.plugins.attrib import attr
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -37,8 +36,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
     def setUp(self):
         super().setUp()
 
-    @istest
-    def deposit_ok(self):
+    def test_deposit_ok(self):
         """Proper deposit should succeed the checks (-> status ready)
 
         """
@@ -60,8 +58,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
 
-    @istest
-    def deposit_invalid_tarball(self):
+    def test_deposit_invalid_tarball(self):
         """Deposit with tarball (of 1 tarball) should fail the checks: rejected
 
         """
@@ -89,8 +86,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
             deposit = Deposit.objects.get(pk=deposit.id)
             self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
-    @istest
-    def deposit_ko_missing_tarball(self):
+    def test_deposit_ko_missing_tarball(self):
         """Deposit without archive should fail the checks: rejected
 
         """
@@ -114,8 +110,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
-    @istest
-    def deposit_ko_unsupported_tarball(self):
+    def test_deposit_ko_unsupported_tarball(self):
         """Deposit with an unsupported tarball should fail the checks: rejected
 
         """
@@ -152,8 +147,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
 
-    @istest
-    def check_deposit_metadata_ok(self):
+    def test_check_deposit_metadata_ok(self):
         """Proper deposit should succeed the checks (-> status ready)
            with all **MUST** metadata
 
@@ -180,8 +174,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
 
 
 class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
-    @istest
-    def check_metadata_ok(self):
+    def test_check_metadata_ok(self):
         actual_check, detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
@@ -192,8 +185,7 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         self.assertTrue(actual_check)
         self.assertIsNone(detail)
 
-    @istest
-    def check_metadata_ok2(self):
+    def test_check_metadata_ok2(self):
         actual_check, detail = self._check_metadata({
             'url': 'something',
             'external_identifier': 'something-else',
@@ -204,8 +196,7 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         self.assertTrue(actual_check)
         self.assertIsNone(detail)
 
-    @istest
-    def check_metadata_ko(self):
+    def test_check_metadata_ko(self):
         """Missing optional field should be caught
 
         """
@@ -224,8 +215,7 @@ class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
         self.assertFalse(actual_check)
         self.assertEqual(error_detail, expected_error)
 
-    @istest
-    def check_metadata_ko2(self):
+    def test_check_metadata_ko2(self):
         """Missing mandatory fields should be caught
 
         """

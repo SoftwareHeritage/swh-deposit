@@ -6,7 +6,6 @@
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -125,8 +124,7 @@ and other stuff</description>
 
 </entry>"""
 
-    @istest
-    def post_deposit_binary_without_slug_header_is_bad_request(self):
+    def test_post_deposit_binary_without_slug_header_is_bad_request(self):
         """Posting a binary deposit without slug header should return 400
 
         """
@@ -148,8 +146,7 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def post_deposit_binary_upload_final_and_status_check(self):
+    def test_post_deposit_binary_upload_final_and_status_check(self):
         """Binary upload with correct headers should return 201 with receipt
 
         """
@@ -205,8 +202,7 @@ and other stuff</description>
         self.assertEqual(response._headers['location'],
                          ('Location', 'http://testserver' + edit_se_iri))
 
-    @istest
-    def post_deposit_binary_upload_supports_zip_or_tar(self):
+    def test_post_deposit_binary_upload_supports_zip_or_tar(self):
         """Binary upload with content-type not in [zip,x-tar] should return 415
 
         """
@@ -235,8 +231,7 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    @istest
-    def post_deposit_binary_fails_if_unsupported_packaging_header(
+    def test_post_deposit_binary_fails_if_unsupported_packaging_header(
             self):
         """Bin deposit without supported content_disposition header returns 400
 
@@ -264,8 +259,7 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    @istest
-    def post_deposit_binary_upload_fail_if_no_content_disposition_header(
+    def test_post_deposit_binary_upload_fail_if_no_content_disposition_header(
             self):
         """Binary upload without content_disposition header should return 400
 
@@ -293,8 +287,7 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    @istest
-    def post_deposit_mediation_not_supported(self):
+    def test_post_deposit_mediation_not_supported(self):
         """Binary upload with mediation should return a 412 response
 
         """
@@ -324,8 +317,7 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    @istest
-    def post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
+    def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
             self):
         """Binary upload must not exceed the limit set up...
 
@@ -360,8 +352,7 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-    @istest
-    def post_deposit_2_post_2_different_deposits(self):
+    def test_post_deposit_2_post_2_different_deposits(self):
         """2 posting deposits should return 2 different 201 with receipt
 
         """
@@ -418,8 +409,7 @@ and other stuff</description>
         self.assertEqual(len(deposits), 2)
         self.assertEqual(list(deposits), [deposit, deposit2])
 
-    @istest
-    def post_deposit_binary_and_post_to_add_another_archive(self):
+    def test_post_deposit_binary_and_post_to_add_another_archive(self):
         """Updating a deposit should return a 201 with receipt
 
         """
@@ -509,8 +499,7 @@ and other stuff</description>
         deposits = Deposit.objects.all()
         self.assertEqual(len(deposits), 1)
 
-    @istest
-    def post_deposit_then_post_or_put_is_refused_when_status_ready(self):
+    def test_post_deposit_then_post_or_put_is_refused_when_status_ready(self):
         """Updating a deposit with status 'ready' should return a 400
 
         """

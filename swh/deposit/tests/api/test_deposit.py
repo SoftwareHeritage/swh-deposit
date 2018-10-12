@@ -7,7 +7,6 @@ import hashlib
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest, nottest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -25,8 +24,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
     """Deposit access are protected with basic authentication.
 
     """
-    @istest
-    def post_will_fail_with_401(self):
+    def test_post_will_fail_with_401(self):
         """Without authentication, endpoint refuses access with 401 response
 
         """
@@ -54,8 +52,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         _user.collections = [_collection2.id]
         self.collection2 = _collection2
 
-    @istest
-    def access_to_another_user_collection_is_forbidden(self):
+    def test_access_to_another_user_collection_is_forbidden(self):
         """Access to another user collection should return a 403
 
         """
@@ -67,8 +64,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
                          'Client hal cannot access collection %s' % (
                              self.collection2.name, ))
 
-    @istest
-    def delete_on_col_iri_not_supported(self):
+    def test_delete_on_col_iri_not_supported(self):
         """Delete on col iri should return a 405 response
 
         """
@@ -79,7 +75,6 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'DELETE method is not supported on this endpoint')
 
-    @nottest
     def create_deposit_with_rejection_status(self):
         url = reverse(COL_IRI, args=[self.collection.name])
 
@@ -105,8 +100,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         actual_state = response_content['deposit_status']
         self.assertEquals(actual_state, DEPOSIT_STATUS_REJECTED)
 
-    @istest
-    def act_on_deposit_rejected_is_not_permitted(self):
+    def test_act_on_deposit_rejected_is_not_permitted(self):
         deposit_id = self.create_deposit_with_status(DEPOSIT_STATUS_REJECTED)
 
         deposit = Deposit.objects.get(pk=deposit_id)
@@ -124,8 +118,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             "You can only act on deposit with status &#39;%s&#39;" % (
                 DEPOSIT_STATUS_PARTIAL, ))
 
-    @istest
-    def add_deposit_with_parent(self):
+    def test_add_deposit_with_parent(self):
         # given multiple deposit already loaded
         deposit_id = self.create_deposit_with_status(
             status=DEPOSIT_STATUS_LOAD_SUCCESS,

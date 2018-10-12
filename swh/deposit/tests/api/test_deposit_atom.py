@@ -5,7 +5,6 @@
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -251,8 +250,7 @@ and other stuff</description>
 </entry>
 """  # noqa
 
-    @istest
-    def post_deposit_atom_entry_serialization_error(self):
+    def test_post_deposit_atom_entry_serialization_error(self):
         """Posting an initial atom entry should return 201 with deposit receipt
 
         """
@@ -278,8 +276,7 @@ and other stuff</description>
         sw_version = dr.metadata.get('codemeta:softwareVersion')
         self.assertEquals(sw_version, '10.4')
 
-    @istest
-    def post_deposit_atom_empty_body_request(self):
+    def test_post_deposit_atom_empty_body_request(self):
         """Posting empty body request should return a 400 response
 
         """
@@ -289,8 +286,7 @@ and other stuff</description>
             data=self.atom_entry_data_empty_body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def post_deposit_atom_badly_formatted_is_a_bad_request(self):
+    def test_post_deposit_atom_badly_formatted_is_a_bad_request(self):
         """Posting a badly formatted atom should return a 400 response
 
         """
@@ -300,8 +296,7 @@ and other stuff</description>
             data=self.atom_entry_data_badly_formatted)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def post_deposit_atom_without_slug_header_is_bad_request(self):
+    def test_post_deposit_atom_without_slug_header_is_bad_request(self):
         """Posting an atom entry without a slug header should return a 400
 
         """
@@ -319,8 +314,7 @@ and other stuff</description>
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def post_deposit_atom_unknown_collection(self):
+    def test_post_deposit_atom_unknown_collection(self):
         """Posting an atom entry to an unknown collection should return a 404
 
         """
@@ -331,8 +325,7 @@ and other stuff</description>
             HTTP_SLUG='something')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @istest
-    def post_deposit_atom_entry_initial(self):
+    def test_post_deposit_atom_entry_initial(self):
         """Posting an initial atom entry should return 201 with deposit receipt
 
         """
@@ -371,8 +364,7 @@ and other stuff</description>
             deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
-    @istest
-    def post_deposit_atom_entry_with_codemeta(self):
+    def test_post_deposit_atom_entry_with_codemeta(self):
         """Posting an initial atom entry should return 201 with deposit receipt
 
         """
@@ -414,7 +406,6 @@ and other stuff</description>
 
         self.assertFalse(bool(deposit_request.archive))
 
-    @istest
     def test_post_deposit_atom_entry_tei(self):
         """Posting initial atom entry as TEI should return 201 with receipt
 
@@ -453,8 +444,7 @@ and other stuff</description>
             deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
-    @istest
-    def post_deposit_atom_entry_multiple_steps(self):
+    def test_post_deposit_atom_entry_multiple_steps(self):
         """After initial deposit, updating a deposit should return a 201
 
         """
