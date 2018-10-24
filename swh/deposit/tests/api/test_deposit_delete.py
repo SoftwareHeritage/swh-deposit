@@ -27,7 +27,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
-        self.assertEquals(len(deposit_requests), 2)
+        self.assertEqual(len(deposit_requests), 2)
         for dr in deposit_requests:
             if dr.type.name == ARCHIVE_KEY:
                 continue
@@ -46,9 +46,9 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = list(DepositRequest.objects.filter(deposit=deposit))
 
-        self.assertEquals(len(requests), 2)
-        self.assertEquals(requests[0].type.name, 'metadata')
-        self.assertEquals(requests[1].type.name, 'metadata')
+        self.assertEqual(len(requests), 2)
+        self.assertEqual(requests[0].type.name, 'metadata')
+        self.assertEqual(requests[1].type.name, 'metadata')
 
     def test_delete_archive_on_undefined_deposit_fails(self):
         """Delete undefined deposit returns a 404 response
@@ -64,7 +64,7 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         """Delete !partial status deposit should return a 400 response"""
         deposit_id = self.create_deposit_ready()
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_DEPOSITED)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
 
         # when
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
@@ -90,9 +90,9 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(response.status_code,
                          status.HTTP_204_NO_CONTENT)
         deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
-        self.assertEquals(deposit_requests, [])
+        self.assertEqual(deposit_requests, [])
         deposits = list(Deposit.objects.filter(pk=deposit_id))
-        self.assertEquals(deposits, [])
+        self.assertEqual(deposits, [])
 
     def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
         """Delete !partial deposit should return a 400 response

@@ -47,7 +47,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
             deposit = Deposit.objects.get(pk=self.deposit.id)
-            self.assertEquals(deposit.status, _status)
+            self.assertEqual(deposit.status, _status)
 
     def test_update_deposit_status_with_info(self):
         """Existing status for update with info should return a 204 response
@@ -80,12 +80,12 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         deposit = Deposit.objects.get(pk=self.deposit.id)
-        self.assertEquals(deposit.status, expected_status)
-        self.assertEquals(deposit.swh_id, expected_swh_id)
-        self.assertEquals(deposit.swh_id_context, expected_swh_id_context)
-        self.assertEquals(deposit.swh_anchor_id, expected_swh_anchor_id)
-        self.assertEquals(deposit.swh_anchor_id_context,
-                          expected_swh_anchor_id_context)
+        self.assertEqual(deposit.status, expected_status)
+        self.assertEqual(deposit.swh_id, expected_swh_id)
+        self.assertEqual(deposit.swh_id_context, expected_swh_id_context)
+        self.assertEqual(deposit.swh_anchor_id, expected_swh_anchor_id)
+        self.assertEqual(deposit.swh_anchor_id_context,
+                         expected_swh_anchor_id_context)
 
     def test_update_deposit_status_will_fail_with_unknown_status(self):
         """Unknown status for update should return a 400 response

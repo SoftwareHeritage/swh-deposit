@@ -167,7 +167,7 @@ class TestLoaderUtils(unittest.TestCase):
             rev_id = hashutil.hash_to_hex(rev['id'])
             directory_id = hashutil.hash_to_hex(rev['directory'])
 
-            self.assertEquals(expected_revisions[rev_id], directory_id)
+            self.assertEqual(expected_revisions[rev_id], directory_id)
 
 
 class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage,
@@ -221,11 +221,11 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                          deposit_update_url=deposit_update_url)
 
         # then
-        self.assertEquals(len(self.loader.state['content']), 1)
-        self.assertEquals(len(self.loader.state['directory']), 1)
-        self.assertEquals(len(self.loader.state['revision']), 1)
-        self.assertEquals(len(self.loader.state['release']), 0)
-        self.assertEquals(len(self.loader.state['snapshot']), 1)
+        self.assertEqual(len(self.loader.state['content']), 1)
+        self.assertEqual(len(self.loader.state['directory']), 1)
+        self.assertEqual(len(self.loader.state['revision']), 1)
+        self.assertEqual(len(self.loader.state['release']), 0)
+        self.assertEqual(len(self.loader.state['snapshot']), 1)
 
     def test_inject_deposit_verify_metadata(self):
         """Load a deposit with metadata, test metadata integrity
@@ -245,14 +245,14 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                          deposit_update_url=deposit_update_url)
 
         # then
-        self.assertEquals(len(self.loader.state['content']), 1)
-        self.assertEquals(len(self.loader.state['directory']), 1)
-        self.assertEquals(len(self.loader.state['revision']), 1)
-        self.assertEquals(len(self.loader.state['release']), 0)
-        self.assertEquals(len(self.loader.state['snapshot']), 1)
-        self.assertEquals(len(self.loader.state['origin_metadata']), 1)
-        self.assertEquals(len(self.loader.state['tool']), 1)
-        self.assertEquals(len(self.loader.state['provider']), 1)
+        self.assertEqual(len(self.loader.state['content']), 1)
+        self.assertEqual(len(self.loader.state['directory']), 1)
+        self.assertEqual(len(self.loader.state['revision']), 1)
+        self.assertEqual(len(self.loader.state['release']), 0)
+        self.assertEqual(len(self.loader.state['snapshot']), 1)
+        self.assertEqual(len(self.loader.state['origin_metadata']), 1)
+        self.assertEqual(len(self.loader.state['tool']), 1)
+        self.assertEqual(len(self.loader.state['provider']), 1)
 
         codemeta = 'codemeta:'
         origin_url = 'https://hal-test.archives-ouvertes.fr/hal-01243065'
@@ -289,17 +289,17 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
             codemeta + 'developmentStatus': 'stable'
         }
         result = self.loader.state['origin_metadata'][0]
-        self.assertEquals(result['metadata'], expected_origin_metadata)
-        self.assertEquals(result['tool_id'], TOOL_ID)
-        self.assertEquals(result['provider_id'], PROVIDER_ID)
+        self.assertEqual(result['metadata'], expected_origin_metadata)
+        self.assertEqual(result['tool_id'], TOOL_ID)
+        self.assertEqual(result['provider_id'], PROVIDER_ID)
 
         deposit = Deposit.objects.get(pk=self.deposit_id)
 
         self.assertRegex(deposit.swh_id, r'^swh:1:dir:.*')
-        self.assertEquals(deposit.swh_id_context, '%s;origin=%s' % (
+        self.assertEqual(deposit.swh_id_context, '%s;origin=%s' % (
             deposit.swh_id, origin_url
         ))
         self.assertRegex(deposit.swh_anchor_id, r'^swh:1:rev:.*')
-        self.assertEquals(deposit.swh_anchor_id_context, '%s;origin=%s' % (
+        self.assertEqual(deposit.swh_anchor_id_context, '%s;origin=%s' % (
             deposit.swh_anchor_id, origin_url
         ))

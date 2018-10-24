@@ -41,24 +41,24 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         r = self.client.get(url)
 
-        self.assertEquals(r.status_code, status.HTTP_200_OK)
-        self.assertEquals(r._headers['content-type'][1],
-                          'application/octet-stream')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r._headers['content-type'][1],
+                         'application/octet-stream')
 
         # read the stream
         data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
-        self.assertEquals(actual_sha1, self.archive['sha1sum'])
+        self.assertEqual(actual_sha1, self.archive['sha1sum'])
 
         # this does not touch the extraction dir so this should stay empty
-        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
+        self.assertEqual(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
     def _check_tarball_consistency(self, actual_sha1):
         tarball.uncompress(self.archive['path'], self.workdir)
-        self.assertEquals(os.listdir(self.workdir), ['file1'])
+        self.assertEqual(os.listdir(self.workdir), ['file1'])
         tarball.uncompress(self.archive2['path'], self.workdir)
         lst = set(os.listdir(self.workdir))
-        self.assertEquals(lst, {'file1', 'file2'})
+        self.assertEqual(lst, {'file1', 'file2'})
 
         new_path = self.workdir + '.zip'
         tarball.compress(new_path, 'zip', self.workdir)
@@ -80,9 +80,9 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         r = self.client.get(url)
 
-        self.assertEquals(r.status_code, status.HTTP_200_OK)
-        self.assertEquals(r._headers['content-type'][1],
-                          'application/octet-stream')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r._headers['content-type'][1],
+                         'application/octet-stream')
         # read the stream
         data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
@@ -90,7 +90,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         # this touches the extraction directory but should clean up
         # after itself
-        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
+        self.assertEqual(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
 
 class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,

@@ -43,7 +43,7 @@ class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
 class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
     def assertResponseOk(self, response):  # noqa: N802
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.content.decode('utf-8'),
+        self.assertEqual(response.content.decode('utf-8'),
                           '''<?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"

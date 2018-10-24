@@ -73,10 +73,10 @@ class CheckDepositListTest(APITestCase, WithAuthTestCase,
         self.assertIsNone(data['previous'])
         self.assertEqual(len(data['results']), 1)  # page of size 1
         deposit = data['results'][0]
-        self.assertEquals(deposit['id'], deposit_id)
-        self.assertEquals(deposit['status'], DEPOSIT_STATUS_PARTIAL)
+        self.assertEqual(deposit['id'], deposit_id)
+        self.assertEqual(deposit['status'], DEPOSIT_STATUS_PARTIAL)
         expected_status_detail = convert_status_detail(status_detail)
-        self.assertEquals(deposit['status_detail'], expected_status_detail)
+        self.assertEqual(deposit['status_detail'], expected_status_detail)
 
         # then 2nd page
         response2 = self.client.get(expected_next)
@@ -90,5 +90,5 @@ class CheckDepositListTest(APITestCase, WithAuthTestCase,
         self.assertTrue(data2['previous'].endswith(expected_previous))
         self.assertEqual(len(data2['results']), 1)  # page of size 1
         deposit2 = data2['results'][0]
-        self.assertEquals(deposit2['id'], deposit_id2)
-        self.assertEquals(deposit2['status'], DEPOSIT_STATUS_PARTIAL)
+        self.assertEqual(deposit2['id'], deposit_id2)
+        self.assertEqual(deposit2['status'], DEPOSIT_STATUS_PARTIAL)

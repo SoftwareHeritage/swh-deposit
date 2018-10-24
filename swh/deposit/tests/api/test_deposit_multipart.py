@@ -154,20 +154,20 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertIsNone(deposit.swh_id)
 
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEquals(len(deposit_requests), 2)
+        self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
-            self.assertEquals(deposit_request.deposit, deposit)
+            self.assertEqual(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
                 self.assertIsNone(deposit_request.raw_metadata)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
-                self.assertEquals(deposit_request.raw_metadata,
-                                  data_atom_entry.decode('utf-8'))
+                self.assertEqual(deposit_request.raw_metadata,
+                                 data_atom_entry.decode('utf-8'))
 
     def test_post_deposit_multipart_tar(self):
         """one multipart deposit (tar+xml) should be accepted
@@ -223,20 +223,20 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertIsNone(deposit.swh_id)
 
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEquals(len(deposit_requests), 2)
+        self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
-            self.assertEquals(deposit_request.deposit, deposit)
+            self.assertEqual(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
                 self.assertIsNone(deposit_request.raw_metadata)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
-                self.assertEquals(deposit_request.raw_metadata,
-                                  data_atom_entry.decode('utf-8'))
+                self.assertEqual(deposit_request.raw_metadata,
+                                 data_atom_entry.decode('utf-8'))
 
     def test_post_deposit_multipart_put_to_replace_metadata(self):
         """One multipart deposit followed by a metadata update should be
@@ -293,18 +293,18 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
 
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
-        self.assertEquals(len(deposit_requests), 2)
+        self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
-            self.assertEquals(deposit_request.deposit, deposit)
+            self.assertEqual(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:
-                self.assertEquals(
+                self.assertEqual(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a')
-                self.assertEquals(deposit_request.raw_metadata,
-                                  data_atom_entry.decode('utf-8'))
+                self.assertEqual(deposit_request.raw_metadata,
+                                 data_atom_entry.decode('utf-8'))
 
         replace_metadata_uri = response._headers['location'][1]
         response = self.client.put(
@@ -324,17 +324,17 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertIsNone(deposit.swh_id)
 
         deposit_requests = DepositRequest.objects.filter(deposit=deposit)
-        self.assertEquals(len(deposit_requests), 2)
+        self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
-            self.assertEquals(deposit_request.deposit, deposit)
+            self.assertEqual(deposit_request.deposit, deposit)
             if deposit_request.type.name == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:
-                self.assertEquals(
+                self.assertEqual(
                     deposit_request.metadata['id'],
                     'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa7b')
-                self.assertEquals(
+                self.assertEqual(
                     deposit_request.raw_metadata,
                     self.data_atom_entry_update_in_place)
 

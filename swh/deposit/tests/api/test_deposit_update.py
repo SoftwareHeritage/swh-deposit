@@ -86,13 +86,13 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit,
             type=self.deposit_request_types['archive'])
 
-        self.assertEquals(len(list(requests)), 1)
+        self.assertEqual(len(list(requests)), 1)
         self.assertRegex(requests[0].archive.name, self.archive2['name'])
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
-        self.assertEquals(len(requests), 1)
+        self.assertEqual(len(requests), 1)
 
     def test_replace_metadata_to_deposit_is_possible(self):
         """Replace all metadata with another one should return a 204 response
@@ -125,14 +125,14 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit,
             type=self.deposit_request_types['metadata'])
 
-        self.assertEquals(len(list(requests)), 1)
+        self.assertEqual(len(list(requests)), 1)
         metadata = requests[0].metadata
-        self.assertEquals(metadata['foobar'], 'bar')
+        self.assertEqual(metadata['foobar'], 'bar')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['archive']))
-        self.assertEquals(len(requests), 1)
+        self.assertEqual(len(requests), 1)
 
     def test_add_archive_to_deposit_is_possible(self):
         """Add another archive to a deposit return a 201 response
@@ -176,7 +176,7 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit,
             type=self.deposit_request_types['archive']).order_by('id'))
 
-        self.assertEquals(len(requests), 2)
+        self.assertEqual(len(requests), 2)
         # first archive still exists
         self.assertRegex(requests[0].archive.name, self.archive['name'])
         # a new one was added
@@ -185,7 +185,7 @@ class DepositUpdateOrReplaceExistingDataTest(
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['metadata']))
-        self.assertEquals(len(requests), 0)
+        self.assertEqual(len(requests), 0)
 
     def test_add_metadata_to_deposit_is_possible(self):
         """Add metadata with another one should return a 204 response
@@ -219,14 +219,14 @@ class DepositUpdateOrReplaceExistingDataTest(
             deposit=deposit,
             type=self.deposit_request_types['metadata']).order_by('id')
 
-        self.assertEquals(len(list(requests)), 3)
+        self.assertEqual(len(list(requests)), 3)
         # a new one was added
-        self.assertEquals(requests[1].metadata['foobar'], 'bar')
+        self.assertEqual(requests[1].metadata['foobar'], 'bar')
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
             deposit=deposit, type=self.deposit_request_types['archive']))
-        self.assertEquals(len(requests), 0)
+        self.assertEqual(len(requests), 0)
 
 
 class DepositUpdateFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,

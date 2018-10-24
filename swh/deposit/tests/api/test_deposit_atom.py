@@ -274,7 +274,7 @@ and other stuff</description>
 
         self.assertIsNotNone(dr.metadata)
         sw_version = dr.metadata.get('codemeta:softwareVersion')
-        self.assertEquals(sw_version, '10.4')
+        self.assertEqual(sw_version, '10.4')
 
     def test_post_deposit_atom_empty_body_request(self):
         """Posting empty body request should return a 400 response
@@ -360,7 +360,7 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
-        self.assertEquals(
+        self.assertEqual(
             deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
@@ -401,7 +401,7 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
-        self.assertEquals(
+        self.assertEqual(
             deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
 
         self.assertFalse(bool(deposit_request.archive))
@@ -440,7 +440,7 @@ and other stuff</description>
         # one associated request to a deposit
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertIsNotNone(deposit_request.metadata)
-        self.assertEquals(
+        self.assertEqual(
             deposit_request.raw_metadata, atom_entry_data.decode('utf-8'))
         self.assertFalse(bool(deposit_request.archive))
 
@@ -521,8 +521,8 @@ and other stuff</description>
 
         for i, deposit_request in enumerate(deposit_requests):
             actual_metadata = deposit_request.metadata
-            self.assertEquals(actual_metadata,
-                              expected_meta[i]['metadata'])
-            self.assertEquals(deposit_request.raw_metadata,
-                              expected_meta[i]['raw_metadata'])
+            self.assertEqual(actual_metadata,
+                             expected_meta[i]['metadata'])
+            self.assertEqual(deposit_request.raw_metadata,
+                             expected_meta[i]['raw_metadata'])
             self.assertFalse(bool(deposit_request.archive))

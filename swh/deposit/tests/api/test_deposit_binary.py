@@ -183,7 +183,7 @@ and other stuff</description>
         self.assertIsNone(deposit.swh_id)
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEqual(deposit_request.deposit, deposit)
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
         self.assertIsNone(deposit_request.metadata)
         self.assertIsNone(deposit_request.raw_metadata)
@@ -446,8 +446,8 @@ and other stuff</description>
         self.assertIsNone(deposit.swh_id)
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
-        self.assertEquals(deposit_request.type.name, 'archive')
+        self.assertEqual(deposit_request.deposit, deposit)
+        self.assertEqual(deposit_request.type.name, 'archive')
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
 
         # 2nd archive to upload
@@ -484,14 +484,14 @@ and other stuff</description>
                                 order_by('id'))
 
         # 2 deposit requests for the same deposit
-        self.assertEquals(len(deposit_requests), 2)
-        self.assertEquals(deposit_requests[0].deposit, deposit)
-        self.assertEquals(deposit_requests[0].type.name, 'archive')
+        self.assertEqual(len(deposit_requests), 2)
+        self.assertEqual(deposit_requests[0].deposit, deposit)
+        self.assertEqual(deposit_requests[0].type.name, 'archive')
         self.assertRegex(deposit_requests[0].archive.name,
                          self.archive['name'])
 
-        self.assertEquals(deposit_requests[1].deposit, deposit)
-        self.assertEquals(deposit_requests[1].type.name, 'archive')
+        self.assertEqual(deposit_requests[1].deposit, deposit)
+        self.assertEqual(deposit_requests[1].type.name, 'archive')
         self.assertRegex(deposit_requests[1].archive.name,
                          archive2['name'])
 
@@ -534,7 +534,7 @@ and other stuff</description>
         self.assertIsNone(deposit.swh_id)
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
-        self.assertEquals(deposit_request.deposit, deposit)
+        self.assertEqual(deposit_request.deposit, deposit)
         self.assertRegex(deposit_request.archive.name, 'filename0')
 
         # updating/adding is forbidden
@@ -564,7 +564,7 @@ and other stuff</description>
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         # adding file is no longer possible since the deposit's status
         # is ready
@@ -579,7 +579,7 @@ and other stuff</description>
             HTTP_IN_PROGRESS='false',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         # replacing metadata is no longer possible since the deposit's
         # status is ready
@@ -590,7 +590,7 @@ and other stuff</description>
             CONTENT_LENGTH=len(self.data_atom_entry_ok),
             HTTP_SLUG=external_id)
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         # adding new metadata is no longer possible since the
         # deposit's status is ready
@@ -601,7 +601,7 @@ and other stuff</description>
             CONTENT_LENGTH=len(self.data_atom_entry_ok),
             HTTP_SLUG=external_id)
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         archive_content = b'some content representing archive'
         archive = InMemoryUploadedFile(
@@ -630,7 +630,7 @@ and other stuff</description>
                 'atom_entry': atom_entry,
             })
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         # adding new metadata is no longer possible since the
         # deposit's status is ready
@@ -642,4 +642,4 @@ and other stuff</description>
                 'atom_entry': atom_entry,
             })
 
-        self.assertEquals(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)

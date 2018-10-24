@@ -72,9 +72,9 @@ class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
         with open(archive_path, 'rb') as f:
             actual_content = f.read()
 
-        self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(actual_content, b''.join(stream_content))
+        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
+        self.assertEqual(_client.kwargs, {
             'stream': True
         })
 
@@ -103,9 +103,9 @@ class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
         with open(archive_path, 'rb') as f:
             actual_content = f.read()
 
-        self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(actual_content, b''.join(stream_content))
+        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
+        self.assertEqual(_client.kwargs, {
             'stream': True,
             'auth': ('user', 'pass')
         })
@@ -153,7 +153,7 @@ class PrivateApiDepositClientReadMetadataTest(unittest.TestCase):
 
         actual_metadata = deposit_client.metadata_get('/metadata')
 
-        self.assertEquals(actual_metadata, expected_response)
+        self.assertEqual(actual_metadata, expected_response)
 
     def test_metadata_get_can_fail(self):
         """Reading metadata can fail for some reasons
@@ -193,9 +193,9 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
                                      DEPOSIT_STATUS_LOAD_SUCCESS,
                                      revision_id='some-revision-id')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/update/status', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/update/status', ))
+        self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_SUCCESS,
                 'revision_id': 'some-revision-id',
@@ -213,9 +213,9 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
         deposit_client.status_update('/update/status/fail',
                                      DEPOSIT_STATUS_LOAD_FAILURE)
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/update/status/fail', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/update/status/fail', ))
+        self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_FAILURE,
             }
@@ -234,10 +234,10 @@ class PrivateApiDepositClientCheckTest(unittest.TestCase):
 
         r = deposit_client.check('/check')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/check', ))
-        self.assertEquals(_client.kwargs, {})
-        self.assertEquals(r, 'something')
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/check', ))
+        self.assertEqual(_client.kwargs, {})
+        self.assertEqual(r, 'something')
 
     def test_check_fails(self):
         """Checking deposit can fail for some reason
@@ -253,6 +253,6 @@ class PrivateApiDepositClientCheckTest(unittest.TestCase):
                 'Problem when checking deposit'):
             deposit_client.check('/check/fails')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/check/fails', ))
-        self.assertEquals(_client.kwargs, {})
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/check/fails', ))
+        self.assertEqual(_client.kwargs, {})

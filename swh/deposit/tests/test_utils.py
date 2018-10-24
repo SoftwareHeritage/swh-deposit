@@ -55,7 +55,7 @@ class UtilsTestCase(unittest.TestCase):
                 '2': '3',
             }
         }
-        self.assertEquals(actual_merge, expected_merge)
+        self.assertEqual(actual_merge, expected_merge)
 
     def test_merge_2(self):
         d0 = {
@@ -129,4 +129,4 @@ class UtilsTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             utils.merge(d1)
 
-        self.assertEquals(utils.merge(d0), d0)
+        self.assertEqual(utils.merge(d0), d0)

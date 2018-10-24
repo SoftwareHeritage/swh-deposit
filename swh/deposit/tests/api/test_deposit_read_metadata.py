@@ -36,8 +36,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK)
-        self.assertEquals(response._headers['content-type'][1],
-                          'application/json')
+        self.assertEqual(response._headers['content-type'][1],
+                         'application/json')
         data = response.json()
 
         expected_meta = {
@@ -87,7 +87,7 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             'branch_name': 'master',
         }
 
-        self.assertEquals(data, expected_meta)
+        self.assertEqual(data, expected_meta)
 
     def test_read_metadata_revision_with_parent(self):
         """Private read metadata to a deposit (with parent) returns metadata
@@ -101,18 +101,18 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
             swh_id=swh_persistent_id)
 
         deposit_parent = Deposit.objects.get(pk=deposit_id1)
-        self.assertEquals(deposit_parent.swh_id, swh_persistent_id)
-        self.assertEquals(deposit_parent.external_id, 'some-external-id')
-        self.assertEquals(deposit_parent.status, DEPOSIT_STATUS_LOAD_SUCCESS)
+        self.assertEqual(deposit_parent.swh_id, swh_persistent_id)
+        self.assertEqual(deposit_parent.external_id, 'some-external-id')
+        self.assertEqual(deposit_parent.status, DEPOSIT_STATUS_LOAD_SUCCESS)
 
         deposit_id = self.create_deposit_partial(
             external_id='some-external-id')
 
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.external_id, 'some-external-id')
-        self.assertEquals(deposit.swh_id, None)
-        self.assertEquals(deposit.parent, deposit_parent)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_PARTIAL)
+        self.assertEqual(deposit.external_id, 'some-external-id')
+        self.assertEqual(deposit.swh_id, None)
+        self.assertEqual(deposit.parent, deposit_parent)
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_PARTIAL)
 
         url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
                       args=[self.collection.name, deposit_id])
@@ -121,8 +121,8 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK)
-        self.assertEquals(response._headers['content-type'][1],
-                          'application/json')
+        self.assertEqual(response._headers['content-type'][1],
+                         'application/json')
         data = response.json()
 
         expected_meta = {

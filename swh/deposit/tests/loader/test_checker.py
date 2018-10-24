@@ -46,8 +46,8 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
         actual_result = self.checker.check(deposit_check_url=deposit_check_url)
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_VERIFIED)
-        self.assertEquals(actual_result, {'status': 'eventful'})
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_VERIFIED)
+        self.assertEqual(actual_result, {'status': 'eventful'})
 
     def test_check_deposit_rejected(self):
         """Check on invalid 'deposited' deposit should result in 'rejected'
@@ -64,5 +64,5 @@ class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
 
         # then
         deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEquals(deposit.status, DEPOSIT_STATUS_REJECTED)
-        self.assertEquals(actual_result, {'status': 'eventful'})
+        self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)
+        self.assertEqual(actual_result, {'status': 'eventful'})
