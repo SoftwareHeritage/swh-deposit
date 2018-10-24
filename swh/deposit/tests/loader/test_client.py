@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import unittest
 
-from nose.plugins.attrib import attr
+import pytest
 
 from swh.deposit.client import PrivateApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
@@ -41,7 +41,7 @@ class FakeRequestClientGet:
         return self.response
 
 
-@attr('fs')
+@pytest.mark.fs
 class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
     def setUp(self):
         super().setUp()

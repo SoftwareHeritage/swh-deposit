@@ -7,7 +7,7 @@ import os
 import unittest
 import shutil
 
-from nose.plugins.attrib import attr
+import pytest
 from rest_framework.test import APITestCase
 
 from swh.model import hashutil
@@ -182,7 +182,7 @@ class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage,
     pass
 
 
-@attr('fs')
+@pytest.mark.fs
 class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                                 BasicTestCase, CommonCreationRoutine,
                                 FileSystemCreationRoutine, TestLoaderUtils):

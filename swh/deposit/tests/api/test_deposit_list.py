@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 from django.core.urlresolvers import reverse
-from nose.plugins.attrib import attr
+import pytest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -15,7 +15,7 @@ from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ...models import Deposit
 
 
-@attr('fs')
+@pytest.mark.fs
 class CheckDepositListTest(APITestCase, WithAuthTestCase,
                            BasicTestCase, CommonCreationRoutine):
     """Check deposit list endpoints.
