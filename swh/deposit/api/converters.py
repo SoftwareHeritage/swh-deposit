@@ -5,11 +5,11 @@
 
 
 def convert_status_detail(status_detail):
-    """Given a status_detail dict, transforms it into a human readable
-       string.
+    """Given a status_detail dict, transforms it into a human readable string.
 
-    Dict has the following form (all first level keys are optional):
-    {
+    Dict has the following form (all first level keys are optional)::
+
+      {
         'url': {
             'summary': "summary-string",
             'fields': [impacted-fields-list]
@@ -22,7 +22,7 @@ def convert_status_detail(status_detail):
             'summary': "summary-string",
             'fields': [impacted-fields-list],
         }]
-    }
+      }
 
     Args:
         status_detail (dict): The status detail dict with the syntax
