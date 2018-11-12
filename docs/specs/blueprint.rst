@@ -40,7 +40,7 @@ Schema representation
 
    <!-- {F2884278} -->
 
-.. figure:: /images/deposit-create-chart.png
+.. figure:: ../images/deposit-create-chart.png
    :alt:
 
 
@@ -67,7 +67,7 @@ Schema representation
 
    <!-- {F2884302} -->
 
-.. figure:: /images/deposit-update-chart.png
+.. figure:: ../images/deposit-update-chart.png
    :alt:
 
 Deleting deposit (or associated archive, or associated metadata)
@@ -86,7 +86,7 @@ Schema representation
 
    <!-- {F2884311} -->
 
-.. figure:: /images/deposit-delete-chart.png
+.. figure:: ../images/deposit-delete-chart.png
    :alt:
 
 Client asks for operation status
