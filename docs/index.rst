@@ -10,17 +10,18 @@ Push-based deposit of software source code artifacts to the archive.
    :maxdepth: 2
    :caption: Contents:
 
-   getting-started.rst
-   spec-api.rst
-   metadata.rst
-   dev-info.rst
-   sys-info.rst
-   specs/specs.rst
+   getting-started
+   spec-api
+   metadata
+   dev-info
+   sys-info
+   specs/specs
 
 
-Indices and tables
-==================
+Reference Documentation
+-----------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+
+   /apidoc/swh.deposit
