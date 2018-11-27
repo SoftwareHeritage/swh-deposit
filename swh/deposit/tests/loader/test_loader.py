@@ -17,6 +17,7 @@ from swh.deposit.config import (
     PRIVATE_GET_RAW_CONTENT, PRIVATE_GET_DEPOSIT_METADATA, PRIVATE_PUT_DEPOSIT
 )
 from django.core.urlresolvers import reverse
+from swh.loader.core.tests import BaseLoaderStorageTest
 
 
 from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
@@ -24,130 +25,6 @@ from .. import TEST_LOADER_CONFIG
 from ..common import (BasicTestCase, WithAuthTestCase,
                       CommonCreationRoutine,
                       FileSystemCreationRoutine)
-
-
-TOOL_ID = 99
-PROVIDER_ID = 12
-
-
-class DepositLoaderInhibitsStorage:
-    """Mixin class to inhibit the persistence and keep in memory the data
-    sent for storage.
-
-    cf. SWHDepositLoaderNoStorage
-
-    """
-    def __init__(self, client=None):
-        # client is not used here, transit it nonetheless to other mixins
-        super().__init__(client=client)
-        # typed data
-        self.state = {
-            'origin': [],
-            'origin_visit': [],
-            'origin_metadata': [],
-            'content': [],
-            'directory': [],
-            'revision': [],
-            'release': [],
-            'snapshot': [],
-            'tool': [],
-            'provider': []
-        }
-
-    def _add(self, type, l):
-        """Add without duplicates and keeping the insertion order.
-
-        Args:
-            type (str): Type of objects concerned by the action
-            l ([object]): List of 'type' object
-
-        """
-        col = self.state[type]
-        for o in l:
-            if o in col:
-                continue
-            col.extend([o])
-
-    def send_origin(self, origin):
-        origin.update({'id': 1})
-        self._add('origin', [origin])
-        return origin['id']
-
-    def send_origin_visit(self, origin_id, visit_date):
-        origin_visit = {
-            'origin': origin_id,
-            'visit_date': visit_date,
-            'visit': 1,
-        }
-        self._add('origin_visit', [origin_visit])
-        return origin_visit
-
-    def send_origin_metadata(self, origin_id, visit_date, provider_id, tool_id,
-                             metadata):
-        origin_metadata = {
-            'origin_id': origin_id,
-            'visit_date': visit_date,
-            'provider_id': provider_id,
-            'tool_id': tool_id,
-            'metadata': metadata
-        }
-        self._add('origin_metadata', [origin_metadata])
-        return origin_metadata
-
-    def send_tool(self, tool):
-        tool = {
-            'tool_name': tool['tool_name'],
-            'tool_version': tool['tool_version'],
-            'tool_configuration': tool['tool_configuration']
-        }
-        self._add('tool', [tool])
-        tool_id = TOOL_ID
-        return tool_id
-
-    def send_provider(self, provider):
-        provider = {
-            'provider_name': provider['provider_name'],
-            'provider_type': provider['provider_type'],
-            'provider_url': provider['provider_url'],
-            'metadata': provider['metadata']
-        }
-        self._add('provider', [provider])
-        provider_id = PROVIDER_ID
-        return provider_id
-
-    def maybe_load_contents(self, contents):
-        self._add('content', contents)
-
-    def maybe_load_directories(self, directories):
-        self._add('directory', directories)
-
-    def maybe_load_revisions(self, revisions):
-        self._add('revision', revisions)
-
-    def maybe_load_releases(self, releases):
-        self._add('release', releases)
-
-    def maybe_load_snapshot(self, snapshot):
-        self._add('snapshot', [snapshot])
-
-    def open_fetch_history(self):
-        pass
-
-    def close_fetch_history_failure(self, fetch_history_id):
-        pass
-
-    def close_fetch_history_success(self, fetch_history_id):
-        pass
-
-    def update_origin_visit(self, origin_id, visit, status):
-        self.status = status
-
-    # Override to do nothing at the end
-    def close_failure(self):
-        pass
-
-    def close_success(self):
-        pass
 
 
 class TestLoaderUtils(unittest.TestCase):
@@ -170,22 +47,11 @@ class TestLoaderUtils(unittest.TestCase):
             self.assertEqual(expected_revisions[rev_id], directory_id)
 
 
-class SWHDepositLoaderNoStorage(DepositLoaderInhibitsStorage,
-                                loader.DepositLoader):
-    """Loader to test.
-
-       It inherits from the actual deposit loader to actually test its
-       correct behavior.  It also inherits from
-       DepositLoaderInhibitsStorage so that no persistence takes place.
-
-    """
-    pass
-
-
 @pytest.mark.fs
 class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                                 BasicTestCase, CommonCreationRoutine,
-                                FileSystemCreationRoutine, TestLoaderUtils):
+                                FileSystemCreationRoutine, TestLoaderUtils,
+                                BaseLoaderStorageTest):
 
     def setUp(self):
         super().setUp()
@@ -198,8 +64,10 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         # 2. Sets a basic client which accesses the test data
         loader_client = SWHDepositTestClient(self.client,
                                              config=CLIENT_TEST_CONFIG)
-        # 3. setup loader with no persistence and that client
-        self.loader = SWHDepositLoaderNoStorage(client=loader_client)
+        # 3. setup loader with that client
+        self.loader = loader.DepositLoader(client=loader_client)
+
+        self.storage = self.loader.storage
 
     def tearDown(self):
         super().tearDown()
@@ -216,16 +84,17 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         deposit_update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
 
         # when
-        self.loader.load(archive_url=archive_url,
-                         deposit_meta_url=deposit_meta_url,
-                         deposit_update_url=deposit_update_url)
+        res = self.loader.load(archive_url=archive_url,
+                               deposit_meta_url=deposit_meta_url,
+                               deposit_update_url=deposit_update_url)
 
         # then
-        self.assertEqual(len(self.loader.state['content']), 1)
-        self.assertEqual(len(self.loader.state['directory']), 1)
-        self.assertEqual(len(self.loader.state['revision']), 1)
-        self.assertEqual(len(self.loader.state['release']), 0)
-        self.assertEqual(len(self.loader.state['snapshot']), 1)
+        self.assertEqual(res['status'], 'eventful', res)
+        self.assertCountContents(1)
+        self.assertCountDirectories(1)
+        self.assertCountRevisions(1)
+        self.assertCountReleases(0)
+        self.assertCountSnapshots(1)
 
     def test_inject_deposit_verify_metadata(self):
         """Load a deposit with metadata, test metadata integrity
@@ -245,14 +114,11 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                          deposit_update_url=deposit_update_url)
 
         # then
-        self.assertEqual(len(self.loader.state['content']), 1)
-        self.assertEqual(len(self.loader.state['directory']), 1)
-        self.assertEqual(len(self.loader.state['revision']), 1)
-        self.assertEqual(len(self.loader.state['release']), 0)
-        self.assertEqual(len(self.loader.state['snapshot']), 1)
-        self.assertEqual(len(self.loader.state['origin_metadata']), 1)
-        self.assertEqual(len(self.loader.state['tool']), 1)
-        self.assertEqual(len(self.loader.state['provider']), 1)
+        self.assertCountContents(1)
+        self.assertCountDirectories(1)
+        self.assertCountRevisions(1)
+        self.assertCountReleases(0)
+        self.assertCountSnapshots(1)
 
         codemeta = 'codemeta:'
         origin_url = 'https://hal-test.archives-ouvertes.fr/hal-01243065'
@@ -288,10 +154,8 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
             codemeta + 'keywords': 'DSP programming,Web',
             codemeta + 'developmentStatus': 'stable'
         }
-        result = self.loader.state['origin_metadata'][0]
-        self.assertEqual(result['metadata'], expected_origin_metadata)
-        self.assertEqual(result['tool_id'], TOOL_ID)
-        self.assertEqual(result['provider_id'], PROVIDER_ID)
+        self.assertOriginMetadataContains('deposit', origin_url,
+                                          expected_origin_metadata)
 
         deposit = Deposit.objects.get(pk=self.deposit_id)
 
