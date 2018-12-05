@@ -6,7 +6,7 @@
 from swh.deposit.config import setup_django_for
 from swh.deposit.config import SWHDefaultConfig  # noqa
 
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 
 
 TEST_CONFIG = {
@@ -66,6 +66,6 @@ def parse_loader_config_file(base_filename=None, config_filename=None,
 # the default configuration without side-effect, i.e do not load the
 # configuration from disk
 SWHDefaultConfig.parse_config_file = parse_deposit_config_file
-SWHLoader.parse_config_file = parse_loader_config_file
+BufferedLoader.parse_config_file = parse_loader_config_file
 
 setup_django_for('testing')

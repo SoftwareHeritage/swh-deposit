@@ -8,7 +8,7 @@ import tempfile
 
 from swh.model import hashutil
 from swh.loader.tar import loader
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 
 from ..client import PrivateApiDepositClient
 
@@ -41,7 +41,7 @@ class DepositLoader(loader.TarLoader):
         self.client = client if client else PrivateApiDepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
-        return SWHLoader.load(
+        return BufferedLoader.load(
             self,
             archive_url=archive_url,
             deposit_meta_url=deposit_meta_url,
