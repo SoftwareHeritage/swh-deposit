@@ -4,7 +4,8 @@
 # See top-level LICENSE file for more information
 
 from swh.scheduler.task import Task
-from swh.deposit.loader import loader, checker
+from swh.deposit.loader.loader import DepositLoader
+from swh.deposit.loader.checker import DepositChecker
 
 
 class LoadDepositArchiveTsk(Task):
@@ -26,7 +27,7 @@ class LoadDepositArchiveTsk(Task):
         Args: see :func:`DepositLoader.load`.
 
         """
-        _loader = loader.DepositLoader()
+        _loader = DepositLoader()
         _loader.log = self.log
         return _loader.load(archive_url=archive_url,
                             deposit_meta_url=deposit_meta_url,
@@ -45,6 +46,6 @@ class ChecksDepositTsk(Task):
         Args: see :func:`DepositChecker.check`.
 
         """
-        _checker = checker.DepositChecker()
+        _checker = DepositChecker()
         _checker.log = self.log
         return _checker.check(deposit_check_url)
