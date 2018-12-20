@@ -13,7 +13,7 @@ from swh.loader.core.loader import BufferedLoader
 from ..client import PrivateApiDepositClient
 
 
-class DepositLoader(loader.TarLoader):
+class DepositLoader(loader.LegacyLocalTarLoader):
     """Deposit loader implementation.
 
     This is a subclass of the :class:TarLoader as the main goal of
