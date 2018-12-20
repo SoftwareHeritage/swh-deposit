@@ -37,6 +37,8 @@ def parse_deposit_config_file(base_filename=None, config_filename=None,
 
 TEST_LOADER_CONFIG = {
     'extraction_dir': '/tmp/swh-loader-tar/test/',
+    'working_dir': '/tmp/swh-loader-tar/test/working-dir',
+    'debug': False,
     'storage': {
         'cls': 'memory',
         'args': {
