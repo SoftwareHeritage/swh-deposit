@@ -3,48 +3,39 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import unittest
 from unittest.mock import patch
 
-from swh.deposit.loader.tasks import LoadDepositArchiveTsk, ChecksDepositTsk
+
+@patch('swh.deposit.loader.loader.DepositLoader.load')
+def test_deposit_load(mock_loader, swh_app, celery_session_worker):
+    mock_loader.return_value = {'status': 'eventful'}
+
+    res = swh_app.send_task(
+        'swh.deposit.loader.tasks.LoadDepositArchiveTsk',
+        kwargs=dict(archive_url='archive_url',
+                    deposit_meta_url='deposit_meta_url',
+                    deposit_update_url='deposit_update_url'))
+    assert res
+    res.wait()
+    assert res.successful()
+
+    assert res.result == {'status': 'eventful'}
+    mock_loader.assert_called_once_with(
+        archive_url='archive_url',
+        deposit_meta_url='deposit_meta_url',
+        deposit_update_url='deposit_update_url')
 
 
-class TestTasks(unittest.TestCase):
-    def test_check_task_name(self):
-        task = LoadDepositArchiveTsk()
-        self.assertEqual(task.task_queue, 'swh_loader_deposit')
+@patch('swh.deposit.loader.checker.DepositChecker.check')
+def test_check_deposit(mock_checker, swh_app, celery_session_worker):
+    mock_checker.return_value = {'status': 'uneventful'}
 
-    @patch('swh.deposit.loader.loader.DepositLoader.load')
-    def test_task(self, mock_loader):
-        mock_loader.return_value = {'status': 'eventful'}
-        task = LoadDepositArchiveTsk()
+    res = swh_app.send_task(
+        'swh.deposit.loader.tasks.ChecksDepositTsk',
+        args=('check_deposit_url',))
+    assert res
+    res.wait()
+    assert res.successful()
 
-        # given
-        actual_result = task.run_task(
-            archive_url='archive_url',
-            deposit_meta_url='deposit_meta_url',
-            deposit_update_url='deposit_update_url')
-
-        self.assertEqual(actual_result, {'status': 'eventful'})
-
-        mock_loader.assert_called_once_with(
-            archive_url='archive_url',
-            deposit_meta_url='deposit_meta_url',
-            deposit_update_url='deposit_update_url')
-
-
-class TestTasks2(unittest.TestCase):
-    def test_check_task_name(self):
-        task = ChecksDepositTsk()
-        self.assertEqual(task.task_queue, 'swh_checker_deposit')
-
-    @patch('swh.deposit.loader.checker.DepositChecker.check')
-    def test_task(self, mock_checker):
-        mock_checker.return_value = {'status': 'uneventful'}
-        task = ChecksDepositTsk()
-
-        # given
-        actual_result = task.run_task('check_deposit_url')
-        self.assertEqual(actual_result, {'status': 'uneventful'})
-
-        mock_checker.assert_called_once_with('check_deposit_url')
+    assert res.result == {'status': 'uneventful'}
+    mock_checker.assert_called_once_with('check_deposit_url')
