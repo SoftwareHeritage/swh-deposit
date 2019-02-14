@@ -8,12 +8,12 @@ import tempfile
 
 from swh.model import hashutil
 from swh.loader.tar import loader
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 
 from ..client import PrivateApiDepositClient
 
 
-class DepositLoader(loader.TarLoader):
+class DepositLoader(loader.LegacyLocalTarLoader):
     """Deposit loader implementation.
 
     This is a subclass of the :class:TarLoader as the main goal of
@@ -38,17 +38,17 @@ class DepositLoader(loader.TarLoader):
     def __init__(self, client=None):
         super().__init__(
             logging_class='swh.deposit.loader.loader.DepositLoader')
-        self.client = client if client else PrivateApiDepositClient()
+        self.deposit_client = client if client else PrivateApiDepositClient()
 
     def load(self, *, archive_url, deposit_meta_url, deposit_update_url):
-        return SWHLoader.load(
+        return BufferedLoader.load(
             self,
             archive_url=archive_url,
             deposit_meta_url=deposit_meta_url,
             deposit_update_url=deposit_update_url)
 
     def prepare_origin_visit(self, *, deposit_meta_url, **kwargs):
-        self.metadata = self.client.metadata_get(
+        self.metadata = self.deposit_client.metadata_get(
             deposit_meta_url, log=self.log)
         self.origin = self.metadata['origin']
         self.visit_date = None
@@ -59,12 +59,12 @@ class DepositLoader(loader.TarLoader):
 
         """
         self.deposit_update_url = deposit_update_url
-        self.client.status_update(deposit_update_url, 'loading')
+        self.deposit_client.status_update(deposit_update_url, 'loading')
 
         temporary_directory = tempfile.TemporaryDirectory()
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
-        archive = self.client.archive_get(
+        archive = self.deposit_client.archive_get(
             archive_url, archive_path, log=self.log)
 
         metadata = self.metadata
@@ -106,8 +106,8 @@ class DepositLoader(loader.TarLoader):
         """
         try:
             if not success:
-                self.client.status_update(self.deposit_update_url,
-                                          status='failed')
+                self.deposit_client.status_update(self.deposit_update_url,
+                                                  status='failed')
                 return
 
             revisions = self.objects['revision']
@@ -123,7 +123,7 @@ class DepositLoader(loader.TarLoader):
 
             # update the deposit's status to success with its
             # revision-id and directory-id
-            self.client.status_update(
+            self.deposit_client.status_update(
                 self.deposit_update_url,
                 status='done',
                 revision_id=rev_id,

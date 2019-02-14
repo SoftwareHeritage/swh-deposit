@@ -7,7 +7,6 @@ import hashlib
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest, nottest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -25,8 +24,7 @@ class DepositNoAuthCase(APITestCase, BasicTestCase):
     """Deposit access are protected with basic authentication.
 
     """
-    @istest
-    def post_will_fail_with_401(self):
+    def test_post_will_fail_with_401(self):
         """Without authentication, endpoint refuses access with 401 response
 
         """
@@ -54,8 +52,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         _user.collections = [_collection2.id]
         self.collection2 = _collection2
 
-    @istest
-    def access_to_another_user_collection_is_forbidden(self):
+    def test_access_to_another_user_collection_is_forbidden(self):
         """Access to another user collection should return a 403
 
         """
@@ -67,8 +64,7 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
                          'Client hal cannot access collection %s' % (
                              self.collection2.name, ))
 
-    @istest
-    def delete_on_col_iri_not_supported(self):
+    def test_delete_on_col_iri_not_supported(self):
         """Delete on col iri should return a 405 response
 
         """
@@ -79,7 +75,6 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertRegex(response.content.decode('utf-8'),
                          'DELETE method is not supported on this endpoint')
 
-    @nottest
     def create_deposit_with_rejection_status(self):
         url = reverse(COL_IRI, args=[self.collection.name])
 
@@ -100,13 +95,12 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
             HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_content = parse_xml(BytesIO(response.content))
         actual_state = response_content['deposit_status']
-        self.assertEquals(actual_state, DEPOSIT_STATUS_REJECTED)
+        self.assertEqual(actual_state, DEPOSIT_STATUS_REJECTED)
 
-    @istest
-    def act_on_deposit_rejected_is_not_permitted(self):
+    def test_act_on_deposit_rejected_is_not_permitted(self):
         deposit_id = self.create_deposit_with_status(DEPOSIT_STATUS_REJECTED)
 
         deposit = Deposit.objects.get(pk=deposit_id)
@@ -118,14 +112,13 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
             data=self.atom_entry_data1,
             HTTP_SLUG='external-id')
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRegex(
             response.content.decode('utf-8'),
             "You can only act on deposit with status &#39;%s&#39;" % (
                 DEPOSIT_STATUS_PARTIAL, ))
 
-    @istest
-    def add_deposit_with_parent(self):
+    def test_add_deposit_with_parent(self):
         # given multiple deposit already loaded
         deposit_id = self.create_deposit_with_status(
             status=DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -133,8 +126,8 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         deposit1 = Deposit.objects.get(pk=deposit_id)
         self.assertIsNotNone(deposit1)
-        self.assertEquals(deposit1.external_id, 'some-external-id')
-        self.assertEquals(deposit1.status, DEPOSIT_STATUS_LOAD_SUCCESS)
+        self.assertEqual(deposit1.external_id, 'some-external-id')
+        self.assertEqual(deposit1.status, DEPOSIT_STATUS_LOAD_SUCCESS)
 
         deposit_id2 = self.create_deposit_with_status(
             status=DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -142,8 +135,8 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         deposit2 = Deposit.objects.get(pk=deposit_id2)
         self.assertIsNotNone(deposit2)
-        self.assertEquals(deposit2.external_id, 'some-external-id')
-        self.assertEquals(deposit2.status, DEPOSIT_STATUS_LOAD_SUCCESS)
+        self.assertEqual(deposit2.external_id, 'some-external-id')
+        self.assertEqual(deposit2.status, DEPOSIT_STATUS_LOAD_SUCCESS)
 
         deposit_id3 = self.create_deposit_with_status(
             status=DEPOSIT_STATUS_LOAD_FAILURE,
@@ -151,8 +144,8 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         deposit3 = Deposit.objects.get(pk=deposit_id3)
         self.assertIsNotNone(deposit3)
-        self.assertEquals(deposit3.external_id, 'some-external-id')
-        self.assertEquals(deposit3.status, DEPOSIT_STATUS_LOAD_FAILURE)
+        self.assertEqual(deposit3.external_id, 'some-external-id')
+        self.assertEqual(deposit3.status, DEPOSIT_STATUS_LOAD_FAILURE)
 
         # when
         deposit_id3 = self.create_simple_deposit_partial(
@@ -162,6 +155,6 @@ class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
         deposit4 = Deposit.objects.get(pk=deposit_id3)
 
         self.assertIsNotNone(deposit4)
-        self.assertEquals(deposit4.external_id, 'some-external-id')
-        self.assertEquals(deposit4.status, DEPOSIT_STATUS_PARTIAL)
-        self.assertEquals(deposit4.parent, deposit2)
+        self.assertEqual(deposit4.external_id, 'some-external-id')
+        self.assertEqual(deposit4.status, DEPOSIT_STATUS_PARTIAL)
+        self.assertEqual(deposit4.parent, deposit2)

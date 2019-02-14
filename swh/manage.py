@@ -19,15 +19,14 @@ DEFAULT_CONFIG = {
 
 if __name__ == "__main__":
     settings_file = 'development'
-    if sys.argv[1] == 'runserver':  # override the default host:port
-                                    # for the 'runserver' task
-
+    if sys.argv[1] == 'runserver':
+        # override the default host:port for the 'runserver' task
         conf = config.load_named_config('deposit/server',
                                         default_conf=DEFAULT_CONFIG)
         extra_cmd = ['%s:%s' % (conf['host'], conf['port'])]
         cmd = sys.argv + extra_cmd
-    elif sys.argv[1] == 'test':     # override the default settings file
-                                    # to read in testing mode
+    elif sys.argv[1] == 'test':
+        # override the default settings file to read in testing mode
         settings_file = 'testing'
         cmd = sys.argv
     else:  # otherwise, do nothing

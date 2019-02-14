@@ -7,8 +7,7 @@ import hashlib
 import os
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
-from nose.plugins.attrib import attr
+import pytest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -20,7 +19,7 @@ from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 from ..common import FileSystemCreationRoutine, create_arborescence_archive
 
 
-@attr('fs')
+@pytest.mark.fs
 class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
                               BasicTestCase, CommonCreationRoutine,
                               FileSystemCreationRoutine):
@@ -31,8 +30,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
             self.root_path, 'archive2', 'file2', b'some other content in file')
         self.workdir = os.path.join(self.root_path, 'workdir')
 
-    @istest
-    def access_to_existing_deposit_with_one_archive(self):
+    def test_access_to_existing_deposit_with_one_archive(self):
         """Access to deposit should stream a 200 response with its raw content
 
         """
@@ -43,24 +41,24 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         r = self.client.get(url)
 
-        self.assertEquals(r.status_code, status.HTTP_200_OK)
-        self.assertEquals(r._headers['content-type'][1],
-                          'application/octet-stream')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r._headers['content-type'][1],
+                         'application/octet-stream')
 
         # read the stream
         data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
-        self.assertEquals(actual_sha1, self.archive['sha1sum'])
+        self.assertEqual(actual_sha1, self.archive['sha1sum'])
 
         # this does not touch the extraction dir so this should stay empty
-        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
+        self.assertEqual(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
     def _check_tarball_consistency(self, actual_sha1):
         tarball.uncompress(self.archive['path'], self.workdir)
-        self.assertEquals(os.listdir(self.workdir), ['file1'])
+        self.assertEqual(os.listdir(self.workdir), ['file1'])
         tarball.uncompress(self.archive2['path'], self.workdir)
         lst = set(os.listdir(self.workdir))
-        self.assertEquals(lst, {'file1', 'file2'})
+        self.assertEqual(lst, {'file1', 'file2'})
 
         new_path = self.workdir + '.zip'
         tarball.compress(new_path, 'zip', self.workdir)
@@ -71,8 +69,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
         self.assertNotEqual(actual_sha1, self.archive['sha1sum'])
         self.assertNotEqual(actual_sha1, self.archive2['sha1sum'])
 
-    @istest
-    def access_to_existing_deposit_with_multiple_archives(self):
+    def test_access_to_existing_deposit_with_multiple_archives(self):
         """Access to deposit should stream a 200 response with its raw contents
 
         """
@@ -83,9 +80,9 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         r = self.client.get(url)
 
-        self.assertEquals(r.status_code, status.HTTP_200_OK)
-        self.assertEquals(r._headers['content-type'][1],
-                          'application/octet-stream')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r._headers['content-type'][1],
+                         'application/octet-stream')
         # read the stream
         data = b''.join(r.streaming_content)
         actual_sha1 = hashlib.sha1(data).hexdigest()
@@ -93,13 +90,12 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         # this touches the extraction directory but should clean up
         # after itself
-        self.assertEquals(os.listdir(TEST_CONFIG['extraction_dir']), [])
+        self.assertEqual(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
 
 class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
                                      BasicTestCase, CommonCreationRoutine):
-    @istest
-    def access_to_nonexisting_deposit_returns_404_response(self):
+    def test_access_to_nonexisting_deposit_returns_404_response(self):
         """Read unknown collection should return a 404 response
 
         """
@@ -113,8 +109,7 @@ class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
         self.assertIn('Deposit with id %s does not exist' % unknown_id,
                       response.content.decode('utf-8'))
 
-    @istest
-    def access_to_nonexisting_collection_returns_404_response(self):
+    def test_access_to_nonexisting_collection_returns_404_response(self):
         """Read unknown deposit should return a 404 response
 
         """

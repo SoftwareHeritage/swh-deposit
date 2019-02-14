@@ -6,7 +6,6 @@
 import json
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -29,8 +28,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.deposit = Deposit.objects.get(pk=deposit.id)
         assert self.deposit.status == DEPOSIT_STATUS_VERIFIED
 
-    @istest
-    def update_deposit_status(self):
+    def test_update_deposit_status(self):
         """Existing status for update should return a 204 response
 
         """
@@ -49,10 +47,9 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
             deposit = Deposit.objects.get(pk=self.deposit.id)
-            self.assertEquals(deposit.status, _status)
+            self.assertEqual(deposit.status, _status)
 
-    @istest
-    def update_deposit_status_with_info(self):
+    def test_update_deposit_status_with_info(self):
         """Existing status for update with info should return a 204 response
 
         """
@@ -83,15 +80,14 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         deposit = Deposit.objects.get(pk=self.deposit.id)
-        self.assertEquals(deposit.status, expected_status)
-        self.assertEquals(deposit.swh_id, expected_swh_id)
-        self.assertEquals(deposit.swh_id_context, expected_swh_id_context)
-        self.assertEquals(deposit.swh_anchor_id, expected_swh_anchor_id)
-        self.assertEquals(deposit.swh_anchor_id_context,
-                          expected_swh_anchor_id_context)
+        self.assertEqual(deposit.status, expected_status)
+        self.assertEqual(deposit.swh_id, expected_swh_id)
+        self.assertEqual(deposit.swh_id_context, expected_swh_id_context)
+        self.assertEqual(deposit.swh_anchor_id, expected_swh_anchor_id)
+        self.assertEqual(deposit.swh_anchor_id_context,
+                         expected_swh_anchor_id_context)
 
-    @istest
-    def update_deposit_status_will_fail_with_unknown_status(self):
+    def test_update_deposit_status_will_fail_with_unknown_status(self):
         """Unknown status for update should return a 400 response
 
         """
@@ -105,8 +101,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def update_deposit_status_will_fail_with_no_status_key(self):
+    def test_update_deposit_status_will_fail_with_no_status_key(self):
         """No status provided for update should return a 400 response
 
         """
@@ -120,8 +115,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @istest
-    def update_deposit_status_success_without_swh_id_fail(self):
+    def test_update_deposit_status_success_without_swh_id_fail(self):
         """Providing successful status without swh_id should return a 400
 
         """
