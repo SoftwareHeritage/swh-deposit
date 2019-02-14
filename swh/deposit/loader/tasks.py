@@ -3,11 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.scheduler.task import Task
-from swh.deposit.loader import loader, checker
+from celery import current_app as app
+
+from swh.deposit.loader.loader import DepositLoader
+from swh.deposit.loader.checker import DepositChecker
 
 
-class LoadDepositArchiveTsk(Task):
+@app.task(name=__name__ + '.LoadDepositArchiveTsk')
+def load_deposit_archive(archive_url, deposit_meta_url, deposit_update_url):
     """Deposit archive loading task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
@@ -18,33 +21,16 @@ class LoadDepositArchiveTsk(Task):
           deposit's private update status api
 
     """
-    task_queue = 'swh_loader_deposit'
-
-    def run_task(self, *, archive_url, deposit_meta_url, deposit_update_url):
-        """Import a deposit tarball into swh.
-
-        Args: see :func:`DepositLoader.load`.
-
-        """
-        _loader = loader.DepositLoader()
-        _loader.log = self.log
-        return _loader.load(archive_url=archive_url,
-                            deposit_meta_url=deposit_meta_url,
-                            deposit_update_url=deposit_update_url)
+    return DepositLoader().load(
+        archive_url=archive_url,
+        deposit_meta_url=deposit_meta_url,
+        deposit_update_url=deposit_update_url)
 
 
-class ChecksDepositTsk(Task):
-    """Deposit checks task.
+@app.task(name=__name__ + '.ChecksDepositTsk')
+def check_deposit(deposit_check_url):
+    """Check a deposit's status
 
+    Args: see :func:`DepositChecker.check`.
     """
-    task_queue = 'swh_checker_deposit'
-
-    def run_task(self, deposit_check_url):
-        """Check a deposit's status
-
-        Args: see :func:`DepositChecker.check`.
-
-        """
-        _checker = checker.DepositChecker()
-        _checker.log = self.log
-        return _checker.check(deposit_check_url)
+    return DepositChecker().check(deposit_check_url)

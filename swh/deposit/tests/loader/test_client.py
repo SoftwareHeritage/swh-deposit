@@ -8,8 +8,7 @@ import shutil
 import tempfile
 import unittest
 
-from nose.plugins.attrib import attr
-from nose.tools import istest
+import pytest
 
 from swh.deposit.client import PrivateApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
@@ -42,7 +41,7 @@ class FakeRequestClientGet:
         return self.response
 
 
-@attr('fs')
+@pytest.mark.fs
 class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -52,8 +51,7 @@ class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
         super().setUp()
         shutil.rmtree(self.temporary_directory)
 
-    @istest
-    def archive_get(self):
+    def test_archive_get(self):
         """Reading archive should write data in temporary directory
 
         """
@@ -74,14 +72,13 @@ class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
         with open(archive_path, 'rb') as f:
             actual_content = f.read()
 
-        self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(actual_content, b''.join(stream_content))
+        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
+        self.assertEqual(_client.kwargs, {
             'stream': True
         })
 
-    @istest
-    def archive_get_with_authentication(self):
+    def test_archive_get_with_authentication(self):
         """Reading archive should write data in temporary directory
 
         """
@@ -106,15 +103,14 @@ class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
         with open(archive_path, 'rb') as f:
             actual_content = f.read()
 
-        self.assertEquals(actual_content, b''.join(stream_content))
-        self.assertEquals(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(actual_content, b''.join(stream_content))
+        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
+        self.assertEqual(_client.kwargs, {
             'stream': True,
             'auth': ('user', 'pass')
         })
 
-    @istest
-    def archive_get_can_fail(self):
+    def test_archive_get_can_fail(self):
         """Reading archive can fail for some reasons
 
         """
@@ -142,8 +138,7 @@ class JsonResponse:
 
 
 class PrivateApiDepositClientReadMetadataTest(unittest.TestCase):
-    @istest
-    def metadata_get(self):
+    def test_metadata_get(self):
         """Reading archive should write data in temporary directory
 
         """
@@ -158,10 +153,9 @@ class PrivateApiDepositClientReadMetadataTest(unittest.TestCase):
 
         actual_metadata = deposit_client.metadata_get('/metadata')
 
-        self.assertEquals(actual_metadata, expected_response)
+        self.assertEqual(actual_metadata, expected_response)
 
-    @istest
-    def metadata_get_can_fail(self):
+    def test_metadata_get_can_fail(self):
         """Reading metadata can fail for some reasons
 
         """
@@ -187,8 +181,7 @@ class FakeRequestClientPut:
 
 
 class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
-    @istest
-    def status_update(self):
+    def test_status_update(self):
         """Update status
 
         """
@@ -200,17 +193,16 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
                                      DEPOSIT_STATUS_LOAD_SUCCESS,
                                      revision_id='some-revision-id')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/update/status', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/update/status', ))
+        self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_SUCCESS,
                 'revision_id': 'some-revision-id',
             }
         })
 
-    @istest
-    def status_update_with_no_revision_id(self):
+    def test_status_update_with_no_revision_id(self):
         """Reading metadata can fail for some reasons
 
         """
@@ -221,9 +213,9 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
         deposit_client.status_update('/update/status/fail',
                                      DEPOSIT_STATUS_LOAD_FAILURE)
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/update/status/fail', ))
-        self.assertEquals(_client.kwargs, {
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/update/status/fail', ))
+        self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_FAILURE,
             }
@@ -231,8 +223,7 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
 
 
 class PrivateApiDepositClientCheckTest(unittest.TestCase):
-    @istest
-    def check(self):
+    def test_check(self):
         """When check ok, this should return the deposit's status
 
         """
@@ -243,13 +234,12 @@ class PrivateApiDepositClientCheckTest(unittest.TestCase):
 
         r = deposit_client.check('/check')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/check', ))
-        self.assertEquals(_client.kwargs, {})
-        self.assertEquals(r, 'something')
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/check', ))
+        self.assertEqual(_client.kwargs, {})
+        self.assertEqual(r, 'something')
 
-    @istest
-    def check_fails(self):
+    def test_check_fails(self):
         """Checking deposit can fail for some reason
 
         """
@@ -263,6 +253,6 @@ class PrivateApiDepositClientCheckTest(unittest.TestCase):
                 'Problem when checking deposit'):
             deposit_client.check('/check/fails')
 
-        self.assertEquals(_client.args,
-                          ('http://nowhere:9000/check/fails', ))
-        self.assertEquals(_client.kwargs, {})
+        self.assertEqual(_client.args,
+                         ('http://nowhere:9000/check/fails', ))
+        self.assertEqual(_client.kwargs, {})

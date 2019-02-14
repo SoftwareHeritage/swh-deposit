@@ -26,7 +26,7 @@ private_conf = config.load_named_config(DEFAULT_PATH)
 if not private_conf:
     raise ValueError('Cannot run in production, missing private data file.')
 
-SECRET_KEY = private_conf['secret_key']
+SECRET_KEY = private_conf.get('secret_key', 'change me')
 
 # https://docs.djangoproject.com/en/1.10/ref/settings/#logging
 LOGGING = {
@@ -56,7 +56,7 @@ LOGGING = {
 
 # database
 
-db_conf = private_conf['db']
+db_conf = private_conf.get('db', {'name': 'unset'})
 
 db = {
     'ENGINE': 'django.db.backends.postgresql',
@@ -88,4 +88,4 @@ DATABASES = {
 # Upload user directory
 
 # https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-MEDIA_ROOT
-MEDIA_ROOT = private_conf['media_root']
+MEDIA_ROOT = private_conf.get('media_root')

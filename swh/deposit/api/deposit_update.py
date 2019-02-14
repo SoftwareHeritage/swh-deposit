@@ -18,9 +18,9 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
                               SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
-    What's known as 'EM IRI' in the sword specification.
+       What's known as 'EM IRI' in the sword specification.
 
-    HTTP verbs supported: PUT, POST, DELETE
+       HTTP verbs supported: PUT, POST, DELETE
 
     """
     parser_classes = (SWHFileUploadZipParser, SWHFileUploadTarParser, )
@@ -28,8 +28,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
 
-        source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_editingcontent_binary
+           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_binary  # noqa
 
         Returns:
             204 No content
@@ -47,8 +46,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_post(self, req, headers, collection_name, deposit_id):
         """Add new content to the existing deposit.
 
-        source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_addingcontent_mediaresource
+           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_mediaresource  # noqa
 
         Returns:
             201 Created
@@ -68,8 +66,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_delete(self, req, collection_name, deposit_id):
         """Delete content (archives) from existing deposit.
 
-        source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_deletingcontent
+           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deletingcontent  # noqa
 
         Returns:
             204 Created
@@ -82,9 +79,9 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
                                SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
-    What's known as 'Edit IRI' (and SE IRI) in the sword specification.
+       What's known as 'Edit IRI' (and SE IRI) in the sword specification.
 
-    HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
+       HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
 
     """
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
@@ -92,11 +89,9 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing deposit's metadata/archive with new ones.
 
-        source:
-        - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-          #protocoloperations_editingcontent_metadata
-        - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-          #protocoloperations_editingcontent_multipart
+           source:
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_metadata  # noqa
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_multipart  # noqa
 
         Returns:
             204 No content
@@ -113,11 +108,9 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_post(self, req, headers, collection_name, deposit_id):
         """Add new metadata/archive to existing deposit.
 
-        source:
-        - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_addingcontent_metadata
-        - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_addingcontent_multipart
+           source:
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_metadata  # noqa
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_multipart  # noqa
 
         This also deals with an empty post corner case to finalize a
         deposit.
@@ -149,7 +142,7 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
     def process_delete(self, req, collection_name, deposit_id):
         """Delete the container (deposit).
 
-        Source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        #protocoloperations_deleteconteiner
+           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deleteconteiner  # noqa
+
         """
         return self._delete_deposit(collection_name, deposit_id)

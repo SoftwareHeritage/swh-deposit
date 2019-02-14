@@ -6,7 +6,6 @@
 import io
 
 from collections import OrderedDict
-from nose.tools import istest
 from rest_framework.test import APITestCase
 
 from swh.deposit.parsers import SWHXMLParser
@@ -16,8 +15,7 @@ class ParsingTest(APITestCase):
     """Access to main entry point is ok without authentication
 
     """
-    @istest
-    def parsing_without_duplicates(self):
+    def test_parsing_without_duplicates(self):
         xml_no_duplicate = io.BytesIO(b'''<?xml version="1.0"?>
     <entry xmlns="http://www.w3.org/2005/Atom"
            xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
@@ -53,8 +51,7 @@ class ParsingTest(APITestCase):
              ('codemeta:issueTracker', 'http://issuetracker.com')])
         self.assertEqual(expected_dict, actual_result)
 
-    @istest
-    def parsing_with_duplicates(self):
+    def test_parsing_with_duplicates(self):
         xml_with_duplicates = io.BytesIO(b'''<?xml version="1.0"?>
     <entry xmlns="http://www.w3.org/2005/Atom"
            xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">

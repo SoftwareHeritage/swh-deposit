@@ -8,13 +8,10 @@ from .common import ALLOWED_HOSTS
 from .development import *  # noqa
 from .development import INSTALLED_APPS
 
-# django-nose setup
+# django setup
 ALLOWED_HOSTS += ['testserver']
 
-INSTALLED_APPS += ['django_nose']
-
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
-NOSE_ARGS = ['--verbosity=3', '-s']  # to see test pass
+INSTALLED_APPS += ['pytest_django']
 
 # https://docs.djangoproject.com/en/1.10/ref/settings/#logging
 LOGGING = {

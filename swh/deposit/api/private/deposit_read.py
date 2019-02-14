@@ -34,8 +34,8 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         Tuple (directory to clean up, archive path (aggregated or not))
 
     """
-    if len(archive_paths) > 1:  # need to rebuild one archive
-                                # from multiple ones
+    if len(archive_paths) > 1:
+        # need to rebuild one archive from multiple ones
         os.makedirs(extraction_dir, 0o755, exist_ok=True)
         dir_path = tempfile.mkdtemp(prefix='swh.deposit-',
                                     dir=extraction_dir)

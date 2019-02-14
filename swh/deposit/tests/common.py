@@ -13,7 +13,7 @@ import tempfile
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from io import BytesIO
-from nose.plugins.attrib import attr
+import pytest
 from rest_framework import status
 
 from swh.deposit.config import (COL_IRI, EM_IRI, EDIT_SE_IRI,
@@ -138,7 +138,7 @@ def create_archive_with_archive(root_path, name, archive):
     return compute_info(invalid_archive_path)
 
 
-@attr('fs')
+@pytest.mark.fs
 class FileSystemCreationRoutine(TestCase):
     """Mixin intended for tests needed to tamper with archives.
 
@@ -264,7 +264,7 @@ class FileSystemCreationRoutine(TestCase):
         return deposit_id
 
 
-@attr('fs')
+@pytest.mark.fs
 class BasicTestCase(TestCase):
     """Mixin intended for data setup purposes (user, collection, etc...)
 

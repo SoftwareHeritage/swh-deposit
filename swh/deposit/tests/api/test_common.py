@@ -5,7 +5,6 @@
 
 
 from django.core.urlresolvers import reverse
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -16,8 +15,7 @@ class IndexNoAuthCase(APITestCase, BasicTestCase):
     """Access to main entry point is ok without authentication
 
     """
-    @istest
-    def get_home_is_ok(self):
+    def test_get_home_is_ok(self):
         """Without authentication, endpoint refuses access with 401 response
 
         """
@@ -31,8 +29,7 @@ class IndexWithAuthCase(WithAuthTestCase, APITestCase, BasicTestCase):
     """Access to main entry point is ok with authentication as well
 
     """
-    @istest
-    def get_home_is_ok_2(self):
+    def test_get_home_is_ok_2(self):
         """Without authentication, endpoint refuses access with 401 response
 
         """
