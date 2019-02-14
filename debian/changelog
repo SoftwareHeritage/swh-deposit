@@ -1,3 +1,15 @@
+swh-deposit (0.0.65-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.65     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-02-14 18:28:48
+    +0100)
+  * Upstream changes:     - v0.0.65     - swh/manage: Fix flake8 warning
+    - Bump dependency on swh-scheduler 0.0.39     - Rewrite celery tasks
+    as a decorated function     - loader.scheduler: Remove non
+    production code     - deposit.loader.tasks: Add tests
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 14 Feb 2019 17:34:09 +0000
+
 swh-deposit (0.0.63-1~swh2) unstable-swh; urgency=medium
 
   * New upstream release, fixing dependencies
