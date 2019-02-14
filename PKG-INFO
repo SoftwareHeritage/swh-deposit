@@ -1,10 +1,34 @@
-Metadata-Version: 1.0
+Metadata-Version: 2.1
 Name: swh.deposit
-Version: 0.0.63
+Version: 0.0.65
 Summary: Software Heritage Deposit Server
 Home-page: https://forge.softwareheritage.org/source/swh-deposit/
 Author: Software Heritage developers
 Author-email: swh-devel@inria.fr
 License: UNKNOWN
-Description: UNKNOWN
+Project-URL: Funding, https://www.softwareheritage.org/donate
+Project-URL: Bug Reports, https://forge.softwareheritage.org/maniphest
+Project-URL: Source, https://forge.softwareheritage.org/source/swh-deposit
+Description: # swh-deposit
+        
+        This is [Software Heritage](https://www.softwareheritage.org)'s
+        [SWORD 2.0](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html) Server
+        implementation.
+        
+        **S.W.O.R.D** (**S**imple **W**eb-Service **O**ffering **R**epository
+        **D**eposit) is an interoperability standard for digital file deposit.
+        
+        This implementation will permit interaction between a client (a
+        repository) and a server (SWH repository) to permit deposits of
+        software source code archives and associated metadata.
+        
+        The documentation is at ./docs/README-specification.md
+        
 Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 5 - Production/Stable
+Description-Content-Type: text/markdown
+Provides-Extra: testing

@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from nose.tools import istest
 from rest_framework.test import APITestCase
 
 from swh.deposit.api.converters import convert_status_detail
@@ -11,8 +10,7 @@ from swh.deposit.api.converters import convert_status_detail
 
 class ConvertersTestCase(APITestCase):
 
-    @istest
-    def convert_status_detail_empty(self):
+    def test_convert_status_detail_empty(self):
         actual_status_detail = convert_status_detail({})
         self.assertIsNone(actual_status_detail)
 
@@ -22,8 +20,7 @@ class ConvertersTestCase(APITestCase):
         actual_status_detail = convert_status_detail(None)
         self.assertIsNone(actual_status_detail)
 
-    @istest
-    def convert_status_detail(self):
+    def test_convert_status_detail(self):
         status_detail = {
             'url': {
                 'summary': "At least one url field must be compatible with the client\'s domain name. The following url fields failed the check",  # noqa
@@ -55,8 +52,7 @@ class ConvertersTestCase(APITestCase):
 
         self.assertEqual(actual_status_detail, expected_status_detail)
 
-    @istest
-    def convert_status_detail_2(self):
+    def test_convert_status_detail_2(self):
         status_detail = {
             'url': {
                 'summary': 'At least one compatible url field. Failed',
@@ -90,8 +86,7 @@ class ConvertersTestCase(APITestCase):
 
         self.assertEqual(actual_status_detail, expected_status_detail)
 
-    @istest
-    def convert_status_detail_3(self):
+    def test_convert_status_detail_3(self):
         status_detail = {
             'url': {
                 'summary': 'At least one compatible url field',
@@ -102,8 +97,7 @@ class ConvertersTestCase(APITestCase):
         actual_status_detail = convert_status_detail(status_detail)
         self.assertEqual(actual_status_detail, expected_status_detail)
 
-    @istest
-    def convert_status_detail_edge_case(self):
+    def test_convert_status_detail_edge_case(self):
         status_detail = {
             'url': {
                 'summary': 'At least one compatible url field. Failed',

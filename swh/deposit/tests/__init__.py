@@ -6,7 +6,7 @@
 from swh.deposit.config import setup_django_for
 from swh.deposit.config import SWHDefaultConfig  # noqa
 
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 
 
 TEST_CONFIG = {
@@ -21,9 +21,9 @@ TEST_CONFIG = {
         }
     },
     'tool': {
-        'tool_name': 'swh-deposit',
-        'tool_version': '0.0.1',
-        'tool_configuration': {
+        'name': 'swh-deposit',
+        'version': '0.0.1',
+        'configuration': {
             'sword_version': '2'
         }
     }
@@ -37,18 +37,20 @@ def parse_deposit_config_file(base_filename=None, config_filename=None,
 
 TEST_LOADER_CONFIG = {
     'extraction_dir': '/tmp/swh-loader-tar/test/',
+    'working_dir': '/tmp/swh-loader-tar/test/working-dir',
+    'debug': False,
     'storage': {
-        'cls': 'remote',
+        'cls': 'memory',
         'args': {
-            'url': 'http://localhost:unexisting-port/',
         }
     },
-    'send_contents': False,
-    'send_directories': False,
-    'send_revisions': False,
-    'send_releases': False,
-    'send_snapshot': False,
+    'send_contents': True,
+    'send_directories': True,
+    'send_revisions': True,
+    'send_releases': True,
+    'send_snapshot': True,
 
+    'content_size_limit': 100 * 1024 * 1024,
     'content_packet_size': 10,
     'content_packet_size_bytes': 100 * 1024 * 1024,
     'directory_packet_size': 10,
@@ -66,6 +68,6 @@ def parse_loader_config_file(base_filename=None, config_filename=None,
 # the default configuration without side-effect, i.e do not load the
 # configuration from disk
 SWHDefaultConfig.parse_config_file = parse_deposit_config_file
-SWHLoader.parse_config_file = parse_loader_config_file
+BufferedLoader.parse_config_file = parse_loader_config_file
 
 setup_django_for('testing')

@@ -1,5 +1,5 @@
 vcversioner
 click
-Django
+Django < 2.0
 djangorestframework
 xmltodict

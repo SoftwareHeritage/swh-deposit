@@ -6,11 +6,9 @@
 
 from django.core.urlresolvers import reverse
 from io import BytesIO
-from nose.tools import istest
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from swh.deposit.api.deposit_status import convert_status_detail
 from swh.deposit.config import (COL_IRI, STATE_IRI, DEPOSIT_STATUS_DEPOSITED,
                                 DEPOSIT_STATUS_REJECTED)
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
@@ -26,8 +24,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
     """Status on deposit
 
     """
-    @istest
-    def post_deposit_with_status_check(self):
+    def test_post_deposit_with_status_check(self):
         """Binary upload should be accepted
 
         """
@@ -68,8 +65,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['deposit_status_detail'],
                          DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
 
-    @istest
-    def status_with_swh_information(self):
+    def test_status_with_swh_information(self):
         _status = DEPOSIT_STATUS_LOAD_SUCCESS
         _context = 'https://hal.archives-ouvertes.fr/hal-01727745'
         _swh_id = 'swh:1:dir:42a13fc721c8716ff695d0d62fc851d641f3a12b'
@@ -104,16 +100,14 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['deposit_swh_anchor_id_context'],
                          _swh_anchor_id_context)
 
-    @istest
-    def status_on_unknown_deposit(self):
+    def test_status_on_unknown_deposit(self):
         """Asking for the status of unknown deposit returns 404 response"""
         status_url = reverse(STATE_IRI, args=[self.collection.name, 999])
         status_response = self.client.get(status_url)
         self.assertEqual(status_response.status_code,
                          status.HTTP_404_NOT_FOUND)
 
-    @istest
-    def status_with_http_accept_header_should_not_break(self):
+    def test_status_with_http_accept_header_should_not_break(self):
         """Asking deposit status with Accept header should return 200
 
         """
@@ -127,8 +121,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    @istest
-    def status_on_deposit_rejected(self):
+    def test_status_on_deposit_rejected(self):
         _status = DEPOSIT_STATUS_REJECTED
         _swh_id = '548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
         _status_detail = {'url': {'summary': 'Wrong url'}}
