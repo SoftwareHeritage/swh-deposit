@@ -1,7 +1,10 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
+
+import os
+# import logging
 
 from .common import *  # noqa
 from .common import ALLOWED_HOSTS
@@ -19,14 +22,28 @@ DEBUG = False
 # https://docs.djangoproject.com/en/1.10/ref/settings/#std:setting-DATABASES
 # https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/#databases
 
-DEFAULT_PATH = 'deposit/private'
+# Retrieve the deposit's configuration file
+# and check the required setup is ok
+# If not raise an error explaining the errors
+config_file = os.environ.get('SWH_CONFIG_FILENAME')
+if not os.path.exists(config_file):
+    raise ValueError('Production: configuration file %s does not exist!' % (
+        config_file, ))
 
-private_conf = config.load_named_config(DEFAULT_PATH)
+conf = config.load_named_config(config_file)
+if not conf:
+    raise ValueError(
+        'Production: configuration %s does not exist.' % (
+            config_file, ))
 
-if not private_conf:
-    raise ValueError('Cannot run in production, missing private data file.')
+for key in ('scheduler', 'private'):
+    if not conf.get(key):
+        raise ValueError(
+            "Production: invalid configuration; missing %s config entry." % (
+                key, ))
 
-SECRET_KEY = private_conf.get('secret_key', 'change me')
+private_conf = conf['private']
+SECRET_KEY = private_conf['secret_key']
 
 # https://docs.djangoproject.com/en/1.10/ref/settings/#logging
 LOGGING = {
