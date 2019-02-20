@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 import os
-# import logging
 
 from .common import *  # noqa
 from .common import ALLOWED_HOSTS
