@@ -4,7 +4,7 @@ Django<2.0
 djangorestframework
 xmltodict
 swh.core>=0.0.36
-swh.loader.tar>=0.0.37
+swh.loader.tar>=0.0.39
 swh.loader.core>=0.0.32
 swh.scheduler>=0.0.39
 swh.model>=0.0.26

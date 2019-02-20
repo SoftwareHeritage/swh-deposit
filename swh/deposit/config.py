@@ -47,8 +47,8 @@ SWH_PERSON = {
 
 
 def setup_django_for(platform):
-    """Setup function for command line tools (swh.deposit.create_user,
-       swh.deposit.scheduler.cli) to initialize the needed db access.
+    """Setup function for command line tools (swh.deposit.create_user) to
+       initialize the needed db access.
 
     Note:
         Do not import any django related module prior to this function
