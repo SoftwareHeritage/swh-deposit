@@ -27,6 +27,20 @@ def user(ctx):
     pass
 
 
+def _create_collection(name):
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositCollection
+
+    try:
+        collection = DepositCollection.objects.get(name=name)
+        click.echo('Collection %s exists, nothing to do.' % name)
+    except DepositCollection.DoesNotExist:
+        click.echo('Create new collection %s' % name)
+        collection = DepositCollection.objects.create(name=name)
+        click.echo('Collection %s created' % name)
+    return collection
+
+
 @user.command('create')
 @click.option('--username', required=True, help="User's name")
 @click.option('--password', required=True,
@@ -36,7 +50,7 @@ def user(ctx):
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
 @click.pass_context
-def create_user(cli, username, password, firstname, lastname, email,
+def create_user(ctx, username, password, firstname, lastname, email,
                 collection):
     """Create a user with some needed information (password, collection)
 
@@ -46,13 +60,11 @@ def create_user(cli, username, password, firstname, lastname, email,
 
     """
     # to avoid loading too early django namespaces
-    from swh.deposit.models import DepositClient, DepositCollection
+    from swh.deposit.models import DepositClient
 
-    try:
-        collection = DepositCollection.objects.get(name=collection)
-    except DepositCollection.DoesNotExist:
-        raise ValueError(
-            'Collection %s does not exist, skipping' % collection)
+    click.echo('collection: %s' % collection)
+    # create the collection if it does not exist
+    collection = _create_collection(collection)
 
     # user create/update
     try:
@@ -81,7 +93,11 @@ def user_list(ctx):
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositClient
     users = DepositClient.objects.all()
-    click.echo('\n'.join((user.username for user in users)))
+    if not users:
+        output = 'Empty user list'
+    else:
+        output = '\n'.join((user.username for user in users))
+    click.echo(output)
 
 
 @cli.group('collection')
@@ -95,16 +111,7 @@ def collection(ctx):
 @click.option('--name', required=True, help="Collection's name")
 @click.pass_context
 def create_collection(ctx, name):
-    # to avoid loading too early django namespaces
-    from swh.deposit.models import DepositCollection
-
-    try:
-        DepositCollection.objects.get(name=name)
-        click.echo('Collection %s exists, nothing to do.' % name)
-    except DepositCollection.DoesNotExist:
-        click.echo('Create new collection %s' % name)
-        DepositCollection.objects.create(name=name)
-        click.echo('Collection %s created' % name)
+    _create_collection(name)
 
 
 @collection.command('list')
@@ -113,7 +120,11 @@ def collection_list(ctx):
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositCollection
     collections = DepositCollection.objects.all()
-    click.echo('\n'.join((col.name for col in collections)))
+    if not collections:
+        output = 'Empty collection list'
+    else:
+        output = '\n'.join((col.name for col in collections))
+    click.echo(output)
 
 
 def main():
