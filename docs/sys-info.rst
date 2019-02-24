@@ -1,4 +1,4 @@
-Deployment of the swh-deposit 
+Deployment of the swh-deposit
 =============================
 
 As usual, the debian packaged is created and uploaded to the swh debian
@@ -9,7 +9,7 @@ Prepare the database setup (existence, connection, etc...).
 -----------------------------------------------------------
 
 This is defined through the packaged ``swh.deposit.settings.production``
-module and the expected **/etc/softwareheritage/deposit/private.yml**.
+module and the expected **/etc/softwareheritage/deposit/server.yml**.
 
 As usual, the expected configuration files are deployed through our
 puppet manifest (cf. puppet-environment/swh-site,
@@ -27,10 +27,12 @@ Load minimum defaults data
 
 .. code:: shell
 
-    sudo django-admin loaddata --settings=swh.deposit.settings.production deposit_data
+    sudo django-admin loaddata \
+      --settings=swh.deposit.settings.production deposit_data
 
-This adds the minimal: - deposit request type 'archive' and 'metadata' -
-'hal' collection
+This adds the minimal:
+- deposit request type 'archive' and 'metadata'
+- 'hal' collection
 
 Note: swh.deposit.fixtures.deposit\_data is packaged
 
@@ -39,7 +41,9 @@ Add client and collection
 
 .. code:: shell
 
-    python3 -m swh.deposit.create_user --platform production \
+    SWH_CONFIG_FILENAME=/etc/softwareheritage/deposit/server.yml \
+    swh-deposit --platform production \
+        user create \
         --collection <collection-name> \
         --username <client-name> \
         --password <to-define>
@@ -48,4 +52,9 @@ This adds a user ``<client-name>`` which can access the collection
 ``<collection-name>``. The password will be used for the authentication
 access to the deposit api.
 
-Note: This creation procedure needs to be improved.
+Note:
+  - If the collection does not exist, it is created alongside.
+  - The password is plain text but stored encrypted (so yes, for now
+    we know the user's password)
+  - A production requirement for the cli to work is to set the
+    SWH_CONFIG_FILENAME environment variable
