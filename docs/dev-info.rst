@@ -110,8 +110,8 @@ Run the local server, using the default configuration file:
 Production-like environment
 ---------------------------
 
-Production-like environment needs two configuration files to work
-properly.
+Production-like environment needs additional section in the
+configuration file to work properly.
 
 This is more close to what's actually running in production.
 
@@ -119,13 +119,14 @@ Configuration
 ~~~~~~~~~~~~~
 
 This expects the same file describes in the previous chapter. Plus, an
-additional private **settings.yml** file containing secret information
-that is not in the source code repository.
+additional private section file containing private information that is
+not in the source code repository.
 
 **``{/etc/softwareheritage | ~/.config/swh | ~/.swh}``/deposit/private.yml**:
 
 .. code:: yaml
 
+  private:
     secret_key: production-local
     db:
       name: swh-deposit-dev
@@ -134,13 +135,14 @@ A production configuration file would look like:
 
 .. code:: yaml
 
+  private:
     secret_key: production-secret-key
-    db:
-      name: swh-deposit-dev
-      host: db
-      port: 5467
-      user: user
-      password: user-password
+      db:
+        name: swh-deposit-dev
+        host: db
+        port: 5467
+        user: user
+        password: user-password
 
 Run
 ~~~
