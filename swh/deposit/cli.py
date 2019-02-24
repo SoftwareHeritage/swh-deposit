@@ -28,6 +28,16 @@ def user(ctx):
 
 
 def _create_collection(name):
+    """Create the collection with name if it does not exist.
+
+    Args:
+        name (str): collection's name
+
+    Returns:
+        collection (DepositCollection): the existing collection object
+                                        (created or not)
+
+    """
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositCollection
 
@@ -50,11 +60,12 @@ def _create_collection(name):
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
 @click.pass_context
-def create_user(ctx, username, password, firstname, lastname, email,
+def user_create(ctx, username, password, firstname, lastname, email,
                 collection):
     """Create a user with some needed information (password, collection)
 
-    If the collection does not exist, the creation process is stopped.
+    If the collection does not exist, the collection is then created
+    alongside.
 
     The password is stored encrypted using django's utilies.
 
@@ -90,6 +101,12 @@ def create_user(ctx, username, password, firstname, lastname, email,
 @user.command('list')
 @click.pass_context
 def user_list(ctx):
+    """List existing users.
+
+       This entrypoint is not paginated yet as there is not a lot of
+       entry.
+
+    """
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositClient
     users = DepositClient.objects.all()
@@ -110,13 +127,19 @@ def collection(ctx):
 @collection.command('create')
 @click.option('--name', required=True, help="Collection's name")
 @click.pass_context
-def create_collection(ctx, name):
+def collection_create(ctx, name):
     _create_collection(name)
 
 
 @collection.command('list')
 @click.pass_context
 def collection_list(ctx):
+    """List existing collections.
+
+       This entrypoint is not paginated yet as there is not a lot of
+       entry.
+
+    """
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositCollection
     collections = DepositCollection.objects.all()
