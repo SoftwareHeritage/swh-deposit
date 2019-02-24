@@ -75,6 +75,15 @@ def create_user(cli, username, password, firstname, lastname, email,
     click.echo('Information registered for user %s' % user)
 
 
+@user.command('list')
+@click.pass_context
+def user_list(ctx):
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositClient
+    users = DepositClient.objects.all()
+    click.echo('\n'.join((user.username for user in users)))
+
+
 @cli.group('collection')
 @click.pass_context
 def collection(ctx):
@@ -96,6 +105,15 @@ def create_collection(ctx, name):
         click.echo('Create new collection %s' % name)
         DepositCollection.objects.create(name=name)
         click.echo('Collection %s created' % name)
+
+
+@collection.command('list')
+@click.pass_context
+def collection_list(ctx):
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositCollection
+    collections = DepositCollection.objects.all()
+    click.echo('\n'.join((col.name for col in collections)))
 
 
 def main():
