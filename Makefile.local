@@ -1,6 +1,6 @@
-FLAKEFLAGS='--exclude=swh/manage.py,swh/deposit/settings.py,swh/deposit/migrations/'
+FLAKEFLAGS='--exclude=swh/deposit/manage.py,swh/deposit/settings.py,swh/deposit/migrations/'
 
-MANAGE=python3 -m swh.manage
+MANAGE=python3 -m swh.deposit.manage
 
 db-drop:
 	dropdb swh-deposit-dev || return 0
@@ -27,4 +27,4 @@ run:
 	gunicorn3 -b 127.0.0.1:5006 swh.deposit.wsgi
 
 test:
-	./swh/manage.py test
+	./swh/deposit/manage.py test
