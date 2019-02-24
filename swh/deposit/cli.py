@@ -35,7 +35,9 @@ def user(ctx):
 @click.option('--lastname', default='', help="User's last name")
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
-def create_user(username, password, firstname, lastname, email, collection):
+@click.pass_context
+def create_user(cli, username, password, firstname, lastname, email,
+                collection):
     """Create a user with some needed information (password, collection)
 
     If the collection does not exist, the creation process is stopped.
@@ -55,10 +57,10 @@ def create_user(username, password, firstname, lastname, email, collection):
     # user create/update
     try:
         user = DepositClient.objects.get(username=username)
-        click.echo_via_pager('User %s exists, updating information.' % user)
+        click.echo('User %s exists, updating information.' % user)
         user.set_password(password)
     except DepositClient.DoesNotExist:
-        click.echo_via_pager('Create new user %s' % username)
+        click.echo('Create new user %s' % username)
         user = DepositClient.objects.create_user(
             username=username,
             password=password)
@@ -70,7 +72,9 @@ def create_user(username, password, firstname, lastname, email, collection):
     user.is_active = True
     user.save()
 
-    click.echo_via_pager('Information registered for user %s' % user)
+    click.echo('Information registered for user %s' % user)
+
+
 @cli.group('collection')
 @click.pass_context
 def collection(ctx):
