@@ -6,7 +6,6 @@
 import click
 
 from swh.deposit.config import setup_django_for
-from swh.deposit.models import DepositClient, DepositCollection
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -14,6 +13,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--platform', default='development',
+              type=click.Choice(['development', 'production']),
               help='development or production platform')
 @click.pass_context
 def cli(ctx, platform):
@@ -43,6 +43,8 @@ def create_user(username, password, firstname, lastname, email, collection):
     The password is stored encrypted using django's utilies.
 
     """
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositClient, DepositCollection
 
     try:
         collection = DepositCollection.objects.get(name=collection)
@@ -69,6 +71,27 @@ def create_user(username, password, firstname, lastname, email, collection):
     user.save()
 
     click.echo_via_pager('Information registered for user %s' % user)
+@cli.group('collection')
+@click.pass_context
+def collection(ctx):
+    """Manipulate collection."""
+    pass
+
+
+@collection.command('create')
+@click.option('--name', required=True, help="Collection's name")
+@click.pass_context
+def create_collection(ctx, name):
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositCollection
+
+    try:
+        DepositCollection.objects.get(name=name)
+        click.echo('Collection %s exists, nothing to do.' % name)
+    except DepositCollection.DoesNotExist:
+        click.echo('Create new collection %s' % name)
+        DepositCollection.objects.create(name=name)
+        click.echo('Collection %s created' % name)
 
 
 def main():
