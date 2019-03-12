@@ -53,7 +53,6 @@ setup(
     entry_points='''
         [console_scripts]
         swh-deposit=swh.deposit.cli:main
-        swh-deposit-client=swh.deposit.client.cli:main
     ''',
     classifiers=[
         "Programming Language :: Python :: 3",
