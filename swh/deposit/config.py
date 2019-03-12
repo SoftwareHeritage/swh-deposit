@@ -46,7 +46,7 @@ SWH_PERSON = {
 }
 
 
-def setup_django_for(platform):
+def setup_django_for(platform, config_file=None):
     """Setup function for command line tools (swh.deposit.create_user) to
        initialize the needed db access.
 
@@ -57,6 +57,8 @@ def setup_django_for(platform):
 
     Args:
         platform (str): the platform the scheduling is running
+        config_file (str): Extra configuration file (typically for the
+                           production platform)
 
     Raises:
         ValueError in case of wrong platform inputs.
@@ -67,6 +69,9 @@ def setup_django_for(platform):
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                           'swh.deposit.settings.%s' % platform)
+
+    if config_file:
+        os.environ.setdefault('SWH_CONFIG_FILENAME', config_file)
 
     import django
     django.setup()

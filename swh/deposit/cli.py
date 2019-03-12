@@ -12,12 +12,15 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
+@click.option('--config-file', '-C', default=None,
+              type=click.Path(exists=True, dir_okay=False,),
+              help="Optional extra configuration file.")
 @click.option('--platform', default='development',
               type=click.Choice(['development', 'production']),
               help='development or production platform')
 @click.pass_context
-def cli(ctx, platform):
-    setup_django_for(platform)
+def cli(ctx, config_file, platform):
+    setup_django_for(platform, config_file=config_file)
 
 
 @cli.group('user')

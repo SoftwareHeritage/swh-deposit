@@ -41,8 +41,9 @@ Add client and collection
 
 .. code:: shell
 
-    SWH_CONFIG_FILENAME=/etc/softwareheritage/deposit/server.yml \
-    swh-deposit --platform production \
+    swh-deposit \
+        --config-file /etc/softwareheritage/deposit/server.yml \
+        --platform production \
         user create \
         --collection <collection-name> \
         --username <client-name> \
@@ -53,8 +54,9 @@ This adds a user ``<client-name>`` which can access the collection
 access to the deposit api.
 
 Note:
-  - If the collection does not exist, it is created alongside.
+  - If the collection does not exist, it is created alongside
   - The password is plain text but stored encrypted (so yes, for now
     we know the user's password)
-  - A production requirement for the cli to work is to set the
-    SWH_CONFIG_FILENAME environment variable
+  - For production platform, you must either set an
+    SWH_CONFIG_FILENAME environment variable or pass alongside the
+    `--config-file` parameter
