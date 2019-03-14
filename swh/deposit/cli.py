@@ -391,13 +391,13 @@ def deposit_update(config, dry_run, logger):
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
 @click.pass_context
-def client(ctx,
-           username, password, archive=None, metadata=None,
-           archive_deposit=False, metadata_deposit=False,
-           collection=None, slug=None, partial=False, deposit_id=None,
-           replace=False, status=False,
-           url='https://deposit.softwareheritage.org/1', dry_run=True,
-           verbose=False):
+def deposit(ctx,
+            username, password, archive=None, metadata=None,
+            archive_deposit=False, metadata_deposit=False,
+            collection=None, slug=None, partial=False, deposit_id=None,
+            replace=False, status=False,
+            url='https://deposit.softwareheritage.org/1', dry_run=True,
+            verbose=False):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line or access its

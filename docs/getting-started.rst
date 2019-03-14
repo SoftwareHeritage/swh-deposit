@@ -115,24 +115,24 @@ minimal deposit
 
 .. code:: shell
 
- $ swh-deposit client --username name --password secret \
-                      --archive je-suis-gpl.tgz
+ $ swh-deposit deposit --username name --password secret \
+                       --archive je-suis-gpl.tgz
 
 with client's external identifier (``slug``)
 
 .. code:: shell
 
- $ swh-deposit client --username name --password secret \
-                      --archive je-suis-gpl.tgz \
-                      --slug je-suis-gpl
+ $ swh-deposit deposit --username name --password secret \
+                       --archive je-suis-gpl.tgz \
+                       --slug je-suis-gpl
 
 to a specific client's collection
 
 .. code:: shell
 
- $ swh-deposit client --username name --password secret \
-                      --archive je-suis-gpl.tgz \
-                      --collection 'second-collection'
+ $ swh-deposit deposit --username name --password secret \
+                       --archive je-suis-gpl.tgz \
+                       --collection 'second-collection'
 
 
 
@@ -180,9 +180,9 @@ First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --archive foo.tar.gz \
-                       --partial
+  $ swh-deposit deposit --username name --password secret \
+                        --archive foo.tar.gz \
+                        --partial
 
 
 2. Add content or metadata to the deposit
@@ -193,34 +193,34 @@ the ``--partial`` argument.
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --archive add-foo.tar.gz \
-                       --deposit-id 42 \
-                       --partial
+  $ swh-deposit deposit --username name --password secret \
+                        --archive add-foo.tar.gz \
+                        --deposit-id 42 \
+                        --partial
 
 
 In case you want to add only one new archive without metadata:
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --archive add-foo.tar.gz \
-                       --archive-deposit \
-                       --deposit-id 42 \
-                       --partial \
+  $ swh-deposit deposit --username name --password secret \
+                        --archive add-foo.tar.gz \
+                        --archive-deposit \
+                        --deposit-id 42 \
+                        --partial \
 
 If you want to add only metadata, use:
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --metadata add-foo.tar.gz.metadata.xml \
-                       --metadata-deposit \
-                       --deposit-id 42 \
-                       --partial
+  $ swh-deposit deposit --username name --password secret \
+                        --metadata add-foo.tar.gz.metadata.xml \
+                        --metadata-deposit \
+                        --deposit-id 42 \
+                        --partial
 
 3. Finalize deposit
-~~~~~~~~~~~~~~~~~~~
+ ~~~~~~~~~~~~~~~~~~~
 On your last addition, by not declaring it as ``--partial``, the
 deposit will be considered as completed and its status will be changed
 to ``deposited``.
@@ -243,10 +243,10 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --deposit-id 11 \
-                       --archive updated-je-suis-gpl.tgz \
-                       --replace
+  $ swh-deposit deposit --username name --password secret \
+                        --deposit-id 11 \
+                        --archive updated-je-suis-gpl.tgz \
+                        --replace
 
 * update a loaded deposit with a new version:
 
@@ -255,9 +255,9 @@ Update deposit
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret \
-                       --archive je-suis-gpl-v2.tgz \
-                       --slug 'je-suis-gpl' \
+  $ swh-deposit deposit --username name --password secret \
+                        --archive je-suis-gpl-v2.tgz \
+                        --slug 'je-suis-gpl' \
 
 
 
@@ -268,7 +268,7 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-  $ swh-deposit client --username name --password secret --deposit-id '11' --status
+  $ swh-deposit deposit --username name --password secret --deposit-id '11' --status
 
 .. code:: json
 
