@@ -47,7 +47,9 @@ setup(
     install_requires=parse_requirements() + parse_requirements('swh'),
     tests_require=parse_requirements('test'),
     setup_requires=['vcversioner'],
-    extras_require={'testing': parse_requirements('test')},
+    extras_require={'testing': parse_requirements('test'),
+                    'server': (parse_requirements('server') +
+                               parse_requirements('swh-server'))},
     vcversioner={},
     include_package_data=True,
     entry_points='''
