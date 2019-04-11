@@ -125,6 +125,23 @@ def user_list(ctx):
     click.echo(output)
 
 
+@user.command('exists')
+@click.argument('username', required=True)
+@click.pass_context
+def user_exists(ctx, username):
+    """Check if user exists.
+    """
+    # to avoid loading too early django namespaces
+    from swh.deposit.models import DepositClient
+    try:
+        DepositClient.objects.get(username=username)
+        click.echo('User %s exists.' % username)
+        ctx.exit(0)
+    except DepositClient.DoesNotExist:
+        click.echo('User %s does not exists.' % username)
+        ctx.exit(1)
+
+
 @admin.group('collection')
 @click.pass_context
 def collection(ctx):
