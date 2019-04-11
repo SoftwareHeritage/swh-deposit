@@ -126,7 +126,8 @@ def client_command_parse_input(
         if 'error' in sd_content:
             raise InputError('Service document retrieval: %s' % (
                 sd_content['error'], ))
-        collection = sd_content['collection']
+        collection = sd_content[
+            'service']['workspace']['collection']['sword:name']
 
     if not slug:
         # generate slug

@@ -316,7 +316,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """Parse service document's success response.
 
         """
-        return _parse_with_filter(xml_content, keys=['collection'])
+        return _parse(xml_content)
 
 
 class StatusDepositClient(BaseDepositClient):
