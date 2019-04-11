@@ -23,7 +23,6 @@ from swh.deposit.config import (COL_IRI, EM_IRI, EDIT_SE_IRI,
                                 DEPOSIT_STATUS_DEPOSITED)
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
-from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
 from swh.core import tarball
@@ -276,12 +275,6 @@ class BasicTestCase(TestCase):
         self.maxDiff = None
 
         # basic minimum test data
-        deposit_request_types = {}
-        # Add deposit request types
-        for deposit_request_type in ['archive', 'metadata']:
-            drt = DepositRequestType(name=deposit_request_type)
-            drt.save()
-            deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
         _provider_url = 'https://hal-test.archives-ouvertes.fr/'
@@ -302,8 +295,6 @@ class BasicTestCase(TestCase):
         self.user = _client
         self.username = _name
         self.userpass = _name
-
-        self.deposit_request_types = deposit_request_types
 
     def tearDown(self):
         super().tearDown()
@@ -568,6 +559,6 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         assert deposit_requests is not []
 
         for dr in deposit_requests:
-            if dr.type.name == 'metadata':
+            if dr.type == 'metadata':
                 assert deposit_requests[0].metadata is not {}
         return deposit_id

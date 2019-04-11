@@ -447,7 +447,7 @@ and other stuff</description>
 
         deposit_request = DepositRequest.objects.get(deposit=deposit)
         self.assertEqual(deposit_request.deposit, deposit)
-        self.assertEqual(deposit_request.type.name, 'archive')
+        self.assertEqual(deposit_request.type, 'archive')
         self.assertRegex(deposit_request.archive.name, self.archive['name'])
 
         # 2nd archive to upload
@@ -486,12 +486,12 @@ and other stuff</description>
         # 2 deposit requests for the same deposit
         self.assertEqual(len(deposit_requests), 2)
         self.assertEqual(deposit_requests[0].deposit, deposit)
-        self.assertEqual(deposit_requests[0].type.name, 'archive')
+        self.assertEqual(deposit_requests[0].type, 'archive')
         self.assertRegex(deposit_requests[0].archive.name,
                          self.archive['name'])
 
         self.assertEqual(deposit_requests[1].deposit, deposit)
-        self.assertEqual(deposit_requests[1].type.name, 'archive')
+        self.assertEqual(deposit_requests[1].type, 'archive')
         self.assertRegex(deposit_requests[1].archive.name,
                          archive2['name'])
 

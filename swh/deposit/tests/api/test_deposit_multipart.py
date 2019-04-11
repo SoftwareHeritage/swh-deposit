@@ -157,7 +157,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
@@ -226,7 +226,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
@@ -296,7 +296,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:
@@ -327,7 +327,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:

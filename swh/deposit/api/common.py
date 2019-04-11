@@ -21,7 +21,7 @@ from ..config import (
     SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI,
     ARCHIVE_KEY, METADATA_KEY, RAW_METADATA_KEY, STATE_IRI,
     DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS
+    DEPOSIT_STATUS_LOAD_SUCCESS, ARCHIVE_TYPE, METADATA_TYPE
 )
 from ..errors import (
     MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT,
@@ -30,7 +30,7 @@ from ..errors import (
     NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
 )
 from ..models import (
-    Deposit, DepositRequest, DepositCollection, DepositRequestType,
+    Deposit, DepositRequest, DepositCollection,
     DepositClient
 )
 from ..parsers import parse_xml
@@ -62,12 +62,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
-    def __init__(self):
-        super().__init__()
-        deposit_request_types = DepositRequestType.objects.all()
-        self.deposit_request_types = {
-            type.name: type for type in deposit_request_types
-        }
 
     def _read_headers(self, req):
         """Read and unify the necessary headers from the request (those are
@@ -205,19 +199,19 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if replace_metadata:
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types[METADATA_KEY]).delete()
+                type=METADATA_TYPE).delete()
 
         if replace_archives:
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types[ARCHIVE_KEY]).delete()
+                type=ARCHIVE_TYPE).delete()
 
         deposit_request = None
 
         archive_file = deposit_request_data.get(ARCHIVE_KEY)
         if archive_file:
             deposit_request = DepositRequest(
-                type=self.deposit_request_types[ARCHIVE_KEY],
+                type=ARCHIVE_TYPE,
                 deposit=deposit,
                 archive=archive_file)
             deposit_request.save()
@@ -226,7 +220,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if metadata:
             raw_metadata = deposit_request_data.get(RAW_METADATA_KEY)
             deposit_request = DepositRequest(
-                type=self.deposit_request_types[METADATA_KEY],
+                type=METADATA_TYPE,
                 deposit=deposit,
                 metadata=metadata,
                 raw_metadata=raw_metadata)
@@ -246,7 +240,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 'The deposit %s does not exist' % deposit_id)
         DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types[ARCHIVE_KEY]).delete()
+            type=ARCHIVE_TYPE).delete()
 
         return {}
 
