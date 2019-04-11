@@ -213,8 +213,6 @@ def deposit_update(config, logger):
               help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
 @click.option('--status/--no-status', default=False,
               help="(Optional) Deposit's status")
-@click.option('--dry-run/--no-dry-run', default=False,
-              help='(Optional) No-op deposit')
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
 @click.pass_context
@@ -223,7 +221,7 @@ def deposit(ctx,
             archive_deposit=False, metadata_deposit=False,
             collection=None, slug=None, partial=False, deposit_id=None,
             replace=False, status=False,
-            url='https://deposit.softwareheritage.org/1', dry_run=True,
+            url='https://deposit.softwareheritage.org/1',
             verbose=False):
     """Software Heritage Public Deposit Client
 
@@ -235,9 +233,6 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
     logger = ctx.obj['logger']
-
-    if dry_run:
-        logger.info("**DRY RUN**")
 
     config = {}
 
@@ -263,10 +258,10 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     deposit_id = config['deposit_id']
 
     if status and deposit_id:
-        r = deposit_status(config, dry_run, logger)
+        r = deposit_status(config, logger)
     elif not status and deposit_id:
-        r = deposit_update(config, dry_run, logger)
+        r = deposit_update(config, logger)
     elif not status and not deposit_id:
-        r = deposit_create(config, dry_run, logger)
+        r = deposit_create(config, logger)
 
     logger.info(r)
