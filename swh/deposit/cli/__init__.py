@@ -6,26 +6,24 @@
 import click
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--verbose/--no-verbose', default=False,
-              help='Verbose mode')
+@click.option('--log-level', '-l', default='INFO',
+              type=click.Choice(logging._nameToLevel.keys()),
+              help="Log level (default to INFO)")
 @click.pass_context
-def cli(ctx, verbose):
-    logger = logging.getLogger(__name__)
-    logger.addHandler(logging.StreamHandler())
-    _loglevel = logging.DEBUG if verbose else logging.INFO
-    logger.setLevel(_loglevel)
-
+def cli(ctx, log_level):
+    logger.setLevel(log_level)
     ctx.ensure_object(dict)
-    ctx.obj = {'loglevel': _loglevel,
-               'logger': logger}
 
 
 def main():
+    logging.basicConfig()
     from . import deposit  # noqa
     try:
         from . import server  # noqa

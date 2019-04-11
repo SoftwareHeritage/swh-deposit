@@ -3,13 +3,17 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import click
+import logging
 import os
 import uuid
 
-from swh.deposit.client import PublicApiDepositClient
+import click
 
+from swh.deposit.client import PublicApiDepositClient
 from swh.deposit.cli import cli
+
+
+logger = logging.getLogger(__name__)
 
 
 class InputError(ValueError):
@@ -158,7 +162,7 @@ def deposit_status(config, logger):
     keys = ('collection', 'deposit_id')
     client = config['client']
     return client.deposit_status(
-        logger=logger, **_subdict(config, keys))
+        **_subdict(config, keys))
 
 
 def deposit_create(config, logger):
@@ -170,7 +174,7 @@ def deposit_create(config, logger):
     client = config['client']
     keys = ('collection', 'archive', 'metadata', 'slug', 'in_progress')
     return client.deposit_create(
-        logger=logger, **_subdict(config, keys))
+        **_subdict(config, keys))
 
 
 def deposit_update(config, logger):
@@ -183,7 +187,7 @@ def deposit_update(config, logger):
     keys = ('collection', 'deposit_id', 'archive', 'metadata',
             'slug', 'in_progress', 'replace')
     return client.deposit_update(
-        logger=logger, **_subdict(config, keys))
+        **_subdict(config, keys))
 
 
 @cli.command()
@@ -232,8 +236,6 @@ More documentation can be found at
 https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
-    logger = ctx.obj['logger']
-
     config = {}
 
     try:
