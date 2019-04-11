@@ -63,9 +63,11 @@ def _create_collection(name):
 @click.option('--lastname', default='', help="User's last name")
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
+@click.option('--provider-url', default='', help="Provider URL")
+@click.option('--domain', help="The domain")
 @click.pass_context
 def user_create(ctx, username, password, firstname, lastname, email,
-                collection):
+                collection, provider_url, domain):
     """Create a user with some needed information (password, collection)
 
     If the collection does not exist, the collection is then created
@@ -97,6 +99,8 @@ def user_create(ctx, username, password, firstname, lastname, email,
     user.last_name = lastname
     user.email = email
     user.is_active = True
+    user.provider_url = provider_url
+    user.domain = domain
     user.save()
 
     click.echo('Information registered for user %s' % user)
