@@ -29,6 +29,7 @@ RAW_METADATA_KEY = 'raw-metadata'
 ARCHIVE_TYPE = 'archive'
 METADATA_TYPE = 'metadata'
 
+
 AUTHORIZED_PLATFORMS = ['development', 'production', 'testing']
 
 DEPOSIT_STATUS_REJECTED = 'rejected'
@@ -46,7 +47,7 @@ SWH_PERSON = {
 }
 
 
-def setup_django_for(platform, config_file=None):
+def setup_django_for(platform=None, config_file=None):
     """Setup function for command line tools (swh.deposit.create_user) to
        initialize the needed db access.
 
@@ -64,11 +65,13 @@ def setup_django_for(platform, config_file=None):
         ValueError in case of wrong platform inputs.
 
     """
-    if platform not in AUTHORIZED_PLATFORMS:
-        raise ValueError('Platform should be one of %s' % AUTHORIZED_PLATFORMS)
-
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                          'swh.deposit.settings.%s' % platform)
+    if platform is not None:
+        if platform not in AUTHORIZED_PLATFORMS:
+            raise ValueError('Platform should be one of %s' %
+                             AUTHORIZED_PLATFORMS)
+        if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+            os.environ['DJANGO_SETTINGS_MODULE'] = (
+                'swh.deposit.settings.%s' % platform)
 
     if config_file:
         os.environ.setdefault('SWH_CONFIG_FILENAME', config_file)
