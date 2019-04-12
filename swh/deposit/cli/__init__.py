@@ -26,7 +26,7 @@ def main():
     logging.basicConfig()
     from . import deposit  # noqa
     try:
-        from . import server  # noqa
+        from . import admin  # noqa
     except ImportError:  # server part is optional
         pass
 
