@@ -79,6 +79,9 @@ def user_create(ctx, username, password, firstname, lastname, email,
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositClient
 
+    # If collection is not provided, fallback to username
+    if not collection:
+        collection = username
     click.echo('collection: %s' % collection)
     # create the collection if it does not exist
     collection = _create_collection(collection)
