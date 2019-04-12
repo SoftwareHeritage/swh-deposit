@@ -45,6 +45,8 @@ for key in ('scheduler', 'private'):
             "Production: invalid configuration; missing %s config entry." % (
                 key, ))
 
+ALLOWED_HOSTS += conf.get('allowed_hosts', [])
+
 private_conf = conf['private']
 SECRET_KEY = private_conf['secret_key']
 
