@@ -175,7 +175,9 @@ class DepositRequest(models.Model):
     # this can be null when type is 'metadata'
     archive = models.FileField(null=True, upload_to=client_directory_path)
 
-    type = models.CharField(max_length=8, choices=REQUEST_TYPES)
+    type = models.CharField(max_length=8,
+                            choices=REQUEST_TYPES,
+                            null=True)
 
     class Meta:
         db_table = 'deposit_request'
