@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 The Software Heritage developers
+# Copyright (C) 2017-2019 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,6 +9,7 @@ import shutil
 import tempfile
 
 from contextlib import contextmanager
+from dateutil import parser
 from django.http import FileResponse
 from rest_framework import status
 
@@ -136,6 +137,45 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
                 if client_domain in metadata[field]:
                     return metadata[field]
 
+    def _prepare_date(self, date):
+        """Prepare date fields as normalized swh date
+
+        """
+        if isinstance(date, list):
+            date = date[0]
+        if isinstance(date, str):
+            date = parser.parse(date)
+
+        return identifiers.normalize_timestamp(date)
+
+    def _compute_date(self, deposit, metadata):
+        """Compute the date to use as a tuple of author date, committer date.
+        Each of those date are swh normalized immediately.
+
+        Args:
+            deposit (Deposit): Deposit model representation
+            metadata (Dict): Metadata dict representation
+
+        Returns:
+            Tuple of author date, committer date. Those dates are
+            swh normalized.
+
+        """
+        commit_date = metadata.get('codemeta:datePublished')
+        author_date = metadata.get('codemeta:dateCreated')
+
+        if author_date and commit_date:
+            t = (author_date, commit_date)
+        elif commit_date:
+            t = (commit_date, commit_date)
+        elif author_date:
+            t = (author_date, author_date)
+        else:
+            date = deposit.complete_date
+            t = (date, date)
+        return (
+            self._prepare_date(t[0]), self._prepare_date(t[1]))
+
     def metadata_read(self, deposit):
         """Read and aggregate multiple data on deposit into one unified data
            dictionary.
@@ -169,12 +209,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
             fullname, deposit.id, deposit.collection.name)
-        complete_date = identifiers.normalize_timestamp(deposit.complete_date)
+
+        author_date, commit_date = self._compute_date(deposit, metadata)
 
         data['revision'] = {
             'synthetic': True,
-            'date': complete_date,
-            'committer_date': complete_date,
+            'date': author_date,
+            'committer_date': commit_date,
             'author': author_committer,
             'committer': author_committer,
             'type': revision_type,

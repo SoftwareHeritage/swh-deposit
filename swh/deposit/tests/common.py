@@ -346,6 +346,7 @@ class CommonCreationRoutine(TestCase):
         <entry xmlns="http://www.w3.org/2005/Atom">
             <author>another one</author>
             <author>no one</author>
+            <codemeta:dateCreated>2017-10-07T15:17:08Z</codemeta:dateCreated>
         </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>
