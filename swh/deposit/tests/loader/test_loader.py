@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -16,7 +16,7 @@ from swh.deposit.loader import loader
 from swh.deposit.config import (
     PRIVATE_GET_RAW_CONTENT, PRIVATE_GET_DEPOSIT_METADATA, PRIVATE_PUT_DEPOSIT
 )
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from swh.loader.core.tests import BaseLoaderStorageTest
 
 
