@@ -350,7 +350,9 @@ class StatusDepositClient(BaseDepositClient):
             'deposit_swh_id',
             'deposit_swh_id_context',
             'deposit_swh_anchor_id',
-            'deposit_swh_anchor_id_context'])
+            'deposit_swh_anchor_id_context',
+            'deposit_external_id',
+        ])
 
 
 class BaseCreateDepositClient(BaseDepositClient):

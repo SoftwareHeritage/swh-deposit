@@ -64,6 +64,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['deposit_status'], DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(r['deposit_status_detail'],
                          DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
+        self.assertEqual(r['deposit_external_id'], external_id)
 
     def test_status_with_swh_information(self):
         _status = DEPOSIT_STATUS_LOAD_SUCCESS

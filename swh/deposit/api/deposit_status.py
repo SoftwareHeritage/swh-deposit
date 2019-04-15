@@ -48,6 +48,7 @@ class SWHDepositStatus(SWHBaseDeposit):
             'swh_id_context': None,
             'swh_anchor_id': None,
             'swh_anchor_id_context': None,
+            'external_id': None,
         }
 
         if deposit.swh_id:
@@ -58,6 +59,8 @@ class SWHDepositStatus(SWHBaseDeposit):
             context['swh_anchor_id'] = deposit.swh_anchor_id
         if deposit.swh_anchor_id_context:
             context['swh_anchor_id_context'] = deposit.swh_anchor_id_context
+        if deposit.external_id:
+            context['external_id'] = deposit.external_id
 
         return render(req, 'deposit/status.xml',
                       context=context,
