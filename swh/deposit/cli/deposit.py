@@ -23,11 +23,11 @@ class InputError(ValueError):
     pass
 
 
-def generate_slug(prefix='swh-sample'):
+def generate_slug():
     """Generate a slug (sample purposes).
 
     """
-    return '%s-%s' % (prefix, uuid.uuid4())
+    return str(uuid.uuid4())
 
 
 def client_command_parse_input(
