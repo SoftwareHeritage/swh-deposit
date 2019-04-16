@@ -3,11 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import logging
 import os
+import logging
+import tempfile
 import uuid
 
 import click
+import xmltodict
 
 from swh.deposit.client import PublicApiDepositClient
 from swh.deposit.cli import cli
@@ -30,11 +32,60 @@ def generate_slug():
     return str(uuid.uuid4())
 
 
+def generate_metadata_file(name, authors):
+    """Generate a temporary metadata file with the minimum required metadata
+
+    This generates a xml file in a temporary location and returns the
+    path to that file.
+
+    This is up to the client of that function to clean up the
+    temporary file.
+
+    """
+    _, tmpfile = tempfile.mkstemp(prefix='swh.deposit.cli.')
+
+    # generate a metadata file with the minimum required metadata
+    codemetadata = {
+        'entry': {
+            '@xmlns': "http://www.w3.org/2005/Atom",
+            '@xmlns:codemeta': "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+            'codemeta:name': name,
+            'codemeta:author': [{
+                'codemeta:name': author_name
+            } for author_name in authors],
+        },
+    }
+
+    logging.debug('Temporary file: %s', tmpfile)
+    logging.debug('Metadata dict to generate as xml: %s', codemetadata)
+    s = xmltodict.unparse(codemetadata, pretty=True)
+    logging.debug('Metadata dict as xml generated: %s', s)
+    with open(tmpfile, 'w') as fp:
+        fp.write(s)
+    return tmpfile
+
+
+def _cleanup_tempfile(config):
+    """Clean up the temporary metadata file generated.
+
+    Args:
+
+        config (Dict): A configuration dict with 2 important keys for
+        that routine, 'cleanup_tempfile' (bool) and 'metadata' (path
+        to eventually clean up)
+
+    """
+    if config['cleanup_tempfile']:
+        path = config['metadata']
+        if os.path.exists(path):
+            os.unlink(path)
+
+
 def client_command_parse_input(
         username, password, archive, metadata,
         archive_deposit, metadata_deposit,
         collection, slug, partial, deposit_id, replace,
-        url, status):
+        url, status, name, authors):
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -74,82 +125,99 @@ def client_command_parse_input(
             'deposit_id': optional deposit identifier
 
     """
-    if status and not deposit_id:
-        raise InputError("Deposit id must be provided for status check")
+    cleanup_tempfile = False
 
-    if status and deposit_id:  # status is higher priority over deposit
-        archive_deposit = False
-        metadata_deposit = False
-        archive = None
-        metadata = None
+    try:
+        if status and not deposit_id:
+            raise InputError("Deposit id must be provided for status check")
 
-    if archive_deposit and metadata_deposit:
-        # too many flags use, remove redundant ones (-> multipart deposit)
-        archive_deposit = False
-        metadata_deposit = False
+        if status and deposit_id:  # status is higher priority over deposit
+            archive_deposit = False
+            metadata_deposit = False
+            archive = None
+            metadata = None
 
-    if archive and not os.path.exists(archive):
-        raise InputError('Software Archive %s must exist!' % archive)
+        if archive_deposit and metadata_deposit:
+            # too many flags use, remove redundant ones (-> multipart deposit)
+            archive_deposit = False
+            metadata_deposit = False
 
-    if archive and not metadata:
-        metadata = '%s.metadata.xml' % archive
+        if archive and not os.path.exists(archive):
+            raise InputError('Software Archive %s must exist!' % archive)
 
-    if metadata_deposit:
-        archive = None
+        if archive and not metadata:  # we need to have the metadata
+            if name and authors:
+                metadata = generate_metadata_file(name, authors)
+                cleanup_tempfile = True
+            else:
+                raise InputError('Either metadata deposit file or (`--name` '
+                                 ' and `--author`) fields must be provided')
 
-    if archive_deposit:
-        metadata = None
+        if metadata_deposit:
+            archive = None
 
-    if metadata_deposit and not metadata:
-        raise InputError(
-            "Metadata deposit filepath must be provided for metadata deposit")
+        if archive_deposit:
+            metadata = None
 
-    if metadata and not os.path.exists(metadata):
-        raise InputError('Software Archive metadata %s must exist!' % metadata)
+        if metadata_deposit and not metadata:
+            raise InputError(
+                "Metadata deposit filepath must be provided for metadata "
+                "deposit")
 
-    if not status and not archive and not metadata:
-        raise InputError(
-            'Please provide an actionable command. See --help for more '
-            'information.')
+        if metadata and not os.path.exists(metadata):
+            raise InputError('Software Archive metadata %s must exist!' % (
+                metadata, ))
 
-    if replace and not deposit_id:
-        raise InputError(
-            'To update an existing deposit, you must provide its id')
+        if not status and not archive and not metadata:
+            raise InputError(
+                'Please provide an actionable command. See --help for more '
+                'information.')
 
-    client = PublicApiDepositClient({
-        'url': url,
-        'auth': {
+        if replace and not deposit_id:
+            raise InputError(
+                'To update an existing deposit, you must provide its id')
+
+        client = PublicApiDepositClient({
+            'url': url,
+            'auth': {
+                'username': username,
+                'password': password
+            },
+        })
+
+        if not collection:
+            # retrieve user's collection
+            sd_content = client.service_document()
+            if 'error' in sd_content:
+                raise InputError('Service document retrieval: %s' % (
+                    sd_content['error'], ))
+            collection = sd_content[
+                'service']['workspace']['collection']['sword:name']
+
+        if not slug:
+            # generate slug
+            slug = generate_slug()
+
+        return {
+            'archive': archive,
             'username': username,
-            'password': password
-        },
-    })
-
-    if not collection:
-        # retrieve user's collection
-        sd_content = client.service_document()
-        if 'error' in sd_content:
-            raise InputError('Service document retrieval: %s' % (
-                sd_content['error'], ))
-        collection = sd_content[
-            'service']['workspace']['collection']['sword:name']
-
-    if not slug:
-        # generate slug
-        slug = generate_slug()
-
-    return {
-        'archive': archive,
-        'username': username,
-        'password': password,
-        'metadata': metadata,
-        'collection': collection,
-        'slug': slug,
-        'in_progress': partial,
-        'client': client,
-        'url': url,
-        'deposit_id': deposit_id,
-        'replace': replace,
-    }
+            'password': password,
+            'metadata': metadata,
+            'cleanup_tempfile': cleanup_tempfile,
+            'collection': collection,
+            'slug': slug,
+            'in_progress': partial,
+            'client': client,
+            'url': url,
+            'deposit_id': deposit_id,
+            'replace': replace,
+        }
+    except Exception:  # to be clean, cleanup prior to raise
+        _cleanup_tempfile({
+            'cleanup_tempfile': cleanup_tempfile,
+            'metadata': metadata
+        })
+        raise
 
 
 def _subdict(d, keys):
@@ -219,6 +287,11 @@ def deposit_update(config, logger):
               help="(Optional) Deposit's status")
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
+@click.option('--name',
+              help='Software name')
+@click.option('--author', multiple=True,
+              help='Software author(s), this can be repeated as many times'
+              ' as there are authors')
 @click.pass_context
 def deposit(ctx,
             username, password, archive=None, metadata=None,
@@ -226,7 +299,7 @@ def deposit(ctx,
             collection=None, slug=None, partial=False, deposit_id=None,
             replace=False, status=False,
             url='https://deposit.softwareheritage.org/1',
-            verbose=False):
+            verbose=False, name=None, author=None):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line or access its
@@ -243,8 +316,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         config = client_command_parse_input(
             username, password, archive, metadata, archive_deposit,
             metadata_deposit, collection, slug, partial, deposit_id,
-            replace, url, status)
-
+            replace, url, status, name, author)
     except InputError as e:
         msg = 'Problem during parsing options: %s' % e
         r = {
@@ -253,17 +325,21 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         logger.info(r)
         return 1
 
-    if verbose:
-        logger.info("Parsed configuration: %s" % (
-            config, ))
+    try:
+        if verbose:
+            logger.info("Parsed configuration: %s" % (
+                config, ))
 
-    deposit_id = config['deposit_id']
+        deposit_id = config['deposit_id']
 
-    if status and deposit_id:
-        r = deposit_status(config, logger)
-    elif not status and deposit_id:
-        r = deposit_update(config, logger)
-    elif not status and not deposit_id:
-        r = deposit_create(config, logger)
+        if status and deposit_id:
+            r = deposit_status(config, logger)
+        elif not status and deposit_id:
+            r = deposit_update(config, logger)
+        elif not status and not deposit_id:
+            r = deposit_create(config, logger)
 
-    logger.info(r)
+        logger.info(r)
+
+    finally:
+        _cleanup_tempfile(config)
