@@ -489,6 +489,9 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             deposit id
 
         """
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',

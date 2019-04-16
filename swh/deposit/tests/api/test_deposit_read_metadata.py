@@ -23,6 +23,43 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
     """Deposit access to read metadata information on deposit.
 
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.template_metadata = """<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+  <title>Composing a Web of Audio Applications</title>
+  <client>hal</client>
+  <id>hal-01243065</id>
+  <external_identifier>hal-01243065</external_identifier>
+  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
+  <codemeta:applicationCategory>test</codemeta:applicationCategory>
+  <codemeta:keywords>DSP programming</codemeta:keywords>
+  <codemeta:description>this is the description</codemeta:description>
+  <codemeta:version>1</codemeta:version>
+  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
+  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
+  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
+  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
+  <codemeta:license>
+    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
+  </codemeta:license>
+  <codemeta:license>
+    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
+  </codemeta:license>
+  <author>
+    <name>HAL</name>
+    <email>hal@ccsd.cnrs.fr</email>
+  </author>
+  <codemeta:author>
+    <codemeta:name>Morane Gruenpeter</codemeta:name>
+  </codemeta:author>
+%s
+</entry>"""
+
     def test_read_metadata(self):
         """Private metadata read api to existing deposit should return metadata
 
@@ -208,43 +245,14 @@ class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(data, expected_meta)
 
     def test_read_metadata_3(self):
-        """dateCreated/datePublished provided, revision uses author/committer date
+        """date(Created|Published) provided, uses author/committer date
 
         """
         # add metadata to the deposit with datePublished and dateCreated
-        codemeta_entry_data = b"""<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom"
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-  <title>Composing a Web of Audio Applications</title>
-  <client>hal</client>
-  <id>hal-01243065</id>
-  <external_identifier>hal-01243065</external_identifier>
-  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
-  <codemeta:applicationCategory>test</codemeta:applicationCategory>
-  <codemeta:keywords>DSP programming,Web</codemeta:keywords>
+        codemeta_entry_data = self.template_metadata % """
   <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
-  <codemeta:description>this is the description</codemeta:description>
-  <codemeta:version>1</codemeta:version>
-  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
-  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
-  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
   <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
-  <codemeta:license>
-    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
-  </codemeta:license>
-  <codemeta:license>
-    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
-  </codemeta:license>
-  <author>
-    <name>HAL</name>
-    <email>hal@ccsd.cnrs.fr</email>
-  </author>
-  <codemeta:author>
-    <codemeta:name>Morane Gruenpeter</codemeta:name>
-  </codemeta:author>
-</entry>"""  # noqa
+"""
 
         deposit_id = self.create_deposit_partial_with_data_in_args(
             codemeta_entry_data)
@@ -281,7 +289,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             'codemeta:datePublished': '2017-05-03T16:08:47+02:00',
             'codemeta:description': 'this is the description',
             'codemeta:developmentStatus': 'stable',
-            'codemeta:keywords': 'DSP programming,Web',
+            'codemeta:keywords': 'DSP programming',
             'codemeta:license': [
                 {
                     'codemeta:name': 'GNU General Public License v3.0 only'
@@ -365,38 +373,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         """dateCreated/datePublished not provided, revision uses complete_date
 
         """
-        # add metadata to the deposit with datePublished and dateCreated
-        codemeta_entry_data = b"""<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom"
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-  <title>Composing a Web of Audio Applications</title>
-  <client>hal</client>
-  <id>hal-01243065</id>
-  <external_identifier>hal-01243065</external_identifier>
-  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
-  <codemeta:applicationCategory>test</codemeta:applicationCategory>
-  <codemeta:keywords>DSP programming</codemeta:keywords>
-  <codemeta:description>this is the description</codemeta:description>
-  <codemeta:version>1</codemeta:version>
-  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
-  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
-  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
-  <codemeta:license>
-    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
-  </codemeta:license>
-  <codemeta:license>
-    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
-  </codemeta:license>
-  <author>
-    <name>HAL</name>
-    <email>hal@ccsd.cnrs.fr</email>
-  </author>
-  <codemeta:author>
-    <codemeta:name>Morane Gruenpeter</codemeta:name>
-  </codemeta:author>
-</entry>"""  # noqa
+        codemeta_entry_data = self.template_metadata % ''
 
         deposit_id = self.create_deposit_partial_with_data_in_args(
             codemeta_entry_data)
@@ -525,42 +502,13 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         the first occurrence (of datePublished) is selected.
 
         """
-        # add metadata to the deposit with datePublished and dateCreated
-        codemeta_entry_data = b"""<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom"
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-  <title>Composing a Web of Audio Applications</title>
-  <client>hal</client>
-  <id>hal-01243065</id>
-  <external_identifier>hal-01243065</external_identifier>
-  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
-  <codemeta:applicationCategory>test</codemeta:applicationCategory>
-  <codemeta:keywords>DSP programming,Web</codemeta:keywords>
+        # add metadata to the deposit with multiple datePublished/dateCreated
+        codemeta_entry_data = self.template_metadata % """
   <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
-  <codemeta:dateCreated>2016-04-06T17:08:47+02:00</codemeta:dateCreated>
-  <codemeta:description>this is the description</codemeta:description>
-  <codemeta:version>1</codemeta:version>
-  <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
-  <codemeta:developmentStatus>stable</codemeta:developmentStatus>
-  <codemeta:programmingLanguage>php</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>python</codemeta:programmingLanguage>
-  <codemeta:programmingLanguage>C</codemeta:programmingLanguage>
   <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
+  <codemeta:dateCreated>2016-04-06T17:08:47+02:00</codemeta:dateCreated>
   <codemeta:datePublished>2018-05-03T16:08:47+02:00</codemeta:datePublished>
-  <codemeta:license>
-    <codemeta:name>GNU General Public License v3.0 only</codemeta:name>
-  </codemeta:license>
-  <codemeta:license>
-    <codemeta:name>CeCILL Free Software License Agreement v1.1</codemeta:name>
-  </codemeta:license>
-  <author>
-    <name>HAL</name>
-    <email>hal@ccsd.cnrs.fr</email>
-  </author>
-  <codemeta:author>
-    <codemeta:name>Morane Gruenpeter</codemeta:name>
-  </codemeta:author>
-</entry>"""  # noqa
+"""
 
         deposit_id = self.create_deposit_partial_with_data_in_args(
             codemeta_entry_data)
@@ -603,7 +551,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             ],
             'codemeta:description': 'this is the description',
             'codemeta:developmentStatus': 'stable',
-            'codemeta:keywords': 'DSP programming,Web',
+            'codemeta:keywords': 'DSP programming',
             'codemeta:license': [
                 {
                     'codemeta:name': 'GNU General Public License v3.0 only'
