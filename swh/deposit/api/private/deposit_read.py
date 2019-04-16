@@ -140,6 +140,18 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
     def _prepare_date(self, date):
         """Prepare date fields as normalized swh date
 
+        If date is a list, elect arbitrarily the first element of that
+        list
+
+        If date is (then) a string, parse it through
+        dateutil.parser.parse to extract a datetime.
+
+        Then normalize it through
+        swh.model.identifiers.normalize_timestamp.
+
+        Returns
+            The swh date object
+
         """
         if isinstance(date, list):
             date = date[0]
@@ -148,9 +160,9 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
 
         return identifiers.normalize_timestamp(date)
 
-    def _compute_date(self, deposit, metadata):
-        """Compute the date to use as a tuple of author date, committer date.
-        Each of those date are swh normalized immediately.
+    def _normalize_dates(self, deposit, metadata):
+        """Normalize the date to use as a tuple of author date, committer date
+           from the incoming metadata.
 
         Args:
             deposit (Deposit): Deposit model representation
@@ -165,16 +177,18 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         author_date = metadata.get('codemeta:dateCreated')
 
         if author_date and commit_date:
-            t = (author_date, commit_date)
+            pass
         elif commit_date:
-            t = (commit_date, commit_date)
+            author_date = commit_date
         elif author_date:
-            t = (author_date, author_date)
+            commit_date = author_date
         else:
-            date = deposit.complete_date
-            t = (date, date)
+            author_date = deposit.complete_date
+            commit_date = deposit.complete_date
         return (
-            self._prepare_date(t[0]), self._prepare_date(t[1]))
+            self._prepare_date(author_date),
+            self._prepare_date(commit_date)
+        )
 
     def metadata_read(self, deposit):
         """Read and aggregate multiple data on deposit into one unified data
@@ -210,7 +224,7 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         revision_msg = '%s: Deposit %s in collection %s' % (
             fullname, deposit.id, deposit.collection.name)
 
-        author_date, commit_date = self._compute_date(deposit, metadata)
+        author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         data['revision'] = {
             'synthetic': True,
