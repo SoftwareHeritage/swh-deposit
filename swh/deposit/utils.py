@@ -3,7 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from dateutil import parser
+import iso8601
+
 from types import GeneratorType
 
 from swh.model.identifiers import normalize_timestamp
@@ -77,6 +78,6 @@ def normalize_date(date):
     if isinstance(date, list):
         date = date[0]
     if isinstance(date, str):
-        date = parser.parse(date)
+        date = iso8601.parse_date(date)
 
     return normalize_timestamp(date)
