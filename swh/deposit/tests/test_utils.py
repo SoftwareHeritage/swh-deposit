@@ -8,6 +8,24 @@ import unittest
 from unittest.mock import patch
 
 from swh.deposit import utils
+from swh.deposit.models import Deposit, DepositClient
+
+
+def test_origin_url_from():
+
+    for provider_url, external_id in (
+            ('http://somewhere.org', 'uuid'),
+            ('http://overthejungle.org', 'diuu'),
+    ):
+        deposit = Deposit(
+            client=DepositClient(provider_url=provider_url),
+            external_id=external_id
+        )
+
+        actual_origin_url = utils.origin_url_from(deposit)
+
+        assert actual_origin_url == '%s/%s' % (
+            provider_url.rstrip('/'), external_id)
 
 
 class UtilsTestCase(unittest.TestCase):

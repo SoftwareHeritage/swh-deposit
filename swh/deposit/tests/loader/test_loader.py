@@ -19,6 +19,7 @@ from swh.deposit.config import (
 from django.urls import reverse
 from swh.loader.core.tests import BaseLoaderStorageTest
 
+from swh.deposit import utils
 
 from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
 from .. import TEST_LOADER_CONFIG
@@ -123,7 +124,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertCountSnapshots(1)
 
         codemeta = 'codemeta:'
-        origin_url = 'https://hal-test.archives-ouvertes.fr/hal-01243065'
+        deposit = Deposit.objects.get(pk=deposit_id)
+        origin_url = utils.origin_url_from(deposit)
+
         expected_origin_metadata = {
             '@xmlns': 'http://www.w3.org/2005/Atom',
             '@xmlns:codemeta': 'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0',
@@ -131,7 +134,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                 'email': 'hal@ccsd.cnrs.fr',
                 'name': 'HAL'
             },
-            codemeta + 'url': origin_url,
+            codemeta + 'url': 'https://hal-test.archives-ouvertes.fr/hal-01243065',  # same as xml  # noqa
             codemeta + 'runtimePlatform': 'phpstorm',
             codemeta + 'license': [
                 {
@@ -158,8 +161,6 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         }
         self.assertOriginMetadataContains('deposit', origin_url,
                                           expected_origin_metadata)
-
-        deposit = Deposit.objects.get(pk=deposit_id)
 
         self.assertRegex(deposit.swh_id, r'^swh:1:dir:.*')
         self.assertEqual(deposit.swh_id_context, '%s;origin=%s' % (

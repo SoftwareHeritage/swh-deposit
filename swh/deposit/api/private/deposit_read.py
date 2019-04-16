@@ -15,6 +15,7 @@ from rest_framework import status
 from swh.core import tarball
 from swh.model import identifiers
 from swh.deposit.utils import normalize_date
+from swh.deposit import utils
 
 from . import DepositReadMixin
 from ...config import SWH_PERSON, ARCHIVE_TYPE
@@ -130,13 +131,6 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         self.provider = self.config['provider']
         self.tool = self.config['tool']
 
-    def _retrieve_url(self, deposit, metadata):
-        client_domain = deposit.client.domain
-        for field in metadata:
-            if 'url' in field:
-                if client_domain in metadata[field]:
-                    return metadata[field]
-
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
            from the incoming metadata.
@@ -178,14 +172,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
             Dictionary of data representing the deposit to inject in swh.
 
         """
-        data = {}
         metadata = self._metadata_get(deposit)
-        # create origin_url from metadata only after deposit_check validates it
-        origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
-        data['origin'] = {
-            'type': 'deposit',
-            'url': origin_url
+        data = {
+            'origin': {
+                'type': 'deposit',
+                'url': utils.origin_url_from(deposit),
+            }
         }
 
         # revision

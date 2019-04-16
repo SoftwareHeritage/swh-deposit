@@ -10,6 +10,21 @@ from types import GeneratorType
 from swh.model.identifiers import normalize_timestamp
 
 
+def origin_url_from(deposit):
+    """Given a deposit instance, return the associated origin url
+
+    Args:
+        deposit (Deposit): The deposit from which derives the origin url
+
+    Returns
+       The associated origin url
+
+    """
+    base_url = deposit.client.provider_url
+    external_id = deposit.external_id
+    return '%s/%s' % (base_url.rstrip('/'), external_id)
+
+
 def merge(*dicts):
     """Given an iterator of dicts, merge them losing no information.
 
