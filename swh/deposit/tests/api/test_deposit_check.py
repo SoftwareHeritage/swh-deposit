@@ -137,7 +137,7 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         mandatory = details['metadata'][0]
         self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
         self.assertEqual(set(mandatory['fields']),
-                         set(['url', 'external_identifier', 'author']))
+                         set(['author']))
         alternate = details['metadata'][1]
         self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
         self.assertEqual(alternate['fields'], ['name or title'])

@@ -124,8 +124,6 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
 
         """
         required_fields = {
-            'url': False,
-            'external_identifier': False,
             'author': False,
         }
         alternate_fields = {
