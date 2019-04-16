@@ -1,10 +1,11 @@
-# Copyright (C) 2018  The Software Heritage developers
+# Copyright (C) 2018-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import unittest
 
+from unittest.mock import patch
 
 from swh.deposit import utils
 
@@ -130,3 +131,52 @@ class UtilsTestCase(unittest.TestCase):
             utils.merge(d1)
 
         self.assertEqual(utils.merge(d0), d0)
+
+
+@patch('swh.deposit.utils.normalize_timestamp', side_effect=lambda x: x)
+def test_normalize_date_0(mock_normalize):
+    """When date is a list, choose the first date and normalize it
+
+    Note: We do not test swh.model.identifiers which is already tested
+    in swh.model
+
+    """
+    actual_date = utils.normalize_date(['2017-10-12', 'date1'])
+
+    expected_date = '2017-10-12 00:00:00'
+
+    assert str(actual_date) == expected_date
+
+
+@patch('swh.deposit.utils.normalize_timestamp', side_effect=lambda x: x)
+def test_normalize_date_1(mock_normalize):
+    """Providing a date in a reasonable format, everything is fine
+
+    Note: We do not test swh.model.identifiers which is already tested
+    in swh.model
+
+    """
+    mock_normalize.side_effect = lambda x: x
+
+    actual_date = utils.normalize_date('2018-06-11 17:02:02')
+
+    expected_date = '2018-06-11 17:02:02'  # <- why?
+
+    assert str(actual_date) == expected_date
+
+
+@patch('swh.deposit.utils.normalize_timestamp', side_effect=lambda x: x)
+def test_normalize_date_doing_irrelevant_stuff(mock_normalize):
+    """Providing a date in an unknown format, it's completely off
+
+    Note: We do not test swh.model.identifiers which is already tested
+    in swh.model
+
+    """
+    mock_normalize.side_effect = lambda x: x
+
+    actual_date = utils.normalize_date('2017')
+
+    expected_date = '2017-04-16 00:00:00'  # <- why?
+
+    assert str(actual_date) == expected_date

@@ -1,9 +1,12 @@
-# Copyright (C) 2018 The Software Heritage developers
+# Copyright (C) 2018-2019 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from dateutil import parser
 from types import GeneratorType
+
+from swh.model.identifiers import normalize_timestamp
 
 
 def merge(*dicts):
@@ -53,3 +56,27 @@ def merge(*dicts):
                 new_val = _extend([existing_val], value)
             d[key] = new_val
     return d
+
+
+def normalize_date(date):
+    """Normalize date fields as expected by swh workers.
+
+    If date is a list, elect arbitrarily the first element of that
+    list
+
+    If date is (then) a string, parse it through
+    dateutil.parser.parse to extract a datetime.
+
+    Then normalize it through
+    swh.model.identifiers.normalize_timestamp.
+
+    Returns
+        The swh date object
+
+    """
+    if isinstance(date, list):
+        date = date[0]
+    if isinstance(date, str):
+        date = parser.parse(date)
+
+    return normalize_timestamp(date)

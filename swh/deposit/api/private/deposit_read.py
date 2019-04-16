@@ -9,12 +9,12 @@ import shutil
 import tempfile
 
 from contextlib import contextmanager
-from dateutil import parser
 from django.http import FileResponse
 from rest_framework import status
 
 from swh.core import tarball
 from swh.model import identifiers
+from swh.deposit.utils import normalize_date
 
 from . import DepositReadMixin
 from ...config import SWH_PERSON, ARCHIVE_TYPE
@@ -137,29 +137,6 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
                 if client_domain in metadata[field]:
                     return metadata[field]
 
-    def _prepare_date(self, date):
-        """Prepare date fields as normalized swh date
-
-        If date is a list, elect arbitrarily the first element of that
-        list
-
-        If date is (then) a string, parse it through
-        dateutil.parser.parse to extract a datetime.
-
-        Then normalize it through
-        swh.model.identifiers.normalize_timestamp.
-
-        Returns
-            The swh date object
-
-        """
-        if isinstance(date, list):
-            date = date[0]
-        if isinstance(date, str):
-            date = parser.parse(date)
-
-        return identifiers.normalize_timestamp(date)
-
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
            from the incoming metadata.
@@ -186,8 +163,8 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
             author_date = deposit.complete_date
             commit_date = deposit.complete_date
         return (
-            self._prepare_date(author_date),
-            self._prepare_date(commit_date)
+            normalize_date(author_date),
+            normalize_date(commit_date)
         )
 
     def metadata_read(self, deposit):
