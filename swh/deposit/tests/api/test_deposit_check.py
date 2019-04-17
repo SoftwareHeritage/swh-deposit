@@ -16,7 +16,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.api.private.deposit_check import (
     SWHChecksDeposit, MANDATORY_ARCHIVE_INVALID,
-    MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
+    MANDATORY_FIELDS_MISSING,
     MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING,
     MANDATORY_ARCHIVE_MISSING
 )
@@ -141,8 +141,6 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         alternate = details['metadata'][1]
         self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
         self.assertEqual(alternate['fields'], ['name or title'])
-        # url check failure
-        self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
 
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)

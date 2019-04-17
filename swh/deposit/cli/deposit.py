@@ -32,7 +32,7 @@ def generate_slug():
     return str(uuid.uuid4())
 
 
-def generate_metadata_file(name, authors):
+def generate_metadata_file(name, external_id, authors):
     """Generate a temporary metadata file with the minimum required metadata
 
     This generates a xml file in a temporary location and returns the
@@ -40,6 +40,14 @@ def generate_metadata_file(name, authors):
 
     This is up to the client of that function to clean up the
     temporary file.
+
+    Args:
+        name (str): Software's name
+        external_id (str): External identifier (slug) or generated one
+        authors (List[str]): List of author names
+
+    Returns:
+        Filepath to the metadata generated file
 
     """
     _, tmpfile = tempfile.mkstemp(prefix='swh.deposit.cli.')
@@ -50,6 +58,7 @@ def generate_metadata_file(name, authors):
             '@xmlns': "http://www.w3.org/2005/Atom",
             '@xmlns:codemeta': "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
             'codemeta:name': name,
+            'codemeta:identifier': external_id,
             'codemeta:author': [{
                 'codemeta:name': author_name
             } for author_name in authors],
@@ -145,9 +154,12 @@ def client_command_parse_input(
         if archive and not os.path.exists(archive):
             raise InputError('Software Archive %s must exist!' % archive)
 
+        if not slug:  # generate one as this is mandatory
+            slug = generate_slug()
+
         if archive and not metadata:  # we need to have the metadata
             if name and authors:
-                metadata = generate_metadata_file(name, authors)
+                metadata = generate_metadata_file(name, slug, authors)
                 cleanup_tempfile = True
             else:
                 raise InputError('Either metadata deposit file or (`--name` '
@@ -193,10 +205,6 @@ def client_command_parse_input(
                     sd_content['error'], ))
             collection = sd_content[
                 'service']['workspace']['collection']['sword:name']
-
-        if not slug:
-            # generate slug
-            slug = generate_slug()
 
         return {
             'archive': archive,
