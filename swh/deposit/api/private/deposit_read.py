@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 The Software Heritage developers
+# Copyright (C) 2017-2019 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,6 +14,8 @@ from rest_framework import status
 
 from swh.core import tarball
 from swh.model import identifiers
+from swh.deposit.utils import normalize_date
+from swh.deposit import utils
 
 from . import DepositReadMixin
 from ...config import SWH_PERSON, ARCHIVE_TYPE
@@ -129,12 +131,35 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         self.provider = self.config['provider']
         self.tool = self.config['tool']
 
-    def _retrieve_url(self, deposit, metadata):
-        client_domain = deposit.client.domain
-        for field in metadata:
-            if 'url' in field:
-                if client_domain in metadata[field]:
-                    return metadata[field]
+    def _normalize_dates(self, deposit, metadata):
+        """Normalize the date to use as a tuple of author date, committer date
+           from the incoming metadata.
+
+        Args:
+            deposit (Deposit): Deposit model representation
+            metadata (Dict): Metadata dict representation
+
+        Returns:
+            Tuple of author date, committer date. Those dates are
+            swh normalized.
+
+        """
+        commit_date = metadata.get('codemeta:datePublished')
+        author_date = metadata.get('codemeta:dateCreated')
+
+        if author_date and commit_date:
+            pass
+        elif commit_date:
+            author_date = commit_date
+        elif author_date:
+            commit_date = author_date
+        else:
+            author_date = deposit.complete_date
+            commit_date = deposit.complete_date
+        return (
+            normalize_date(author_date),
+            normalize_date(commit_date)
+        )
 
     def metadata_read(self, deposit):
         """Read and aggregate multiple data on deposit into one unified data
@@ -147,14 +172,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
             Dictionary of data representing the deposit to inject in swh.
 
         """
-        data = {}
         metadata = self._metadata_get(deposit)
-        # create origin_url from metadata only after deposit_check validates it
-        origin_url = self._retrieve_url(deposit, metadata)
         # Read information metadata
-        data['origin'] = {
-            'type': 'deposit',
-            'url': origin_url
+        data = {
+            'origin': {
+                'type': 'deposit',
+                'url': utils.origin_url_from(deposit),
+            }
         }
 
         # revision
@@ -169,12 +193,13 @@ class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
         revision_type = 'tar'
         revision_msg = '%s: Deposit %s in collection %s' % (
             fullname, deposit.id, deposit.collection.name)
-        complete_date = identifiers.normalize_timestamp(deposit.complete_date)
+
+        author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         data['revision'] = {
             'synthetic': True,
-            'date': complete_date,
-            'committer_date': complete_date,
+            'date': author_date,
+            'committer_date': commit_date,
             'author': author_committer,
             'committer': author_committer,
             'type': revision_type,

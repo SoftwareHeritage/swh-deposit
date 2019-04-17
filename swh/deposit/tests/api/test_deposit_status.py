@@ -1,10 +1,10 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -64,6 +64,7 @@ class DepositStatusTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(r['deposit_status'], DEPOSIT_STATUS_DEPOSITED)
         self.assertEqual(r['deposit_status_detail'],
                          DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED])
+        self.assertEqual(r['deposit_external_id'], external_id)
 
     def test_status_with_swh_information(self):
         _status = DEPOSIT_STATUS_LOAD_SUCCESS

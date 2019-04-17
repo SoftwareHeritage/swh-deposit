@@ -1,0 +1,4 @@
+
+        [console_scripts]
+        swh-deposit=swh.deposit.cli:main
+    

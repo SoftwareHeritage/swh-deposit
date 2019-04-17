@@ -11,10 +11,14 @@ import hashlib
 import os
 import requests
 import xmltodict
+import logging
 
 from abc import ABCMeta, abstractmethod
 
 from swh.core.config import SWHConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 def _parse(stream, encoding='utf-8'):
@@ -115,14 +119,14 @@ class PrivateApiDepositClient(BaseApiDepositClient):
     - update a given deposit's status
 
     """
-    def archive_get(self, archive_update_url, archive_path, log=None):
+    def archive_get(self, archive_update_url, archive):
         """Retrieve the archive from the deposit to a local directory.
 
         Args:
             archive_update_url (str): The full deposit archive(s)'s raw content
                                to retrieve locally
 
-            archive_path (str): the local archive's path where to store
+            archive (str): the local archive's path where to store
             the raw content
 
         Returns:
@@ -132,20 +136,19 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         """
         r = self.do('get', archive_update_url, stream=True)
         if r.ok:
-            with open(archive_path, 'wb') as f:
+            with open(archive, 'wb') as f:
                 for chunk in r.iter_content():
                     f.write(chunk)
 
-            return archive_path
+            return archive
 
         msg = 'Problem when retrieving deposit archive at %s' % (
             archive_update_url, )
-        if log:
-            log.error(msg)
+        logger.error(msg)
 
         raise ValueError(msg)
 
-    def metadata_get(self, metadata_url, log=None):
+    def metadata_get(self, metadata_url):
         """Retrieve the metadata information on a given deposit.
 
         Args:
@@ -162,8 +165,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             return r.json()
 
         msg = 'Problem when retrieving metadata at %s' % metadata_url
-        if log:
-            log.error(msg)
+        logger.error(msg)
 
         raise ValueError(msg)
 
@@ -189,7 +191,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
 
         self.do('put', update_status_url, json=payload)
 
-    def check(self, check_url, log=None):
+    def check(self, check_url):
         """Check the deposit's associated data (metadata, archive(s))
 
         Args:
@@ -202,8 +204,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             return data['status']
 
         msg = 'Problem when checking deposit %s' % check_url
-        if log:
-            log.error(msg)
+        logger.error(msg)
 
         raise ValueError(msg)
 
@@ -316,7 +317,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """Parse service document's success response.
 
         """
-        return _parse_with_filter(xml_content, keys=['collection'])
+        return _parse(xml_content)
 
 
 class StatusDepositClient(BaseDepositClient):
@@ -349,7 +350,9 @@ class StatusDepositClient(BaseDepositClient):
             'deposit_swh_id',
             'deposit_swh_id_context',
             'deposit_swh_anchor_id',
-            'deposit_swh_anchor_id_context'])
+            'deposit_swh_anchor_id_context',
+            'deposit_external_id',
+        ])
 
 
 class BaseCreateDepositClient(BaseDepositClient):
@@ -490,12 +493,12 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
 
         return files, headers
 
-    def compute_information(self, collection, archive_path, metadata_path,
+    def compute_information(self, collection, archive, metadata,
                             in_progress, slug, **kwargs):
         info = self._compute_information(
-            collection, archive_path, in_progress, slug)
+            collection, archive, in_progress, slug)
         info_meta = self._compute_information(
-            collection, metadata_path, in_progress, slug, is_archive=False)
+            collection, metadata, in_progress, slug, is_archive=False)
         files, headers = self._multipart_info(info, info_meta)
         return {'files': files, 'headers': headers}
 
@@ -515,35 +518,35 @@ class UpdateMultipartDepositClient(CreateMultipartDepositClient):
 
 class PublicApiDepositClient(BaseApiDepositClient):
     """Public api deposit client."""
-    def service_document(self, log=None):
+    def service_document(self):
         """Retrieve service document endpoint's information."""
         return ServiceDocumentDepositClient(self.config).execute()
 
-    def deposit_status(self, collection, deposit_id, log=None):
+    def deposit_status(self, collection, deposit_id):
         """Retrieve status information on a deposit."""
         return StatusDepositClient(self.config).execute(
             collection, deposit_id)
 
-    def deposit_create(self, collection, slug, archive_path=None,
-                       metadata_path=None, in_progress=False, log=None):
+    def deposit_create(self, collection, slug, archive=None,
+                       metadata=None, in_progress=False):
         """Create a new deposit (archive, metadata, both as multipart)."""
-        if archive_path and not metadata_path:
+        if archive and not metadata:
             return CreateArchiveDepositClient(self.config).execute(
-                collection, archive_path, in_progress, slug)
-        elif not archive_path and metadata_path:
+                collection, archive, in_progress, slug)
+        elif not archive and metadata:
             return CreateMetadataDepositClient(self.config).execute(
-                collection, metadata_path, in_progress, slug,
+                collection, metadata, in_progress, slug,
                 is_archive=False)
         else:
             return CreateMultipartDepositClient(self.config).execute(
-                collection, archive_path, metadata_path, in_progress,
+                collection, archive, metadata, in_progress,
                 slug)
 
-    def deposit_update(self, collection, deposit_id, slug, archive_path=None,
-                       metadata_path=None, in_progress=False,
-                       replace=False, log=None):
+    def deposit_update(self, collection, deposit_id, slug, archive=None,
+                       metadata=None, in_progress=False,
+                       replace=False):
         """Update (add/replace) existing deposit (archive, metadata, both)."""
-        r = self.deposit_status(collection, deposit_id, log=log)
+        r = self.deposit_status(collection, deposit_id)
         if 'error' in r:
             return r
 
@@ -556,19 +559,19 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 'deposit_status': status,
                 'deposit_id': deposit_id,
             }
-        if archive_path and not metadata_path:
+        if archive and not metadata:
             r = UpdateArchiveDepositClient(self.config).execute(
-                collection, archive_path, in_progress, slug,
-                deposit_id=deposit_id, replace=replace, log=log)
-        elif not archive_path and metadata_path:
+                collection, archive, in_progress, slug,
+                deposit_id=deposit_id, replace=replace)
+        elif not archive and metadata:
             r = UpdateMetadataDepositClient(self.config).execute(
-                collection, metadata_path, in_progress, slug,
-                deposit_id=deposit_id, replace=replace, log=log)
+                collection, metadata, in_progress, slug,
+                deposit_id=deposit_id, replace=replace)
         else:
             r = UpdateMultipartDepositClient(self.config).execute(
-                collection, archive_path, metadata_path, in_progress,
-                slug, deposit_id=deposit_id, replace=replace, log=log)
+                collection, archive, metadata, in_progress,
+                slug, deposit_id=deposit_id, replace=replace)
 
         if 'error' in r:
             return r
-        return self.deposit_status(collection, deposit_id, log=log)
+        return self.deposit_status(collection, deposit_id)

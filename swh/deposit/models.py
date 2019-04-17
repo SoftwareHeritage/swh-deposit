@@ -16,7 +16,7 @@ from django.utils.timezone import now
 from .config import (
     DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
     DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE,
-    DEPOSIT_STATUS_REJECTED
+    DEPOSIT_STATUS_REJECTED, ARCHIVE_TYPE, METADATA_TYPE
 )
 
 
@@ -141,20 +141,6 @@ class Deposit(models.Model):
         return str(d)
 
 
-class DepositRequestType(models.Model):
-    """Deposit request type made by clients (either archive or metadata)
-
-    """
-    id = models.BigAutoField(primary_key=True)
-    name = models.TextField()
-
-    class Meta:
-        db_table = 'deposit_request_type'
-
-    def __str__(self):
-        return str({'id': self.id, 'name': self.name})
-
-
 def client_directory_path(instance, filename):
     """Callable to upload archive in MEDIA_ROOT/user_<id>/<filename>
 
@@ -168,6 +154,10 @@ def client_directory_path(instance, filename):
 
     """
     return 'client_{0}/{1}'.format(instance.deposit.client.id, filename)
+
+
+REQUEST_TYPES = [(ARCHIVE_TYPE, ARCHIVE_TYPE),
+                 (METADATA_TYPE, METADATA_TYPE)]
 
 
 class DepositRequest(models.Model):
@@ -185,8 +175,9 @@ class DepositRequest(models.Model):
     # this can be null when type is 'metadata'
     archive = models.FileField(null=True, upload_to=client_directory_path)
 
-    type = models.ForeignKey(
-        'DepositRequestType', models.DO_NOTHING)
+    type = models.CharField(max_length=8,
+                            choices=REQUEST_TYPES,
+                            null=True)
 
     class Meta:
         db_table = 'deposit_request'

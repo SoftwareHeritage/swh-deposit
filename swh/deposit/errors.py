@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -20,6 +20,14 @@ CHECKSUM_MISMATCH = 'checksum-mismatch'
 MEDIATION_NOT_ALLOWED = 'mediation-not-allowed'
 METHOD_NOT_ALLOWED = 'method-not-allowed'
 MAX_UPLOAD_SIZE_EXCEEDED = 'max_upload_size_exceeded'
+PARSING_ERROR = 'parsing-error'
+
+
+class ParserError(ValueError):
+    """Specific parsing error detected when parsing the xml metadata input
+
+    """
+    pass
 
 
 ERRORS = {
@@ -49,6 +57,11 @@ ERRORS = {
         'tag': 'sword:ErrorChecksumMismatch',
     },
     BAD_REQUEST: {
+        'status': status.HTTP_400_BAD_REQUEST,
+        'iri': 'http://purl.org/net/sword/error/ErrorBadRequest',
+        'tag': 'sword:ErrorBadRequest',
+    },
+    PARSING_ERROR: {
         'status': status.HTTP_400_BAD_REQUEST,
         'iri': 'http://purl.org/net/sword/error/ErrorBadRequest',
         'tag': 'sword:ErrorBadRequest',

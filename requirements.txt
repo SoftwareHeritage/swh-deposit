@@ -1,5 +1,4 @@
 vcversioner
 click
-Django < 2.0
-djangorestframework
 xmltodict
+iso8601
