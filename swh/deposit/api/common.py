@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,7 +6,7 @@
 import hashlib
 
 from abc import ABCMeta, abstractmethod
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -21,16 +21,17 @@ from ..config import (
     SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI,
     ARCHIVE_KEY, METADATA_KEY, RAW_METADATA_KEY, STATE_IRI,
     DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS
+    DEPOSIT_STATUS_LOAD_SUCCESS, ARCHIVE_TYPE, METADATA_TYPE
 )
 from ..errors import (
     MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT,
     CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED,
     make_error_response_from_dict, FORBIDDEN,
-    NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
+    NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED,
+    ParserError, PARSING_ERROR
 )
 from ..models import (
-    Deposit, DepositRequest, DepositCollection, DepositRequestType,
+    Deposit, DepositRequest, DepositCollection,
     DepositClient
 )
 from ..parsers import parse_xml
@@ -62,12 +63,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
-    def __init__(self):
-        super().__init__()
-        deposit_request_types = DepositRequestType.objects.all()
-        self.deposit_request_types = {
-            type.name: type for type in deposit_request_types
-        }
 
     def _read_headers(self, req):
         """Read and unify the necessary headers from the request (those are
@@ -205,19 +200,19 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if replace_metadata:
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types[METADATA_KEY]).delete()
+                type=METADATA_TYPE).delete()
 
         if replace_archives:
             DepositRequest.objects.filter(
                 deposit=deposit,
-                type=self.deposit_request_types[ARCHIVE_KEY]).delete()
+                type=ARCHIVE_TYPE).delete()
 
         deposit_request = None
 
         archive_file = deposit_request_data.get(ARCHIVE_KEY)
         if archive_file:
             deposit_request = DepositRequest(
-                type=self.deposit_request_types[ARCHIVE_KEY],
+                type=ARCHIVE_TYPE,
                 deposit=deposit,
                 archive=archive_file)
             deposit_request.save()
@@ -226,7 +221,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if metadata:
             raw_metadata = deposit_request_data.get(RAW_METADATA_KEY)
             deposit_request = DepositRequest(
-                type=self.deposit_request_types[METADATA_KEY],
+                type=METADATA_TYPE,
                 deposit=deposit,
                 metadata=metadata,
                 raw_metadata=raw_metadata)
@@ -246,7 +241,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 'The deposit %s does not exist' % deposit_id)
         DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types[ARCHIVE_KEY]).delete()
+            type=ARCHIVE_TYPE).delete()
 
         return {}
 
@@ -508,8 +503,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if precondition_status_response:
             return precondition_status_response
 
-        raw_metadata, metadata = self._read_metadata(
-            data['application/atom+xml'])
+        try:
+            raw_metadata, metadata = self._read_metadata(
+                data['application/atom+xml'])
+        except ParserError:
+            return make_error_dict(
+                PARSING_ERROR,
+                'Malformed xml metadata',
+                "The xml received is malformed. "
+                "Please ensure your metadata file is correctly formatted.")
 
         # actual storage of data
         deposit = self._deposit_put(deposit_id=deposit_id,
@@ -566,7 +568,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        raw_metadata, metadata = self._read_metadata(req.data)
+        try:
+            raw_metadata, metadata = self._read_metadata(req.data)
+        except ParserError:
+            return make_error_dict(
+                BAD_REQUEST,
+                'Malformed xml metadata',
+                "The xml received is malformed. "
+                "Please ensure your metadata file is correctly formatted.")
+
         if not metadata:
             return make_error_dict(
                 BAD_REQUEST,

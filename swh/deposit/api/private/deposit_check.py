@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -19,7 +19,6 @@ from ...models import Deposit
 
 MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
 ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
-INCOMPATIBLE_URL_FIELDS = "At least one url field must be compatible with the client's domain name"  # noqa
 MANDATORY_ARCHIVE_UNREADABLE = 'At least one of its associated archives is not readable'  # noqa
 MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (i.e contains only one archive)'  # noqa
 MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
@@ -124,8 +123,6 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
 
         """
         required_fields = {
-            'url': False,
-            'external_identifier': False,
             'author': False,
         }
         alternate_fields = {
@@ -165,35 +162,6 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
             'metadata': detail
         }
 
-    def _check_url(self, client_domain, metadata):
-        """Check compatibility between client_domain and url field in metadata
-
-        Args:
-            client_domain (str): url associated with the deposit's client
-            metadata (dict): Metadata where to find url
-
-        Returns:
-            tuple (status, error_detail): True, None if url associated
-              with the deposit's client is ok, (False,
-              <detailed-error>) otherwise.
-
-        """
-        url_fields = []
-        for field in metadata:
-            if 'url' in field:
-                if client_domain in metadata[field]:
-                    return True, None
-                url_fields.append(field)
-
-        detail = {
-            'url': {
-                'summary': INCOMPATIBLE_URL_FIELDS,
-            }
-        }
-        if url_fields:
-            detail['url']['fields'] = url_fields
-        return False, detail
-
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
            content to the client.
@@ -208,7 +176,6 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
-        client_domain = deposit.client.domain
         metadata = self._metadata_get(deposit)
         problems = {}
         # will check each deposit's associated request (both of type
@@ -221,11 +188,7 @@ class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
         if not metadata_status:
             problems.update(error_detail)
 
-        url_status, error_detail = self._check_url(client_domain, metadata)
-        if not url_status:
-            problems.update(error_detail)
-
-        deposit_status = archives_status and metadata_status and url_status
+        deposit_status = archives_status and metadata_status
 
         # if any problems arose, the deposit is rejected
         if not deposit_status:

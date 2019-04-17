@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,6 +14,9 @@ from django.conf import settings
 from rest_framework.parsers import BaseParser
 from rest_framework.parsers import FileUploadParser
 from rest_framework.parsers import MultiPartParser
+from xml.parsers.expat import ExpatError
+
+from swh.deposit.errors import ParserError
 
 
 class SWHFileUploadZipParser(FileUploadParser):
@@ -76,8 +79,14 @@ def parse_xml(raw_content):
     Args:
         raw_content (bytes): The content to parse
 
+    Raises:
+        ParserError in case of a malformed xml
+
     Returns:
         content parsed as dict.
 
     """
-    return SWHXMLParser().parse(raw_content)
+    try:
+        return SWHXMLParser().parse(raw_content)
+    except ExpatError as e:
+        raise ParserError(str(e))

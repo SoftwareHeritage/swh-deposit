@@ -49,7 +49,7 @@ class DepositLoader(loader.LegacyLocalTarLoader):
 
     def prepare_origin_visit(self, *, deposit_meta_url, **kwargs):
         self.metadata = self.deposit_client.metadata_get(
-            deposit_meta_url, log=self.log)
+            deposit_meta_url)
         self.origin = self.metadata['origin']
         self.visit_date = None
 
@@ -65,7 +65,7 @@ class DepositLoader(loader.LegacyLocalTarLoader):
         self.temporary_directory = temporary_directory
         archive_path = os.path.join(temporary_directory.name, 'archive.zip')
         archive = self.deposit_client.archive_get(
-            archive_url, archive_path, log=self.log)
+            archive_url, archive_path)
 
         metadata = self.metadata
         revision = metadata['revision']

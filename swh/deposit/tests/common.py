@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,7 +10,7 @@ import shutil
 import tarfile
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 from io import BytesIO
 import pytest
@@ -23,7 +23,6 @@ from swh.deposit.config import (COL_IRI, EM_IRI, EDIT_SE_IRI,
                                 DEPOSIT_STATUS_DEPOSITED)
 from swh.deposit.models import DepositClient, DepositCollection, Deposit
 from swh.deposit.models import DepositRequest
-from swh.deposit.models import DepositRequestType
 from swh.deposit.parsers import parse_xml
 from swh.deposit.settings.testing import MEDIA_ROOT
 from swh.core import tarball
@@ -276,12 +275,6 @@ class BasicTestCase(TestCase):
         self.maxDiff = None
 
         # basic minimum test data
-        deposit_request_types = {}
-        # Add deposit request types
-        for deposit_request_type in ['archive', 'metadata']:
-            drt = DepositRequestType(name=deposit_request_type)
-            drt.save()
-            deposit_request_types[deposit_request_type] = drt
 
         _name = 'hal'
         _provider_url = 'https://hal-test.archives-ouvertes.fr/'
@@ -302,8 +295,6 @@ class BasicTestCase(TestCase):
         self.user = _client
         self.username = _name
         self.userpass = _name
-
-        self.deposit_request_types = deposit_request_types
 
     def tearDown(self):
         super().tearDown()
@@ -355,6 +346,7 @@ class CommonCreationRoutine(TestCase):
         <entry xmlns="http://www.w3.org/2005/Atom">
             <author>another one</author>
             <author>no one</author>
+            <codemeta:dateCreated>2017-10-07T15:17:08Z</codemeta:dateCreated>
         </entry>"""
 
         self.atom_entry_data2 = b"""<?xml version="1.0"?>
@@ -497,6 +489,9 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             deposit id
 
         """
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
             content_type='application/atom+xml;type=entry',
@@ -568,6 +563,6 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         assert deposit_requests is not []
 
         for dr in deposit_requests:
-            if dr.type.name == 'metadata':
+            if dr.type == 'metadata':
                 assert deposit_requests[0].metadata is not {}
         return deposit_id

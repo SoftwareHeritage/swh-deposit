@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,7 +9,7 @@ from swh.deposit.models import Deposit
 from swh.deposit.config import PRIVATE_CHECK_DEPOSIT, DEPOSIT_STATUS_VERIFIED
 from swh.deposit.config import DEPOSIT_STATUS_REJECTED
 from swh.deposit.loader.checker import DepositChecker
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 
 from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG

@@ -1,9 +1,9 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -29,9 +29,9 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
 
         self.assertEqual(len(deposit_requests), 2)
         for dr in deposit_requests:
-            if dr.type.name == ARCHIVE_KEY:
+            if dr.type == ARCHIVE_KEY:
                 continue
-            elif dr.type.name == METADATA_KEY:
+            elif dr.type == METADATA_KEY:
                 continue
             else:
                 self.fail('only archive and metadata type should exist '
@@ -47,8 +47,8 @@ class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
         requests = list(DepositRequest.objects.filter(deposit=deposit))
 
         self.assertEqual(len(requests), 2)
-        self.assertEqual(requests[0].type.name, 'metadata')
-        self.assertEqual(requests[1].type.name, 'metadata')
+        self.assertEqual(requests[0].type, 'metadata')
+        self.assertEqual(requests[1].type, 'metadata')
 
     def test_delete_archive_on_undefined_deposit_fails(self):
         """Delete undefined deposit returns a 404 response
