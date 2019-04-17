@@ -25,6 +25,10 @@ DEBUG = False
 # and check the required setup is ok
 # If not raise an error explaining the errors
 config_file = os.environ.get('SWH_CONFIG_FILENAME')
+if not config_file:
+    raise ValueError('Production: SWH_CONFIG_FILENANE must be set to the'
+                     ' configuration file needed!')
+
 if not os.path.exists(config_file):
     raise ValueError('Production: configuration file %s does not exist!' % (
         config_file, ))
@@ -40,6 +44,8 @@ for key in ('scheduler', 'private'):
         raise ValueError(
             "Production: invalid configuration; missing %s config entry." % (
                 key, ))
+
+ALLOWED_HOSTS += conf.get('allowed_hosts', [])
 
 private_conf = conf['private']
 SECRET_KEY = private_conf['secret_key']

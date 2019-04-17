@@ -1,11 +1,11 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import unittest
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 import pytest
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -16,7 +16,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.api.private.deposit_check import (
     SWHChecksDeposit, MANDATORY_ARCHIVE_INVALID,
-    MANDATORY_FIELDS_MISSING, INCOMPATIBLE_URL_FIELDS,
+    MANDATORY_FIELDS_MISSING,
     MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING,
     MANDATORY_ARCHIVE_MISSING
 )
@@ -137,12 +137,10 @@ class CheckDepositTest(APITestCase, WithAuthTestCase,
         mandatory = details['metadata'][0]
         self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
         self.assertEqual(set(mandatory['fields']),
-                         set(['url', 'external_identifier', 'author']))
+                         set(['author']))
         alternate = details['metadata'][1]
         self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
         self.assertEqual(alternate['fields'], ['name or title'])
-        # url check failure
-        self.assertEqual(details['url']['summary'], INCOMPATIBLE_URL_FIELDS)
 
         deposit = Deposit.objects.get(pk=deposit.id)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)

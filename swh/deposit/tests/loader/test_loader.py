@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -16,9 +16,10 @@ from swh.deposit.loader import loader
 from swh.deposit.config import (
     PRIVATE_GET_RAW_CONTENT, PRIVATE_GET_DEPOSIT_METADATA, PRIVATE_PUT_DEPOSIT
 )
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from swh.loader.core.tests import BaseLoaderStorageTest
 
+from swh.deposit import utils
 
 from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
 from .. import TEST_LOADER_CONFIG
@@ -59,12 +60,10 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         # create the extraction dir used by the loader
         os.makedirs(TEST_LOADER_CONFIG['extraction_dir'], exist_ok=True)
 
-        # 1. create a deposit with archive and metadata
-        self.deposit_id = self.create_simple_binary_deposit()
-        # 2. Sets a basic client which accesses the test data
+        # Sets a basic client which accesses the test data
         loader_client = SWHDepositTestClient(self.client,
                                              config=CLIENT_TEST_CONFIG)
-        # 3. setup loader with that client
+        # Setup loader with that client
         self.loader = loader.DepositLoader(client=loader_client)
 
         self.storage = self.loader.storage
@@ -77,7 +76,11 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         """Load a deposit which is ready
 
         """
-        args = [self.collection.name, self.deposit_id]
+        # create a deposit with archive and metadata
+        deposit_id = self.create_simple_binary_deposit()
+        self.update_binary_deposit(deposit_id, status_partial=False)
+
+        args = [self.collection.name, deposit_id]
 
         archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
         deposit_meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
@@ -100,9 +103,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         """Load a deposit with metadata, test metadata integrity
 
         """
-        self.deposit_metadata_id = self.add_metadata_to_deposit(
-            self.deposit_id)
-        args = [self.collection.name, self.deposit_metadata_id]
+        deposit_id = self.create_simple_binary_deposit()
+        self.add_metadata_to_deposit(deposit_id, status_partial=False)
+        args = [self.collection.name, deposit_id]
 
         archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
         deposit_meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
@@ -121,7 +124,9 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         self.assertCountSnapshots(1)
 
         codemeta = 'codemeta:'
-        origin_url = 'https://hal-test.archives-ouvertes.fr/hal-01243065'
+        deposit = Deposit.objects.get(pk=deposit_id)
+        origin_url = utils.origin_url_from(deposit)
+
         expected_origin_metadata = {
             '@xmlns': 'http://www.w3.org/2005/Atom',
             '@xmlns:codemeta': 'https://doi.org/10.5063/SCHEMA/CODEMETA-2.0',
@@ -129,7 +134,7 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
                 'email': 'hal@ccsd.cnrs.fr',
                 'name': 'HAL'
             },
-            codemeta + 'url': origin_url,
+            codemeta + 'url': 'https://hal-test.archives-ouvertes.fr/hal-01243065',  # same as xml  # noqa
             codemeta + 'runtimePlatform': 'phpstorm',
             codemeta + 'license': [
                 {
@@ -156,8 +161,6 @@ class DepositLoaderScenarioTest(APITestCase, WithAuthTestCase,
         }
         self.assertOriginMetadataContains('deposit', origin_url,
                                           expected_origin_metadata)
-
-        deposit = Deposit.objects.get(pk=self.deposit_id)
 
         self.assertRegex(deposit.swh_id, r'^swh:1:dir:.*')
         self.assertEqual(deposit.swh_id_context, '%s;origin=%s' % (

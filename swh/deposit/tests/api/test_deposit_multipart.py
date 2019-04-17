@@ -1,10 +1,10 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from io import BytesIO
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -157,7 +157,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
@@ -226,7 +226,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
                 self.assertIsNone(deposit_request.metadata)
@@ -296,7 +296,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:
@@ -327,7 +327,7 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
         self.assertEqual(len(deposit_requests), 2)
         for deposit_request in deposit_requests:
             self.assertEqual(deposit_request.deposit, deposit)
-            if deposit_request.type.name == 'archive':
+            if deposit_request.type == 'archive':
                 self.assertRegex(deposit_request.archive.name,
                                  self.archive['name'])
             else:
@@ -400,3 +400,49 @@ class DepositMultipartTestCase(APITestCase, WithAuthTestCase, BasicTestCase,
             'application/x-tar) and 1 atom+xml entry for '
             'multipart deposit' in response.content.decode('utf-8')
         )
+
+    def test_post_deposit_multipart_400_when_badly_formatted_xml(self):
+        # given
+        url = reverse(COL_IRI, args=[self.collection.name])
+
+        data_atom_entry_ko = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+        xmlns:dcterms="http://purl.org/dc/terms/">
+    <titleTitle</title>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+</entry>
+"""
+
+        archive_content = b'some content representing archive'
+        archive = InMemoryUploadedFile(
+            BytesIO(archive_content),
+            field_name='archive0',
+            name='archive0',
+            content_type='application/zip',
+            size=len(archive_content),
+            charset=None)
+
+        atom_entry = InMemoryUploadedFile(
+            BytesIO(data_atom_entry_ko),
+            field_name='atom0',
+            name='atom0',
+            content_type='application/atom+xml; charset="utf-8"',
+            size=len(data_atom_entry_ko),
+            charset='utf-8')
+
+        # when
+        response = self.client.post(
+            url,
+            format='multipart',
+            data={
+                'archive': archive,
+                'atom_entry': atom_entry,
+            },
+            # + headers
+            HTTP_IN_PROGRESS='false',
+            HTTP_SLUG='external-id',
+        )
+
+        self.assertIn(b'Malformed xml metadata', response.content)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)

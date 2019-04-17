@@ -1,9 +1,9 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -46,21 +46,21 @@ class DepositUpdateOrReplaceExistingDataTest(
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['archive'])
+            type='archive')
 
         assert len(list(requests)) == 1
         assert self.archive['name'] in requests[0].archive.name
 
         # we have no metadata for that deposit
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata']))
+            deposit=deposit, type='metadata'))
         assert len(requests) == 0
 
         deposit_id = self._update_deposit_with_status(deposit_id,
                                                       status_partial=True)
 
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata']))
+            deposit=deposit, type='metadata'))
         assert len(requests) == 1
 
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
@@ -84,14 +84,14 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['archive'])
+            type='archive')
 
         self.assertEqual(len(list(requests)), 1)
         self.assertRegex(requests[0].archive.name, self.archive2['name'])
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata']))
+            deposit=deposit, type='metadata'))
         self.assertEqual(len(requests), 1)
 
     def test_replace_metadata_to_deposit_is_possible(self):
@@ -104,11 +104,11 @@ class DepositUpdateOrReplaceExistingDataTest(
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['metadata'])
+            type='metadata')
         assert len(list(requests)) == 0
 
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['archive']))
+            deposit=deposit, type='archive'))
         assert len(requests) == 1
 
         update_uri = reverse(EDIT_SE_IRI, args=[self.collection.name,
@@ -123,7 +123,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['metadata'])
+            type='metadata')
 
         self.assertEqual(len(list(requests)), 1)
         metadata = requests[0].metadata
@@ -131,7 +131,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['archive']))
+            deposit=deposit, type='archive'))
         self.assertEqual(len(requests), 1)
 
     def test_add_archive_to_deposit_is_possible(self):
@@ -144,13 +144,13 @@ class DepositUpdateOrReplaceExistingDataTest(
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['archive'])
+            type='archive')
 
         assert len(list(requests)) == 1
         assert self.archive['name'] in requests[0].archive.name
 
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata']))
+            deposit=deposit, type='metadata'))
         assert len(requests) == 0
 
         update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
@@ -174,7 +174,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         requests = list(DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['archive']).order_by('id'))
+            type='archive').order_by('id'))
 
         self.assertEqual(len(requests), 2)
         # first archive still exists
@@ -184,7 +184,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['metadata']))
+            deposit=deposit, type='metadata'))
         self.assertEqual(len(requests), 0)
 
     def test_add_metadata_to_deposit_is_possible(self):
@@ -197,12 +197,12 @@ class DepositUpdateOrReplaceExistingDataTest(
         deposit = Deposit.objects.get(pk=deposit_id)
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['metadata'])
+            type='metadata')
 
         assert len(list(requests)) == 2
 
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['archive']))
+            deposit=deposit, type='archive'))
         assert len(requests) == 0
 
         update_uri = reverse(EDIT_SE_IRI, args=[self.collection.name,
@@ -217,7 +217,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         requests = DepositRequest.objects.filter(
             deposit=deposit,
-            type=self.deposit_request_types['metadata']).order_by('id')
+            type='metadata').order_by('id')
 
         self.assertEqual(len(list(requests)), 3)
         # a new one was added
@@ -225,7 +225,7 @@ class DepositUpdateOrReplaceExistingDataTest(
 
         # check we did not touch the other parts
         requests = list(DepositRequest.objects.filter(
-            deposit=deposit, type=self.deposit_request_types['archive']))
+            deposit=deposit, type='archive'))
         self.assertEqual(len(requests), 0)
 
 

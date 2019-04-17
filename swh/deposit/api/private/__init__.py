@@ -19,7 +19,7 @@ class DepositReadMixin:
 
         Args:
             deposit (Deposit): Deposit to list requests for
-            request_type (str): Archive or metadata type
+            request_type (str): 'archive' or 'metadata'
 
         Yields:
             deposit requests of type request_type associated to the deposit
@@ -29,7 +29,7 @@ class DepositReadMixin:
             deposit = Deposit.objects.get(pk=deposit)
 
         deposit_requests = DepositRequest.objects.filter(
-            type=self.deposit_request_types[request_type],
+            type=request_type,
             deposit=deposit).order_by('id')
 
         for deposit_request in deposit_requests:
