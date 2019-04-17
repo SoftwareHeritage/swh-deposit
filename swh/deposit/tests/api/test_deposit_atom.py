@@ -297,6 +297,21 @@ and other stuff</description>
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_deposit_atom_without_slug_header_is_bad_request(self):
+    def test_post_deposit_atom_400_with_parsing_error(self):
+        """Posting parsing error prone atom should return 400
+
+        """
+        atom_entry_data_parsing_error_prone = b"""<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"</entry>
+  <title>Composing a Web of Audio Applications</title>
+  <clienhal</client>
+</entry>
+"""
+        response = self.client.post(
+            reverse(COL_IRI, args=[self.collection.name]),
+            content_type='application/atom+xml;type=entry',
+            data=atom_entry_data_parsing_error_prone)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         """Posting an atom entry without a slug header should return a 400
 
         """

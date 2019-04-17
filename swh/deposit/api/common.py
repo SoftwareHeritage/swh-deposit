@@ -27,7 +27,8 @@ from ..errors import (
     MAX_UPLOAD_SIZE_EXCEEDED, BAD_REQUEST, ERROR_CONTENT,
     CHECKSUM_MISMATCH, make_error_dict, MEDIATION_NOT_ALLOWED,
     make_error_response_from_dict, FORBIDDEN,
-    NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED
+    NOT_FOUND, make_error_response, METHOD_NOT_ALLOWED,
+    ParserError, PARSING_ERROR
 )
 from ..models import (
     Deposit, DepositRequest, DepositCollection,
@@ -502,8 +503,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         if precondition_status_response:
             return precondition_status_response
 
-        raw_metadata, metadata = self._read_metadata(
-            data['application/atom+xml'])
+        try:
+            raw_metadata, metadata = self._read_metadata(
+                data['application/atom+xml'])
+        except ParserError:
+            return make_error_dict(
+                PARSING_ERROR,
+                'Malformed xml metadata',
+                "The xml received is malformed. "
+                "Please ensure your metadata file is correctly formatted.")
 
         # actual storage of data
         deposit = self._deposit_put(deposit_id=deposit_id,
@@ -560,7 +568,15 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        raw_metadata, metadata = self._read_metadata(req.data)
+        try:
+            raw_metadata, metadata = self._read_metadata(req.data)
+        except ParserError:
+            return make_error_dict(
+                BAD_REQUEST,
+                'Malformed xml metadata',
+                "The xml received is malformed. "
+                "Please ensure your metadata file is correctly formatted.")
+
         if not metadata:
             return make_error_dict(
                 BAD_REQUEST,
