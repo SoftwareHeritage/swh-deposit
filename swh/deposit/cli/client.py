@@ -301,13 +301,13 @@ def deposit_update(config, logger):
               help='Software author(s), this can be repeated as many times'
               ' as there are authors')
 @click.pass_context
-def deposit(ctx,
-            username, password, archive=None, metadata=None,
-            archive_deposit=False, metadata_deposit=False,
-            collection=None, slug=None, partial=False, deposit_id=None,
-            replace=False, status=False,
-            url='https://deposit.softwareheritage.org/1',
-            verbose=False, name=None, author=None):
+def upload(ctx,
+           username, password, archive=None, metadata=None,
+           archive_deposit=False, metadata_deposit=False,
+           collection=None, slug=None, partial=False, deposit_id=None,
+           replace=False, status=False,
+           url='https://deposit.softwareheritage.org/1',
+           verbose=False, name=None, author=None):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line or access its
