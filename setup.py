@@ -16,22 +16,23 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-def parse_requirements(name=None):
-    if name:
-        reqf = 'requirements-%s.txt' % name
-    else:
-        reqf = 'requirements.txt'
-
+def parse_requirements(*names):
     requirements = []
-    if not path.exists(reqf):
-        return requirements
+    for name in names:
+        if name:
+            reqf = 'requirements-%s.txt' % name
+        else:
+            reqf = 'requirements.txt'
 
-    with open(reqf) as f:
-        for line in f.readlines():
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            requirements.append(line)
+        if not path.exists(reqf):
+            return requirements
+
+        with open(reqf) as f:
+            for line in f.readlines():
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                requirements.append(line)
     return requirements
 
 
@@ -44,17 +45,19 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/source/swh-deposit/',
     packages=find_packages(),
-    install_requires=parse_requirements() + parse_requirements('swh'),
+    install_requires=parse_requirements(None, 'swh'),
     tests_require=parse_requirements('test'),
     setup_requires=['vcversioner'],
-    extras_require={'testing': parse_requirements('test'),
-                    'server': (parse_requirements('server') +
-                               parse_requirements('swh-server'))},
+    extras_require={
+        'testing': parse_requirements('test', 'server', 'swh-server'),
+        'server': parse_requirements('server', 'swh-server')},
     vcversioner={},
     include_package_data=True,
     entry_points='''
         [console_scripts]
         swh-deposit=swh.deposit.cli:main
+        [swh.cli.subcommands]
+        deposit=swh.deposit.cli:deposit
     ''',
     classifiers=[
         "Programming Language :: Python :: 3",

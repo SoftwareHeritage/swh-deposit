@@ -6,31 +6,31 @@
 import click
 import logging
 
+from swh.core.cli import CONTEXT_SETTINGS
+
 logger = logging.getLogger(__name__)
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--log-level', '-l', default='INFO',
-              type=click.Choice(logging._nameToLevel.keys()),
-              help="Log level (default to INFO)")
 @click.pass_context
-def cli(ctx, log_level):
-    logger.setLevel(log_level)
+def deposit(ctx):
+    """Deposit main command
+    """
+    logger.debug('deposit')
     ctx.ensure_object(dict)
 
 
 def main():
     logging.basicConfig()
-    from . import client  # noqa
-    try:
-        from . import admin  # noqa
-    except ImportError:  # server part is optional
-        pass
+    return deposit(auto_envvar_prefix='SWH_DEPOSIT')
 
-    return cli(auto_envvar_prefix='SWH_DEPOSIT')
+# These import statements MUST be executed after defining the 'deposit' group
+# since the subcommands in these are defined using this 'deposit' group.
+from . import client  # noqa
+try:
+    from . import admin  # noqa
+except ImportError:  # server part is optional
+    logger.debug('admin subcommand not loaded')
 
 
 if __name__ == '__main__':
