@@ -6,10 +6,10 @@
 import click
 
 from swh.deposit.config import setup_django_for
-from swh.deposit.cli import cli
+from swh.deposit.cli import deposit
 
 
-@cli.group('admin')
+@deposit.group('admin')
 @click.option('--config-file', '-C', default=None,
               type=click.Path(exists=True, dir_okay=False,),
               help="Optional extra configuration file.")

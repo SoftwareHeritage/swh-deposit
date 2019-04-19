@@ -24,7 +24,7 @@ def cli(ctx, log_level):
 
 def main():
     logging.basicConfig()
-    from . import deposit  # noqa
+    from . import client  # noqa
     try:
         from . import admin  # noqa
     except ImportError:  # server part is optional
