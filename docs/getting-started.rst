@@ -2,9 +2,9 @@ Getting Started
 ===============
 
 This is a guide for how to prepare and push a software deposit with
-the swh-deposit commands.
+the `swh deposit` commands.
 
-The api is rooted at https://deposit.softwareheritage.org/1.
+The API is rooted at https://deposit.softwareheritage.org/1.
 
 For more details, see the `main documentation <./index.html>`__.
 
@@ -18,11 +18,14 @@ You need to be referenced on SWH's client list to have:
   - in this document we reference ``<name>`` as the client's name and
     ``<pass>`` as its associated authentication password.
 
-* an associated collection
+* an associated collection_.
 
 
-`Contact us for more
-information. <https://www.softwareheritage.org/contact/>`__
+.. _collection: https://bitworking.org/projects/atom/rfc5023#rfc.section.8.3.3
+
+
+`Contact us for more information.
+<https://www.softwareheritage.org/contact/>`__
 
 Prepare a deposit
 -----------------
@@ -30,16 +33,17 @@ Prepare a deposit
 
   - zip: common zip archive (no multi-disk zip files).
   - tar: tar archive without compression or optionally any of the
-         following compression algorithm gzip (.tar.gz, .tgz), bzip2
-         (.tar.bz2) , or lzma (.tar.lzma)
+         following compression algorithm gzip (`.tar.gz`, `.tgz`), bzip2
+         (`.tar.bz2`) , or lzma (`.tar.lzma`)
+
 * prepare a metadata file (`more details <./metadata.html>`__.):
 
-  - specify metadata schema/vocabulary (CodeMeta is recommended)
+  - specify metadata schema/vocabulary (CodeMeta is strongly recommended)
   - specify *MUST* metadata (url, authors, software name and
     the external\_identifier)
-  - add all available information under the compatible metadata term
+  - add all available information under the compatible metadata term.
 
-  An example of an atom entry file with CodeMeta terms:
+  Here is an example of an atom entry file with CodeMeta terms:
 
 .. code:: xml
 
@@ -115,24 +119,24 @@ minimal deposit
 
 .. code:: shell
 
- $ swh-deposit deposit --username name --password secret \
-                       --archive je-suis-gpl.tgz
+ $ swh deposit upload --username name --password secret \
+                      --archive je-suis-gpl.tgz
 
 with client's external identifier (``slug``)
 
 .. code:: shell
 
- $ swh-deposit deposit --username name --password secret \
-                       --archive je-suis-gpl.tgz \
-                       --slug je-suis-gpl
+ $ swh deposit upload --username name --password secret \
+                      --archive je-suis-gpl.tgz \
+                      --slug je-suis-gpl
 
 to a specific client's collection
 
 .. code:: shell
 
- $ swh-deposit deposit --username name --password secret \
-                       --archive je-suis-gpl.tgz \
-                       --collection 'second-collection'
+ $ swh deposit upload --username name --password secret \
+                      --archive je-suis-gpl.tgz \
+                      --collection 'second-collection'
 
 
 
@@ -180,9 +184,9 @@ First use the ``--partial`` argument to declare there is more to come
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --archive foo.tar.gz \
-                        --partial
+  $ swh deposit upload --username name --password secret \
+                       --archive foo.tar.gz \
+                       --partial
 
 
 2. Add content or metadata to the deposit
@@ -193,38 +197,44 @@ the ``--partial`` argument.
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --archive add-foo.tar.gz \
-                        --deposit-id 42 \
-                        --partial
+  $ swh deposit upload --username name --password secret \
+                       --archive add-foo.tar.gz \
+                       --deposit-id 42 \
+                       --partial
 
 
 In case you want to add only one new archive without metadata:
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --archive add-foo.tar.gz \
-                        --archive-deposit \
-                        --deposit-id 42 \
-                        --partial \
+  $ swh deposit upload --username name --password secret \
+                       --archive add-foo.tar.gz \
+                       --archive-deposit \
+                       --deposit-id 42 \
+                       --partial
 
 If you want to add only metadata, use:
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --metadata add-foo.tar.gz.metadata.xml \
-                        --metadata-deposit \
-                        --deposit-id 42 \
-                        --partial
+  $ swh deposit upload --username name --password secret \
+                       --metadata add-foo.tar.gz.metadata.xml \
+                       --metadata-deposit \
+                       --deposit-id 42 \
+                       --partial
 
 3. Finalize deposit
- ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 On your last addition, by not declaring it as ``--partial``, the
 deposit will be considered as completed and its status will be changed
-to ``deposited``.
+to ``deposited``:
 
+.. code:: shell
+
+  $ swh deposit upload --username name --password secret \
+                       --metadata add-foo.tar.gz.metadata.xml \
+                       --metadata-deposit \
+                       --deposit-id 42
 
 
 Update deposit
@@ -239,25 +249,25 @@ Update deposit
     - ``--metadata-deposit`` replaces associated existing metadata
     - ``--archive-deposit`` replaces associated archive(s)
     - by default, with no flag or both, you'll replace associated
-      metadata and archive(s)
+      metadata and archive(s):
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --deposit-id 11 \
-                        --archive updated-je-suis-gpl.tgz \
-                        --replace
+  $ swh deposit upload --username name --password secret \
+                       --deposit-id 11 \
+                       --archive updated-je-suis-gpl.tgz \
+                       --replace
 
 * update a loaded deposit with a new version:
 
   - by using the external-id with the ``--slug`` argument, you will
-    link the new deposit with its parent deposit
+    link the new deposit with its parent deposit:
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret \
-                        --archive je-suis-gpl-v2.tgz \
-                        --slug 'je-suis-gpl' \
+  $ swh deposit upload --username name --password secret \
+                       --archive je-suis-gpl-v2.tgz \
+                       --slug 'je-suis-gpl' \
 
 
 
@@ -268,7 +278,9 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-  $ swh-deposit deposit --username name --password secret --deposit-id '11' --status
+  $ swh deposit upload --username name --password secret \
+                       --deposit-id 11 \
+                       --status
 
 .. code:: json
 
