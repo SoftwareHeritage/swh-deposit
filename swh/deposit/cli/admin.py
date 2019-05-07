@@ -141,7 +141,7 @@ def user_exists(ctx, username):
         click.echo('User %s exists.' % username)
         ctx.exit(0)
     except DepositClient.DoesNotExist:
-        click.echo('User %s does not exists.' % username)
+        click.echo('User %s does not exist.' % username)
         ctx.exit(1)
 
 
