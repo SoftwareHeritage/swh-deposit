@@ -60,3 +60,28 @@ Note:
   - For production platform, you must either set an
     SWH_CONFIG_FILENAME environment variable or pass alongside the
     `--config-file` parameter
+
+Reschedule a deposit
+---------------------
+
+.. code:: shell
+
+    swh deposit admin \
+        --config-file /etc/softwareheritage/deposit/server.yml \
+        --platform production \
+        deposit reschedule \
+        --deposit-id <deposit-id>
+
+This will:
+
+- check the deposit's status to something reasonable (failed or done). That
+  means that the checks have passed alright but something went wrong during the
+  loading (failed: loading failed, done: loading ok, still for some reasons as
+  in bugs, we need to reschedule it)
+- reset the deposit's status to 'verified' (prior to any loading but after the
+  checks which are fine) and removes the different archives' identifiers
+  (swh-id, ...)
+- trigger back the loading task through the scheduler
+
+
+
