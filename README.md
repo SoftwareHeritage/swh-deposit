@@ -2,7 +2,7 @@
 
 This is [Software Heritage](https://www.softwareheritage.org)'s
 [SWORD 2.0](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html) Server
-implementation.
+implementation, as well as a simple client to upload deposits on the server.
 
 **S.W.O.R.D** (**S**imple **W**eb-Service **O**ffering **R**epository
 **D**eposit) is an interoperability standard for digital file deposit.
