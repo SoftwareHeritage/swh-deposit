@@ -41,7 +41,7 @@ Add client and collection
 
 .. code:: shell
 
-    swh-deposit \
+    swh deposit admin \
         --config-file /etc/softwareheritage/deposit/server.yml \
         --platform production \
         user create \
