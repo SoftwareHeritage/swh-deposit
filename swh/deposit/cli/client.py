@@ -134,19 +134,22 @@ def client_command_parse_input(
 
        By acceptable, we mean:
 
-           - A multipart deposit (create or update) needs both an
-             existing software archive and an existing metadata file
+           - A multipart deposit (create or update) requires:
 
-           - A binary deposit (create/update) needs an existing
-             software archive
+             - an existing software archive
+             - an existing metadata file or author(s) and name provided in
+               params
 
-           - A metadata deposit (create/update) needs an existing
-             metadata file
+           - A binary deposit (create/update) requires an existing software
+             archive
 
-           - A deposit update needs a deposit_id to be provided
+           - A metadata deposit (create/update) requires an existing metadata
+             file or author(s) and name provided in params
 
-        This won't prevent all failure cases though. The remaining
-        errors are already dealt with the underlying api client.
+           - A deposit update requires a deposit_id
+
+        This will not prevent all failure cases though. The remaining
+        errors are already dealt with by the underlying api client.
 
     Raises:
         InputError explaining the issue
