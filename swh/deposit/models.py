@@ -122,6 +122,14 @@ class Deposit(models.Model):
     status_detail = JSONField(null=True)
     # deposit can have one parent
     parent = models.ForeignKey('self', null=True)
+    check_task_id = models.TextField(
+        blank=True, null=True,
+        verbose_name="Scheduler's associated checking task id"
+    )
+    load_task_id = models.TextField(
+        blank=True, null=True,
+        verbose_name="Scheduler's associated loading task id"
+    )
 
     class Meta:
         db_table = 'deposit'

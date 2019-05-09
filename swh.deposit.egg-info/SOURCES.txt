@@ -44,7 +44,7 @@ swh/deposit/api/private/deposit_update_status.py
 swh/deposit/api/private/urls.py
 swh/deposit/cli/__init__.py
 swh/deposit/cli/admin.py
-swh/deposit/cli/deposit.py
+swh/deposit/cli/client.py
 swh/deposit/client/__init__.py
 swh/deposit/fixtures/__init__.py
 swh/deposit/fixtures/deposit_data.yaml
@@ -67,6 +67,7 @@ swh/deposit/migrations/0012_deposit_status_detail.py
 swh/deposit/migrations/0013_depositrequest_raw_metadata.py
 swh/deposit/migrations/0014_auto_20180720_1221.py
 swh/deposit/migrations/0015_depositrequest_typemigration.py
+swh/deposit/migrations/0016_auto_20190507_1408.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py

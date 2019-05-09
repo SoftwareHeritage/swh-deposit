@@ -12,7 +12,7 @@ import click
 import xmltodict
 
 from swh.deposit.client import PublicApiDepositClient
-from swh.deposit.cli import cli
+from swh.deposit.cli import deposit
 
 
 logger = logging.getLogger(__name__)
@@ -266,7 +266,7 @@ def deposit_update(config, logger):
         **_subdict(config, keys))
 
 
-@cli.command()
+@deposit.command()
 @click.option('--username', required=1,
               help="(Mandatory) User's name")
 @click.option('--password', required=1,
@@ -301,13 +301,13 @@ def deposit_update(config, logger):
               help='Software author(s), this can be repeated as many times'
               ' as there are authors')
 @click.pass_context
-def deposit(ctx,
-            username, password, archive=None, metadata=None,
-            archive_deposit=False, metadata_deposit=False,
-            collection=None, slug=None, partial=False, deposit_id=None,
-            replace=False, status=False,
-            url='https://deposit.softwareheritage.org/1',
-            verbose=False, name=None, author=None):
+def upload(ctx,
+           username, password, archive=None, metadata=None,
+           archive_deposit=False, metadata_deposit=False,
+           collection=None, slug=None, partial=False, deposit_id=None,
+           replace=False, status=False,
+           url='https://deposit.softwareheritage.org/1',
+           verbose=False, name=None, author=None):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line or access its
