@@ -6,10 +6,10 @@
 import click
 
 from swh.deposit.config import setup_django_for
-from swh.deposit.cli import cli
+from swh.deposit.cli import deposit
 
 
-@cli.group('admin')
+@deposit.group('admin')
 @click.option('--config-file', '-C', default=None,
               type=click.Path(exists=True, dir_okay=False,),
               help="Optional extra configuration file.")
@@ -141,7 +141,7 @@ def user_exists(ctx, username):
         click.echo('User %s exists.' % username)
         ctx.exit(0)
     except DepositClient.DoesNotExist:
-        click.echo('User %s does not exists.' % username)
+        click.echo('User %s does not exist.' % username)
         ctx.exit(1)
 
 
@@ -176,3 +176,79 @@ def collection_list(ctx):
     else:
         output = '\n'.join((col.name for col in collections))
     click.echo(output)
+
+
+@admin.group('deposit')
+@click.pass_context
+def deposit(ctx):
+    """Manipulate deposit."""
+    pass
+
+
+@deposit.command('reschedule')
+@click.option('--deposit-id', required=True, help="Deposit identifier")
+@click.pass_context
+def deposit_reschedule(ctx, deposit_id):
+    """Reschedule the deposit loading
+
+    This will:
+
+    - check the deposit's status to something reasonable (failed or done). That
+      means that the checks have passed alright but something went wrong during
+      the loading (failed: loading failed, done: loading ok, still for some
+      reasons as in bugs, we need to reschedule it)
+
+    - reset the deposit's status to 'verified' (prior to any loading but after
+      the checks which are fine) and removes the different archives'
+      identifiers (swh-id, ...)
+
+    - trigger back the loading task through the scheduler
+
+    """
+    # to avoid loading too early django namespaces
+    from datetime import datetime
+    from swh.deposit.models import Deposit
+    from swh.deposit.config import (
+        DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE,
+        DEPOSIT_STATUS_VERIFIED, SWHDefaultConfig,
+    )
+
+    try:
+        deposit = Deposit.objects.get(pk=deposit_id)
+    except Deposit.DoesNotExist:
+        click.echo('Deposit %s does not exist.' % deposit_id)
+        ctx.exit(1)
+
+    # Check the deposit is in a reasonable state
+    accepted_statuses = [
+        DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE
+    ]
+    if deposit.status == DEPOSIT_STATUS_VERIFIED:
+        click.echo('Deposit %s\'s status already set for rescheduling.' % (
+            deposit_id))
+        ctx.exit(0)
+
+    if deposit.status not in accepted_statuses:
+        click.echo('Deposit %s\'s status be one of %s.' % (
+            deposit_id, ', '.join(accepted_statuses)))
+        ctx.exit(1)
+
+    task_id = deposit.load_task_id
+    if not task_id:
+        click.echo('Deposit %s cannot be rescheduled. It misses the '
+                   'associated task.' % deposit_id)
+        ctx.exit(1)
+
+    # Reset the deposit's state
+    deposit.swh_id = None
+    deposit.swh_id_context = None
+    deposit.swh_anchor_id = None
+    deposit.swh_anchor_id_context = None
+    deposit.status = DEPOSIT_STATUS_VERIFIED
+    deposit.save()
+
+    # Trigger back the deposit
+    scheduler = SWHDefaultConfig().scheduler
+    scheduler.set_status_tasks(
+        [task_id], status='next_run_not_scheduled',
+        next_run=datetime.now())

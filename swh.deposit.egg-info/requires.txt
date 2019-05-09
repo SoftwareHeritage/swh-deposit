@@ -2,11 +2,13 @@ vcversioner
 click
 xmltodict
 iso8601
-swh.core>=0.0.36
+requests
+swh.core>=0.0.60
 
 [server]
 Django<2.0
 djangorestframework
+swh.core[http]
 swh.loader.tar>=0.0.39
 swh.loader.core>=0.0.32
 swh.scheduler>=0.0.39
@@ -16,3 +18,10 @@ swh.model>=0.0.26
 pytest<4
 pytest-django
 swh.scheduler[testing]
+Django<2.0
+djangorestframework
+swh.core[http]
+swh.loader.tar>=0.0.39
+swh.loader.core>=0.0.32
+swh.scheduler>=0.0.39
+swh.model>=0.0.26

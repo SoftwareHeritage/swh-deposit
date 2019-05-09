@@ -1,8 +1,17 @@
-swh-deposit (0.0.68-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.69-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.69     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-05-09 10:25:43
+    +0200)
+  * Upstream changes:     - v0.0.69     - cli.admin: Add an admin
+    subcommand 'deposit reschedule'     - models: Keep scheduler task
+    ids reference on deposit model     - cli: make the deposit cli
+    command a subcommand of the main 'swh' one     - docs: update the
+    getting-started document to use 'swh deposit upload' command     -
+    docs: Update the sys-info document to expose the `swh deposit admin
+    deposit     - reschedule` subcommand
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 17 Apr 2019 13:51:48 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 09 May 2019 08:35:53 +0000
 
 swh-deposit (0.0.68-1~swh1) unstable-swh; urgency=medium
 

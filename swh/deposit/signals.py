@@ -21,6 +21,22 @@ from .config import SWHDefaultConfig, DEPOSIT_STATUS_VERIFIED
 from .config import DEPOSIT_STATUS_DEPOSITED
 
 
+def schedule_task(scheduler, task):
+    """Schedule the task and return its identifier
+
+    Args:
+        task (dict): Task to schedule
+
+    Returns:
+        The task identifier
+
+    """
+    tasks = scheduler.create_tasks([task])
+    if tasks:
+        created_task = tasks[0]
+        return created_task['id']
+
+
 @receiver(post_save, sender=Deposit)
 def post_deposit_save(sender, instance, created, raw, using,
                       update_fields, **kwargs):
@@ -58,15 +74,25 @@ def post_deposit_save(sender, instance, created, raw, using,
 
     args = [instance.collection.name, instance.id]
 
-    if instance.status == DEPOSIT_STATUS_DEPOSITED:
-        # schedule archive check
+    # In the following, we are checking the instance.*task_id are not already
+    # populated because the `instance.save()` call will also trigger a call to
+    # that very function.
+
+    if (instance.status == DEPOSIT_STATUS_DEPOSITED and
+       not instance.check_task_id):
+        # schedule deposit's checks
         from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
         check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
         task = create_oneshot_task_dict(
             'swh-deposit-archive-checks',
             deposit_check_url=check_url)
-    else:  # instance.status == DEPOSIT_STATUS_VERIFIED:
-        # schedule loading
+        check_task_id = schedule_task(default_config.scheduler, task)
+        instance.check_task_id = check_task_id
+        instance.save()
+
+    elif (instance.status == DEPOSIT_STATUS_VERIFIED and
+          not instance.load_task_id):
+        # schedule deposit loading
         from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
         from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
         from swh.deposit.config import PRIVATE_PUT_DEPOSIT
@@ -80,4 +106,6 @@ def post_deposit_save(sender, instance, created, raw, using,
             deposit_meta_url=meta_url,
             deposit_update_url=update_url)
 
-    default_config.scheduler.create_tasks([task])
+        load_task_id = schedule_task(default_config.scheduler, task)
+        instance.load_task_id = load_task_id
+        instance.save()
