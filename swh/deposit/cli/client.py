@@ -90,11 +90,44 @@ def _cleanup_tempfile(config):
             os.unlink(path)
 
 
+def _client(url, username, password):
+    """Instantiate a client to access the deposit api server
+
+    Args:
+        url (str): Deposit api server
+        username (str): User
+        password (str): User's password
+
+    """
+    client = PublicApiDepositClient({
+        'url': url,
+        'auth': {
+            'username': username,
+            'password': password
+        },
+    })
+    return client
+
+
+def _collection(client):
+    """Retrieve the client's collection
+
+    """
+    # retrieve user's collection
+    sd_content = client.service_document()
+    if 'error' in sd_content:
+        raise InputError('Service document retrieval: %s' % (
+            sd_content['error'], ))
+    collection = sd_content[
+        'service']['workspace']['collection']['sword:name']
+    return collection
+
+
 def client_command_parse_input(
         username, password, archive, metadata,
         archive_deposit, metadata_deposit,
         collection, slug, partial, deposit_id, replace,
-        url, status, name, authors):
+        url, name, authors):
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -137,15 +170,6 @@ def client_command_parse_input(
     cleanup_tempfile = False
 
     try:
-        if status and not deposit_id:
-            raise InputError("Deposit id must be provided for status check")
-
-        if status and deposit_id:  # status is higher priority over deposit
-            archive_deposit = False
-            metadata_deposit = False
-            archive = None
-            metadata = None
-
         if archive_deposit and metadata_deposit:
             # too many flags use, remove redundant ones (-> multipart deposit)
             archive_deposit = False
@@ -180,7 +204,7 @@ def client_command_parse_input(
             raise InputError('Software Archive metadata %s must exist!' % (
                 metadata, ))
 
-        if not status and not archive and not metadata:
+        if not archive and not metadata:
             raise InputError(
                 'Please provide an actionable command. See --help for more '
                 'information.')
@@ -189,22 +213,10 @@ def client_command_parse_input(
             raise InputError(
                 'To update an existing deposit, you must provide its id')
 
-        client = PublicApiDepositClient({
-            'url': url,
-            'auth': {
-                'username': username,
-                'password': password
-            },
-        })
+        client = _client(url, username, password)
 
         if not collection:
-            # retrieve user's collection
-            sd_content = client.service_document()
-            if 'error' in sd_content:
-                raise InputError('Service document retrieval: %s' % (
-                    sd_content['error'], ))
-            collection = sd_content[
-                'service']['workspace']['collection']['sword:name']
+            collection = _collection(client)
 
         return {
             'archive': archive,
@@ -231,14 +243,6 @@ def client_command_parse_input(
 def _subdict(d, keys):
     'return a dict from d with only given keys'
     return {k: v for k, v in d.items() if k in keys}
-
-
-def deposit_status(config, logger):
-    logger.debug('Status deposit')
-    keys = ('collection', 'deposit_id')
-    client = config['client']
-    return client.deposit_status(
-        **_subdict(config, keys))
 
 
 def deposit_create(config, logger):
@@ -291,8 +295,6 @@ def deposit_update(config, logger):
               help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
 @click.option('--url', default='https://deposit.softwareheritage.org/1',
               help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
-@click.option('--status/--no-status', default=False,
-              help="(Optional) Deposit's status")
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
 @click.option('--name',
@@ -305,13 +307,12 @@ def upload(ctx,
            username, password, archive=None, metadata=None,
            archive_deposit=False, metadata_deposit=False,
            collection=None, slug=None, partial=False, deposit_id=None,
-           replace=False, status=False,
+           replace=False,
            url='https://deposit.softwareheritage.org/1',
            verbose=False, name=None, author=None):
     """Software Heritage Public Deposit Client
 
-    Create/Update deposit through the command line or access its
-    status.
+    Create/Update deposit through the command line.
 
 More documentation can be found at
 https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
@@ -324,7 +325,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         config = client_command_parse_input(
             username, password, archive, metadata, archive_deposit,
             metadata_deposit, collection, slug, partial, deposit_id,
-            replace, url, status, name, author)
+            replace, url, name, author)
     except InputError as e:
         msg = 'Problem during parsing options: %s' % e
         r = {
@@ -340,14 +341,45 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
         deposit_id = config['deposit_id']
 
-        if status and deposit_id:
-            r = deposit_status(config, logger)
-        elif not status and deposit_id:
+        if deposit_id:
             r = deposit_update(config, logger)
-        elif not status and not deposit_id:
+        else:
             r = deposit_create(config, logger)
 
         logger.info(r)
 
     finally:
         _cleanup_tempfile(config)
+
+
+@deposit.command()
+@click.option('--url', default='https://deposit.softwareheritage.org/1',
+              help="(Optional) Deposit server api endpoint. By default, "
+              "https://deposit.softwareheritage.org/1")
+@click.option('--username', required=1,
+              help="(Mandatory) User's name")
+@click.option('--password', required=1,
+              help="(Mandatory) User's associated password")
+@click.option('--deposit-id', default=None,
+              required=1,
+              help="Deposit identifier.")
+@click.pass_context
+def status(ctx, url, username, password, deposit_id):
+    """Deposit's status
+
+    """
+    logger.debug('Status deposit')
+    try:
+        client = _client(url, username, password)
+        collection = _collection(client)
+    except InputError as e:
+        msg = 'Problem during parsing options: %s' % e
+        r = {
+            'error': msg,
+        }
+        logger.info(r)
+        return 1
+
+    r = client.deposit_status(
+        collection=collection, deposit_id=deposit_id)
+    logger.info(r)

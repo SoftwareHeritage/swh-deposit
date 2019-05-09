@@ -278,9 +278,8 @@ You can check the status of the deposit by using the ``--deposit-id`` argument:
 
 .. code:: shell
 
-  $ swh deposit upload --username name --password secret \
-                       --deposit-id 11 \
-                       --status
+  $ swh deposit status --username name --password secret \
+                       --deposit-id 11
 
 .. code:: json
 
