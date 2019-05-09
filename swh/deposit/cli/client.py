@@ -181,13 +181,9 @@ def client_command_parse_input(
         if not slug:  # generate one as this is mandatory
             slug = generate_slug()
 
-        if archive and not metadata:  # we need to have the metadata
-            if name and authors:
-                metadata = generate_metadata_file(name, slug, authors)
-                cleanup_tempfile = True
-            else:
-                raise InputError('Either metadata deposit file or (`--name` '
-                                 ' and `--author`) fields must be provided')
+        if not metadata and name and authors:
+            metadata = generate_metadata_file(name, slug, authors)
+            cleanup_tempfile = True
 
         if metadata_deposit:
             archive = None
