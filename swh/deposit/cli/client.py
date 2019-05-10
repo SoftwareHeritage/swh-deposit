@@ -196,8 +196,8 @@ def client_command_parse_input(
 
         if metadata_deposit and not metadata:
             raise InputError(
-                "Metadata deposit filepath must be provided for metadata "
-                "deposit")
+                "Metadata deposit must be provided for metadata "
+                "deposit (either a filepath or --name and --author)")
 
         if metadata and not os.path.exists(metadata):
             raise InputError('Software Archive metadata %s must exist!' % (
@@ -206,7 +206,7 @@ def client_command_parse_input(
         if not archive and not metadata:
             raise InputError(
                 'Please provide an actionable command. See --help for more '
-                'information.')
+                'information')
 
         if replace and not deposit_id:
             raise InputError(
