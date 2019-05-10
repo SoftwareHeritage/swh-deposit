@@ -178,9 +178,6 @@ def client_command_parse_input(
             archive_deposit = False
             metadata_deposit = False
 
-        if archive and not os.path.exists(archive):
-            raise InputError('Software Archive %s must exist!' % archive)
-
         if not slug:  # generate one as this is mandatory
             slug = generate_slug()
 
@@ -198,10 +195,6 @@ def client_command_parse_input(
             raise InputError(
                 "Metadata deposit must be provided for metadata "
                 "deposit (either a filepath or --name and --author)")
-
-        if metadata and not os.path.exists(metadata):
-            raise InputError('Software Archive metadata %s must exist!' % (
-                metadata, ))
 
         if not archive and not metadata:
             raise InputError(
@@ -274,9 +267,9 @@ def deposit_update(config, logger):
               help="(Mandatory) User's name")
 @click.option('--password', required=1,
               help="(Mandatory) User's associated password")
-@click.option('--archive',
+@click.option('--archive', type=click.Path(exists=True),
               help='(Optional) Software archive to deposit')
-@click.option('--metadata',
+@click.option('--metadata', type=click.Path(exists=True),
               help="(Optional) Path to xml metadata file. If not provided, this will use a file named <archive>.metadata.xml")  # noqa
 @click.option('--archive-deposit/--no-archive-deposit', default=False,
               help='(Optional) Software archive only deposit')
