@@ -1,3 +1,5 @@
+.. _deposit-metadata:
+
 Deposit metadata
 ================
 
