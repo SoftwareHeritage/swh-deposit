@@ -21,30 +21,26 @@ Metadata requirements
       <entry xmlns="http://www.w3.org/2005/Atom"
 	     xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
-- **the url** representing the location of the source *MUST* be provided under
-  the url tag. The url will be used for creating an origin object in the
-  archive.
-
-  .. code:: xml
-
-      <url>www.url-example.com</url>
-      or
-      <codemeta:url>www.url-example.com</codemeta:url>
-      or
-      <dcterms:url>www.url-example.com</dcterms:url>
-
-- **the external\_identifier** *MUST* be provided as an identifier
-
 - **the name** of the software deposit *MUST* be provided [atom:title,
    codemeta:name, dcterms:title]
 
 - **the authors** of the software deposit *MUST* be provided
 
+- **the url** representing the location of the source *MAY* be provided under
+  the url tag. The url will be used for creating an origin object in the
+  archive.
+
+  .. code:: xml
+
+      <codemeta:url>www.url-example.com</codemeta:url>
+
+- **the external\_identifier** *MAY* be provided as an identifier
+
 - **the external\_identifier** *SHOULD* match the Slug external-identifier in
   the header
 
 - **the description** of the software deposit *SHOULD* be provided
-  [codemeta:description]: short or long description of the software 
+  [codemeta:description]: short or long description of the software
 
 - **the license/s** of the software
   deposit *SHOULD* be provided [codemeta:license]
