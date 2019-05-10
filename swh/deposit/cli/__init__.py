@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 def deposit(ctx):
     """Deposit main command
     """
-    logger.debug('deposit')
     ctx.ensure_object(dict)
+    log_level = ctx.obj.get('log_level', logging.INFO)
+    logger.setLevel(log_level)
 
 
 def main():
