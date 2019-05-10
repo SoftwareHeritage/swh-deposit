@@ -38,6 +38,8 @@ def _parse(stream, encoding='utf-8'):
     data = xmltodict.parse(stream, encoding=encoding, process_namespaces=False)
     if 'entry' in data:
         data = data['entry']
+    if 'sword:error' in data:
+        data = data['sword:error']
     return dict(data)
 
 
@@ -253,7 +255,8 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
                 'detail': Some more detail about the error if any
 
         """
-        return _parse_with_filter(xml_content, keys=['summary', 'detail'])
+        return _parse_with_filter(xml_content, keys=[
+            'summary', 'detail', 'sword:verboseDescription'])
 
     def do_execute(self, method, url, info):
         """Execute the http query to url using method and info information.
