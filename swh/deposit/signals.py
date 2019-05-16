@@ -83,9 +83,8 @@ def post_deposit_save(sender, instance, created, raw, using,
         # schedule deposit's checks
         from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
         check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
-        task = create_oneshot_task_dict(
-            'swh-deposit-archive-checks',
-            deposit_check_url=check_url)
+        task = create_oneshot_task_dict('check-deposit',
+                                        deposit_check_url=check_url)
         check_task_id = schedule_task(default_config.scheduler, task)
         instance.check_task_id = check_task_id
         instance.save()
@@ -100,11 +99,10 @@ def post_deposit_save(sender, instance, created, raw, using,
         meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
         update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
 
-        task = create_oneshot_task_dict(
-            'swh-deposit-archive-loading',
-            archive_url=archive_url,
-            deposit_meta_url=meta_url,
-            deposit_update_url=update_url)
+        task = create_oneshot_task_dict('load-deposit',
+                                        archive_url=archive_url,
+                                        deposit_meta_url=meta_url,
+                                        deposit_update_url=update_url)
 
         load_task_id = schedule_task(default_config.scheduler, task)
         instance.load_task_id = load_task_id
