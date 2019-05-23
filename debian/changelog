@@ -1,3 +1,11 @@
+swh-deposit (0.0.71-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.71     - (tagged by Antoine Lambert
+    <antoine.lambert@inria.fr> on 2019-05-23 11:02:05 +0200)
+  * Upstream changes:     - version 0.0.71
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 23 May 2019 09:09:54 +0000
+
 swh-deposit (0.0.70-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.70     - (tagged by Antoine R. Dumont
