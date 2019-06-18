@@ -84,13 +84,12 @@ class DepositLoader(loader.LegacyLocalTarLoader):
         Provider_id and tool_id are resolved during the prepare() method.
 
         """
-        origin_id = self.origin_id
         visit_date = self.visit_date
         provider_id = self.origin_metadata['provider']['provider_id']
         tool_id = self.origin_metadata['tool']['tool_id']
         metadata = self.origin_metadata['metadata']
         try:
-            self.send_origin_metadata(origin_id, visit_date, provider_id,
+            self.send_origin_metadata(visit_date, provider_id,
                                       tool_id, metadata)
         except Exception:
             self.log.exception('Problem when storing origin_metadata')
