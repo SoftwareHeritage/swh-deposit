@@ -1,7 +1,9 @@
-Loading specification (draft)
-=============================
+Loading specification
+=====================
 
-This part discusses the deposit loading part on the server side.
+This part specifies the ingestion of the deposit in the SWH archive, using
+the tarball loader and the complete schema of software artifacts creation
+in the archive.
 
 Tarball Loading
 ---------------
@@ -14,26 +16,212 @@ The loading of the deposit will use the deposit's associated data:
 * the metadata
 * the archive(s)
 
-We will use the ``synthetic`` revision notion.
 
-To that revision will be associated the metadata. Those will be included
-in the hash computation, thus resulting in a unique identifier.
+SWH artifacts creation
+----------------------
 
-Loading mapping
-~~~~~~~~~~~~~~~
+Deposit to artifacts mapping
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some of those metadata will also be included in the ``origin_metadata``
-table.
+This is a global view of the deposit ingestion
 
-::
++-----------------------------------+----------------------------------------+
+|swh artifact                       | representation in deposit              |
++===================================+========================================+
+|origin                             |      https://hal.inria.fr/hal-id       |
++-----------------------------------+----------------------------------------+
+|origin_visit                       | 1 :reception_date                      |
++-----------------------------------+----------------------------------------+
+|origin_metadata                    | aggregated metadata                    |
++-----------------------------------+----------------------------------------+
+|snapshot                           | at visit of all occurences             |
++-----------------------------------+----------------------------------------+
+|occurrence & occurrence_history    | branch: client's version n° (e.g hal)  |
++-----------------------------------+----------------------------------------+
+|revision                           | synthetic_revision (tarball)           |
++-----------------------------------+----------------------------------------+
+|directory                          | upper level of the uncompressed archive|
++-----------------------------------+----------------------------------------+
 
-    origin                              |      https://hal.inria.fr/hal-id       |
-    ------------------------------------|----------------------------------------|
-    origin_visit                        | 1 :reception_date                      |
-    origin_metadata                     | aggregated metadata                    |
-    occurrence &amp; occurrence_history | branch: client's version n° (e.g hal)  |
-    revision                            | synthetic_revision (tarball)           |
-    directory                           | upper level of the uncompressed archive|
+
+Origin artifact
+~~~~~~~~~~~~~~~~
+An origin using the url in the deposited metadata is created.
+The current deposit and future deposits with the same url or external_id
+will be associated with this origin.
+
+.. code-block:: json
+
+  {
+    "id": 89283768,
+    "origin_visits_url": "/api/1/origin/89283768/visits/",
+    "type": "deposit",
+    "url": "https://hal.archives-ouvertes.fr/hal-02140606"
+  }
+
+Visits
+~~~~~~~
+Each push of the same origin or external_id will generate a visit of the origin.
+Here in the example below, two snapshots are identified by two different visits.
+
+.. code-block:: json
+
+  [
+      {
+          "date": "2019-06-03T09:28:10.223007+00:00",
+          "origin": 89283768,
+          "origin_visit_url": "/api/1/origin/89283768/visit/2/",
+          "snapshot": "a3773941561cc557853898773a19c07cfe2efc5a",
+          "snapshot_url": "/api/1/snapshot/a3773941561cc557853898773a19c07cfe2efc5a/",
+          "status": "full",
+          "type": "deposit",
+          "visit": 2
+      },
+      {
+          "date": "2019-05-27T12:23:31.037273+00:00",
+          "origin": 89283768,
+          "origin_visit_url": "/api/1/origin/89283768/visit/1/",
+          "snapshot": "43fdb8291f1bf6962211c370e394f6abb1cbe01d",
+          "snapshot_url": "/api/1/snapshot/43fdb8291f1bf6962211c370e394f6abb1cbe01d/",
+          "status": "full",
+          "type": "deposit",
+          "visit": 1
+      }
+  ]
+
+Snapshot artifact
+~~~~~~~~~~~~~~~~
+The snapshot represents one deposit push.
+
+.. code-block:: json
+
+  {
+      "branches": {
+          "master": {
+              "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
+              "target_type": "revision",
+              "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+          }
+      },
+      "id": "a3773941561cc557853898773a19c07cfe2efc5a",
+      "next_branch": null
+  }
+
+Revision artifact
+~~~~~~~~~~~~~~~~
+A ``synthetic`` revision is created because the deposit is not a commit and
+is created by the ``swh-loader-tar`` module.
+
+The metadata sent with the deposit will be included in the revision and will
+affect the hash computation, thus resulting in a unique identifier.
+This way, by depositing the same content with different metadata will be two
+different revisions in the archive.
+
+.. code-block:: json
+
+  {
+    "author": {
+        "email": "robot@softwareheritage.org",
+        "fullname": "Software Heritage",
+        "id": 18233048,
+        "name": "Software Heritage"
+    },
+    "author_url": "/api/1/person/18233048/",
+    "committer": {
+        "email": "robot@softwareheritage.org",
+        "fullname": "Software Heritage",
+        "id": 18233048,
+        "name": "Software Heritage"
+    },
+    "committer_date": "2019-05-27T16:28:33+02:00",
+    "committer_url": "/api/1/person/18233048/",
+    "date": "2012-01-01T00:00:00+00:00",
+    "directory": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
+    "directory_url": "/api/1/directory/fb13b51abbcfd13de85d9ba8d070a23679576cd7/",
+    "history_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/log/",
+    "id": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
+    "merge": false,
+    "message": "hal: Deposit 282 in collection hal",
+    "metadata": {
+        "@xmlns": "http://www.w3.org/2005/Atom",
+        "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+        "author": {
+            "email": "hal@ccsd.cnrs.fr",
+            "name": "HAL"
+        },
+        "client": "hal",
+        "codemeta:applicationCategory": "info",
+        "codemeta:author": {
+            "codemeta:name": "Morane Gruenpeter"
+        },
+        "codemeta:codeRepository": "www.code-repository.com",
+        "codemeta:contributor": "Morane Gruenpeter",
+        "codemeta:dateCreated": "2012",
+        "codemeta:datePublished": "2019-05-27T16:28:33+02:00",
+        "codemeta:description": "description\\_en test v2",
+        "codemeta:developmentStatus": "Inactif",
+        "codemeta:keywords": "mot_cle_en,mot_cle_2_en,mot_cle_fr",
+        "codemeta:license": [
+            {
+                "codemeta:name": "MIT License"
+            },
+            {
+                "codemeta:name": "CeCILL Free Software License Agreement v1.1"
+            }
+        ],
+        "codemeta:name": "Test\\_20190527\\_01",
+        "codemeta:operatingSystem": "OS",
+        "codemeta:programmingLanguage": "Java",
+        "codemeta:referencePublication": null,
+        "codemeta:relatedLink": null,
+        "codemeta:releaseNotes": "releaseNote",
+        "codemeta:runtimePlatform": "outil",
+        "codemeta:softwareVersion": "1.0.1",
+        "codemeta:url": "https://hal.archives-ouvertes.fr/hal-02140606",
+        "codemeta:version": "2",
+        "external_identifier": "hal-02140606",
+        "id": "hal-02140606",
+        "original_artifact": [
+            {
+                "archive_type": "zip",
+                "blake2s256": "96be3ddedfcee9669ad9c42b0bb3a706daf23824d04311c63505a4d8db02df00",
+                "length": 193072,
+                "name": "archive.zip",
+                "sha1": "5b6ecc9d5bb113ff69fc275dcc9b0d993a8194f1",
+                "sha1_git": "bd10e4d3ede17162692d7e211e08e87e67994488",
+                "sha256": "3e2ce93384251ce6d6da7b8f2a061a8ebdaf8a28b8d8513223ca79ded8a10948"
+            }
+        ]
+    },
+    "parents": [
+        {
+            "id": "a9fdc3937d2b704b915852a64de2ab1b4b481003",
+            "url": "/api/1/revision/a9fdc3937d2b704b915852a64de2ab1b4b481003/"
+        }
+    ],
+    "synthetic": true,
+    "type": "tar",
+    "url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+  }
+
+Directory artifact
+~~~~~~~~~~~~~~~~
+The directory artifact is the actual content deposited.
+
+.. code-block:: json
+
+  [
+      {
+          "dir_id": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
+          "length": null,
+          "name": "AffectationRO",
+          "perms": 16384,
+          "target": "fbc418f9ac2c39e8566b04da5dc24b14e65b23b1",
+          "target_url": "/api/1/directory/fbc418f9ac2c39e8566b04da5dc24b14e65b23b1/",
+          "type": "dir"
+      }
+  ]
+
 
 Questions raised concerning loading
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,96 +273,6 @@ HAL's deposit 01535619-v2 = SWH's deposit **01535619-v2-1**
 
     + new directory
 
-Technical details
------------------
-
-Requirements
-~~~~~~~~~~~~
-
-*  one dedicated database to store the deposit's state - swh-deposit
-*  one dedicated temporary objstorage to store archives before loading
-*  one client to test the communication with SWORD protocol
-
-Deposit reception schema
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-* SWORD imposes the use of basic authentication, so we need a way to
-  authenticate client. Also, a client can access collections:
-
-  **deposit\_client** table: - id (bigint): Client's identifier - username
-  (str): Client's username - password (pass): Client's crypted password -
-  collections ([id]): List of collections the client can access
-
-* Collections group deposits together:
-
-  **deposit\_collection** table: - id (bigint): Collection's identifier - name
-  (str): Collection's human readable name
-
-*  A deposit is the main object the repository is all about:
-
-   **deposit** table:
-
-   * id (bigint): deposit's identifier
-   * reception\_date (date): First deposit's reception date
-   * complete\_data (date): Date when the deposit is deemed complete and ready
-     for loading
-   * collection (id): The collection the deposit belongs to
-   * external id (text): client's internal identifier (e.g hal's id, etc...).
-   * client\_id (id) : Client which did the deposit
-   * swh\_id (str) : swh identifier result once the loading is complete
-   * status (enum): The deposit's current status
-
-- As mentioned, a deposit can have a status, whose possible values are:
-
-  .. code:: text
-
-        'partial',   -- the deposit is new or partially received since it
-                     -- can be done in multiple requests
-        'expired',   -- deposit has been there too long and is now deemed
-                     -- ready to be garbage collected
-        'deposited'  -- deposit complete, it is ready to be checked to ensure data consistency
-        'verified',  -- deposit is fully received, checked, and ready for loading
-        'loading',   -- loading is ongoing on swh's side
-        'done',      -- loading is successful
-        'failed'     -- loading is a failure
-
-* A deposit is stateful and can be made in multiple requests:
-
-  **deposit\_request** table:
-  * id (bigint): identifier
-  * type (id): deposit request's type (possible values: 'archive', 'metadata')
-  * deposit\_id (id): deposit whose request belongs to
-  * metadata: metadata associated to the request
-  * date (date): date of the requests
-
-  Information sent along a request are stored in a ``deposit_request`` row.
-
-  They can be either of type ``metadata`` (atom entry, multipart's atom entry
-  part) or of type ``archive`` (binary upload, multipart's binary upload part).
-
-  When the deposit is complete (status ``deposited``), those ``metadata`` and
-  ``archive`` deposit requests will be read and aggregated. They will then be
-  sent as parameters to the loading routine.
-
-  During loading, some of those metadata are kept in the ``origin_metadata``
-  table and some other are stored in the ``revision`` table (see `metadata
-  loading <#metadata-loading>`__).
-
-  The only update actions occurring on the deposit table are in regards of: -
-  status changing: - ``partial`` -> {``expired``/``deposited``}, -
-  ``deposited`` -> {``rejected``/``verified``}, - ``verified`` -> ``loading`` -
-  ``loading`` -> {``done``/``failed``} - ``complete_date`` when the deposit is
-  finalized (when the status is changed to ``deposited``) - ``swh-id`` is
-  populated once we have the loading result
-
-SWH Identifier returned
-^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    The synthetic revision id
-
-    e.g.: swh:1:rev:47dc6b4636c7f6cba0df83e3d5490bf4334d987e
 
 Scheduling loading
 ~~~~~~~~~~~~~~~~~~
@@ -200,7 +298,7 @@ graceful delays for further scheduling.
 Metadata loading
 ~~~~~~~~~~~~~~~~
 
-- the metadata received with the deposit should be kept in the
+- the metadata received with the deposit are also kept in the
   ``origin_metadata`` table before translation as part of the loading process
   and an indexation process should be scheduled.
 
