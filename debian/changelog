@@ -1,8 +1,11 @@
-swh-deposit (0.0.71-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.72-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.72     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2019-06-18 17:15:53 +0200)
+  * Upstream changes:     - Remove argument origin_id from call to
+    Loader.send_origin_metadata.     - It no longer needs that argument.
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 23 May 2019 09:11:28 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 19 Jun 2019 14:26:44 +0000
 
 swh-deposit (0.0.71-1~swh1) unstable-swh; urgency=medium
 
