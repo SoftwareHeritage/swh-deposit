@@ -1,3 +1,12 @@
+swh-deposit (0.0.72-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.72     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2019-06-18 17:15:53 +0200)
+  * Upstream changes:     - Remove argument origin_id from call to
+    Loader.send_origin_metadata.     - It no longer needs that argument.
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 19 Jun 2019 14:26:44 +0000
+
 swh-deposit (0.0.71-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.71     - (tagged by Antoine Lambert
