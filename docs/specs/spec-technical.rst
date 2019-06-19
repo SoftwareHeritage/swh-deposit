@@ -5,7 +5,7 @@ Requirements
 ~~~~~~~~~~~~
 
 *  one dedicated database to store the deposit's state - swh-deposit
-*  one dedicated temporary objstorage to store archives before loading
+*  one dedicated temporary storage to store archives before loading
 *  one client to test the communication with SWORD protocol
 
 Deposit reception schema
@@ -14,28 +14,33 @@ Deposit reception schema
 * SWORD imposes the use of basic authentication, so we need a way to
   authenticate client. Also, a client can access collections:
 
-  **deposit\_client** table: - id (bigint): Client's identifier - username
-  (str): Client's username - password (pass): Client's crypted password -
-  collections ([id]): List of collections the client can access
+  **deposit\_client** table:
+
+    - id (bigint): Client's identifier
+    - username  (str): Client's username
+    - password (pass): Client's encrypted password
+    - collections ([id]): List of collections the client can access
 
 * Collections group deposits together:
 
-  **deposit\_collection** table: - id (bigint): Collection's identifier - name
-  (str): Collection's human readable name
+  **deposit\_collection** table:
+
+    - id (bigint): Collection's identifier
+    - name (str): Collection's human readable name
 
 *  A deposit is the main object the repository is all about:
 
    **deposit** table:
 
-   * id (bigint): deposit's identifier
-   * reception\_date (date): First deposit's reception date
-   * complete\_data (date): Date when the deposit is deemed complete and ready
+   - id (bigint): deposit's identifier
+   - reception\_date (date): First deposit's reception date
+   - complete\_data (date): Date when the deposit is deemed complete and ready
      for loading
-   * collection (id): The collection the deposit belongs to
-   * external id (text): client's internal identifier (e.g hal's id, etc...).
-   * client\_id (id) : Client which did the deposit
-   * swh\_id (str) : swh identifier result once the loading is complete
-   * status (enum): The deposit's current status
+   - collection (id): The collection the deposit belongs to
+   - external id (text): client's internal identifier (e.g hal's id, etc...).
+   - client\_id (id) : Client which did the deposit
+   - swh\_id (str) : swh identifier result once the loading is complete
+   - status (enum): The deposit's current status
 
 - As mentioned, a deposit can have a status, whose possible values are:
 
@@ -54,11 +59,12 @@ Deposit reception schema
 * A deposit is stateful and can be made in multiple requests:
 
   **deposit\_request** table:
-  * id (bigint): identifier
-  * type (id): deposit request's type (possible values: 'archive', 'metadata')
-  * deposit\_id (id): deposit whose request belongs to
-  * metadata: metadata associated to the request
-  * date (date): date of the requests
+
+  - id (bigint): identifier
+  - type (id): deposit request's type (possible values: 'archive', 'metadata')
+  - deposit\_id (id): deposit whose request belongs to
+  - metadata: metadata associated to the request
+  - date (date): date of the requests
 
   Information sent along a request are stored in a ``deposit_request`` row.
 
@@ -73,9 +79,22 @@ Deposit reception schema
   table and some other are stored in the ``revision`` table (see `metadata
   loading <#metadata-loading>`__).
 
-  The only update actions occurring on the deposit table are in regards of: -
-  status changing: - ``partial`` -> {``expired``/``deposited``}, -
-  ``deposited`` -> {``rejected``/``verified``}, - ``verified`` -> ``loading`` -
-  ``loading`` -> {``done``/``failed``} - ``complete_date`` when the deposit is
-  finalized (when the status is changed to ``deposited``) - ``swh-id`` is
-  populated once we have the loading result
+  The only update actions occurring on the deposit table are in regards of:
+
+    - status changes (see figure below):
+
+       - ``partial`` -> {``expired``/``deposited``},
+       - ``deposited`` -> {``rejected``/``verified``},
+       - ``verified`` -> ``loading``
+       - ``loading`` -> {``done``/``failed``}
+
+    - ``complete_date`` when the deposit is
+      finalized (when the status is changed to ``deposited``)
+    - ``swh-id`` is populated once we have the loading result
+
+.. raw:: html
+
+       <!-- {F2884302} -->
+
+.. figure:: ../images/status.png
+   :alt:
