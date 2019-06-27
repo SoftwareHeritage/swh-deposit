@@ -77,19 +77,30 @@ and other stuff</description>
         self.atom_entry_data_badly_formatted = b"""<?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"</entry>"""
 
-        self.atom_error_with_decimal = b"""<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom" xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+        self.atom_error_with_decimal = b"""
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
   <title>Composing a Web of Audio Applications</title>
   <client>hal</client>
   <id>hal-01243065</id>
   <external_identifier>hal-01243065</external_identifier>
-  <codemeta:url>https://hal-test.archives-ouvertes.fr/hal-01243065</codemeta:url>
+  <codemeta:url>
+    https://hal-test.archives-ouvertes.fr/hal-01243065
+  </codemeta:url>
   <codemeta:applicationCategory>test</codemeta:applicationCategory>
   <codemeta:name/>
   <description/>
-  <codemeta:keywords>DSP programming,Web,Composability,Faust</codemeta:keywords>
+  <codemeta:keywords>
+    DSP programming,Web,Composability,Faust
+  </codemeta:keywords>
   <codemeta:dateCreated>2017-05-03T16:08:47+02:00</codemeta:dateCreated>
-  <codemeta:description>The Web offers a great opportunity to share, deploy and use programs without installation difficulties. In this article we explore the idea of freely combining/composing real-time audio applications deployed on the Web using Faust audio DSP language.</codemeta:description>
+  <codemeta:description>
+    The Web offers a great opportunity to share, deploy and use programs
+    without installation difficulties. In this article we explore the idea of
+    freely combining/composing real-time audio applications deployed on the
+    Web using Faust audio DSP language.
+  </codemeta:description>
   <codemeta:version>1</codemeta:version>
   <codemeta:softwareVersion>10.4</codemeta:softwareVersion>
   <codemeta:runtimePlatform>phpstorm</codemeta:runtimePlatform>
@@ -115,7 +126,7 @@ and other stuff</description>
     <codemeta:affiliation>FFJ</codemeta:affiliation>
   </contributor>
 </entry>
-"""  # noqa
+"""
 
     def test_post_deposit_atom_201_even_with_decimal(self):
         """Posting an initial atom entry should return 201 with deposit receipt
@@ -273,29 +284,43 @@ and other stuff</description>
 
             <external_identifier>%s</external_identifier>
             <dcterms:identifier>hal-01587361</dcterms:identifier>
-            <dcterms:identifier>https://hal.inria.fr/hal-01587361</dcterms:identifier>
-            <dcterms:identifier>https://hal.inria.fr/hal-01587361/document</dcterms:identifier>
-            <dcterms:identifier>https://hal.inria.fr/hal-01587361/file/AffectationRO-v1.0.0.zip</dcterms:identifier>
+            <dcterms:identifier>
+              https://hal.inria.fr/hal-01587361
+            </dcterms:identifier>
+            <dcterms:identifier>
+              https://hal.inria.fr/hal-01587361/document
+            </dcterms:identifier>
+            <dcterms:identifier>
+              https://hal.inria.fr/hal-01587361/file/AffectationRO-v1.0.0.zip
+            </dcterms:identifier>
             <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>
             <dcterms:title xml:lang="en">The assignment problem</dcterms:title>
             <dcterms:title xml:lang="fr">AffectationRO</dcterms:title>
             <dcterms:creator>Gruenpeter, Morane</dcterms:creator>
             <dcterms:subject>[INFO] Computer Science [cs]</dcterms:subject>
-            <dcterms:subject>[INFO.INFO-RO] Computer Science [cs]/Operations Research [cs.RO]</dcterms:subject>
+            <dcterms:subject>
+              [INFO.INFO-RO] Computer Science [cs]/Operations Research [cs.RO]
+            </dcterms:subject>
             <dcterms:type>SOFTWARE</dcterms:type>
-            <dcterms:abstract xml:lang="en">Project in OR: The assignment problemA java implementation for the assignment problem first release</dcterms:abstract>
+            <dcterms:abstract xml:lang="en">
+              Project in OR: The assignment problemA java implementation for
+              the assignment problem first release
+            </dcterms:abstract>
             <dcterms:abstract xml:lang="fr">description fr</dcterms:abstract>
             <dcterms:created>2015-06-01</dcterms:created>
             <dcterms:available>2017-10-19</dcterms:available>
             <dcterms:language>en</dcterms:language>
 
-
             <codemeta:url>url stable</codemeta:url>
             <codemeta:version>Version sur hal </codemeta:version>
-            <codemeta:softwareVersion>Version entre par lutilisateur</codemeta:softwareVersion>
+            <codemeta:softwareVersion>
+              Version entre par lutilisateur
+            </codemeta:softwareVersion>
             <codemeta:keywords>Mots-cls</codemeta:keywords>
             <codemeta:releaseNotes>Commentaire</codemeta:releaseNotes>
-            <codemeta:referencePublication>Rfrence interne </codemeta:referencePublication>
+            <codemeta:referencePublication>
+              Rfrence interne
+            </codemeta:referencePublication>
             <codemeta:isPartOf>
                 <codemeta:type> Collaboration/Projet </codemeta:type>
                 <codemeta:name> nom du projet</codemeta:name>
@@ -306,18 +331,30 @@ and other stuff</description>
             <codemeta:funding>Projet ANR </codemeta:funding>
             <codemeta:funding>Projet Europen </codemeta:funding>
             <codemeta:operatingSystem>Platform/OS </codemeta:operatingSystem>
-            <codemeta:softwareRequirements>Dpendances </codemeta:softwareRequirements>
-            <codemeta:developmentStatus>Etat du dveloppement </codemeta:developmentStatus>
+            <codemeta:softwareRequirements>
+              Dpendances
+            </codemeta:softwareRequirements>
+            <codemeta:developmentStatus>
+              Etat du dveloppement
+            </codemeta:developmentStatus>
             <codemeta:license>
                 <codemeta:name>license</codemeta:name>
                 <codemeta:url>url spdx</codemeta:url>
             </codemeta:license>
-            <codemeta:runtimePlatform>Outils de dveloppement- outil no1 </codemeta:runtimePlatform>
-            <codemeta:runtimePlatform>Outils de dveloppement- outil no2 </codemeta:runtimePlatform>
+            <codemeta:runtimePlatform>
+              Outils de dveloppement- outil no1
+            </codemeta:runtimePlatform>
+            <codemeta:runtimePlatform>
+              Outils de dveloppement- outil no2
+            </codemeta:runtimePlatform>
             <codemeta:codeRepository>http://code.com</codemeta:codeRepository>
-            <codemeta:programmingLanguage>language 1</codemeta:programmingLanguage>
-            <codemeta:programmingLanguage>language 2</codemeta:programmingLanguage>
-        </entry>"""  % external_id.encode('utf-8')  # noqa
+            <codemeta:programmingLanguage>
+              language 1
+            </codemeta:programmingLanguage>
+            <codemeta:programmingLanguage>
+              language 2
+            </codemeta:programmingLanguage>
+        </entry>""" % external_id.encode('utf-8')
 
         # when
         response = self.client.post(
@@ -357,8 +394,206 @@ and other stuff</description>
         with self.assertRaises(Deposit.DoesNotExist):
             Deposit.objects.get(external_id=external_id)
 
-        atom_entry_data = b"""<TEI><teiHeader><fileDesc><titleStmt><title>HAL TEI export of hal-01587083</title></titleStmt><publicationStmt><distributor>CCSD</distributor><availability status="restricted"><licence target="http://creativecommons.org/licenses/by/4.0/">Distributed under a Creative Commons Attribution 4.0 International License</licence></availability><date when="2017-10-03T17:21:03+02:00"/></publicationStmt><sourceDesc><p part="N">HAL API platform</p></sourceDesc></fileDesc></teiHeader><text><body><listBibl><biblFull><titleStmt><title xml:lang="en">questionnaire software metadata</title><author role="aut"><persName><forename type="first">Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">7de56c632362954fa84172cad80afe4e</email><email type="domain">inria.fr</email><ptr type="url" target="moranegg.github.io"/><idno type="halauthorid">1556733</idno><affiliation ref="#struct-474639"/></author><editor role="depositor"><persName><forename>Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">f85a43a5fb4a2e0778a77e017f28c8fd</email><email type="domain">gmail.com</email></editor></titleStmt><editionStmt><edition n="v1" type="current"><date type="whenSubmitted">2017-09-29 11:21:32</date><date type="whenModified">2017-10-03 17:20:13</date><date type="whenReleased">2017-10-03 17:20:13</date><date type="whenProduced">2017-09-29</date><date type="whenEndEmbargoed">2017-09-29</date><ref type="file" target="https://hal.inria.fr/hal-01587083/document"><date notBefore="2017-09-29"/></ref><ref type="file" subtype="author" n="1" target="https://hal.inria.fr/hal-01587083/file/questionnaire.zip"><date notBefore="2017-09-29"/></ref></edition><respStmt><resp>contributor</resp><name key="442239"><persName><forename>Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">f85a43a5fb4a2e0778a77e017f28c8fd</email><email type="domain">gmail.com</email></name></respStmt></editionStmt><publicationStmt><distributor>CCSD</distributor><idno type="halId">hal-01587083</idno><idno type="halUri">https://hal.inria.fr/hal-01587083</idno><idno type="halBibtex">gruenpeter:hal-01587083</idno><idno type="halRefHtml">2017</idno><idno type="halRef">2017</idno></publicationStmt><seriesStmt/><notesStmt/><sourceDesc><biblStruct><analytic><title xml:lang="en">questionnaire software metadata</title><author role="aut"><persName><forename type="first">Morane</forename><surname>Gruenpeter</surname></persName><email type="md5">7de56c632362954fa84172cad80afe4e</email><email type="domain">inria.fr</email><ptr type="url" target="moranegg.github.io"/><idno type="halauthorid">1556733</idno><affiliation ref="#struct-474639"/></author></analytic><monogr><imprint/></monogr></biblStruct></sourceDesc><profileDesc><langUsage><language ident="en">English</language></langUsage><textClass><classCode scheme="halDomain" n="info">Computer Science [cs]</classCode><classCode scheme="halTypology" n="SOFTWARE">Software</classCode></textClass></profileDesc></biblFull></listBibl></body><back><listOrg type="structures"><org type="laboratory" xml:id="struct-474639" status="VALID"><orgName>IRILL</orgName><orgName type="acronym">Initiative pour la Recherche et l'Innovation sur le Logiciel Libre</orgName><desc><address><country key="FR"/></address><ref type="url">https://www.irill.org/</ref></desc><listRelation><relation active="#struct-93591" type="direct"/><relation active="#struct-300009" type="direct"/><relation active="#struct-300301" type="direct"/></listRelation></org><org type="institution" xml:id="struct-93591" status="VALID"><orgName>Universite Pierre et Marie Curie - Paris 6</orgName><orgName type="acronym">UPMC</orgName><desc><address><addrLine>4 place Jussieu - 75005 Paris</addrLine><country key="FR"/></address><ref type="url">http://www.upmc.fr/</ref></desc></org><org type="institution" xml:id="struct-300009" status="VALID"><orgName>Institut National de Recherche en Informatique et en Automatique</orgName><orgName type="acronym">Inria</orgName><desc><address><addrLine>Domaine de VoluceauRocquencourt - BP 10578153 Le Chesnay Cedex</addrLine><country key="FR"/></address><ref type="url">http://www.inria.fr/en/</ref></desc></org><org type="institution" xml:id="struct-300301" status="VALID"><orgName>Universite Paris Diderot - Paris 7</orgName><orgName type="acronym">UPD7</orgName><desc><address><addrLine>5 rue Thomas-Mann - 75205 Paris cedex 13</addrLine><country key="FR"/></address><ref type="url">http://www.univ-paris-diderot.fr</ref></desc></org></listOrg></back></text></TEI>"""  # noqa
-
+        atom_entry_data = b"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TEI>
+        <teiHeader>
+            <fileDesc>
+            <titleStmt>
+                <title>HAL TEI export of hal-01587083</title>
+            </titleStmt>
+            <publicationStmt>
+                <distributor>CCSD</distributor>
+                <availability status="restricted">
+                <licence target="http://creativecommons.org/licenses/by/4.0/">
+                  Distributed under a Creative Commons Attribution 4.0
+                  International License
+                </licence>
+                </availability>
+                <date when="2017-10-03T17:21:03+02:00" />
+            </publicationStmt>
+            <sourceDesc>
+                <p part="N">HAL API platform</p>
+            </sourceDesc>
+            </fileDesc>
+        </teiHeader>
+        <text>
+            <body>
+            <listBibl>
+                <biblFull>
+                <titleStmt>
+                    <title xml:lang="en">
+                      questionnaire software metadata
+                    </title>
+                    <author role="aut">
+                    <persName>
+                        <forename type="first">Morane</forename>
+                        <surname>Gruenpeter</surname>
+                    </persName>
+                    <email type="md5">7de56c632362954fa84172cad80afe4e</email>
+                    <email type="domain">inria.fr</email>
+                    <ptr type="url" target="moranegg.github.io" />
+                    <idno type="halauthorid">1556733</idno>
+                    <affiliation ref="#struct-474639" />
+                    </author>
+                    <editor role="depositor">
+                    <persName>
+                        <forename>Morane</forename>
+                        <surname>Gruenpeter</surname>
+                    </persName>
+                    <email type="md5">f85a43a5fb4a2e0778a77e017f28c8fd</email>
+                    <email type="domain">gmail.com</email>
+                    </editor>
+                </titleStmt>
+                <editionStmt>
+                    <edition n="v1" type="current">
+                    <date type="whenSubmitted">2017-09-29 11:21:32</date>
+                    <date type="whenModified">2017-10-03 17:20:13</date>
+                    <date type="whenReleased">2017-10-03 17:20:13</date>
+                    <date type="whenProduced">2017-09-29</date>
+                    <date type="whenEndEmbargoed">2017-09-29</date>
+                    <ref type="file"
+                         target="https://hal.inria.fr/hal-01587083/document">
+                        <date notBefore="2017-09-29" />
+                    </ref>
+                    <ref type="file" subtype="author" n="1"
+                         target="https://hal.inria.fr/hal-01587083/file/questionnaire.zip">
+                        <date notBefore="2017-09-29" />
+                    </ref>
+                    </edition>
+                    <respStmt>
+                    <resp>contributor</resp>
+                    <name key="442239">
+                        <persName>
+                        <forename>Morane</forename>
+                        <surname>Gruenpeter</surname>
+                        </persName>
+                        <email type="md5">
+                          f85a43a5fb4a2e0778a77e017f28c8fd
+                        </email>
+                        <email type="domain">gmail.com</email>
+                    </name>
+                    </respStmt>
+                </editionStmt>
+                <publicationStmt>
+                    <distributor>CCSD</distributor>
+                    <idno type="halId">hal-01587083</idno>
+                    <idno type="halUri">
+                      https://hal.inria.fr/hal-01587083
+                    </idno>
+                    <idno type="halBibtex">gruenpeter:hal-01587083</idno>
+                    <idno type="halRefHtml">2017</idno>
+                    <idno type="halRef">2017</idno>
+                </publicationStmt>
+                <seriesStmt />
+                <notesStmt />
+                <sourceDesc>
+                    <biblStruct>
+                    <analytic>
+                        <title xml:lang="en">
+                          questionnaire software metadata
+                        </title>
+                        <author role="aut">
+                        <persName>
+                            <forename type="first">Morane</forename>
+                            <surname>Gruenpeter</surname>
+                        </persName>
+                        <email type="md5">
+                          7de56c632362954fa84172cad80afe4e
+                        </email>
+                        <email type="domain">inria.fr</email>
+                        <ptr type="url" target="moranegg.github.io" />
+                        <idno type="halauthorid">1556733</idno>
+                        <affiliation ref="#struct-474639" />
+                        </author>
+                    </analytic>
+                    <monogr>
+                        <imprint />
+                    </monogr>
+                    </biblStruct>
+                </sourceDesc>
+                <profileDesc>
+                    <langUsage>
+                    <language ident="en">English</language>
+                    </langUsage>
+                    <textClass>
+                    <classCode scheme="halDomain" n="info">
+                      Computer Science [cs]
+                    </classCode>
+                    <classCode scheme="halTypology" n="SOFTWARE">
+                      Software
+                    </classCode>
+                    </textClass>
+                </profileDesc>
+                </biblFull>
+            </listBibl>
+            </body>
+            <back>
+            <listOrg type="structures">
+                <org type="laboratory" xml:id="struct-474639" status="VALID">
+                <orgName>IRILL</orgName>
+                <orgName type="acronym">
+                  Initiative pour la Recherche et l'Innovation sur le
+                  Logiciel Libre
+                </orgName>
+                <desc>
+                    <address>
+                    <country key="FR" />
+                    </address>
+                    <ref type="url">https://www.irill.org/</ref>
+                </desc>
+                <listRelation>
+                    <relation active="#struct-93591" type="direct" />
+                    <relation active="#struct-300009" type="direct" />
+                    <relation active="#struct-300301" type="direct" />
+                </listRelation>
+                </org>
+                <org type="institution" xml:id="struct-93591" status="VALID">
+                <orgName>Universite Pierre et Marie Curie - Paris 6</orgName>
+                <orgName type="acronym">UPMC</orgName>
+                <desc>
+                    <address>
+                    <addrLine>4 place Jussieu - 75005 Paris</addrLine>
+                    <country key="FR" />
+                    </address>
+                    <ref type="url">http://www.upmc.fr/</ref>
+                </desc>
+                </org>
+                <org type="institution" xml:id="struct-300009" status="VALID">
+                <orgName>
+                  Institut National de Recherche en Informatique et en
+                  Automatique
+                </orgName>
+                <orgName type="acronym">Inria</orgName>
+                <desc>
+                    <address>
+                    <addrLine>
+                      Domaine de VoluceauRocquencourt - BP 10578153 Le Chesnay
+                      Cedex
+                    </addrLine>
+                    <country key="FR" />
+                    </address>
+                    <ref type="url">http://www.inria.fr/en/</ref>
+                </desc>
+                </org>
+                <org type="institution" xml:id="struct-300301" status="VALID">
+                <orgName>Universite Paris Diderot - Paris 7</orgName>
+                <orgName type="acronym">UPD7</orgName>
+                <desc>
+                    <address>
+                    <addrLine>
+                      5 rue Thomas-Mann - 75205 Paris cedex 13
+                    </addrLine>
+                    <country key="FR" />
+                    </address>
+                    <ref type="url">http://www.univ-paris-diderot.fr</ref>
+                </desc>
+                </org>
+            </listOrg>
+            </back>
+        </text>
+        </TEI>
+        """
         # when
         response = self.client.post(
             reverse(COL_IRI, args=[self.collection.name]),
