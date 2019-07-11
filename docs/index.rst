@@ -16,6 +16,7 @@ Push-based deposit of software source code artifacts to the archive.
    dev-info
    sys-info
    specs/specs
+   tests/tests_HAL.rst
 
 
 Reference Documentation
