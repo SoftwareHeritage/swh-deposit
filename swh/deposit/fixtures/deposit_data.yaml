@@ -7,11 +7,3 @@
   pk: 1
   fields:
     name: hal
-- model: deposit.depositrequesttype
-  pk: 1
-  fields:
-    name: archive
-- model: deposit.depositrequesttype
-  pk: 2
-  fields:
-    name: metadata

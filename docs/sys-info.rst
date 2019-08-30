@@ -30,9 +30,7 @@ Load minimum defaults data
     sudo django-admin loaddata \
       --settings=swh.deposit.settings.production deposit_data
 
-This adds the minimal:
-- deposit request type 'archive' and 'metadata'
-- 'hal' collection
+This adds the minimal 'hal' collection
 
 Note: swh.deposit.fixtures.deposit\_data is packaged
 
