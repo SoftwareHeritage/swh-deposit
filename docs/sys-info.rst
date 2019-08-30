@@ -15,6 +15,17 @@ As usual, the expected configuration files are deployed through our
 puppet manifest (cf. puppet-environment/swh-site,
 puppet-environment/swh-role, puppet-environment/swh-profile)
 
+Environment (production)
+------------------------
+
+`SWH_CONFIG_FILENAME` must be defined and target the deposit's server
+configuration file. So either prefix the following commands or export the
+environment variable in your shell session.
+
+.. code:: shell
+
+    export SWH_CONFIG_FILENAME=/etc/softwareheritage/deposit/server.yml
+
 Migrate/bootstrap the db schema
 -------------------------------
 
@@ -55,9 +66,8 @@ Note:
   - If the collection does not exist, it is created alongside
   - The password is plain text but stored encrypted (so yes, for now
     we know the user's password)
-  - For production platform, you must either set an
-    SWH_CONFIG_FILENAME environment variable or pass alongside the
-    `--config-file` parameter
+  - For production platform, you must either set an `SWH_CONFIG_FILENAME`
+    environment variable or pass alongside the `--config-file` parameter
 
 Reschedule a deposit
 ---------------------
