@@ -32,6 +32,22 @@ def generate_slug():
     return str(uuid.uuid4())
 
 
+def _url(url):
+    """Force the /1 api version at the end of the url (avoiding confusing
+       issues without it).
+
+    Args:
+        url (str): api url used by cli users
+
+    Returns:
+        Top level api url to actually request
+
+    """
+    if not url.endswith('/1'):
+        url = '%s/1' % url
+    return url
+
+
 def generate_metadata_file(name, external_id, authors):
     """Generate a temporary metadata file with the minimum required metadata
 
@@ -285,7 +301,7 @@ def deposit_update(config, logger):
               help='(Optional) Update an existing partial deposit with its identifier')  # noqa
 @click.option('--replace/--no-replace', default=False,
               help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
-@click.option('--url', default='https://deposit.softwareheritage.org/1',
+@click.option('--url', default='https://deposit.softwareheritage.org',
               help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
 @click.option('--verbose/--no-verbose', default=False,
               help='Verbose mode')
@@ -299,8 +315,7 @@ def upload(ctx,
            username, password, archive=None, metadata=None,
            archive_deposit=False, metadata_deposit=False,
            collection=None, slug=None, partial=False, deposit_id=None,
-           replace=False,
-           url='https://deposit.softwareheritage.org/1',
+           replace=False, url='https://deposit.softwareheritage.org',
            verbose=False, name=None, author=None):
     """Software Heritage Public Deposit Client
 
@@ -310,6 +325,7 @@ More documentation can be found at
 https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
+    url = _url(url)
     config = {}
 
     try:
@@ -345,7 +361,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
 
 @deposit.command()
-@click.option('--url', default='https://deposit.softwareheritage.org/1',
+@click.option('--url', default='https://deposit.softwareheritage.org',
               help="(Optional) Deposit server api endpoint. By default, "
               "https://deposit.softwareheritage.org/1")
 @click.option('--username', required=1,
@@ -360,6 +376,7 @@ def status(ctx, url, username, password, deposit_id):
     """Deposit's status
 
     """
+    url = _url(url)
     logger.debug('Status deposit')
     try:
         client = _client(url, username, password)
