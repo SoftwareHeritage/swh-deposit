@@ -64,7 +64,7 @@ def _create_collection(name):
 @click.option('--email', default='', help="User's email")
 @click.option('--collection', help="User's collection")
 @click.option('--provider-url', default='', help="Provider URL")
-@click.option('--domain', help="The domain")
+@click.option('--domain', default='', help="The domain")
 @click.pass_context
 def user_create(ctx, username, password, firstname, lastname, email,
                 collection, provider_url, domain):

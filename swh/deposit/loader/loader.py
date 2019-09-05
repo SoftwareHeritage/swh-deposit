@@ -35,6 +35,8 @@ class DepositLoader(loader.LegacyLocalTarLoader):
         'extraction_dir': ('str', '/tmp/swh.deposit.loader/'),
     }
 
+    visit_type = 'deposit'
+
     def __init__(self, client=None):
         super().__init__(
             logging_class='swh.deposit.loader.loader.DepositLoader')
