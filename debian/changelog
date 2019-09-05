@@ -1,8 +1,15 @@
-swh-deposit (0.0.72-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.73-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.73     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-09-05 10:15:29
+    +0200)
+  * Upstream changes:     - v0.0.73     - loader: Add missing visit_type
+    attribute.     - cli/client: Simplify url definition to use     -
+    cli/admin: Add the default domain value to empty     - deposit_data:
+    Remove no longer used DepositRequestType references     - doc/sys-
+    info: Clarify commands     - docs: add code of conduct document
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 19 Jun 2019 14:28:31 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 05 Sep 2019 08:19:17 +0000
 
 swh-deposit (0.0.72-1~swh1) unstable-swh; urgency=medium
 
