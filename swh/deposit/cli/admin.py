@@ -73,7 +73,7 @@ def user_create(ctx, username, password, firstname, lastname, email,
     If the collection does not exist, the collection is then created
     alongside.
 
-    The password is stored encrypted using django's utilies.
+    The password is stored encrypted using django's utilities.
 
     """
     # to avoid loading too early django namespaces
