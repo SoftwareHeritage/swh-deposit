@@ -180,15 +180,15 @@ def collection_list(ctx):
 
 @admin.group('deposit')
 @click.pass_context
-def deposit(ctx):
+def adm_deposit(ctx):
     """Manipulate deposit."""
     pass
 
 
-@deposit.command('reschedule')
+@adm_deposit.command('reschedule')
 @click.option('--deposit-id', required=True, help="Deposit identifier")
 @click.pass_context
-def deposit_reschedule(ctx, deposit_id):
+def adm_deposit_reschedule(ctx, deposit_id):
     """Reschedule the deposit loading
 
     This will:
