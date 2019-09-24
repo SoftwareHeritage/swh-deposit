@@ -5,6 +5,8 @@
 
 import hashlib
 
+from typing import Any, Tuple
+
 from abc import ABCMeta, abstractmethod
 from django.urls import reverse
 from django.http import HttpResponse
@@ -46,7 +48,7 @@ class SWHAPIView(APIView):
        authentication check
 
     """
-    authentication_classes = (BasicAuthentication, )
+    authentication_classes: Tuple[Any, ...] = (BasicAuthentication, )
     permission_classes = (IsAuthenticated, )
 
 

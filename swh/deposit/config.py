@@ -6,6 +6,8 @@
 import os
 import logging
 
+from typing import Any, Dict, Tuple
+
 from swh.core.config import SWHConfig
 from swh.scheduler import get_scheduler
 
@@ -97,7 +99,7 @@ class SWHDefaultConfig(SWHConfig):
         })
     }
 
-    ADDITIONAL_CONFIG = {}
+    ADDITIONAL_CONFIG: Dict[str, Tuple[str, Any]] = {}
 
     def __init__(self, **config):
         super().__init__()

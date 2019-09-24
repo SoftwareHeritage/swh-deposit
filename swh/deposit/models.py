@@ -76,7 +76,10 @@ class DepositClient(User):
 
     """
     collections = ArrayField(models.IntegerField(), null=True)
-    objects = UserManager()
+    objects = UserManager()  # type: ignore
+    # this typing hint is due to a mypy/django-stubs limitation,
+    # see https://github.com/typeddjango/django-stubs/issues/174
+
     provider_url = models.TextField(null=False)
     domain = models.TextField(null=False)
 

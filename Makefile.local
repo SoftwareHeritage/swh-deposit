@@ -25,3 +25,10 @@ run-dev:
 
 run:
 	gunicorn3 -b 127.0.0.1:5006 swh.deposit.wsgi
+
+# Override default rule to make sure DJANGO env var is properly set. It
+# *should* work without any override thanks to the mypy django-stubs plugin,
+# but it currently doesn't; see
+# https://github.com/typeddjango/django-stubs/issues/166
+typecheck:
+	DJANGO_SETTINGS_MODULE=swh.deposit.settings.testing $(MYPY) $(MYPYFLAGS) -p $(PYMODULE)
