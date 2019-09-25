@@ -48,7 +48,7 @@ class SWHAPIView(APIView):
        authentication check
 
     """
-    authentication_classes: Tuple[Any, ...] = (BasicAuthentication, )
+    authentication_classes = (BasicAuthentication, )  # type: Tuple[Any, ...]
     permission_classes = (IsAuthenticated, )
 
 

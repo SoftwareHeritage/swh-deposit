@@ -99,7 +99,7 @@ class SWHDefaultConfig(SWHConfig):
         })
     }
 
-    ADDITIONAL_CONFIG: Dict[str, Tuple[str, Any]] = {}
+    ADDITIONAL_CONFIG = {}  # type: Dict[str, Tuple[str, Any]]
 
     def __init__(self, **config):
         super().__init__()
