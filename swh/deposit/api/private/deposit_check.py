@@ -11,8 +11,8 @@ import zipfile
 from rest_framework import status
 
 
-from . import DepositReadMixin
-from ..common import SWHGetDepositAPI, SWHPrivateAPIView
+from . import DepositReadMixin, SWHPrivateAPIView
+from ..common import SWHGetDepositAPI
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
 from ...config import ARCHIVE_TYPE
 from ...models import Deposit
@@ -33,7 +33,7 @@ PATTERN_ARCHIVE_EXTENSION = re.compile(
     r'.*\.(%s)$' % '|'.join(ARCHIVE_EXTENSIONS))
 
 
-class SWHChecksDeposit(SWHGetDepositAPI, SWHPrivateAPIView, DepositReadMixin):
+class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.
