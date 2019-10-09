@@ -1,13 +1,13 @@
 Metadata-Version: 2.1
 Name: swh.deposit
-Version: 0.0.73
+Version: 0.0.74
 Summary: Software Heritage Deposit Server
 Home-page: https://forge.softwareheritage.org/source/swh-deposit/
 Author: Software Heritage developers
 Author-email: swh-devel@inria.fr
 License: UNKNOWN
-Project-URL: Source, https://forge.softwareheritage.org/source/swh-deposit
 Project-URL: Bug Reports, https://forge.softwareheritage.org/maniphest
+Project-URL: Source, https://forge.softwareheritage.org/source/swh-deposit
 Project-URL: Funding, https://www.softwareheritage.org/donate
 Description: # swh-deposit
         

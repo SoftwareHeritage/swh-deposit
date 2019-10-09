@@ -68,6 +68,7 @@ swh/deposit/migrations/0013_depositrequest_raw_metadata.py
 swh/deposit/migrations/0014_auto_20180720_1221.py
 swh/deposit/migrations/0015_depositrequest_typemigration.py
 swh/deposit/migrations/0016_auto_20190507_1408.py
+swh/deposit/migrations/0017_auto_20190925_0906.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
@@ -103,15 +104,15 @@ swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
-swh/deposit/tests/api/test_deposit_check.py
 swh/deposit/tests/api/test_deposit_delete.py
 swh/deposit/tests/api/test_deposit_list.py
 swh/deposit/tests/api/test_deposit_multipart.py
-swh/deposit/tests/api/test_deposit_read_archive.py
-swh/deposit/tests/api/test_deposit_read_metadata.py
+swh/deposit/tests/api/test_deposit_private_check.py
+swh/deposit/tests/api/test_deposit_private_read_archive.py
+swh/deposit/tests/api/test_deposit_private_read_metadata.py
+swh/deposit/tests/api/test_deposit_private_update_status.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
-swh/deposit/tests/api/test_deposit_update_status.py
 swh/deposit/tests/api/test_parser.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/cli/__init__.py
