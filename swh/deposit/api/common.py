@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from swh.model import hashutil
@@ -48,15 +48,6 @@ class SWHAPIView(APIView):
     """
     authentication_classes = (BasicAuthentication, )
     permission_classes = (IsAuthenticated, )
-
-
-class SWHPrivateAPIView(SWHAPIView):
-    """Mixin intended as private api (so no authentication) based API view
-       (for the private ones).
-
-    """
-    authentication_classes = ()
-    permission_classes = (AllowAny, )
 
 
 class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):

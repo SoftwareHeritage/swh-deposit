@@ -279,9 +279,9 @@ def deposit_update(config, logger):
 
 
 @deposit.command()
-@click.option('--username', required=1,
+@click.option('--username', required=True,
               help="(Mandatory) User's name")
-@click.option('--password', required=1,
+@click.option('--password', required=True,
               help="(Mandatory) User's associated password")
 @click.option('--archive', type=click.Path(exists=True),
               help='(Optional) Software archive to deposit')
@@ -364,12 +364,12 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 @click.option('--url', default='https://deposit.softwareheritage.org',
               help="(Optional) Deposit server api endpoint. By default, "
               "https://deposit.softwareheritage.org/1")
-@click.option('--username', required=1,
+@click.option('--username', required=True,
               help="(Mandatory) User's name")
-@click.option('--password', required=1,
+@click.option('--password', required=True,
               help="(Mandatory) User's associated password")
 @click.option('--deposit-id', default=None,
-              required=1,
+              required=True,
               help="Deposit identifier.")
 @click.pass_context
 def status(ctx, url, username, password, deposit_id):

@@ -58,6 +58,8 @@ setup(
         swh-deposit=swh.deposit.cli:main
         [swh.cli.subcommands]
         deposit=swh.deposit.cli:deposit
+        [swh.workers]
+        deposit.worker=swh.deposit.loader:register
     ''',
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -60,14 +60,17 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 %s
 </entry>"""
 
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_GET_DEPOSIT_METADATA,
+                       args=[self.collection.name, deposit_id])
+
     def test_read_metadata(self):
         """Private metadata read api to existing deposit should return metadata
 
         """
         deposit_id = self.create_deposit_partial()
 
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, deposit_id])
+        url = self.private_deposit_url(deposit_id)
 
         response = self.client.get(url)
 
@@ -167,8 +170,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         self.assertEqual(deposit.parent, deposit_parent)
         self.assertEqual(deposit.status, DEPOSIT_STATUS_PARTIAL)
 
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, deposit_id])
+        url = self.private_deposit_url(deposit_id)
 
         response = self.client.get(url)
 
@@ -256,10 +258,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         deposit_id = self.create_deposit_partial_with_data_in_args(
             codemeta_entry_data)
-
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, deposit_id])
-
+        url = self.private_deposit_url(deposit_id)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
@@ -383,9 +382,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         deposit.complete_date = '2016-04-06'
         deposit.save()
 
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, deposit_id])
-
+        url = self.private_deposit_url(deposit_id)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
@@ -512,10 +509,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         deposit_id = self.create_deposit_partial_with_data_in_args(
             codemeta_entry_data)
-
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, deposit_id])
-
+        url = self.private_deposit_url(deposit_id)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
@@ -636,26 +630,15 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
         """
         unknown_id = '999'
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[self.collection.name, unknown_id])
-
+        url = self.private_deposit_url(unknown_id)
         response = self.client.get(url)
         self.assertEqual(response.status_code,
                          status.HTTP_404_NOT_FOUND)
         self.assertIn('Deposit with id %s does not exist' % unknown_id,
                       response.content.decode('utf-8'))
 
-    def test_access_to_nonexisting_collection_returns_404_response(self):
-        """Read unknown deposit should return a 404 response
 
-        """
-        collection_name = 'non-existing'
-        deposit_id = self.create_deposit_partial()
-        url = reverse(PRIVATE_GET_DEPOSIT_METADATA,
-                      args=[collection_name, deposit_id])
-
-        response = self.client.get(url)
-        self.assertEqual(response.status_code,
-                         status.HTTP_404_NOT_FOUND)
-        self.assertIn('Unknown collection name %s' % collection_name,
-                      response.content.decode('utf-8'),)
+class DepositReadMetadataTest2(DepositReadMetadataTest):
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_GET_DEPOSIT_METADATA+'-nc',
+                       args=[deposit_id])

@@ -30,15 +30,17 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
             self.root_path, 'archive2', 'file2', b'some other content in file')
         self.workdir = os.path.join(self.root_path, 'workdir')
 
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_GET_RAW_CONTENT,
+                       args=[self.collection.name, deposit_id])
+
     def test_access_to_existing_deposit_with_one_archive(self):
         """Access to deposit should stream a 200 response with its raw content
 
         """
         deposit_id = self.create_simple_binary_deposit()
 
-        url = reverse(PRIVATE_GET_RAW_CONTENT,
-                      args=[self.collection.name, deposit_id])
-
+        url = self.private_deposit_url(deposit_id)
         r = self.client.get(url)
 
         self.assertEqual(r.status_code, status.HTTP_200_OK)
@@ -74,10 +76,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
 
         """
         deposit_id = self.create_complex_binary_deposit()
-
-        url = reverse(PRIVATE_GET_RAW_CONTENT,
-                      args=[self.collection.name, deposit_id])
-
+        url = self.private_deposit_url(deposit_id)
         r = self.client.get(url)
 
         self.assertEqual(r.status_code, status.HTTP_200_OK)
@@ -93,33 +92,7 @@ class DepositReadArchivesTest(APITestCase, WithAuthTestCase,
         self.assertEqual(os.listdir(TEST_CONFIG['extraction_dir']), [])
 
 
-class DepositReadArchivesFailureTest(APITestCase, WithAuthTestCase,
-                                     BasicTestCase, CommonCreationRoutine):
-    def test_access_to_nonexisting_deposit_returns_404_response(self):
-        """Read unknown collection should return a 404 response
-
-        """
-        unknown_id = '999'
-        url = reverse(PRIVATE_GET_RAW_CONTENT,
-                      args=[self.collection.name, unknown_id])
-
-        response = self.client.get(url)
-        self.assertEqual(response.status_code,
-                         status.HTTP_404_NOT_FOUND)
-        self.assertIn('Deposit with id %s does not exist' % unknown_id,
-                      response.content.decode('utf-8'))
-
-    def test_access_to_nonexisting_collection_returns_404_response(self):
-        """Read unknown deposit should return a 404 response
-
-        """
-        collection_name = 'non-existing'
-        deposit_id = self.create_deposit_partial()
-        url = reverse(PRIVATE_GET_RAW_CONTENT,
-                      args=[collection_name, deposit_id])
-
-        response = self.client.get(url)
-        self.assertEqual(response.status_code,
-                         status.HTTP_404_NOT_FOUND)
-        self.assertIn('Unknown collection name %s' % collection_name,
-                      response.content.decode('utf-8'))
+@pytest.mark.fs
+class DepositReadArchivesTest2(DepositReadArchivesTest):
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_GET_RAW_CONTENT+'-nc', args=[deposit_id])

@@ -28,12 +28,15 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         self.deposit = Deposit.objects.get(pk=deposit.id)
         assert self.deposit.status == DEPOSIT_STATUS_VERIFIED
 
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_PUT_DEPOSIT,
+                       args=[self.collection.name, deposit_id])
+
     def test_update_deposit_status(self):
         """Existing status for update should return a 204 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT,
-                      args=[self.collection.name, self.deposit.id])
+        url = self.private_deposit_url(self.deposit.id)
 
         possible_status = set(DEPOSIT_STATUS_DETAIL.keys()) - set(
             [DEPOSIT_STATUS_LOAD_SUCCESS])
@@ -53,8 +56,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         """Existing status for update with info should return a 204 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT,
-                      args=[self.collection.name, self.deposit.id])
+        url = self.private_deposit_url(self.deposit.id)
 
         expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
         origin_url = 'something'
@@ -91,8 +93,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         """Unknown status for update should return a 400 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT,
-                      args=[self.collection.name, self.deposit.id])
+        url = self.private_deposit_url(self.deposit.id)
 
         response = self.client.put(
             url,
@@ -105,8 +106,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         """No status provided for update should return a 400 response
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT,
-                      args=[self.collection.name, self.deposit.id])
+        url = self.private_deposit_url(self.deposit.id)
 
         response = self.client.put(
             url,
@@ -119,8 +119,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         """Providing successful status without swh_id should return a 400
 
         """
-        url = reverse(PRIVATE_PUT_DEPOSIT,
-                      args=[self.collection.name, self.deposit.id])
+        url = self.private_deposit_url(self.deposit.id)
 
         response = self.client.put(
             url,
@@ -128,3 +127,8 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
             data=json.dumps({'status': DEPOSIT_STATUS_LOAD_SUCCESS}))
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateDepositStatusTest2(UpdateDepositStatusTest):
+    def private_deposit_url(self, deposit_id):
+        return reverse(PRIVATE_PUT_DEPOSIT+'-nc', args=[deposit_id])

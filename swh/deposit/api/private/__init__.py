@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 The Software Heritage developers
+# Copyright (C) 2017-2019 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,6 +7,11 @@ from swh.deposit import utils
 
 from ...config import METADATA_TYPE
 from ...models import DepositRequest, Deposit
+
+from rest_framework.permissions import AllowAny
+
+from swh.deposit.api.common import SWHAPIView
+from swh.deposit.errors import make_error_dict, NOT_FOUND
 
 
 class DepositReadMixin:
@@ -49,3 +54,39 @@ class DepositReadMixin:
         metadata = (m.metadata for m in self._deposit_requests(
             deposit, request_type=METADATA_TYPE))
         return utils.merge(*metadata)
+
+
+class SWHPrivateAPIView(SWHAPIView):
+    """Mixin intended as private api (so no authentication) based API view
+       (for the private ones).
+
+    """
+    authentication_classes = ()
+    permission_classes = (AllowAny, )
+
+    def checks(self, req, collection_name, deposit_id=None):
+        """Override default checks implementation to allow empty collection.
+
+        """
+        if deposit_id:
+            try:
+                Deposit.objects.get(pk=deposit_id)
+            except Deposit.DoesNotExist:
+                return make_error_dict(
+                    NOT_FOUND,
+                    'Deposit with id %s does not exist' %
+                    deposit_id)
+
+        headers = self._read_headers(req)
+        checks = self.additional_checks(
+            req, headers, collection_name, deposit_id)
+        if 'error' in checks:
+            return checks
+
+        return {'headers': headers}
+
+    def get(self, req, collection_name=None, deposit_id=None, format=None):
+        return super().get(req, collection_name, deposit_id, format)
+
+    def put(self, req, collection_name=None, deposit_id=None, format=None):
+        return super().put(req, collection_name, deposit_id, format)
