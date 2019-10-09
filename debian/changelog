@@ -1,8 +1,17 @@
-swh-deposit (0.0.73-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.74-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.74     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-10-09 11:30:00
+    +0200)
+  * Upstream changes:     - v0.0.74     - deposit.signals: Scheduler
+    load-deposit task with new endpoints     - deposit.private.api:
+    Expose new endpoints with no collection name     - models: Migrate
+    model to enforce check on delete     - setup: register the worker
+    task in the swh.workers entrypoint     - tests: Explicit private
+    tests in their names     - admin CLI: avoid redefining deposit name
+    in admin subcommand
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 05 Sep 2019 08:20:50 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 09 Oct 2019 09:35:03 +0000
 
 swh-deposit (0.0.73-1~swh1) unstable-swh; urgency=medium
 
