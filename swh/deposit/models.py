@@ -121,7 +121,7 @@ class Deposit(models.Model):
         default=DEPOSIT_STATUS_PARTIAL)
     status_detail = JSONField(null=True)
     # deposit can have one parent
-    parent = models.ForeignKey('self', null=True)
+    parent = models.ForeignKey('self', on_delete=models.PROTECT, null=True)
     check_task_id = models.TextField(
         blank=True, null=True,
         verbose_name="Scheduler's associated checking task id"

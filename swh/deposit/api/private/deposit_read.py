@@ -17,9 +17,9 @@ from swh.model import identifiers
 from swh.deposit.utils import normalize_date
 from swh.deposit import utils
 
-from . import DepositReadMixin
+from . import DepositReadMixin, SWHPrivateAPIView
 from ...config import SWH_PERSON, ARCHIVE_TYPE
-from ..common import SWHGetDepositAPI, SWHPrivateAPIView
+from ..common import SWHGetDepositAPI
 from ...models import Deposit
 
 
@@ -67,7 +67,7 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         yield archive_paths[0]
 
 
-class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView,
+class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI,
                              DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
@@ -105,7 +105,7 @@ class SWHDepositReadArchives(SWHGetDepositAPI, SWHPrivateAPIView,
                                 content_type='application/octet-stream')
 
 
-class SWHDepositReadMetadata(SWHGetDepositAPI, SWHPrivateAPIView,
+class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI,
                              DepositReadMixin):
     """Class in charge of aggregating metadata on a deposit.
 

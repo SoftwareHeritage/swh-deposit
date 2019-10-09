@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,13 +9,14 @@ from swh.model.identifiers import (
     persistent_identifier, REVISION, DIRECTORY
 )
 
-from ..common import SWHPutDepositAPI, SWHPrivateAPIView
+from . import SWHPrivateAPIView
+from ..common import SWHPutDepositAPI
 from ...errors import make_error_dict, BAD_REQUEST
 from ...models import Deposit, DEPOSIT_STATUS_DETAIL
 from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
 
 
-class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
+class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
     """Deposit request class to update the deposit's status.
 
     HTTP verbs supported: PUT
@@ -51,13 +52,6 @@ class SWHUpdateStatusDeposit(SWHPutDepositAPI, SWHPrivateAPIView):
                 return make_error_dict(BAD_REQUEST, msg)
 
         return {}
-
-    def restrict_access(self, req, deposit=None):
-        """Remove restriction modification to 'partial' deposit.
-           Update is possible regardless of the existing status.
-
-        """
-        return None
 
     def process_put(self, req, headers, collection_name, deposit_id):
         """Update the deposit's status
