@@ -7,10 +7,19 @@ import base64
 import pytest
 import psycopg2
 
+from django.urls import reverse
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from rest_framework import status
 from rest_framework.test import APIClient
 
+# , STATE_IRI,
 from swh.scheduler.tests.conftest import *  # noqa
+
+from swh.deposit.config import (
+    COL_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
+    DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
+)
+from swh.deposit.tests.common import create_arborescence_archive
 
 
 TEST_USER = {
@@ -63,12 +72,8 @@ def pytest_load_initial_conftests(early_config, parser, args):
 
 
 @pytest.fixture
-def deposit_user(db):
-    """Create/Return the test_user "test"
-
-    """
-    from swh.deposit.models import DepositCollection, DepositClient
-    # UserModel = django_user_model
+def deposit_collection(db):
+    from swh.deposit.models import DepositCollection
     collection_name = TEST_USER['collection']['name']
     try:
         collection = DepositCollection._default_manager.get(
@@ -76,8 +81,15 @@ def deposit_user(db):
     except DepositCollection.DoesNotExist:
         collection = DepositCollection(name=collection_name)
         collection.save()
+    return collection
 
-    # Create a user
+
+@pytest.fixture
+def deposit_user(db, deposit_collection):
+    """Create/Return the test_user "test"
+
+    """
+    from swh.deposit.models import DepositClient
     try:
         user = DepositClient._default_manager.get(
             username=TEST_USER['username'])
@@ -89,21 +101,9 @@ def deposit_user(db):
             provider_url=TEST_USER['provider_url'],
             domain=TEST_USER['domain'],
         )
-        user.collections = [collection.id]
+        user.collections = [deposit_collection.id]
         user.save()
-
     return user
-
-
-# @pytest.fixture
-# def headers(deposit_user):
-    import base64
-    _token = '%s:%s' % (deposit_user.username, TEST_USER['password'])
-    token = base64.b64encode(_token.encode('utf-8'))
-    authorization = 'Basic %s' % token.decode('utf-8')
-    return {
-        'AUTHENTICATION': authorization,
-    }
 
 
 @pytest.fixture
@@ -125,3 +125,93 @@ def authenticated_client(client, deposit_user):
     client.credentials(HTTP_AUTHORIZATION=authorization)
     yield client
     client.logout()
+
+
+@pytest.fixture
+def sample_archive(tmp_path):
+    """Returns a sample archive
+
+    """
+    tmp_path = str(tmp_path)  # pytest version limitation in previous version
+    archive = create_arborescence_archive(
+        tmp_path, 'archive1', 'file1', b'some content in file')
+
+    return archive
+
+
+@pytest.fixture
+def deposited_deposit(
+        sample_archive, deposit_collection, authenticated_client):
+    """Returns a deposit with status deposited.
+
+    """
+    collection = deposit_collection.name
+    url = reverse(COL_IRI, args=[collection])
+    external_id = 'some-external-id-1'
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type='application/zip',  # as zip
+        data=sample_archive['data'],
+        # + headers
+        CONTENT_LENGTH=sample_archive['length'],
+        HTTP_SLUG=external_id,
+        HTTP_CONTENT_MD5=sample_archive['md5sum'],
+        HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
+        HTTP_IN_PROGRESS='false',
+        HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+
+    # then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    from swh.deposit.models import Deposit
+    deposit = Deposit._default_manager.get(external_id=external_id)
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
+    return deposit
+
+
+@pytest.fixture
+def rejected_deposit(
+        deposited_deposit):
+    """Returns a deposit with status rejected.
+
+    """
+    deposit = deposited_deposit
+    deposit.status = DEPOSIT_STATUS_REJECTED
+    deposit.save()
+    assert deposit.status == DEPOSIT_STATUS_REJECTED
+    return deposit
+
+
+@pytest.fixture
+def partial_deposit(
+        deposited_deposit):
+    """Returns a deposit with status rejected.
+
+    """
+    deposit = deposited_deposit
+    deposit.status = DEPOSIT_STATUS_PARTIAL
+    deposit.save()
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+    return deposit
+
+
+@pytest.fixture
+def complete_deposit(deposited_deposit):
+    """Returns a completed deposit (load success)
+
+    """
+    deposit = deposited_deposit
+    deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
+    _swh_id_context = 'https://hal.archives-ouvertes.fr/hal-01727745'
+    deposit.swh_id = 'swh:1:dir:42a13fc721c8716ff695d0d62fc851d641f3a12b'
+    deposit.swh_id_context = '%s;%s' % (
+        deposit.swh_id, _swh_id_context)
+    deposit.swh_anchor_id = \
+        'swh:rev:1:548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10'
+    deposit.swh_anchor_id_context = '%s;%s' % (
+        deposit.swh_anchor_id, _swh_id_context)
+
+    deposit.save()
+    return deposit
