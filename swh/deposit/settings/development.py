@@ -50,7 +50,7 @@ LOGGING = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'swh-deposit-dev',
+        'NAME': 'swh-deposit-dev',  # this is no longer used in test env
     }
 }
 

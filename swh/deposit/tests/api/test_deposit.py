@@ -20,21 +20,17 @@ from swh.deposit.parsers import parse_xml
 from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
 
-class DepositNoAuthCase(APITestCase, BasicTestCase):
-    """Deposit access are protected with basic authentication.
+def test_deposit_post_will_fail_with_401(client):
+    """Without authentication, endpoint refuses access with 401 response
 
     """
-    def test_post_will_fail_with_401(self):
-        """Without authentication, endpoint refuses access with 401 response
+    url = reverse(COL_IRI, args=['hal'])
 
-        """
-        url = reverse(COL_IRI, args=[self.collection.name])
+    # when
+    response = client.post(url)
 
-        # when
-        response = self.client.post(url)
-
-        # then
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    # then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class DepositFailuresTest(APITestCase, WithAuthTestCase, BasicTestCase,
