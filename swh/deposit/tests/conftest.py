@@ -7,7 +7,6 @@ import base64
 import pytest
 import psycopg2
 
-from django.db import connections
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from rest_framework.test import APIClient
 
@@ -47,13 +46,15 @@ def pytest_load_initial_conftests(early_config, parser, args):
         db_name = 'tests'
         print('before: %s' % settings.DATABASES)
         # work around db settings for django
-        for k, v in [('ENGINE', 'django.db.backends.postgresql'),
-                     ('NAME', 'tests'),
-                     ('USER', postgresql_proc.user),
-                     ('HOST', postgresql_proc.host),
-                     ('PORT', postgresql_proc.port),
+        for k, v in [
+                ('ENGINE', 'django.db.backends.postgresql'),
+                ('NAME', 'tests'),
+                ('USER', postgresql_proc.user),  # noqa
+                ('HOST', postgresql_proc.host),  # noqa
+                ('PORT', postgresql_proc.port),  # noqa
         ]:
             settings.DATABASES['default'][k] = v
+
         print('after: %s' % settings.DATABASES)
         execute_sql('DROP DATABASE IF EXISTS %s' % db_name)
         execute_sql('CREATE DATABASE %s TEMPLATE template0' % db_name)

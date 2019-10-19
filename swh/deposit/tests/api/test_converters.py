@@ -88,6 +88,7 @@ def test_convert_status_detail_3():
     actual_status_detail = convert_status_detail(status_detail)
     assert actual_status_detail == expected_status_detail
 
+
 def test_convert_status_detail_edge_case():
     status_detail = {
         'url': {

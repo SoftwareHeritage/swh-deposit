@@ -25,6 +25,3 @@ run-dev:
 
 run:
 	gunicorn3 -b 127.0.0.1:5006 swh.deposit.wsgi
-
-test:
-	./swh/deposit/manage.py test

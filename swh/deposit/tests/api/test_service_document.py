@@ -5,11 +5,9 @@
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import SD_IRI
-from ..common import BasicTestCase, WithAuthTestCase
 
 
 def test_service_document_no_auth_fails(client):
