@@ -3,13 +3,27 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import base64
 import pytest
 import psycopg2
 
 from django.db import connections
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from rest_framework.test import APIClient
 
 from swh.scheduler.tests.conftest import *  # noqa
+
+
+TEST_USER = {
+    'username': 'test',
+    'password': 'password',
+    'email': 'test@example.org',
+    'provider_url': 'https://hal-test.archives-ouvertes.fr/',
+    'domain': 'archives-ouvertes.fr/',
+    'collection': {
+        'name': 'test'
+    },
+}
 
 
 def execute_sql(sql):
@@ -47,8 +61,66 @@ def pytest_load_initial_conftests(early_config, parser, args):
     project.app.signals.something = prepare_db
 
 
+@pytest.fixture
+def deposit_user(db):
+    """Create/Return the test_user "test"
+
+    """
+    from swh.deposit.models import DepositCollection, DepositClient
+    # UserModel = django_user_model
+    collection_name = TEST_USER['collection']['name']
+    try:
+        collection = DepositCollection._default_manager.get(
+            name=collection_name)
+    except DepositCollection.DoesNotExist:
+        collection = DepositCollection(name=collection_name)
+        collection.save()
+
+    # Create a user
+    try:
+        user = DepositClient._default_manager.get(
+            username=TEST_USER['username'])
+    except DepositClient.DoesNotExist:
+        user = DepositClient._default_manager.create_user(
+            username=TEST_USER['username'],
+            email=TEST_USER['email'],
+            password=TEST_USER['password'],
+            provider_url=TEST_USER['provider_url'],
+            domain=TEST_USER['domain'],
+        )
+        user.collections = [collection.id]
+        user.save()
+
+    return user
 
 
+# @pytest.fixture
+# def headers(deposit_user):
+    import base64
+    _token = '%s:%s' % (deposit_user.username, TEST_USER['password'])
+    token = base64.b64encode(_token.encode('utf-8'))
+    authorization = 'Basic %s' % token.decode('utf-8')
+    return {
+        'AUTHENTICATION': authorization,
+    }
 
 
+@pytest.fixture
+def client():
+    """Override pytest-django one which does not work for djangorestframework.
 
+    """
+    return APIClient()  # <- drf's client
+
+
+@pytest.yield_fixture
+def authenticated_client(client, deposit_user):
+    """Returned a logged client
+
+    """
+    _token = '%s:%s' % (deposit_user.username, TEST_USER['password'])
+    token = base64.b64encode(_token.encode('utf-8'))
+    authorization = 'Basic %s' % token.decode('utf-8')
+    client.credentials(HTTP_AUTHORIZATION=authorization)
+    yield client
+    client.logout()
