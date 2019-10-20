@@ -6,6 +6,7 @@
 import base64
 import hashlib
 import os
+import re
 import shutil
 import tarfile
 import tempfile
@@ -566,3 +567,20 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             if dr.type == 'metadata':
                 assert deposit_requests[0].metadata is not {}
         return deposit_id
+
+
+def check_archive(archive_name: str, archive_name_to_check: str):
+    """Helper function to ensure archive_name is present within the
+       archive_name_to_check.
+
+    Raises:
+        AssertionError if archive_name is not present within
+            archive_name_to_check
+
+    """
+    if '.' in archive_name:
+        filename, extension = archive_name.split('.')
+        pattern = re.compile('.*/%s.*\\.%s' % (filename, extension))
+    else:
+        pattern = re.compile('.*/%s' % archive_name)
+    assert pattern.match(archive_name_to_check) is not None

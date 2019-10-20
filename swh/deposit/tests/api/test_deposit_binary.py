@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 import pytest
-import re
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
@@ -18,42 +17,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import create_arborescence_archive
-
-
-def check_archive(archive_name: str, archive_name_to_check: str):
-    """Helper function to ensure archive_name is present within the
-       archive_name_to_check.
-
-    Raises:
-        AssertionError if archive_name is not present within
-            archive_name_to_check
-
-    """
-    if '.' in archive_name:
-        filename, extension = archive_name.split('.')
-        pattern = re.compile('.*/%s.*\\.%s' % (filename, extension))
-    else:
-        pattern = re.compile('.*/%s' % archive_name)
-    assert pattern.match(archive_name_to_check) is not None
-
-
-def test_check_archive_helper():
-    # success
-    for archive_name, archive_name_to_check in [
-            ('filename0', 'something/filename0'),
-            ('archive.zip', 'client_1/archive_noisynoise.zip'),
-    ]:
-        check_archive(archive_name, archive_name_to_check)
-
-    # failures
-    for archive_name, archive_name_to_check in [
-            ('filename0', 'something-filename0'),
-            ('archive.zip', 'client_1_archive_noisynoise.zip'),
-            ('reference', 'irrelevant'),
-    ]:
-        with pytest.raises(AssertionError):
-            check_archive(archive_name, archive_name_to_check)
+from swh.deposit.tests.common import create_arborescence_archive, check_archive
 
 
 def test_post_deposit_binary_no_slug(
