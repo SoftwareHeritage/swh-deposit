@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 from typing import Mapping
 
 from swh.scheduler.tests.conftest import *  # noqa
-
+from swh.deposit.parsers import parse_xml
 from swh.deposit.config import (
     COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -258,6 +258,28 @@ def partial_deposit_with_metadata(
 
 
 @pytest.fixture
+def partial_deposit_only_metadata(
+        deposit_collection, authenticated_client,
+        atom_dataset):
+
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type='application/atom+xml;type=entry',
+        data=atom_dataset['entry-data1'],
+        HTTP_SLUG='external-id-partial',
+        HTTP_IN_PROGRESS=True)
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_content = parse_xml(response.content)
+    deposit_id = response_content['deposit_id']
+    from swh.deposit.models import Deposit
+    deposit = Deposit._default_manager.get(pk=deposit_id)
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+    return deposit
+
+
+@pytest.fixture
 def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     """Returns a completed deposit (load success)
 
@@ -277,3 +299,8 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
         deposit.swh_anchor_id, _swh_id_context)
     deposit.save()
     return deposit
+
+
+@pytest.fixture()
+def tmp_path(tmp_path):
+    return str(tmp_path)  # issue with oldstable's pytest version

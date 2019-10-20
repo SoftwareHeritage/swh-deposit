@@ -14,8 +14,10 @@ from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.config import DEPOSIT_STATUS_PARTIAL
 
 
-from ...config import SWH_PERSON
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+from swh.deposit.config import SWH_PERSON
+from swh.deposit.tests.common import (
+    BasicTestCase, WithAuthTestCase, CommonCreationRoutine
+)
 
 
 class DepositReadMetadataTest(APITestCase, WithAuthTestCase, BasicTestCase,

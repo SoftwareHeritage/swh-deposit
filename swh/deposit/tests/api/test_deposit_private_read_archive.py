@@ -15,8 +15,10 @@ from swh.core import tarball
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests import TEST_CONFIG
 
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine, create_arborescence_archive
+from swh.deposit.tests.common import (
+    BasicTestCase, WithAuthTestCase, CommonCreationRoutine,
+    FileSystemCreationRoutine, create_arborescence_archive
+)
 
 
 @pytest.mark.fs

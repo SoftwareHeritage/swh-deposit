@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
 from swh.deposit.config import PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_VERIFIED
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..common import BasicTestCase
+from swh.deposit.tests.common import BasicTestCase
 
 
 class UpdateDepositStatusTest(APITestCase, BasicTestCase):
