@@ -11,8 +11,8 @@ from django.urls import reverse
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from rest_framework import status
 from rest_framework.test import APIClient
+from typing import Mapping
 
-# , STATE_IRI,
 from swh.scheduler.tests.conftest import *  # noqa
 
 from swh.deposit.config import (
@@ -86,7 +86,8 @@ def create_deposit_collection(collection_name: str):
     return collection
 
 
-def deposit_collection_factory(collection_name=TEST_USER['collection']['name']):
+def deposit_collection_factory(
+        collection_name=TEST_USER['collection']['name']):
     @pytest.fixture
     def _deposit_collection(db, collection_name=collection_name):
         return create_deposit_collection(collection_name)
@@ -171,7 +172,8 @@ def create_deposit(
         HTTP_CONTENT_MD5=sample_archive['md5sum'],
         HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
         HTTP_IN_PROGRESS='false',
-        HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+        HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+            sample_archive['name']))
 
     # then
     assert response.status_code == status.HTTP_201_CREATED
@@ -181,6 +183,38 @@ def create_deposit(
     if deposit.status != deposit_status:
         deposit.status = deposit_status
         deposit.save()
+    assert deposit.status == deposit_status
+    return deposit
+
+
+def create_binary_deposit(
+        authenticated_client, collection_name: str, sample_archive,
+        external_id: str, deposit_status: str = DEPOSIT_STATUS_DEPOSITED,
+        atom_dataset: Mapping[str, bytes] = {}):
+    """Create a deposit with both metadata and archive set. Then alters its status
+       to `deposit_status`.
+
+    """
+    deposit = create_deposit(
+        authenticated_client, collection_name, sample_archive,
+        external_id=external_id, deposit_status=DEPOSIT_STATUS_PARTIAL)
+
+    response = authenticated_client.post(
+        reverse(EDIT_SE_IRI, args=[collection_name, deposit.id]),
+        content_type='application/atom+xml;type=entry',
+        data=atom_dataset['entry-data0'] % deposit.external_id.encode('utf-8'),
+        HTTP_SLUG=deposit.external_id,
+        HTTP_IN_PROGRESS='true')
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+
+    from swh.deposit.models import Deposit
+    deposit = Deposit._default_manager.get(pk=deposit.id)
+    if deposit.status != deposit_status:
+        deposit.status = deposit_status
+        deposit.save()
+
     assert deposit.status == deposit_status
     return deposit
 
@@ -215,24 +249,12 @@ def partial_deposit_with_metadata(
     """Returns deposit with archive and metadata provided, status 'partial'
 
     """
-    # deposit with one archive
-    deposit = create_deposit(
+    return create_binary_deposit(
         authenticated_client, deposit_collection.name, sample_archive,
         external_id='external-id-partial',
-        deposit_status=DEPOSIT_STATUS_PARTIAL
+        deposit_status=DEPOSIT_STATUS_PARTIAL,
+        atom_dataset=atom_dataset
     )
-
-    # update the deposit with metadata
-    response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id]),
-        content_type='application/atom+xml;type=entry',
-        data=atom_dataset['entry-data0'] % deposit.external_id.encode('utf-8'),
-        HTTP_SLUG=deposit.external_id,
-        HTTP_IN_PROGRESS='true')
-
-    assert response.status_code == status.HTTP_201_CREATED
-    assert deposit.status == DEPOSIT_STATUS_PARTIAL
-    return deposit
 
 
 @pytest.fixture
