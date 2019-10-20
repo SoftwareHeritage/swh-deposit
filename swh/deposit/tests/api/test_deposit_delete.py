@@ -3,111 +3,119 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from collections import defaultdict
 from django.urls import reverse
-
 from rest_framework import status
-from rest_framework.test import APITestCase
+from typing import Mapping
 
-from swh.deposit.config import EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY
-from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED
+from swh.deposit.config import (
+    EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY,
+    DEPOSIT_STATUS_DEPOSITED
+)
 
 from swh.deposit.models import Deposit, DepositRequest
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
 
 
-class DepositDeleteTest(APITestCase, WithAuthTestCase, BasicTestCase,
-                        CommonCreationRoutine):
+def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
+    deposit_request_types = defaultdict(int)
+    for dr in deposit_requests:
+        deposit_request_types[dr.type] += 1
+    return deposit_request_types
 
-    def test_delete_archive_on_partial_deposit_works(self):
-        """Removing partial deposit's archive should return a 204 response
 
-        """
-        # given
-        deposit_id = self.create_deposit_partial()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        deposit_requests = DepositRequest.objects.filter(deposit=deposit)
+def test_delete_archive_on_partial_deposit_works(
+        authenticated_client, partial_deposit_with_metadata,
+        deposit_collection):
+    """Removing partial deposit's archive should return a 204 response
 
-        self.assertEqual(len(deposit_requests), 2)
-        for dr in deposit_requests:
-            if dr.type == ARCHIVE_KEY:
-                continue
-            elif dr.type == METADATA_KEY:
-                continue
-            else:
-                self.fail('only archive and metadata type should exist '
-                          'in this test context')
+    """
+    deposit_id = partial_deposit_with_metadata.id
+    deposit = Deposit.objects.get(pk=deposit_id)
+    deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
-        # when
-        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    # deposit request type: 'archive', 1 'metadata'
+    deposit_request_types = count_deposit_request_types(deposit_requests)
+    assert deposit_request_types == {
+        ARCHIVE_KEY: 1,
+        METADATA_KEY: 1
+    }
 
-        deposit = Deposit.objects.get(pk=deposit_id)
-        requests = list(DepositRequest.objects.filter(deposit=deposit))
+    # when
+    update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit_id])
+    response = authenticated_client.delete(update_uri)
 
-        self.assertEqual(len(requests), 2)
-        self.assertEqual(requests[0].type, 'metadata')
-        self.assertEqual(requests[1].type, 'metadata')
+    # then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_delete_archive_on_undefined_deposit_fails(self):
-        """Delete undefined deposit returns a 404 response
+    deposit = Deposit.objects.get(pk=deposit_id)
+    deposit_requests2 = DepositRequest.objects.filter(deposit=deposit)
 
-        """
-        # when
-        update_uri = reverse(EM_IRI, args=[self.collection.name, 999])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    deposit_request_types = count_deposit_request_types(deposit_requests2)
+    assert deposit_request_types == {
+        METADATA_KEY: 1
+    }
 
-    def test_delete_archive_on_non_partial_deposit_fails(self):
-        """Delete !partial status deposit should return a 400 response"""
-        deposit_id = self.create_deposit_ready()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
 
-        # when
-        update_uri = reverse(EM_IRI, args=[self.collection.name, deposit_id])
-        response = self.client.delete(update_uri)
-        # then
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertIsNotNone(deposit)
+def test_delete_archive_on_undefined_deposit_fails(
+        authenticated_client, deposit_collection, sample_archive):
+    """Delete undefined deposit returns a 404 response
 
-    def test_delete_partial_deposit_works(self):
-        """Delete deposit should return a 204 response
+    """
+    # when
+    update_uri = reverse(EM_IRI, args=[deposit_collection.name, 999])
+    response = authenticated_client.delete(update_uri)
+    # then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        """
-        # given
-        deposit_id = self.create_simple_deposit_partial()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.id == deposit_id
 
-        # when
-        url = reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id])
-        response = self.client.delete(url)
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_204_NO_CONTENT)
-        deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
-        self.assertEqual(deposit_requests, [])
-        deposits = list(Deposit.objects.filter(pk=deposit_id))
-        self.assertEqual(deposits, [])
+def test_delete_non_partial_deposit(
+        authenticated_client, deposit_collection, deposited_deposit):
+    """Delete !partial status deposit should return a 400 response
 
-    def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(self):
-        """Delete !partial deposit should return a 400 response
+    """
+    deposit = deposited_deposit
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
-        """
-        # given
-        deposit_id = self.create_deposit_ready()
-        deposit = Deposit.objects.get(pk=deposit_id)
-        assert deposit.id == deposit_id
+    # when
+    update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.delete(update_uri)
+    # then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    deposit = Deposit.objects.get(pk=deposit.id)
+    assert deposit is not None
 
-        # when
-        url = reverse(EDIT_SE_IRI, args=[self.collection.name, deposit_id])
-        response = self.client.delete(url)
-        # then
-        self.assertEqual(response.status_code,
-                         status.HTTP_400_BAD_REQUEST)
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertIsNotNone(deposit)
+
+def test_delete_partial_deposit(
+        authenticated_client, deposit_collection, partial_deposit):
+    """Delete deposit should return a 204 response
+
+    """
+    # given
+    deposit = partial_deposit
+
+    # when
+    url = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.delete(url)
+    # then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    deposit_requests = list(DepositRequest.objects.filter(deposit=deposit))
+    assert deposit_requests == []
+    deposits = list(Deposit.objects.filter(pk=deposit.id))
+    assert deposits == []
+
+
+def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(
+        authenticated_client, deposit_collection, complete_deposit):
+    """Delete !partial deposit should return a 400 response
+
+    """
+    # given
+    deposit = complete_deposit
+
+    # when
+    url = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.delete(url)
+    # then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    deposit = Deposit.objects.get(pk=deposit.id)
+    assert deposit is not None

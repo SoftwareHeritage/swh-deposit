@@ -16,7 +16,7 @@ from rest_framework.test import APIClient
 from swh.scheduler.tests.conftest import *  # noqa
 
 from swh.deposit.config import (
-    COL_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
+    COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
 )
 from swh.deposit.tests.common import create_arborescence_archive
@@ -169,7 +169,7 @@ def create_deposit(
 @pytest.fixture
 def deposited_deposit(
         sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status deposited.
+    """Returns a deposit with status 'deposited'.
 
     """
     deposit = create_deposit(
@@ -181,7 +181,7 @@ def deposited_deposit(
 
 @pytest.fixture
 def rejected_deposit(sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status rejected.
+    """Returns a deposit with status 'rejected'.
 
     """
     deposit = create_deposit(
@@ -195,7 +195,7 @@ def rejected_deposit(sample_archive, deposit_collection, authenticated_client):
 
 @pytest.fixture
 def partial_deposit(sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status rejected.
+    """Returns a deposit with status 'partial'.
 
     """
     deposit = create_deposit(
@@ -204,6 +204,35 @@ def partial_deposit(sample_archive, deposit_collection, authenticated_client):
     )
     deposit.status = DEPOSIT_STATUS_PARTIAL
     deposit.save()
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+    return deposit
+
+
+@pytest.fixture
+def partial_deposit_with_metadata(
+        sample_archive, deposit_collection, authenticated_client,
+        atom_dataset):
+    """Returns deposit with archive and metadata provided, status 'partial'
+
+    """
+    # deposit with one archive
+    deposit = create_deposit(
+        authenticated_client, deposit_collection.name, sample_archive,
+        external_id='external-id-partial'
+    )
+    deposit.status = DEPOSIT_STATUS_PARTIAL
+    deposit.save()
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+
+    # update the deposit with metadata
+    response = authenticated_client.post(
+        reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id]),
+        content_type='application/atom+xml;type=entry',
+        data=atom_dataset['entry-data0'] % deposit.external_id.encode('utf-8'),
+        HTTP_SLUG=deposit.external_id,
+        HTTP_IN_PROGRESS='true')
+
+    assert response.status_code == status.HTTP_201_CREATED
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
     return deposit
 
