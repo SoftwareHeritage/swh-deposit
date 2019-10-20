@@ -10,7 +10,9 @@ from django.urls import reverse
 from os import path, listdir
 from typing import Mapping
 
-from swh.deposit.config import DEPOSIT_STATUS_DEPOSITED, COL_IRI
+from swh.deposit.config import (
+    DEPOSIT_STATUS_DEPOSITED, COL_IRI, DEPOSIT_STATUS_VERIFIED
+)
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
@@ -46,6 +48,17 @@ def ready_deposit_ok(partial_deposit_with_metadata):
     """
     deposit = partial_deposit_with_metadata
     deposit.status = DEPOSIT_STATUS_DEPOSITED
+    deposit.save()
+    return deposit
+
+
+@pytest.fixture
+def ready_deposit_verified(partial_deposit_with_metadata):
+    """Returns a deposit ready for checks (it will pass the checks).
+
+    """
+    deposit = partial_deposit_with_metadata
+    deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
     return deposit
 
