@@ -17,7 +17,8 @@ from swh.scheduler.tests.conftest import *  # noqa
 
 from swh.deposit.config import (
     COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
-    DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS
+    DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_LOAD_FAILURE
 )
 from swh.deposit.tests.common import create_arborescence_archive
 
@@ -71,10 +72,11 @@ def pytest_load_initial_conftests(early_config, parser, args):
     project.app.signals.something = prepare_db
 
 
-@pytest.fixture
-def deposit_collection(db):
+def create_deposit_collection(collection_name: str):
+    """Create a deposit collection with name collection_name
+
+    """
     from swh.deposit.models import DepositCollection
-    collection_name = TEST_USER['collection']['name']
     try:
         collection = DepositCollection._default_manager.get(
             name=collection_name)
@@ -82,6 +84,18 @@ def deposit_collection(db):
         collection = DepositCollection(name=collection_name)
         collection.save()
     return collection
+
+
+def deposit_collection_factory(collection_name=TEST_USER['collection']['name']):
+    @pytest.fixture
+    def _deposit_collection(db, collection_name=collection_name):
+        return create_deposit_collection(collection_name)
+
+    return _deposit_collection
+
+
+deposit_collection = deposit_collection_factory()
+deposit_another_collection = deposit_collection_factory('another-collection')
 
 
 @pytest.fixture
@@ -141,7 +155,7 @@ def sample_archive(tmp_path):
 
 def create_deposit(
         authenticated_client, collection_name: str, sample_archive,
-        external_id: str):
+        external_id: str, deposit_status=DEPOSIT_STATUS_DEPOSITED):
     """Create a skeleton shell deposit
 
     """
@@ -163,49 +177,35 @@ def create_deposit(
     assert response.status_code == status.HTTP_201_CREATED
     from swh.deposit.models import Deposit
     deposit = Deposit._default_manager.get(external_id=external_id)
+
+    if deposit.status != deposit_status:
+        deposit.status = deposit_status
+        deposit.save()
+    assert deposit.status == deposit_status
     return deposit
 
 
-@pytest.fixture
-def deposited_deposit(
-        sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status 'deposited'.
+def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED):
+    """Build deposit with a specific status
 
     """
-    deposit = create_deposit(
-        authenticated_client, deposit_collection.name, sample_archive,
-        external_id='external-id-deposited')
-    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
-    return deposit
+    @pytest.fixture()
+    def _deposit(sample_archive, deposit_collection, authenticated_client,
+                 deposit_status=deposit_status):
+        external_id = 'external-id-%s' % deposit_status
+        return create_deposit(
+            authenticated_client, deposit_collection.name, sample_archive,
+            external_id=external_id, deposit_status=deposit_status
+        )
+
+    return _deposit
 
 
-@pytest.fixture
-def rejected_deposit(sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status 'rejected'.
-
-    """
-    deposit = create_deposit(
-        authenticated_client, deposit_collection.name, sample_archive,
-        external_id='external-id-rejected')
-    deposit.status = DEPOSIT_STATUS_REJECTED
-    deposit.save()
-    assert deposit.status == DEPOSIT_STATUS_REJECTED
-    return deposit
-
-
-@pytest.fixture
-def partial_deposit(sample_archive, deposit_collection, authenticated_client):
-    """Returns a deposit with status 'partial'.
-
-    """
-    deposit = create_deposit(
-        authenticated_client, deposit_collection.name, sample_archive,
-        external_id='external-id-partial'
-    )
-    deposit.status = DEPOSIT_STATUS_PARTIAL
-    deposit.save()
-    assert deposit.status == DEPOSIT_STATUS_PARTIAL
-    return deposit
+deposited_deposit = deposit_factory()
+rejected_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_REJECTED)
+partial_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_PARTIAL)
+completed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_SUCCESS)
+failed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_FAILURE)
 
 
 @pytest.fixture
@@ -218,11 +218,9 @@ def partial_deposit_with_metadata(
     # deposit with one archive
     deposit = create_deposit(
         authenticated_client, deposit_collection.name, sample_archive,
-        external_id='external-id-partial'
+        external_id='external-id-partial',
+        deposit_status=DEPOSIT_STATUS_PARTIAL
     )
-    deposit.status = DEPOSIT_STATUS_PARTIAL
-    deposit.save()
-    assert deposit.status == DEPOSIT_STATUS_PARTIAL
 
     # update the deposit with metadata
     response = authenticated_client.post(
@@ -244,9 +242,9 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     """
     deposit = create_deposit(
         authenticated_client, deposit_collection.name, sample_archive,
-        external_id='external-id-complete'
+        external_id='external-id-complete',
+        deposit_status=DEPOSIT_STATUS_LOAD_SUCCESS
     )
-    deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
     _swh_id_context = 'https://hal.archives-ouvertes.fr/hal-01727745'
     deposit.swh_id = 'swh:1:dir:42a13fc721c8716ff695d0d62fc851d641f3a12b'
     deposit.swh_id_context = '%s;%s' % (
