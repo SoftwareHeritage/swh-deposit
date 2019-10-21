@@ -19,7 +19,7 @@ from swh.deposit.parsers import parse_xml
 from swh.deposit.config import (
     COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS,
-    DEPOSIT_STATUS_LOAD_FAILURE
+    DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_LOAD_FAILURE
 )
 from swh.deposit.tests.common import create_arborescence_archive
 
@@ -34,16 +34,6 @@ TEST_USER = {
         'name': 'test'
     },
 }
-
-
-@pytest.fixture(autouse=True, scope='session')
-def swh_proxy():
-    """Automatically inject this fixture in all tests to ensure no outside
-       connection takes place.
-
-    """
-    os.environ['http_proxy'] = 'http://localhost:999'
-    os.environ['https_proxy'] = 'http://localhost:999'
 
 
 def execute_sql(sql):
@@ -65,7 +55,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
     def prepare_db(*args, **kwargs):
         from django.conf import settings
         db_name = 'tests'
-        print('before: %s' % settings.DATABASES)
         # work around db settings for django
         for k, v in [
                 ('ENGINE', 'django.db.backends.postgresql'),
@@ -76,11 +65,20 @@ def pytest_load_initial_conftests(early_config, parser, args):
         ]:
             settings.DATABASES['default'][k] = v
 
-        print('after: %s' % settings.DATABASES)
         execute_sql('DROP DATABASE IF EXISTS %s' % db_name)
         execute_sql('CREATE DATABASE %s TEMPLATE template0' % db_name)
 
     project.app.signals.something = prepare_db
+
+
+@pytest.fixture(autouse=True, scope='session')
+def swh_proxy():
+    """Automatically inject this fixture in all tests to ensure no outside
+       connection takes place.
+
+    """
+    os.environ['http_proxy'] = 'http://localhost:999'
+    os.environ['https_proxy'] = 'http://localhost:999'
 
 
 def create_deposit_collection(collection_name: str):
@@ -249,6 +247,7 @@ def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED):
 deposited_deposit = deposit_factory()
 rejected_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_REJECTED)
 partial_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_PARTIAL)
+verified_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_VERIFIED)
 completed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_SUCCESS)
 failed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_FAILURE)
 

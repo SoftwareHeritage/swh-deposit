@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import pytest
-
 from django.urls import reverse
 from rest_framework import status
 
@@ -14,7 +12,6 @@ from swh.deposit.config import (
 )
 
 
-@pytest.mark.django_db
 def test_deposit_list(
         partial_deposit, deposited_deposit, authenticated_client):
     """Deposit list api should return the deposits
