@@ -1,171 +1,199 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import os
-import shutil
-import tempfile
+import json
+import pytest
 import unittest
 
-import pytest
+from typing import Any, Callable, Optional
+from urllib.parse import urlparse
 
 from swh.deposit.client import PrivateApiDepositClient
-from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
-from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE
-from .common import CLIENT_TEST_CONFIG
+from swh.deposit.config import (
+    DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE
+)
 
 
-class StreamedResponse:
-    """Streamed response facsimile
-
-    """
-    def __init__(self, ok, stream):
-        self.ok = ok
-        self.stream = stream
-
-    def iter_content(self):
-        yield from self.stream
+CLIENT_TEST_CONFIG = {
+    'url': 'https://nowhere.org/',
+    'auth': {},  # no authentication in test scenario
+}
 
 
-class FakeRequestClientGet:
-    """Fake request client dedicated to get method calls.
+def build_expected_path(datadir, base_url: str, api_url: str) -> str:
+    """Build expected path from api to served file
 
     """
-    def __init__(self, response):
-        self.response = response
-
-    def get(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        return self.response
-
-
-@pytest.mark.fs
-class PrivateApiDepositClientReadArchiveTest(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        self.temporary_directory = tempfile.mkdtemp(dir='/tmp')
-
-    def tearDown(self):
-        super().setUp()
-        shutil.rmtree(self.temporary_directory)
-
-    def test_archive_get(self):
-        """Reading archive should write data in temporary directory
-
-        """
-        stream_content = [b"some", b"streamed", b"response"]
-        response = StreamedResponse(
-            ok=True,
-            stream=(s for s in stream_content))
-        _client = FakeRequestClientGet(response)
-
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
-
-        archive_path = os.path.join(self.temporary_directory, 'test.archive')
-        archive_path = deposit_client.archive_get('/some/url', archive_path)
-
-        self.assertTrue(os.path.exists(archive_path))
-
-        with open(archive_path, 'rb') as f:
-            actual_content = f.read()
-
-        self.assertEqual(actual_content, b''.join(stream_content))
-        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEqual(_client.kwargs, {
-            'stream': True
-        })
-
-    def test_archive_get_with_authentication(self):
-        """Reading archive should write data in temporary directory
-
-        """
-        stream_content = [b"some", b"streamed", b"response", b"for", b"auth"]
-        response = StreamedResponse(
-            ok=True,
-            stream=(s for s in stream_content))
-        _client = FakeRequestClientGet(response)
-
-        _config = CLIENT_TEST_CONFIG.copy()
-        _config['auth'] = {  # add authentication setup
-            'username': 'user',
-            'password': 'pass'
-        }
-        deposit_client = PrivateApiDepositClient(_config, _client=_client)
-
-        archive_path = os.path.join(self.temporary_directory, 'test.archive')
-        archive_path = deposit_client.archive_get('/some/url', archive_path)
-
-        self.assertTrue(os.path.exists(archive_path))
-
-        with open(archive_path, 'rb') as f:
-            actual_content = f.read()
-
-        self.assertEqual(actual_content, b''.join(stream_content))
-        self.assertEqual(_client.args, ('http://nowhere:9000/some/url', ))
-        self.assertEqual(_client.kwargs, {
-            'stream': True,
-            'auth': ('user', 'pass')
-        })
-
-    def test_archive_get_can_fail(self):
-        """Reading archive can fail for some reasons
-
-        """
-        response = StreamedResponse(ok=False, stream=None)
-        _client = FakeRequestClientGet(response)
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
-
-        with self.assertRaisesRegex(
-                ValueError,
-                'Problem when retrieving deposit archive'):
-            deposit_client.archive_get('/some/url', 'some/path')
+    url = urlparse(base_url)
+    dirname = '%s_%s' % (url.scheme, url.hostname)
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    if api_url.startswith('/'):
+        api_url = api_url[1:]
+    suffix_path = api_url.replace('/', '_')
+    return os.path.join(datadir, dirname, suffix_path)
 
 
-class JsonResponse:
-    """Json response facsimile
+def test_build_expected_path(datadir):
+    actual_path = build_expected_path(
+        datadir, 'http://example.org', '/hello/you/')
+
+    assert actual_path == os.path.join(
+        datadir, 'http_example.org', 'hello_you')
+
+
+def read_served_path(
+        datadir, base_url: str, api_url: str,
+        convert_fn: Optional[Callable[[str], Any]] = None) -> bytes:
+    """Read served path
 
     """
-    def __init__(self, ok, response):
-        self.ok = ok
-        self.response = response
+    archive_path = build_expected_path(datadir, base_url, api_url)
+    with open(archive_path, 'rb') as f:
+        content = f.read()
+    if convert_fn:
+        content = convert_fn(content.decode('utf-8'))
+    return content
 
-    def json(self):
-        return self.response
+
+def test_read_served_path(datadir):
+    actual_content = read_served_path(
+        datadir, 'http://example.org', '/hello/you/')
+
+    assert actual_content == b'hello people\n'
+
+    actual_content2 = read_served_path(
+        datadir, 'http://example.org', '/hello.json',
+        convert_fn=json.loads)
+
+    assert actual_content2 == {
+        'a': [1, 3]
+    }
 
 
-class PrivateApiDepositClientReadMetadataTest(unittest.TestCase):
-    def test_metadata_get(self):
-        """Reading archive should write data in temporary directory
+# private api to retrieve archive
 
-        """
-        expected_response = {"some": "dict"}
 
-        response = JsonResponse(
-            ok=True,
-            response=expected_response)
-        _client = FakeRequestClientGet(response)
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
+def test_archive_get(tmp_path, datadir, requests_mock_datadir):
+    """Retrieving archive data through private api should stream data
 
-        actual_metadata = deposit_client.metadata_get('/metadata')
+    """
+    api_url = '/1/private/test/1/raw/'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
 
-        self.assertEqual(actual_metadata, expected_response)
+    expected_content = read_served_path(
+        datadir, client.base_url, api_url)
 
-    def test_metadata_get_can_fail(self):
-        """Reading metadata can fail for some reasons
+    archive_path = os.path.join(tmp_path, 'test.archive')
+    archive_path = client.archive_get(api_url, archive_path)
 
-        """
-        _client = FakeRequestClientGet(JsonResponse(ok=False, response=None))
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
-        with self.assertRaisesRegex(
-                ValueError,
-                'Problem when retrieving metadata at'):
-            deposit_client.metadata_get('/some/metadata/url')
+    assert os.path.exists(archive_path) is True
+
+    with open(archive_path, 'rb') as f:
+        actual_content = f.read()
+
+    assert actual_content == expected_content
+    assert client.base_url == CLIENT_TEST_CONFIG['url']
+    assert client.auth is None
+
+
+def test_archive_get_auth(tmp_path, datadir, requests_mock_datadir):
+    """Retrieving archive data through private api should stream data
+
+    """
+    api_url = '/1/private/test/1/raw/'
+    config = CLIENT_TEST_CONFIG.copy()
+    config['auth'] = {  # add authentication setup
+        'username': 'user',
+        'password': 'pass'
+    }
+    client = PrivateApiDepositClient(config)
+
+    expected_content = read_served_path(
+        datadir, client.base_url, api_url)
+
+    archive_path = os.path.join(tmp_path, 'test.archive')
+    archive_path = client.archive_get(api_url, archive_path)
+
+    assert os.path.exists(archive_path) is True
+
+    with open(archive_path, 'rb') as f:
+        actual_content = f.read()
+
+    assert actual_content == expected_content
+    assert client.base_url == CLIENT_TEST_CONFIG['url']
+    assert client.auth == ('user', 'pass')
+
+
+def test_archive_get_ko(tmp_path, datadir, requests_mock_datadir):
+    """Reading archive can fail for some reasons
+
+    """
+    unknown_api_url = '/1/private/unknown/deposit-id/raw/'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+
+    with pytest.raises(ValueError, match='Problem when retrieving deposit'):
+        client.archive_get(unknown_api_url, 'some/path')
+
+
+# private api read metadata
+
+
+def test_metadata_get(datadir, requests_mock_datadir):
+    """Reading archive should write data in temporary directory
+
+    """
+    api_url = '/1/private/test/1/metadata'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+    actual_metadata = client.metadata_get(api_url)
+
+    assert isinstance(actual_metadata, str) is False
+    expected_content = read_served_path(
+        datadir, client.base_url, api_url,
+        convert_fn=json.loads)
+    assert actual_metadata == expected_content
+
+
+def test_metadata_get_ko(requests_mock_datadir):
+    """Reading metadata can fail for some reasons
+
+    """
+    unknown_api_url = '/1/private/unknown/deposit-id/metadata/'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+
+    with pytest.raises(ValueError, match='Problem when retrieving metadata'):
+        client.metadata_get(unknown_api_url)
+
+
+# private api check
+
+
+def test_check(requests_mock_datadir):
+    """When check ok, this should return the deposit's status
+
+    """
+    api_url = '/1/private/test/1/check'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+
+    r = client.check(api_url)
+    assert r == 'something'
+
+
+def test_check_fails(requests_mock_datadir):
+    """Checking deposit can fail for some reason
+
+    """
+    unknown_api_url = '/1/private/test/10/check'
+    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+
+    with pytest.raises(ValueError, match='Problem when checking deposit'):
+        client.check(unknown_api_url)
+
+
+# private api update status
 
 
 class FakeRequestClientPut:
@@ -194,7 +222,7 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
                                      revision_id='some-revision-id')
 
         self.assertEqual(_client.args,
-                         ('http://nowhere:9000/update/status', ))
+                         ('https://nowhere.org/update/status', ))
         self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -214,45 +242,9 @@ class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
                                      DEPOSIT_STATUS_LOAD_FAILURE)
 
         self.assertEqual(_client.args,
-                         ('http://nowhere:9000/update/status/fail', ))
+                         ('https://nowhere.org/update/status/fail', ))
         self.assertEqual(_client.kwargs, {
             'json': {
                 'status': DEPOSIT_STATUS_LOAD_FAILURE,
             }
         })
-
-
-class PrivateApiDepositClientCheckTest(unittest.TestCase):
-    def test_check(self):
-        """When check ok, this should return the deposit's status
-
-        """
-        _client = FakeRequestClientGet(
-            JsonResponse(ok=True, response={'status': 'something'}))
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
-
-        r = deposit_client.check('/check')
-
-        self.assertEqual(_client.args,
-                         ('http://nowhere:9000/check', ))
-        self.assertEqual(_client.kwargs, {})
-        self.assertEqual(r, 'something')
-
-    def test_check_fails(self):
-        """Checking deposit can fail for some reason
-
-        """
-        _client = FakeRequestClientGet(
-            JsonResponse(ok=False, response=None))
-        deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG,
-                                                 _client=_client)
-
-        with self.assertRaisesRegex(
-                ValueError,
-                'Problem when checking deposit'):
-            deposit_client.check('/check/fails')
-
-        self.assertEqual(_client.args,
-                         ('http://nowhere:9000/check/fails', ))
-        self.assertEqual(_client.kwargs, {})
