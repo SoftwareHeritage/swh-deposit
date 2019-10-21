@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
 import base64
 import pytest
 import psycopg2
@@ -33,6 +34,16 @@ TEST_USER = {
         'name': 'test'
     },
 }
+
+
+@pytest.fixture(autouse=True, scope='session')
+def swh_proxy():
+    """Automatically inject this fixture in all tests to ensure no outside
+       connection takes place.
+
+    """
+    os.environ['http_proxy'] = 'http://localhost:999'
+    os.environ['https_proxy'] = 'http://localhost:999'
 
 
 def execute_sql(sql):
