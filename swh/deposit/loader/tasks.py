@@ -10,7 +10,7 @@ from swh.deposit.loader.checker import DepositChecker
 
 
 @shared_task(name=__name__ + '.LoadDepositArchiveTsk')
-def load_deposit_archive(archive_url, deposit_meta_url, deposit_update_url):
+def load_deposit(archive_url, deposit_meta_url, deposit_update_url):
     """Deposit archive loading task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
@@ -21,7 +21,8 @@ def load_deposit_archive(archive_url, deposit_meta_url, deposit_update_url):
           deposit's private update status api
 
     """
-    return DepositLoader().load(
+    loader = DepositLoader()
+    return loader.load(
         archive_url=archive_url,
         deposit_meta_url=deposit_meta_url,
         deposit_update_url=deposit_update_url)
@@ -33,4 +34,5 @@ def check_deposit(deposit_check_url):
 
     Args: see :func:`DepositChecker.check`.
     """
-    return DepositChecker().check(deposit_check_url)
+    checker = DepositChecker()
+    return checker.check(deposit_check_url)
