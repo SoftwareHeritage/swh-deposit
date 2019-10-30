@@ -1,0 +1,69 @@
+{
+    "branch_name": "master",
+    "origin": {
+        "type": "deposit",
+        "url": "https://hal-test.archives-ouvertes.fr/some-external-id"
+    },
+    "origin_metadata": {
+        "metadata": {
+            "@xmlns": ["http://www.w3.org/2005/Atom"],
+            "author": [
+                "some awesome author",
+                "another one",
+                "no one"
+            ],
+            "codemeta:dateCreated": "2017-10-07T15:17:08Z",
+            "external_identifier": "some-external-id",
+            "url": "https://hal-test.archives-ouvertes.fr/some-external-id"
+        },
+        "provider": {
+            "metadata": {},
+            "provider_name": "",
+            "provider_type": "deposit_client",
+            "provider_url": "https://hal-test.archives-ouvertes.fr/"
+        },
+        "tool": {
+            "configuration": {"sword_version": "2"},
+            "name": "swh-deposit",
+            "version": "0.0.1"
+        }
+    },
+    "revision": {
+        "author": {
+            "name": "Software Heritage",
+            "fullname": "Software Heritage",
+            "email": "robot@softwareheritage.org"
+        },
+        "committer": {
+            "name": "Software Heritage",
+            "fullname": "Software Heritage",
+          "email": "robot@softwareheritage.org"
+        },
+        "committer_date": {
+            "negative_utc": "false",
+            "offset": 0,
+            "timestamp": {
+                "microseconds": 0,
+                "seconds": 1507389428
+            }
+        },
+        "date": {
+            "negative_utc": "false",
+            "offset": 0,
+            "timestamp": {"microseconds": 0, "seconds": 1507389428}
+        },
+        "message": "test: Deposit 999 in collection test",
+        "metadata": {
+            "@xmlns": ["http://www.w3.org/2005/Atom"],
+            "author": ["some awesome author",
+                       "another one",
+                       "no one"],
+            "codemeta:dateCreated": "2017-10-07T15:17:08Z",
+            "external_identifier": "some-external-id",
+            "url": "https://hal-test.archives-ouvertes.fr/some-external-id"
+        },
+        "synthetic": "true",
+        "type": "tar",
+        "parents": []
+    }
+}

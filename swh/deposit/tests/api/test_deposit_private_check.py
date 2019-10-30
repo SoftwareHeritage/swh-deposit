@@ -3,234 +3,261 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import unittest
-
 from django.urls import reverse
-import pytest
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from swh.deposit.config import (
     DEPOSIT_STATUS_VERIFIED, PRIVATE_CHECK_DEPOSIT,
-    DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED
+    DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED, COL_IRI
 )
 from swh.deposit.api.private.deposit_check import (
-    SWHChecksDeposit, MANDATORY_ARCHIVE_INVALID,
-    MANDATORY_FIELDS_MISSING,
+    MANDATORY_ARCHIVE_INVALID, MANDATORY_FIELDS_MISSING,
     MANDATORY_ARCHIVE_UNSUPPORTED, ALTERNATE_FIELDS_MISSING,
     MANDATORY_ARCHIVE_MISSING
 )
 from swh.deposit.models import Deposit
+from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import (
+    create_arborescence_archive, create_archive_with_archive
+)
 
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine
+
+PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + '-nc'
 
 
-@pytest.mark.fs
-class CheckDepositTest(APITestCase, WithAuthTestCase,
-                       BasicTestCase, CommonCreationRoutine,
-                       FileSystemCreationRoutine):
-    """Check deposit endpoints.
+def private_check_url_endpoints(collection, deposit):
+    """There are 2 endpoints to check (one with collection, one without)"""
+    return [
+        reverse(PRIVATE_CHECK_DEPOSIT, args=[collection.name, deposit.id]),
+        reverse(PRIVATE_CHECK_DEPOSIT_NC, args=[deposit.id])
+    ]
+
+
+def test_deposit_ok(
+        authenticated_client, deposit_collection, ready_deposit_ok):
+    """Proper deposit should succeed the checks (-> status ready)
 
     """
-    def setUp(self):
-        super().setUp()
+    deposit = ready_deposit_ok
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
 
-    def private_deposit_url(self, deposit_id):
-        return reverse(PRIVATE_CHECK_DEPOSIT,
-                       args=[self.collection.name, deposit_id])
-
-    def test_deposit_ok(self):
-        """Proper deposit should succeed the checks (-> status ready)
-
-        """
-        deposit_id = self.create_simple_binary_deposit(status_partial=True)
-        deposit_id = self.update_binary_deposit(deposit_id,
-                                                status_partial=False)
-
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
-
-        url = self.private_deposit_url(deposit.id)
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
+        assert data['status'] == DEPOSIT_STATUS_VERIFIED
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_VERIFIED)
+        assert deposit.status == DEPOSIT_STATUS_VERIFIED
 
-    def test_deposit_invalid_tarball(self):
-        """Deposit with tarball (of 1 tarball) should fail the checks: rejected
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
-        """
-        for archive_extension in ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz']:
-            deposit_id = self.create_deposit_archive_with_archive(
-                archive_extension)
 
-            deposit = Deposit.objects.get(pk=deposit_id)
-            self.assertEqual(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+def test_deposit_invalid_tarball(
+        tmp_path, authenticated_client, deposit_collection):
+    """Deposit with tarball (of 1 tarball) should fail the checks: rejected
 
-            url = self.private_deposit_url(deposit.id)
-            response = self.client.get(url)
-
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+    """
+    for archive_extension in ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz']:
+        deposit = create_deposit_archive_with_archive(
+            tmp_path, archive_extension,
+            authenticated_client,
+            deposit_collection.name)
+        for url in private_check_url_endpoints(deposit_collection, deposit):
+            response = authenticated_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
-            self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+            assert data['status'] == DEPOSIT_STATUS_REJECTED
             details = data['details']
             # archive checks failure
-            self.assertEqual(len(details['archive']), 1)
-            self.assertEqual(details['archive'][0]['summary'],
-                             MANDATORY_ARCHIVE_INVALID)
+            assert len(details['archive']) == 1
+            assert details['archive'][0]['summary'] == \
+                MANDATORY_ARCHIVE_INVALID
 
             deposit = Deposit.objects.get(pk=deposit.id)
-            self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)
+            assert deposit.status == DEPOSIT_STATUS_REJECTED
 
-    def test_deposit_ko_missing_tarball(self):
-        """Deposit without archive should fail the checks: rejected
 
-        """
-        deposit_id = self.create_deposit_ready()  # no archive, only atom
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+def test_deposit_ko_missing_tarball(
+        authenticated_client, deposit_collection, ready_deposit_only_metadata):
+    """Deposit without archive should fail the checks: rejected
 
-        url = self.private_deposit_url(deposit.id)
-        response = self.client.get(url)
+    """
+    deposit = ready_deposit_only_metadata
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+        assert data['status'] == DEPOSIT_STATUS_REJECTED
         details = data['details']
         # archive checks failure
-        self.assertEqual(len(details['archive']), 1)
-        self.assertEqual(details['archive'][0]['summary'],
-                         MANDATORY_ARCHIVE_MISSING)
+        assert len(details['archive']) == 1
+        assert details['archive'][0]['summary'] == MANDATORY_ARCHIVE_MISSING
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)
+        assert deposit.status == DEPOSIT_STATUS_REJECTED
 
-    def test_deposit_ko_unsupported_tarball(self):
-        """Deposit with an unsupported tarball should fail the checks: rejected
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
-        """
-        deposit_id = self.create_deposit_with_invalid_archive()
 
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(DEPOSIT_STATUS_DEPOSITED, deposit.status)
+def test_deposit_ko_unsupported_tarball(
+        tmp_path, authenticated_client, deposit_collection,
+        ready_deposit_invalid_archive):
+    """Deposit with an unsupported tarball should fail the checks: rejected
 
-        url = self.private_deposit_url(deposit.id)
-        response = self.client.get(url)
+    """
+    deposit = ready_deposit_invalid_archive
+    assert DEPOSIT_STATUS_DEPOSITED == deposit.status
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        self.assertEqual(data['status'], DEPOSIT_STATUS_REJECTED)
+        assert data['status'] == DEPOSIT_STATUS_REJECTED
         details = data['details']
+
         # archive checks failure
-        self.assertEqual(len(details['archive']), 1)
-        self.assertEqual(details['archive'][0]['summary'],
-                         MANDATORY_ARCHIVE_UNSUPPORTED)
+        assert len(details['archive']) == 1
+        assert details['archive'][0]['summary'] == \
+            MANDATORY_ARCHIVE_UNSUPPORTED
         # metadata check failure
-        self.assertEqual(len(details['metadata']), 2)
+        assert len(details['metadata']) == 2
         mandatory = details['metadata'][0]
-        self.assertEqual(mandatory['summary'], MANDATORY_FIELDS_MISSING)
-        self.assertEqual(set(mandatory['fields']),
-                         set(['author']))
+        assert mandatory['summary'] == MANDATORY_FIELDS_MISSING
+        assert set(mandatory['fields']) == set(['author'])
         alternate = details['metadata'][1]
-        self.assertEqual(alternate['summary'], ALTERNATE_FIELDS_MISSING)
-        self.assertEqual(alternate['fields'], ['name or title'])
+        assert alternate['summary'] == ALTERNATE_FIELDS_MISSING
+        assert alternate['fields'] == ['name or title']
 
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)
+        assert deposit.status == DEPOSIT_STATUS_REJECTED
 
-    def test_check_deposit_metadata_ok(self):
-        """Proper deposit should succeed the checks (-> status ready)
-           with all **MUST** metadata
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
-           using the codemeta metadata test set
-        """
-        deposit_id = self.create_simple_binary_deposit(status_partial=True)
-        deposit_id_metadata = self.add_metadata_to_deposit(deposit_id)
-        self.assertEqual(deposit_id, deposit_id_metadata)
 
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_DEPOSITED)
+def test_check_deposit_metadata_ok(
+        authenticated_client, deposit_collection, ready_deposit_ok):
+    """Proper deposit should succeed the checks (-> status ready)
+       with all **MUST** metadata
 
-        url = self.private_deposit_url(deposit.id)
+       using the codemeta metadata test set
+    """
+    deposit = ready_deposit_ok
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
-        response = self.client.get(url)
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        self.assertEqual(data['status'], DEPOSIT_STATUS_VERIFIED)
+        assert data['status'] == DEPOSIT_STATUS_VERIFIED
         deposit = Deposit.objects.get(pk=deposit.id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_VERIFIED)
+        assert deposit.status == DEPOSIT_STATUS_VERIFIED
+
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
 
-@pytest.mark.fs
-class CheckDepositTest2(CheckDepositTest):
-    def private_deposit_url(self, deposit_id):
-        return reverse(PRIVATE_CHECK_DEPOSIT+'-nc',
-                       args=[deposit_id])
+def test_check_metadata_ok(swh_checks_deposit):
+    actual_check, detail = swh_checks_deposit._check_metadata({
+        'url': 'something',
+        'external_identifier': 'something-else',
+        'name': 'foo',
+        'author': 'someone',
+    })
+
+    assert actual_check is True
+    assert detail is None
 
 
-class CheckMetadata(unittest.TestCase, SWHChecksDeposit):
-    def test_check_metadata_ok(self):
-        actual_check, detail = self._check_metadata({
-            'url': 'something',
-            'external_identifier': 'something-else',
-            'name': 'foo',
-            'author': 'someone',
-        })
+def test_check_metadata_ok2(swh_checks_deposit):
+    actual_check, detail = swh_checks_deposit._check_metadata({
+        'url': 'something',
+        'external_identifier': 'something-else',
+        'title': 'bar',
+        'author': 'someone',
+    })
 
-        self.assertTrue(actual_check)
-        self.assertIsNone(detail)
+    assert actual_check is True
+    assert detail is None
 
-    def test_check_metadata_ok2(self):
-        actual_check, detail = self._check_metadata({
-            'url': 'something',
-            'external_identifier': 'something-else',
-            'title': 'bar',
-            'author': 'someone',
-        })
 
-        self.assertTrue(actual_check)
-        self.assertIsNone(detail)
+def test_check_metadata_ko(swh_checks_deposit):
+    """Missing optional field should be caught
 
-    def test_check_metadata_ko(self):
-        """Missing optional field should be caught
+    """
+    actual_check, error_detail = swh_checks_deposit._check_metadata({
+        'url': 'something',
+        'external_identifier': 'something-else',
+        'author': 'someone',
+    })
 
-        """
-        actual_check, error_detail = self._check_metadata({
-            'url': 'something',
-            'external_identifier': 'something-else',
-            'author': 'someone',
-        })
+    expected_error = {
+        'metadata': [{
+            'summary': 'Mandatory alternate fields are missing',
+            'fields': ['name or title'],
+        }]
+    }
+    assert actual_check is False
+    assert error_detail == expected_error
 
-        expected_error = {
-            'metadata': [{
-                'summary': 'Mandatory alternate fields are missing',
-                'fields': ['name or title'],
-            }]
-        }
-        self.assertFalse(actual_check)
-        self.assertEqual(error_detail, expected_error)
 
-    def test_check_metadata_ko2(self):
-        """Missing mandatory fields should be caught
+def test_check_metadata_ko2(swh_checks_deposit):
+    """Missing mandatory fields should be caught
 
-        """
-        actual_check, error_detail = self._check_metadata({
-            'url': 'something',
-            'external_identifier': 'something-else',
-            'title': 'foobar',
-        })
+    """
+    actual_check, error_detail = swh_checks_deposit._check_metadata({
+        'url': 'something',
+        'external_identifier': 'something-else',
+        'title': 'foobar',
+    })
 
-        expected_error = {
-            'metadata': [{
-                'summary': 'Mandatory fields are missing',
-                'fields': ['author'],
-            }]
-        }
+    expected_error = {
+        'metadata': [{
+            'summary': 'Mandatory fields are missing',
+            'fields': ['author'],
+        }]
+    }
 
-        self.assertFalse(actual_check)
-        self.assertEqual(error_detail, expected_error)
+    assert actual_check is False
+    assert error_detail == expected_error
+
+
+def create_deposit_archive_with_archive(
+        root_path, archive_extension, client, collection_name):
+    # we create the holding archive to a given extension
+    archive = create_arborescence_archive(
+        root_path, 'archive1', 'file1', b'some content in file',
+        extension=archive_extension)
+
+    # now we create an archive holding the first created archive
+    invalid_archive = create_archive_with_archive(
+        root_path, 'invalid.tar.gz', archive)
+
+    # we deposit it
+    response = client.post(
+        reverse(COL_IRI, args=[collection_name]),
+        content_type='application/x-tar',
+        data=invalid_archive['data'],
+        CONTENT_LENGTH=invalid_archive['length'],
+        HTTP_MD5SUM=invalid_archive['md5sum'],
+        HTTP_SLUG='external-id',
+        HTTP_IN_PROGRESS=False,
+        HTTP_CONTENT_DISPOSITION='attachment; filename=%s' % (
+            invalid_archive['name'], ))
+
+    # then
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(response.content)
+    deposit_status = response_content['deposit_status']
+    assert deposit_status == DEPOSIT_STATUS_DEPOSITED
+    deposit_id = int(response_content['deposit_id'])
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert DEPOSIT_STATUS_DEPOSITED == deposit.status
+    return deposit
