@@ -3,7 +3,7 @@ click
 xmltodict
 iso8601
 requests
-swh.core>=0.0.60
+swh.core>=0.0.75
 
 [server]
 Django<2.0
@@ -18,6 +18,8 @@ swh.model>=0.0.26
 pytest<4
 pytest-django
 swh.scheduler[testing]
+pytest-postgresql>=2.1.0
+requests_mock
 Django<2.0
 djangorestframework
 swh.core[http]

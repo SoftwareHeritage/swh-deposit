@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+               xmlns:dcterms="http://purl.org/dc/terms/"
+               xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <external_identifier>%s</external_identifier>
+            <dcterms:identifier>hal-01587361</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361/document</dcterms:identifier>
+            <dcterms:identifier>https://hal.inria.fr/hal-01587361/file/AffectationRO-v1.0.0.zip</dcterms:identifier>
+            <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>
+            <dcterms:title xml:lang="en">The assignment problem</dcterms:title>
+            <dcterms:title xml:lang="fr">AffectationRO</dcterms:title>
+            <dcterms:creator>Gruenpeter, Morane</dcterms:creator>
+            <dcterms:subject>[INFO] Computer Science [cs]</dcterms:subject>
+            <dcterms:subject>[INFO.INFO-RO] Computer Science [cs]/Operations Research [cs.RO]</dcterms:subject>
+            <dcterms:type>SOFTWARE</dcterms:type>
+            <dcterms:abstract xml:lang="en">Project in OR: The assignment problemA java implementation for the assignment problem first release</dcterms:abstract>
+            <dcterms:abstract xml:lang="fr">description fr</dcterms:abstract>
+            <dcterms:created>2015-06-01</dcterms:created>
+            <dcterms:available>2017-10-19</dcterms:available>
+            <dcterms:language>en</dcterms:language>
+
+
+            <codemeta:url>url stable</codemeta:url>
+            <codemeta:version>Version sur hal </codemeta:version>
+            <codemeta:softwareVersion>Version entre par lutilisateur</codemeta:softwareVersion>
+            <codemeta:keywords>Mots-cls</codemeta:keywords>
+            <codemeta:releaseNotes>Commentaire</codemeta:releaseNotes>
+            <codemeta:referencePublication>Rfrence interne </codemeta:referencePublication>
+            <codemeta:isPartOf>
+                <codemeta:type> Collaboration/Projet </codemeta:type>
+                <codemeta:name> nom du projet</codemeta:name>
+                <codemeta:identifier> id </codemeta:identifier>
+            </codemeta:isPartOf>
+            <codemeta:relatedLink>Voir aussi  </codemeta:relatedLink>
+            <codemeta:funding>Financement  </codemeta:funding>
+            <codemeta:funding>Projet ANR </codemeta:funding>
+            <codemeta:funding>Projet Europen </codemeta:funding>
+            <codemeta:operatingSystem>Platform/OS </codemeta:operatingSystem>
+            <codemeta:softwareRequirements>Dpendances </codemeta:softwareRequirements>
+            <codemeta:developmentStatus>Etat du dveloppement </codemeta:developmentStatus>
+            <codemeta:license>
+                <codemeta:name>license</codemeta:name>
+                <codemeta:url>url spdx</codemeta:url>
+            </codemeta:license>
+            <codemeta:runtimePlatform>Outils de dveloppement- outil no1 </codemeta:runtimePlatform>
+            <codemeta:runtimePlatform>Outils de dveloppement- outil no2 </codemeta:runtimePlatform>
+            <codemeta:codeRepository>http://code.com</codemeta:codeRepository>
+            <codemeta:programmingLanguage>language 1</codemeta:programmingLanguage>
+            <codemeta:programmingLanguage>language 2</codemeta:programmingLanguage>
+        </entry>

@@ -5,45 +5,55 @@
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import SD_IRI
-from ..common import BasicTestCase, WithAuthTestCase
 
 
-class ServiceDocumentNoAuthCase(APITestCase, BasicTestCase):
-    """Service document endpoints are protected with basic authentication.
+def test_service_document_no_auth_fails(client):
+    """Without authentication, service document endpoint should return 401
 
     """
-    def test_service_document_no_authentication_fails(self):
-        """Without authentication, service document endpoint should return 401
-
-        """
-        url = reverse(SD_IRI)
-
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_service_document_with_http_accept_should_not_break(self):
-        """Without auth, sd endpoint through browser should return 401
-
-        """
-        url = reverse(SD_IRI)
-
-        # when
-        response = self.client.get(
-            url,
-            HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    url = reverse(SD_IRI)
+    response = client.get(url)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
-    def assertResponseOk(self, response):  # noqa: N802
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content.decode('utf-8'),
+def test_service_document_no_auth_with_http_auth_should_not_break(client):
+    """Without auth, sd endpoint through browser should return 401
+
+    """
+    url = reverse(SD_IRI)
+    response = client.get(
+        url,
+        HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_service_document(authenticated_client, deposit_user):
+    """With authentication, service document list user's collection
+
+    """
+    url = reverse(SD_IRI)
+    response = authenticated_client.get(url)
+    check_response(response, deposit_user.username)
+
+
+def test_service_document_with_http_accept_header(
+        authenticated_client, deposit_user):
+    """With authentication, with browser, sd list user's collection
+
+    """
+    url = reverse(SD_IRI)
+    response = authenticated_client.get(
+        url,
+        HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+    check_response(response, deposit_user.username)
+
+
+def check_response(response, username):
+    assert response.status_code == status.HTTP_200_OK
+    assert response.content.decode('utf-8') == \
                           '''<?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
@@ -71,32 +81,7 @@ class ServiceDocumentCase(APITestCase, WithAuthTestCase, BasicTestCase):
     </workspace>
 </service>
 ''' % (TEST_CONFIG['max_upload_size'],
-       self.username,
-       self.username,
-       self.username,
-       self.username))  # noqa
-
-    def test_service_document(self):
-        """With authentication, service document list user's collection
-
-        """
-        url = reverse(SD_IRI)
-
-        # when
-        response = self.client.get(url)
-
-        # then
-        self.assertResponseOk(response)
-
-    def test_service_document_with_http_accept_header(self):
-        """With authentication, with browser, sd list user's collection
-
-        """
-        url = reverse(SD_IRI)
-
-        # when
-        response = self.client.get(
-            url,
-            HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
-
-        self.assertResponseOk(response)
+       username,
+       username,
+       username,
+       username)  # noqa

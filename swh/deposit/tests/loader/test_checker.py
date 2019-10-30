@@ -3,66 +3,43 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from rest_framework.test import APITestCase
-
-from swh.deposit.models import Deposit
-from swh.deposit.config import PRIVATE_CHECK_DEPOSIT, DEPOSIT_STATUS_VERIFIED
-from swh.deposit.config import DEPOSIT_STATUS_REJECTED
-from swh.deposit.loader.checker import DepositChecker
 from django.urls import reverse
+from unittest.mock import patch
+
+from swh.deposit.config import PRIVATE_CHECK_DEPOSIT
 
 
-from .common import SWHDepositTestClient, CLIENT_TEST_CONFIG
-from ..common import BasicTestCase, WithAuthTestCase, CommonCreationRoutine
-from ..common import FileSystemCreationRoutine
+def test_check_deposit_ready(
+        swh_config, requests_mock_datadir, deposit_checker):
+    """Check on a valid 'deposited' deposit should result in 'verified'
+
+    """
+    deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=['test', 1])
+    actual_result = deposit_checker.check(deposit_check_url=deposit_check_url)
+    assert actual_result == {'status': 'eventful'}
 
 
-class DepositCheckerScenarioTest(APITestCase, WithAuthTestCase,
-                                 BasicTestCase, CommonCreationRoutine,
-                                 FileSystemCreationRoutine):
+def test_check_deposit_rejected(
+        swh_config, requests_mock_datadir, deposit_checker):
+    """Check on invalid 'deposited' deposit should result in 'rejected'
 
-    def setUp(self):
-        super().setUp()
+    """
+    deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=[
+        'test', 2
+    ])
+    actual_result = deposit_checker.check(deposit_check_url=deposit_check_url)
+    assert actual_result == {'status': 'failed'}
 
-        # 2. Sets a basic client which accesses the test data
-        checker_client = SWHDepositTestClient(client=self.client,
-                                              config=CLIENT_TEST_CONFIG)
-        # 3. setup loader with no persistence and that client
-        self.checker = DepositChecker(client=checker_client)
 
-    def test_check_deposit_ready(self):
-        """Check on a valid 'deposited' deposit should result in 'verified'
+@patch('swh.deposit.client.requests.get')
+def test_check_deposit_rejected_exception(
+        mock_requests, swh_config, deposit_checker):
+    """Check on invalid 'deposited' deposit should result in 'rejected'
 
-        """
-        # 1. create a deposit with archive and metadata
-        deposit_id = self.create_simple_binary_deposit()
-        deposit_id = self.update_binary_deposit(deposit_id,
-                                                status_partial=False)
-
-        args = [self.collection.name, deposit_id]
-        deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
-
-        # when
-        actual_result = self.checker.check(deposit_check_url=deposit_check_url)
-        # then
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_VERIFIED)
-        self.assertEqual(actual_result, {'status': 'eventful'})
-
-    def test_check_deposit_rejected(self):
-        """Check on invalid 'deposited' deposit should result in 'rejected'
-
-        """
-        # 1. create a deposit with archive and metadata
-        deposit_id = self.create_deposit_with_invalid_archive()
-
-        args = [self.collection.name, deposit_id]
-        deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=args)
-
-        # when
-        actual_result = self.checker.check(deposit_check_url=deposit_check_url)
-
-        # then
-        deposit = Deposit.objects.get(pk=deposit_id)
-        self.assertEqual(deposit.status, DEPOSIT_STATUS_REJECTED)
-        self.assertEqual(actual_result, {'status': 'eventful'})
+    """
+    mock_requests.side_effect = ValueError('simulated problem when checking')
+    deposit_check_url = reverse(PRIVATE_CHECK_DEPOSIT, args=[
+        'test', 3
+    ])
+    actual_result = deposit_checker.check(deposit_check_url=deposit_check_url)
+    assert actual_result == {'status': 'failed'}
