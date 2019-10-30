@@ -1,16 +1,16 @@
-# Copyright (C) 2015-2018  The Software Heritage developers
+# Copyright (C) 2015-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from celery import current_app as app
+from celery import shared_task
 
 from swh.deposit.loader.loader import DepositLoader
 from swh.deposit.loader.checker import DepositChecker
 
 
-@app.task(name=__name__ + '.LoadDepositArchiveTsk')
-def load_deposit_archive(archive_url, deposit_meta_url, deposit_update_url):
+@shared_task(name=__name__ + '.LoadDepositArchiveTsk')
+def load_deposit(archive_url, deposit_meta_url, deposit_update_url):
     """Deposit archive loading task described by the following steps:
 
        1. Retrieve tarball from deposit's private api and store
@@ -21,16 +21,18 @@ def load_deposit_archive(archive_url, deposit_meta_url, deposit_update_url):
           deposit's private update status api
 
     """
-    return DepositLoader().load(
+    loader = DepositLoader()
+    return loader.load(
         archive_url=archive_url,
         deposit_meta_url=deposit_meta_url,
         deposit_update_url=deposit_update_url)
 
 
-@app.task(name=__name__ + '.ChecksDepositTsk')
+@shared_task(name=__name__ + '.ChecksDepositTsk')
 def check_deposit(deposit_check_url):
     """Check a deposit's status
 
     Args: see :func:`DepositChecker.check`.
     """
-    return DepositChecker().check(deposit_check_url)
+    checker = DepositChecker()
+    return checker.check(deposit_check_url)

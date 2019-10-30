@@ -1,8 +1,12 @@
-swh-deposit (0.0.74-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-deposit (0.0.75-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.75     - (tagged by Nicolas Dandrimont
+    <nicolas@dandrimont.eu> on 2019-10-30 16:50:25 +0100)
+  * Upstream changes:     - Release swh.deposit v0.0.75     - Revert
+    changes to the task signature until the new loader is ready     -
+    Migrate tests to pytest
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 09 Oct 2019 09:36:40 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 30 Oct 2019 15:54:55 +0000
 
 swh-deposit (0.0.74-1~swh1) unstable-swh; urgency=medium
 
