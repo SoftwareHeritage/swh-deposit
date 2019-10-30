@@ -5,8 +5,12 @@
 
 import logging
 
+from typing import Mapping
 
-from ..client import PrivateApiDepositClient
+from swh.deposit.client import PrivateApiDepositClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class DepositChecker():
@@ -18,16 +22,14 @@ class DepositChecker():
     def __init__(self, client=None):
         super().__init__()
         self.client = client if client else PrivateApiDepositClient()
-        logging_class = '%s.%s' % (self.__class__.__module__,
-                                   self.__class__.__name__)
-        self.log = logging.getLogger(logging_class)
 
-    def check(self, deposit_check_url):
+    def check(self, deposit_check_url: str) -> Mapping[str, str]:
+        status = None
         try:
-            self.client.check(deposit_check_url)
+            r = self.client.check(deposit_check_url)
+            status = 'eventful' if r == 'verified' else 'failed'
         except Exception:
-            self.log.exception("Failure during check on '%s'" % (
+            logger.exception("Failure during check on '%s'" % (
                 deposit_check_url, ))
-            return {'status': 'failed'}
-        else:
-            return {'status': 'eventful'}
+            status = 'failed'
+        return {'status': status}

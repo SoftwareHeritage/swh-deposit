@@ -7,57 +7,56 @@ import json
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from swh.deposit.models import Deposit, DEPOSIT_STATUS_DETAIL
-from swh.deposit.config import PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_VERIFIED
-from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..common import BasicTestCase
+from swh.deposit.config import (
+    PRIVATE_PUT_DEPOSIT, DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_LOAD_SUCCESS
+)
 
 
-class UpdateDepositStatusTest(APITestCase, BasicTestCase):
-    """Update the deposit's status scenario
+PRIVATE_PUT_DEPOSIT_NC = PRIVATE_PUT_DEPOSIT + '-nc'
+
+
+def private_check_url_endpoints(collection, deposit):
+    """There are 2 endpoints to check (one with collection, one without)"""
+    return [
+        reverse(PRIVATE_PUT_DEPOSIT, args=[collection.name, deposit.id]),
+        reverse(PRIVATE_PUT_DEPOSIT_NC, args=[deposit.id])
+    ]
+
+
+def test_update_deposit_status(
+        authenticated_client, deposit_collection, ready_deposit_verified):
+    """Existing status for update should return a 204 response
 
     """
-    def setUp(self):
-        super().setUp()
-        deposit = Deposit(status=DEPOSIT_STATUS_VERIFIED,
-                          collection=self.collection,
-                          client=self.user)
-        deposit.save()
-        self.deposit = Deposit.objects.get(pk=deposit.id)
-        assert self.deposit.status == DEPOSIT_STATUS_VERIFIED
-
-    def private_deposit_url(self, deposit_id):
-        return reverse(PRIVATE_PUT_DEPOSIT,
-                       args=[self.collection.name, deposit_id])
-
-    def test_update_deposit_status(self):
-        """Existing status for update should return a 204 response
-
-        """
-        url = self.private_deposit_url(self.deposit.id)
-
+    deposit = ready_deposit_verified
+    for url in private_check_url_endpoints(deposit_collection, deposit):
         possible_status = set(DEPOSIT_STATUS_DETAIL.keys()) - set(
             [DEPOSIT_STATUS_LOAD_SUCCESS])
 
         for _status in possible_status:
-            response = self.client.put(
+            response = authenticated_client.put(
                 url,
                 content_type='application/json',
                 data=json.dumps({'status': _status}))
 
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            assert response.status_code == status.HTTP_204_NO_CONTENT
 
-            deposit = Deposit.objects.get(pk=self.deposit.id)
-            self.assertEqual(deposit.status, _status)
+            deposit = Deposit.objects.get(pk=deposit.id)
+            assert deposit.status == _status
 
-    def test_update_deposit_status_with_info(self):
-        """Existing status for update with info should return a 204 response
+            deposit.status = DEPOSIT_STATUS_VERIFIED
+            deposit.save()  # hack the same deposit
 
-        """
-        url = self.private_deposit_url(self.deposit.id)
 
+def test_update_deposit_status_with_info(
+        authenticated_client, deposit_collection, ready_deposit_verified):
+    """Existing status for update with info should return a 204 response
+
+    """
+    deposit = ready_deposit_verified
+    for url in private_check_url_endpoints(deposit_collection, deposit):
         expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
         origin_url = 'something'
         directory_id = '42a13fc721c8716ff695d0d62fc851d641f3a12b'
@@ -69,7 +68,7 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
         expected_swh_anchor_id_context = 'swh:1:rev:%s;origin=%s' % (
             revision_id, origin_url)
 
-        response = self.client.put(
+        response = authenticated_client.put(
             url,
             content_type='application/json',
             data=json.dumps({
@@ -79,56 +78,63 @@ class UpdateDepositStatusTest(APITestCase, BasicTestCase):
                 'origin_url': origin_url,
             }))
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        deposit = Deposit.objects.get(pk=self.deposit.id)
-        self.assertEqual(deposit.status, expected_status)
-        self.assertEqual(deposit.swh_id, expected_swh_id)
-        self.assertEqual(deposit.swh_id_context, expected_swh_id_context)
-        self.assertEqual(deposit.swh_anchor_id, expected_swh_anchor_id)
-        self.assertEqual(deposit.swh_anchor_id_context,
-                         expected_swh_anchor_id_context)
+        deposit = Deposit.objects.get(pk=deposit.id)
+        assert deposit.status == expected_status
+        assert deposit.swh_id == expected_swh_id
+        assert deposit.swh_id_context == expected_swh_id_context
+        assert deposit.swh_anchor_id == expected_swh_anchor_id
+        assert deposit.swh_anchor_id_context == expected_swh_anchor_id_context
 
-    def test_update_deposit_status_will_fail_with_unknown_status(self):
-        """Unknown status for update should return a 400 response
+        deposit.swh_id = None
+        deposit.swh_id_context = None
+        deposit.swh_anchor_id = None
+        deposit.swh_anchor_id_context = None
+        deposit.status = DEPOSIT_STATUS_VERIFIED
+        deposit.save()
 
-        """
-        url = self.private_deposit_url(self.deposit.id)
 
-        response = self.client.put(
+def test_update_deposit_status_will_fail_with_unknown_status(
+        authenticated_client, deposit_collection, ready_deposit_verified):
+    """Unknown status for update should return a 400 response
+
+    """
+    deposit = ready_deposit_verified
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.put(
             url,
             content_type='application/json',
             data=json.dumps({'status': 'unknown'}))
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_update_deposit_status_will_fail_with_no_status_key(self):
-        """No status provided for update should return a 400 response
 
-        """
-        url = self.private_deposit_url(self.deposit.id)
+def test_update_deposit_status_will_fail_with_no_status_key(
+        authenticated_client, deposit_collection, ready_deposit_verified):
+    """No status provided for update should return a 400 response
 
-        response = self.client.put(
+    """
+    deposit = ready_deposit_verified
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.put(
             url,
             content_type='application/json',
             data=json.dumps({'something': 'something'}))
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_update_deposit_status_success_without_swh_id_fail(self):
-        """Providing successful status without swh_id should return a 400
 
-        """
-        url = self.private_deposit_url(self.deposit.id)
+def test_update_deposit_status_success_without_swh_id_fail(
+        authenticated_client, deposit_collection, ready_deposit_verified):
+    """Providing successful status without swh_id should return a 400
 
-        response = self.client.put(
+    """
+    deposit = ready_deposit_verified
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.put(
             url,
             content_type='application/json',
             data=json.dumps({'status': DEPOSIT_STATUS_LOAD_SUCCESS}))
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-class UpdateDepositStatusTest2(UpdateDepositStatusTest):
-    def private_deposit_url(self, deposit_id):
-        return reverse(PRIVATE_PUT_DEPOSIT+'-nc', args=[deposit_id])
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
