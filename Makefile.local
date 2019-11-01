@@ -31,4 +31,4 @@ run:
 # but it currently doesn't; see
 # https://github.com/typeddjango/django-stubs/issues/166
 typecheck:
-	DJANGO_SETTINGS_MODULE=swh.deposit.settings.testing $(MYPY) $(MYPYFLAGS) -p $(PYMODULE)
+	DJANGO_SETTINGS_MODULE=swh.deposit.settings.testing $(MYPY) $(MYPYFLAGS) swh
