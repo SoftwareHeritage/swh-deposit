@@ -30,5 +30,5 @@ run:
 # *should* work without any override thanks to the mypy django-stubs plugin,
 # but it currently doesn't; see
 # https://github.com/typeddjango/django-stubs/issues/166
-typecheck:
+check-mypy:
 	DJANGO_SETTINGS_MODULE=swh.deposit.settings.testing $(MYPY) $(MYPYFLAGS) swh
