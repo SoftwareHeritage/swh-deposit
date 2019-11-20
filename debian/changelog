@@ -1,8 +1,8 @@
-swh-deposit (0.0.75-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.75-1~swh2) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * Add egg-info to pybuild.testfiles
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 30 Oct 2019 15:56:24 +0000
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 20 Nov 2019 15:06:31 +0100
 
 swh-deposit (0.0.75-1~swh1) unstable-swh; urgency=medium
 
