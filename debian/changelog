@@ -1,3 +1,9 @@
+swh-deposit (0.0.75-1~swh2) unstable-swh; urgency=medium
+
+  * Add egg-info to pybuild.testfiles
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 20 Nov 2019 15:06:31 +0100
+
 swh-deposit (0.0.75-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.75     - (tagged by Nicolas Dandrimont
