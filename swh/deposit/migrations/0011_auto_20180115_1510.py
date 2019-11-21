@@ -15,6 +15,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='deposit',
             name='status',
-            field=models.TextField(choices=[('partial', 'partial'), ('expired', 'expired'), ('deposited', 'deposited'), ('verified', 'verified'), ('rejected', 'rejected'), ('loading', 'loading'), ('done', 'done'), ('failed', 'failed')], default='partial'),
+            field=models.TextField(
+                choices=[('partial', 'partial'),
+                         ('expired', 'expired'),
+                         ('deposited', 'deposited'),
+                         ('verified', 'verified'),
+                         ('rejected', 'rejected'),
+                         ('loading', 'loading'),
+                         ('done', 'done'),
+                         ('failed', 'failed')],
+                default='partial'),
         ),
     ]

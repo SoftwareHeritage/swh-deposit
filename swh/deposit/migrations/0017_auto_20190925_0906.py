@@ -16,6 +16,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='deposit',
             name='parent',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='deposit.Deposit'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to='deposit.Deposit'),
         ),
     ]
