@@ -6,7 +6,7 @@
 from collections import defaultdict
 from django.urls import reverse
 from rest_framework import status
-from typing import Mapping
+from typing import Dict, Mapping
 
 from swh.deposit.config import (
     EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY,
@@ -17,7 +17,7 @@ from swh.deposit.models import Deposit, DepositRequest
 
 
 def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
-    deposit_request_types = defaultdict(int)
+    deposit_request_types = defaultdict(int)  # type: Dict[str, int]
     for dr in deposit_requests:
         deposit_request_types[dr.type] += 1
     return deposit_request_types

@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='depositclient',
             name='url',
-            field=models.TextField(default='https://hal.archives-ouvertes.fr/'),
+            field=models.TextField(
+                default='https://hal.archives-ouvertes.fr/'),
             preserve_default=False,
         ),
     ]

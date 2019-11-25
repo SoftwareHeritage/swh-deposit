@@ -17,7 +17,7 @@ from swh.deposit.loader.checker import DepositChecker
 from swh.deposit.loader.loader import DepositLoader
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='session')  # type: ignore  # expected redefinition
 def celery_includes():
     return [
         'swh.deposit.loader.tasks',

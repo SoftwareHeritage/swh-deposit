@@ -16,6 +16,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='depositrequest',
             name='archive',
-            field=models.FileField(null=True, upload_to=swh.deposit.models.client_directory_path),
+            field=models.FileField(
+                null=True,
+                upload_to=swh.deposit.models.client_directory_path),
         ),
     ]

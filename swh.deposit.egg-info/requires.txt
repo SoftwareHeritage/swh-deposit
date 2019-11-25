@@ -15,11 +15,12 @@ swh.scheduler>=0.0.39
 swh.model>=0.0.26
 
 [testing]
-pytest<4
+pytest
 pytest-django
 swh.scheduler[testing]
 pytest-postgresql>=2.1.0
 requests_mock
+django-stubs
 Django<2.0
 djangorestframework
 swh.core[http]

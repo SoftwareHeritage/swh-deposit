@@ -23,6 +23,7 @@ swh/deposit/errors.py
 swh/deposit/manage.py
 swh/deposit/models.py
 swh/deposit/parsers.py
+swh/deposit/py.typed
 swh/deposit/signals.py
 swh/deposit/urls.py
 swh/deposit/utils.py
