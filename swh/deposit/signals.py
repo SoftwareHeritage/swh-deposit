@@ -94,7 +94,7 @@ def post_deposit_save(sender, instance, created, raw, using,
     elif (instance.status == DEPOSIT_STATUS_VERIFIED and
           not instance.load_task_id):
 
-        version = default_config.get('deposit', {}).get('loader-version', 1)
+        version = default_config.config.get('loader-version', 1)
         # schedule deposit loading
         if int(version) == 1:  # default version
             from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
