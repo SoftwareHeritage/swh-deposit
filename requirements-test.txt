@@ -1,5 +1,6 @@
-pytest<4
+pytest
 pytest-django
 swh.scheduler[testing]
 pytest-postgresql >= 2.1.0
 requests_mock
+django-stubs

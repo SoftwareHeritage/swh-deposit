@@ -1,8 +1,11 @@
-swh-deposit (0.0.75-1~swh2~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.76-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.76     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-11-25 12:26:07
+    +0100)
+  * Upstream changes:     - v0.0.76     - Start adding mypy annotation
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 20 Nov 2019 14:13:03 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 25 Nov 2019 11:29:48 +0000
 
 swh-deposit (0.0.75-1~swh2) unstable-swh; urgency=medium
 

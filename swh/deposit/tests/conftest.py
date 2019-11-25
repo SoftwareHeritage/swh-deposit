@@ -50,7 +50,7 @@ def pytest_load_initial_conftests(early_config, parser, args):
        Used to initialize the deposit's server db.
 
     """
-    import project.app.signals
+    import project.app.signals  # type: ignore
 
     def prepare_db(*args, **kwargs):
         from django.conf import settings

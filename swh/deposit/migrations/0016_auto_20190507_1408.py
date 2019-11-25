@@ -15,11 +15,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='deposit',
             name='check_task_id',
-            field=models.TextField(blank=True, null=True, verbose_name="Scheduler's associated checking task id"),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name="Scheduler's associated checking task id"),
         ),
         migrations.AddField(
             model_name='deposit',
             name='load_task_id',
-            field=models.TextField(blank=True, null=True, verbose_name="Scheduler's associated loading task id"),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name="Scheduler's associated loading task id"),
         ),
     ]

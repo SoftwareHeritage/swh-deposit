@@ -23,8 +23,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Dbversion',
             fields=[
-                ('version', models.IntegerField(primary_key=True, serialize=False)),
-                ('release', models.DateTimeField(default=django.utils.timezone.now, null=True)),
+                ('version', models.IntegerField(
+                    primary_key=True, serialize=False)),
+                ('release', models.DateTimeField(
+                    default=django.utils.timezone.now, null=True)),
                 ('description', models.TextField(blank=True, null=True)),
             ],
             options={
@@ -39,7 +41,14 @@ class Migration(migrations.Migration):
                 ('complete_date', models.DateTimeField(null=True)),
                 ('external_id', models.TextField()),
                 ('swh_id', models.TextField(blank=True, null=True)),
-                ('status', models.TextField(choices=[('partial', 'partial'), ('expired', 'expired'), ('ready', 'ready'), ('injecting', 'injecting'), ('success', 'success'), ('failure', 'failure')], default='partial')),
+                ('status', models.TextField(
+                    choices=[('partial', 'partial'),
+                             ('expired', 'expired'),
+                             ('ready', 'ready'),
+                             ('injecting', 'injecting'),
+                             ('success', 'success'),
+                             ('failure', 'failure')],
+                    default='partial')),
             ],
             options={
                 'db_table': 'deposit',
@@ -48,8 +57,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DepositClient',
             fields=[
-                ('user_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('collections', django.contrib.postgres.fields.ArrayField(base_field=models.IntegerField(), null=True, size=None)),
+                ('user_ptr', models.OneToOneField(
+                    auto_created=True,
+                    on_delete=django.db.models.deletion.CASCADE,
+                    parent_link=True,
+                    primary_key=True,
+                    serialize=False,
+                    to=settings.AUTH_USER_MODEL)),
+                ('collections',
+                 django.contrib.postgres.fields.ArrayField(
+                     base_field=models.IntegerField(),
+                     null=True,
+                     size=None)),
             ],
             options={
                 'db_table': 'deposit_client',
@@ -74,8 +93,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
                 ('date', models.DateTimeField(auto_now_add=True)),
-                ('metadata', django.contrib.postgres.fields.jsonb.JSONField(null=True)),
-                ('deposit', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='deposit.Deposit')),
+                ('metadata',
+                 django.contrib.postgres.fields.jsonb.JSONField(null=True)),
+                ('deposit',
+                 models.ForeignKey(
+                     on_delete=django.db.models.deletion.DO_NOTHING,
+                     to='deposit.Deposit')),
             ],
             options={
                 'db_table': 'deposit_request',
@@ -94,16 +117,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='depositrequest',
             name='type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='deposit.DepositRequestType'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to='deposit.DepositRequestType'),
         ),
         migrations.AddField(
             model_name='deposit',
             name='client',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='deposit.DepositClient'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to='deposit.DepositClient'),
         ),
         migrations.AddField(
             model_name='deposit',
             name='collection',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='deposit.DepositCollection'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to='deposit.DepositCollection'),
         ),
     ]
