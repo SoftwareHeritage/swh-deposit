@@ -1,8 +1,12 @@
-swh-deposit (0.0.77-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.78-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.78     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-11-25 18:28:13
+    +0100)
+  * Upstream changes:     - v0.0.78     - deposit.signal: Simplify
+    configuration entry
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 25 Nov 2019 14:04:13 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 25 Nov 2019 17:34:33 +0000
 
 swh-deposit (0.0.77-1~swh1) unstable-swh; urgency=medium
 
