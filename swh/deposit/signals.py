@@ -94,10 +94,25 @@ def post_deposit_save(sender, instance, created, raw, using,
     elif (instance.status == DEPOSIT_STATUS_VERIFIED and
           not instance.load_task_id):
 
-        url = utils.origin_url_from(instance)
+        version = default_config.get('deposit', {}).get('loader-version', 1)
+        # schedule deposit loading
+        if int(version) == 1:  # default version
+            from swh.deposit.config import PRIVATE_GET_RAW_CONTENT
+            from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA
+            from swh.deposit.config import PRIVATE_PUT_DEPOSIT
+            archive_url = reverse(PRIVATE_GET_RAW_CONTENT, args=args)
+            meta_url = reverse(PRIVATE_GET_DEPOSIT_METADATA, args=args)
+            update_url = reverse(PRIVATE_PUT_DEPOSIT, args=args)
 
-        task = create_oneshot_task_dict(
-            'load-deposit', url=url, deposit_id=instance.id)
+            task = create_oneshot_task_dict('load-deposit',
+                                            archive_url=archive_url,
+                                            deposit_meta_url=meta_url,
+                                            deposit_update_url=update_url)
+        else:  # new version
+            url = utils.origin_url_from(instance)
+            task = create_oneshot_task_dict(
+                'load-deposit',
+                url=url, deposit_id=instance.id)
 
         load_task_id = schedule_task(default_config.scheduler, task)
         instance.load_task_id = load_task_id
