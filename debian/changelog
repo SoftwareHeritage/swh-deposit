@@ -1,8 +1,13 @@
-swh-deposit (0.0.76-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.77-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.77     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-11-25 14:48:59
+    +0100)
+  * Upstream changes:     - v0.0.77     - deposit.signals: Send
+    versioned scheduler tasks     - deposit.signals: Scheduler load-
+    deposit task with new endpoints     - mypy: Fix missing import
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 25 Nov 2019 11:31:18 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 25 Nov 2019 14:02:38 +0000
 
 swh-deposit (0.0.76-1~swh1) unstable-swh; urgency=medium
 
