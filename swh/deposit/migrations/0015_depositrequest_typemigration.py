@@ -25,7 +25,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='depositrequest',
             name='type2',
-            field=models.CharField(choices=[('archive', 'archive'), ('metadata', 'metadata')], max_length=8, null=True),
+            field=models.CharField(
+                choices=[('archive', 'archive'),
+                         ('metadata', 'metadata')],
+                max_length=8, null=True),
         ),
         migrations.RunPython(populate_deposit_type2),
         migrations.RemoveField(

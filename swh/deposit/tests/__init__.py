@@ -67,7 +67,7 @@ def parse_loader_config_file(base_filename=None, config_filename=None,
 # monkey patch classes method permits to override, for tests purposes,
 # the default configuration without side-effect, i.e do not load the
 # configuration from disk
-SWHDefaultConfig.parse_config_file = parse_deposit_config_file
-BufferedLoader.parse_config_file = parse_loader_config_file
+SWHDefaultConfig.parse_config_file = parse_deposit_config_file  # type: ignore
+BufferedLoader.parse_config_file = parse_loader_config_file  # type: ignore
 
 setup_django_for('testing')
