@@ -15,7 +15,6 @@ from rest_framework import status
 from swh.core import tarball
 from swh.model import identifiers
 from swh.deposit.utils import normalize_date
-from swh.deposit import utils
 
 from . import DepositReadMixin, SWHPrivateAPIView
 from ...config import SWH_PERSON, ARCHIVE_TYPE
@@ -177,7 +176,7 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI,
         data = {
             'origin': {
                 'type': 'deposit',
-                'url': utils.origin_url_from(deposit),
+                'url': deposit.origin_url,
             }
         }
 

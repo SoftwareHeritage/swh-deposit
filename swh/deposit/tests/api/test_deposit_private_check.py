@@ -237,7 +237,7 @@ def create_deposit_archive_with_archive(
 
     # now we create an archive holding the first created archive
     invalid_archive = create_archive_with_archive(
-        root_path, 'invalid.tar.gz', archive)
+        root_path, 'invalid.tgz', archive)
 
     # we deposit it
     response = client.post(

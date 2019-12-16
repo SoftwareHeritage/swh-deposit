@@ -8,8 +8,12 @@ import re
 import tarfile
 import zipfile
 
+from itertools import chain
+from shutil import get_unpack_formats
+
 from rest_framework import status
 
+from swh.scheduler.utils import create_oneshot_task_dict
 
 from . import DepositReadMixin, SWHPrivateAPIView
 from ..common import SWHGetDepositAPI
@@ -31,6 +35,11 @@ ARCHIVE_EXTENSIONS = [
 
 PATTERN_ARCHIVE_EXTENSION = re.compile(
     r'.*\.(%s)$' % '|'.join(ARCHIVE_EXTENSIONS))
+
+
+def known_archive_format(filename):
+    return any(filename.endswith(t) for t in
+               chain(*(x[1] for x in get_unpack_formats())))
 
 
 class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
@@ -92,6 +101,10 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
 
         """
         archive_path = archive_request.archive.path
+
+        if not known_archive_format(archive_path):
+            return False, MANDATORY_ARCHIVE_UNSUPPORTED
+
         try:
             if zipfile.is_zipfile(archive_path):
                 with zipfile.ZipFile(archive_path) as f:
@@ -203,6 +216,12 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
             response = {
                 'status': deposit.status,
             }
+            if not deposit.load_task_id and self.config['checks']:
+                url = deposit.origin_url
+                task = create_oneshot_task_dict(
+                    'load-deposit', url=url, deposit_id=deposit.id)
+                load_task_id = self.scheduler.create_tasks([task])[0]['id']
+                deposit.load_task_id = load_task_id
 
         deposit.save()
 

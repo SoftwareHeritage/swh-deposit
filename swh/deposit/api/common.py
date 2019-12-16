@@ -19,13 +19,12 @@ from rest_framework.views import APIView
 
 from swh.model import hashutil
 from swh.scheduler.utils import create_oneshot_task_dict
-from swh.deposit.utils import origin_url_from
 
 from ..config import (
     SWHDefaultConfig, EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI,
     ARCHIVE_KEY, METADATA_KEY, RAW_METADATA_KEY, STATE_IRI,
     DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_VERIFIED, PRIVATE_CHECK_DEPOSIT,
+    PRIVATE_CHECK_DEPOSIT,
     DEPOSIT_STATUS_LOAD_SUCCESS, ARCHIVE_TYPE, METADATA_TYPE
 )
 from ..errors import (
@@ -184,14 +183,6 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                     'check-deposit', deposit_check_url=check_url)
                 check_task_id = scheduler.create_tasks([task])[0]['id']
                 deposit.check_task_id = check_task_id
-            elif (deposit.status == DEPOSIT_STATUS_VERIFIED and
-                  not deposit.load_task_id):
-
-                url = origin_url_from(deposit)
-                task = create_oneshot_task_dict(
-                    'load-deposit', url=url, deposit_id=deposit.id)
-                load_task_id = scheduler.create_task([task])[0]['id']
-                deposit.load_task_id = load_task_id
 
         deposit.save()
 
