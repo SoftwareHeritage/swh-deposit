@@ -1,5 +1,6 @@
 pytest
 pytest-django
+pytest-mock
 swh.scheduler[testing]
 pytest-postgresql >= 2.1.0
 requests_mock
