@@ -9,6 +9,10 @@ import pytest
 import psycopg2
 
 from django.urls import reverse
+from django.test.utils import setup_databases  # type: ignore
+# mypy is asked to ignore the import statement above because setup_databases
+# is not part of the d.t.utils.__all__ variable.
+
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -36,39 +40,32 @@ TEST_USER = {
 }
 
 
+@pytest.fixture(scope='session')
+def django_db_setup(
+        request,
+        django_db_blocker,
+        postgresql_proc):
+    from django.conf import settings
+    settings.DATABASES['default'].update({
+        ('ENGINE', 'django.db.backends.postgresql'),
+        ('NAME', 'tests'),
+        ('USER', postgresql_proc.user),  # noqa
+        ('HOST', postgresql_proc.host),  # noqa
+        ('PORT', postgresql_proc.port),  # noqa
+    })
+    with django_db_blocker.unblock():
+        setup_databases(
+            verbosity=request.config.option.verbose,
+            interactive=False,
+            keepdb=False)
+
+
 def execute_sql(sql):
     """Execute sql to postgres db"""
     with psycopg2.connect(database='postgres') as conn:
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
         cur.execute(sql)
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_load_initial_conftests(early_config, parser, args):
-    """This hook is done prior to django loading.
-       Used to initialize the deposit's server db.
-
-    """
-    import project.app.signals  # type: ignore
-
-    def prepare_db(*args, **kwargs):
-        from django.conf import settings
-        db_name = 'tests'
-        # work around db settings for django
-        for k, v in [
-                ('ENGINE', 'django.db.backends.postgresql'),
-                ('NAME', 'tests'),
-                ('USER', postgresql_proc.user),  # noqa
-                ('HOST', postgresql_proc.host),  # noqa
-                ('PORT', postgresql_proc.port),  # noqa
-        ]:
-            settings.DATABASES['default'][k] = v
-
-        execute_sql('DROP DATABASE IF EXISTS %s' % db_name)
-        execute_sql('CREATE DATABASE %s TEMPLATE template0' % db_name)
-
-    project.app.signals.something = prepare_db
 
 
 @pytest.fixture(autouse=True, scope='session')
