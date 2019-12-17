@@ -5,6 +5,7 @@
 
 import os
 import logging
+import sys
 import tempfile
 import uuid
 
@@ -335,12 +336,8 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             metadata_deposit, collection, slug, partial, deposit_id,
             replace, url, name, author)
     except InputError as e:
-        msg = 'Problem during parsing options: %s' % e
-        r = {
-            'error': msg,
-        }
-        logger.info(r)
-        return 1
+        logger.error('Problem during parsing options: %s', e)
+        sys.exit(1)
 
     try:
         if verbose:
@@ -382,12 +379,8 @@ def status(ctx, url, username, password, deposit_id):
         client = _client(url, username, password)
         collection = _collection(client)
     except InputError as e:
-        msg = 'Problem during parsing options: %s' % e
-        r = {
-            'error': msg,
-        }
-        logger.info(r)
-        return 1
+        logger.error('Problem during parsing options: %s', e)
+        sys.exit(1)
 
     r = client.deposit_status(
         collection=collection, deposit_id=deposit_id)
