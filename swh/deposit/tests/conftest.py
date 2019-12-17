@@ -163,6 +163,28 @@ def sample_archive(tmp_path):
     return archive
 
 
+@pytest.fixture
+def atom_dataset(datadir) -> Mapping[str, bytes]:
+    """Compute the paths to atom files.
+
+    Returns:
+        Dict of atom name per content (bytes)
+
+    """
+    atom_path = os.path.join(datadir, 'atom')
+    data = {}
+    for filename in os.listdir(atom_path):
+        filepath = os.path.join(atom_path, filename)
+        with open(filepath, 'rb') as f:
+            raw_content = f.read()
+
+        # Keep the filename without extension
+        atom_name = filename.split('.')[0]
+        data[atom_name] = raw_content
+
+    return data
+
+
 def create_deposit(
         authenticated_client, collection_name: str, sample_archive,
         external_id: str, deposit_status=DEPOSIT_STATUS_DEPOSITED):
