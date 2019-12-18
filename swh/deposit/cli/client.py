@@ -178,8 +178,33 @@ def client_command_parse_input(
     if not slug:  # generate one as this is mandatory
         slug = generate_slug()
 
-    if not metadata and name and authors:
-        metadata = generate_metadata_file(name, slug, authors, temp_dir)
+    if not metadata:
+        if name and authors:
+            metadata = generate_metadata_file(name, slug, authors, temp_dir)
+        elif not archive_deposit and not partial and not deposit_id:
+            # If we meet all the following conditions:
+            # * there is not an archive-only deposit
+            # * it is not part of a multipart deposit (either create/update
+            #   or finish)
+            # * it misses either name or authors
+            raise InputError(
+                "Either a metadata file (--metadata) or both --author and "
+                "--name must be provided, unless this is an archive-only "
+                "deposit.")
+        elif name or authors:
+            # If we are generating metadata, then all mandatory metadata
+            # must be present
+            raise InputError(
+                "Either a metadata file (--metadata) or both --author and "
+                "--name must be provided.")
+        else:
+            # TODO: this is a multipart deposit, we might want to check that
+            # metadata are deposited at some point
+            pass
+    elif name or authors:
+        raise InputError(
+            "Using a metadata file (--metadata) is incompatible with "
+            "--author and --name, which are used to generate one.")
 
     if metadata_deposit:
         archive = None

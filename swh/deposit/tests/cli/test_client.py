@@ -6,6 +6,7 @@
 import contextlib
 import logging
 import os
+import re
 from unittest.mock import MagicMock
 
 from click.testing import CliRunner
@@ -119,6 +120,92 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 \t\t<codemeta:name>Jane Doe</codemeta:name>
 \t</codemeta:author>
 </entry>'''
+
+
+def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
+    """ from:
+    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
+    """  # noqa
+    slug = generate_slug()
+    mocker.patch('swh.deposit.cli.client.generate_slug', return_value=slug)
+    mock_client = MagicMock()
+    mocker.patch(
+        'swh.deposit.cli.client._client',
+        return_value=mock_client)
+    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
+    mock_client.deposit_create.return_value = '{"foo": "bar"}'
+
+    metadata_path = os.path.join(tmp_path, 'metadata.xml')
+    mocker.patch('swh.deposit.cli.client.tempfile.TemporaryDirectory',
+                 return_value=contextlib.nullcontext(str(tmp_path)))
+    with open(metadata_path, 'a'):
+        pass  # creates the file
+
+    runner = CliRunner()
+
+    # Test missing author
+    result = runner.invoke(cli, [
+        'upload',
+        '--url', 'mock://deposit.swh/1',
+        '--username', TEST_USER['username'],
+        '--password', TEST_USER['password'],
+        '--name', 'test-project',
+        '--archive', sample_archive['path'],
+    ])
+
+    assert result.exit_code == 1, result.output
+    assert result.output == ''
+    assert len(caplog.record_tuples) == 1
+    (_logger, level, message) = caplog.record_tuples[0]
+    assert level == logging.ERROR
+    assert ' --author ' in message
+
+    # Clear mocking state
+    caplog.clear()
+    mock_client.reset_mock()
+
+    # Test missing name
+    result = runner.invoke(cli, [
+        'upload',
+        '--url', 'mock://deposit.swh/1',
+        '--username', TEST_USER['username'],
+        '--password', TEST_USER['password'],
+        '--archive', sample_archive['path'],
+        '--author', 'Jane Doe',
+    ])
+
+    assert result.exit_code == 1, result.output
+    assert result.output == ''
+    assert len(caplog.record_tuples) == 1
+    (_logger, level, message) = caplog.record_tuples[0]
+    assert level == logging.ERROR
+    assert ' --name ' in message
+
+    # Clear mocking state
+    caplog.clear()
+    mock_client.reset_mock()
+
+    # Test both --metadata and --author
+    result = runner.invoke(cli, [
+        'upload',
+        '--url', 'mock://deposit.swh/1',
+        '--username', TEST_USER['username'],
+        '--password', TEST_USER['password'],
+        '--archive', sample_archive['path'],
+        '--metadata', metadata_path,
+        '--author', 'Jane Doe',
+    ])
+
+    assert result.exit_code == 1, result.output
+    assert result.output == ''
+    assert len(caplog.record_tuples) == 1
+    (_logger, level, message) = caplog.record_tuples[0]
+    assert level == logging.ERROR
+    assert re.search('--metadata.*is incompatible with', message)
+
+    # Clear mocking state
+    caplog.clear()
+    mock_client.reset_mock()
 
 
 def test_single_deposit_slug_generation(
