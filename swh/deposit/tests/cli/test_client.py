@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import contextlib
 import logging
 import os
 from unittest.mock import MagicMock
@@ -76,10 +77,14 @@ def test_collection_ok():
 
 
 def test_single_minimal_deposit(
-        sample_archive, mocker, caplog, client_mock, slug):
+        sample_archive, mocker, caplog, client_mock, slug, tmp_path):
     """ from:
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
+
+    metadata_path = os.path.join(tmp_path, 'metadata.xml')
+    mocker.patch('swh.deposit.cli.client.tempfile.TemporaryDirectory',
+                 return_value=contextlib.nullcontext(str(tmp_path)))
 
     runner = CliRunner()
     result = runner.invoke(cli, [
@@ -89,6 +94,7 @@ def test_single_minimal_deposit(
         '--password', TEST_USER['password'],
         '--name', 'test-project',
         '--archive', sample_archive['path'],
+        '--author', 'Jane Doe',
     ])
 
     assert result.exit_code == 0, result.output
@@ -99,17 +105,33 @@ def test_single_minimal_deposit(
 
     client_mock.deposit_create.assert_called_once_with(
         archive=sample_archive['path'],
-        collection='softcol', in_progress=False, metadata=None,
+        collection='softcol', in_progress=False, metadata=metadata_path,
         slug=slug)
 
+    with open(metadata_path) as fd:
+        assert fd.read() == f'''\
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" \
+xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+\t<codemeta:name>test-project</codemeta:name>
+\t<codemeta:identifier>{slug}</codemeta:identifier>
+\t<codemeta:author>
+\t\t<codemeta:name>Jane Doe</codemeta:name>
+\t</codemeta:author>
+</entry>'''
 
-def test_single_deposit_slug_collection(
-        sample_archive, mocker, caplog, client_mock):
+
+def test_single_deposit_slug_generation(
+        sample_archive, mocker, caplog, tmp_path, client_mock):
     """ from:
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
     slug = 'my-slug'
     collection = 'my-collection'
+
+    metadata_path = os.path.join(tmp_path, 'metadata.xml')
+    mocker.patch('swh.deposit.cli.client.tempfile.TemporaryDirectory',
+                 return_value=contextlib.nullcontext(str(tmp_path)))
 
     runner = CliRunner()
     result = runner.invoke(cli, [
@@ -121,6 +143,7 @@ def test_single_deposit_slug_collection(
         '--archive', sample_archive['path'],
         '--slug', slug,
         '--collection', collection,
+        '--author', 'Jane Doe',
     ])
 
     assert result.exit_code == 0, result.output
@@ -131,8 +154,20 @@ def test_single_deposit_slug_collection(
 
     client_mock.deposit_create.assert_called_once_with(
         archive=sample_archive['path'],
-        collection=collection, in_progress=False, metadata=None,
+        collection=collection, in_progress=False, metadata=metadata_path,
         slug=slug)
+
+    with open(metadata_path) as fd:
+        assert fd.read() == '''\
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" \
+xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+\t<codemeta:name>test-project</codemeta:name>
+\t<codemeta:identifier>my-slug</codemeta:identifier>
+\t<codemeta:author>
+\t\t<codemeta:name>Jane Doe</codemeta:name>
+\t</codemeta:author>
+</entry>'''
 
 
 def test_multisteps_deposit(

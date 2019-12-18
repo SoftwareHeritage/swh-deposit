@@ -49,7 +49,7 @@ def _url(url):
     return url
 
 
-def generate_metadata_file(name, external_id, authors):
+def generate_metadata_file(name, external_id, authors, temp_dir):
     """Generate a temporary metadata file with the minimum required metadata
 
     This generates a xml file in a temporary location and returns the
@@ -67,8 +67,7 @@ def generate_metadata_file(name, external_id, authors):
         Filepath to the metadata generated file
 
     """
-    _, tmpfile = tempfile.mkstemp(prefix='swh.deposit.cli.')
-
+    path = os.path.join(temp_dir, 'metadata.xml')
     # generate a metadata file with the minimum required metadata
     codemetadata = {
         'entry': {
@@ -82,29 +81,13 @@ def generate_metadata_file(name, external_id, authors):
         },
     }
 
-    logging.debug('Temporary file: %s', tmpfile)
+    logging.debug('Temporary file: %s', path)
     logging.debug('Metadata dict to generate as xml: %s', codemetadata)
     s = xmltodict.unparse(codemetadata, pretty=True)
     logging.debug('Metadata dict as xml generated: %s', s)
-    with open(tmpfile, 'w') as fp:
+    with open(path, 'w') as fp:
         fp.write(s)
-    return tmpfile
-
-
-def _cleanup_tempfile(config):
-    """Clean up the temporary metadata file generated.
-
-    Args:
-
-        config (Dict): A configuration dict with 2 important keys for
-        that routine, 'cleanup_tempfile' (bool) and 'metadata' (path
-        to eventually clean up)
-
-    """
-    if config['cleanup_tempfile']:
-        path = config['metadata']
-        if os.path.exists(path):
-            os.unlink(path)
+    return path
 
 
 def _client(url, username, password):
@@ -144,7 +127,7 @@ def client_command_parse_input(
         username, password, archive, metadata,
         archive_deposit, metadata_deposit,
         collection, slug, partial, deposit_id, replace,
-        url, name, authors):
+        url, name, authors, temp_dir):
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -187,66 +170,55 @@ def client_command_parse_input(
             'deposit_id': optional deposit identifier
 
     """
-    cleanup_tempfile = False
+    if archive_deposit and metadata_deposit:
+        # too many flags use, remove redundant ones (-> multipart deposit)
+        archive_deposit = False
+        metadata_deposit = False
 
-    try:
-        if archive_deposit and metadata_deposit:
-            # too many flags use, remove redundant ones (-> multipart deposit)
-            archive_deposit = False
-            metadata_deposit = False
+    if not slug:  # generate one as this is mandatory
+        slug = generate_slug()
 
-        if not slug:  # generate one as this is mandatory
-            slug = generate_slug()
+    if not metadata and name and authors:
+        metadata = generate_metadata_file(name, slug, authors, temp_dir)
 
-        if not metadata and name and authors:
-            metadata = generate_metadata_file(name, slug, authors)
-            cleanup_tempfile = True
+    if metadata_deposit:
+        archive = None
 
-        if metadata_deposit:
-            archive = None
+    if archive_deposit:
+        metadata = None
 
-        if archive_deposit:
-            metadata = None
+    if metadata_deposit and not metadata:
+        raise InputError(
+            "Metadata deposit must be provided for metadata "
+            "deposit (either a filepath or --name and --author)")
 
-        if metadata_deposit and not metadata:
-            raise InputError(
-                "Metadata deposit must be provided for metadata "
-                "deposit (either a filepath or --name and --author)")
+    if not archive and not metadata and partial:
+        raise InputError(
+            'Please provide an actionable command. See --help for more '
+            'information')
 
-        if not archive and not metadata:
-            raise InputError(
-                'Please provide an actionable command. See --help for more '
-                'information')
+    if replace and not deposit_id:
+        raise InputError(
+            'To update an existing deposit, you must provide its id')
 
-        if replace and not deposit_id:
-            raise InputError(
-                'To update an existing deposit, you must provide its id')
+    client = _client(url, username, password)
 
-        client = _client(url, username, password)
+    if not collection:
+        collection = _collection(client)
 
-        if not collection:
-            collection = _collection(client)
-
-        return {
-            'archive': archive,
-            'username': username,
-            'password': password,
-            'metadata': metadata,
-            'cleanup_tempfile': cleanup_tempfile,
-            'collection': collection,
-            'slug': slug,
-            'in_progress': partial,
-            'client': client,
-            'url': url,
-            'deposit_id': deposit_id,
-            'replace': replace,
-        }
-    except Exception:  # to be clean, cleanup prior to raise
-        _cleanup_tempfile({
-            'cleanup_tempfile': cleanup_tempfile,
-            'metadata': metadata
-        })
-        raise
+    return {
+        'archive': archive,
+        'username': username,
+        'password': password,
+        'metadata': metadata,
+        'collection': collection,
+        'slug': slug,
+        'in_progress': partial,
+        'client': client,
+        'url': url,
+        'deposit_id': deposit_id,
+        'replace': replace,
+    }
 
 
 def _subdict(d, keys):
@@ -329,17 +301,17 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     url = _url(url)
     config = {}
 
-    try:
-        logger.debug('Parsing cli options')
-        config = client_command_parse_input(
-            username, password, archive, metadata, archive_deposit,
-            metadata_deposit, collection, slug, partial, deposit_id,
-            replace, url, name, author)
-    except InputError as e:
-        logger.error('Problem during parsing options: %s', e)
-        sys.exit(1)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            logger.debug('Parsing cli options')
+            config = client_command_parse_input(
+                username, password, archive, metadata, archive_deposit,
+                metadata_deposit, collection, slug, partial, deposit_id,
+                replace, url, name, author, temp_dir)
+        except InputError as e:
+            logger.error('Problem during parsing options: %s', e)
+            sys.exit(1)
 
-    try:
         if verbose:
             logger.info("Parsed configuration: %s" % (
                 config, ))
@@ -352,9 +324,6 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             r = deposit_create(config, logger)
 
         logger.info(r)
-
-    finally:
-        _cleanup_tempfile(config)
 
 
 @deposit.command()
