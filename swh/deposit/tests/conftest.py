@@ -18,8 +18,11 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from typing import Mapping
 
+from swh.scheduler import get_scheduler
 from swh.scheduler.tests.conftest import *  # noqa
+from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml
+from swh.deposit.config import SWHDefaultConfig
 from swh.deposit.config import (
     COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -38,6 +41,58 @@ TEST_USER = {
         'name': 'test'
     },
 }
+
+
+TEST_CONFIG = {
+    'max_upload_size': 500,
+    'extraction_dir': '/tmp/swh-deposit/test/extraction-dir',
+    'checks': False,
+    'provider': {
+        'provider_name': '',
+        'provider_type': 'deposit_client',
+        'provider_url': '',
+        'metadata': {
+        }
+    },
+    'tool': {
+        'name': 'swh-deposit',
+        'version': '0.0.1',
+        'configuration': {
+            'sword_version': '2'
+        }
+    },
+}
+
+
+def pytest_configure():
+    setup_django_for('testing')
+
+
+@pytest.fixture()
+def deposit_config():
+    return TEST_CONFIG
+
+
+@pytest.fixture(autouse=True)
+def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
+    """Enforce config for deposit classes inherited from SWHDefaultConfig."""
+    def mock_parse_config(*args, **kw):
+        config = deposit_config.copy()
+        config['scheduler'] = {
+            'cls': 'local',
+            'args': swh_scheduler_config,
+        }
+        return config
+    monkeypatch.setattr(
+        SWHDefaultConfig, "parse_config_file",
+        mock_parse_config)
+
+    scheduler = get_scheduler('local', swh_scheduler_config)
+    task_type = {
+        'type': 'load-deposit',
+        'backend_name': 'swh.loader.packages.deposit.tasks.LoadDeposit',
+        'description': 'why does this have not-null constraint?'}
+    scheduler.create_task_type(task_type)
 
 
 @pytest.fixture(scope='session')

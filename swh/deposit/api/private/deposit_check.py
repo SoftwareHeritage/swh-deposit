@@ -219,7 +219,8 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
             if not deposit.load_task_id and self.config['checks']:
                 url = deposit.origin_url
                 task = create_oneshot_task_dict(
-                    'load-deposit', url=url, deposit_id=deposit.id)
+                    'load-deposit', url=url, deposit_id=deposit.id,
+                    retries_left=3)
                 load_task_id = self.scheduler.create_tasks([task])[0]['id']
                 deposit.load_task_id = load_task_id
 
