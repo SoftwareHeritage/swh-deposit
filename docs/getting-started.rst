@@ -88,7 +88,8 @@ minimal deposit
 .. code:: shell
 
  $ swh deposit upload --username name --password secret \
-                      --author "some@nobody" --author "second@nobody" \
+                      --author "Jane Doe" \
+                      --author "John Doe" \
                       --name 'je-suis-gpl' \
                       --archive je-suis-gpl.tgz
 
@@ -97,7 +98,7 @@ with client's external identifier (``slug``)
 .. code:: shell
 
  $ swh deposit upload --username name --password secret \
-                      --author "some@nobody" \
+                      --author "Jane Doe" \
                       --name 'je-suis-gpl' \
                       --archive je-suis-gpl.tgz \
                       --slug je-suis-gpl
@@ -107,7 +108,7 @@ to a specific client's collection
 .. code:: shell
 
  $ swh deposit upload --username name --password secret \
-                      --author "some@nobody" \
+                      --author "Jane Doe" \
                       --name 'je-suis-gpl' \
                       --archive je-suis-gpl.tgz \
                       --collection 'second-collection'
