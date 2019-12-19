@@ -1,3 +1,17 @@
+swh-deposit (0.0.79-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.79     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2019-12-19 17:37:41 +0100)
+  * Upstream changes:     - v0.0.79     - * requirements: Pin mypy and
+    django-stubs version     - * homepage: Improve sentence phrasing
+    - * deposit.api: Add a basic api page to avoid broken link     - *
+    removed dead and deprecated code     - * Add sentry integration.
+    - * Fix log level + status code of the client CLI in case of error.
+    - * Improve validation of --author and --name.     - * Update
+    documentation of --author to use names instead of emails.
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 19 Dec 2019 16:42:28 +0000
+
 swh-deposit (0.0.78-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.78     - (tagged by Antoine R. Dumont
