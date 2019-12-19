@@ -1,13 +1,14 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""swh URL Configuration
+"""SWH's deposit api URL Configuration
 
 """
 
 from django.conf.urls import url
+from django.shortcuts import render
 
 from ..config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
 from ..config import SD_IRI, COL_IRI, STATE_IRI
@@ -18,9 +19,15 @@ from .deposit_update import SWHUpdateArchiveDeposit
 from .deposit_content import SWHDepositContent
 from .service_document import SWHServiceDocument
 
-urlpatterns = [
-    # PUBLIC API
 
+def api_view(req):
+    return render(req, "api.html")
+
+
+# PUBLIC API
+urlpatterns = [
+    # simple view on the api
+    url(r'^$', api_view, name='api'),
     # SD IRI - Service Document IRI
     # -> GET
     url(r'^servicedocument/', SWHServiceDocument.as_view(),

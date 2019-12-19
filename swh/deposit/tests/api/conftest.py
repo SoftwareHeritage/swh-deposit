@@ -7,8 +7,6 @@ import hashlib
 import pytest
 
 from django.urls import reverse
-from os import path, listdir
-from typing import Mapping
 
 from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED, COL_IRI, DEPOSIT_STATUS_VERIFIED
@@ -17,28 +15,6 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
 from swh.deposit.api.private.deposit_check import SWHChecksDeposit
-
-
-@pytest.fixture
-def atom_dataset(datadir) -> Mapping[str, bytes]:
-    """Compute the paths to atom files.
-
-    Returns:
-        Dict of atom name per content (bytes)
-
-    """
-    atom_path = path.join(datadir, 'atom')
-    data = {}
-    for filename in listdir(atom_path):
-        filepath = path.join(atom_path, filename)
-        with open(filepath, 'rb') as f:
-            raw_content = f.read()
-
-        # Keep the filename without extension
-        atom_name = filename.split('.')[0]
-        data[atom_name] = raw_content
-
-    return data
 
 
 @pytest.fixture

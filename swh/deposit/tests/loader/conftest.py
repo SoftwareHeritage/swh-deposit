@@ -14,7 +14,6 @@ from swh.core.pytest_plugin import get_response_cb
 from swh.scheduler.tests.conftest import *  # noqa
 from swh.storage.tests.conftest import *  # noqa
 from swh.deposit.loader.checker import DepositChecker
-from swh.deposit.loader.loader import DepositLoader
 
 
 @pytest.fixture(scope='session')  # type: ignore  # expected redefinition
@@ -50,11 +49,6 @@ def swh_config(tmp_path, swh_storage_postgresql, monkeypatch):
 @pytest.fixture
 def deposit_checker(swh_config):
     return DepositChecker()
-
-
-@pytest.fixture
-def deposit_loader(swh_config):
-    return DepositLoader()
 
 
 @pytest.fixture
