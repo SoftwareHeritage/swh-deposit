@@ -17,10 +17,11 @@ swh.model>=0.0.26
 [testing]
 pytest
 pytest-django
+pytest-mock
 swh.scheduler[testing]
 pytest-postgresql>=2.1.0
 requests_mock
-django-stubs
+django-stubs<1.3.0
 Django<2.0
 djangorestframework
 swh.core[http]
