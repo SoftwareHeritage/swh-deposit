@@ -8,6 +8,8 @@ import logging
 import sys
 import tempfile
 import uuid
+import json
+import yaml
 
 import click
 import xmltodict
@@ -308,13 +310,16 @@ def deposit_update(config, logger):
 @click.option('--author', multiple=True,
               help='Software author(s), this can be repeated as many times'
               ' as there are authors')
+@click.option('-f', '--format', 'output_format', default='logging',
+              type=click.Choice(['logging', 'yaml', 'json']),
+              help='Output format results.')
 @click.pass_context
 def upload(ctx,
            username, password, archive=None, metadata=None,
            archive_deposit=False, metadata_deposit=False,
            collection=None, slug=None, partial=False, deposit_id=None,
            replace=False, url='https://deposit.softwareheritage.org',
-           verbose=False, name=None, author=None):
+           verbose=False, name=None, author=None, output_format=None):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line.
@@ -347,8 +352,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             r = deposit_update(config, logger)
         else:
             r = deposit_create(config, logger)
-
-        logger.info(r)
+        print_result(r, output_format)
 
 
 @deposit.command()
@@ -362,8 +366,11 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 @click.option('--deposit-id', default=None,
               required=True,
               help="Deposit identifier.")
+@click.option('-f', '--format', 'output_format', default='logging',
+              type=click.Choice(['logging', 'yaml', 'json']),
+              help='Output format results.')
 @click.pass_context
-def status(ctx, url, username, password, deposit_id):
+def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
 
     """
@@ -376,6 +383,15 @@ def status(ctx, url, username, password, deposit_id):
         logger.error('Problem during parsing options: %s', e)
         sys.exit(1)
 
-    r = client.deposit_status(
-        collection=collection, deposit_id=deposit_id)
-    logger.info(r)
+    print_result(client.deposit_status(
+        collection=collection, deposit_id=deposit_id),
+                 output_format)
+
+
+def print_result(data, output_format):
+    if output_format == 'json':
+        click.echo(json.dumps(data))
+    elif output_format == 'yaml':
+        click.echo(yaml.dump(data))
+    else:
+        logger.info(data)
