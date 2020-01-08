@@ -48,11 +48,9 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         tarball.uncompress(archive_path, aggregated_tarball_rootdir)
 
     # Aggregate into one big tarball the multiple smaller ones
-    temp_tarpath = tarball.compress(
-        aggregated_tarball_rootdir + '.zip',
-        nature='zip',
-        dirpath_or_files=aggregated_tarball_rootdir)
-
+    temp_tarpath = shutil.make_archive(
+        aggregated_tarball_rootdir, 'zip',
+        aggregated_tarball_rootdir)
     # can already clean up temporary directory
     shutil.rmtree(aggregated_tarball_rootdir)
 
