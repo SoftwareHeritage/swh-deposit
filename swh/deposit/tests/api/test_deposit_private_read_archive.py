@@ -36,7 +36,7 @@ def test_access_to_existing_deposit_with_one_archive(
         r = authenticated_client.get(url)
 
         assert r.status_code == status.HTTP_200_OK
-        assert r._headers['content-type'][1] == 'application/octet-stream'
+        assert r._headers['content-type'][1] == 'application/zip'
 
         # read the stream
         data = b''.join(r.streaming_content)
@@ -76,7 +76,7 @@ def test_access_to_existing_deposit_with_multiple_archives(
         r = authenticated_client.get(url)
 
         assert r.status_code == status.HTTP_200_OK
-        assert r._headers['content-type'][1] == 'application/octet-stream'
+        assert r._headers['content-type'][1] == 'application/zip'
         # read the stream
         data = b''.join(r.streaming_content)
         # extract the file from the zip

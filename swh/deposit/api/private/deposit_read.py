@@ -95,7 +95,7 @@ class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI,
         with aggregate_tarballs(self.extraction_dir, archive_paths) as path:
             return FileResponse(open(path, 'rb'),
                                 status=status.HTTP_200_OK,
-                                content_type='application/octet-stream')
+                                content_type='application/zip')
 
 
 class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI,
