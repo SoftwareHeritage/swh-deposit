@@ -1,3 +1,11 @@
+swh-deposit (0.0.80-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.80     - (tagged by David Douard
+    <david.douard@sdfa3.org> on 2020-01-09 15:54:57 +0100)
+  * Upstream changes:     - v0.0.80
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 09 Jan 2020 15:00:32 +0000
+
 swh-deposit (0.0.79-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.79     - (tagged by Valentin Lorentz
