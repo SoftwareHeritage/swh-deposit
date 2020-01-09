@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 from django.urls import reverse
+import pytest
 from rest_framework import status
 
 from swh.deposit.config import (
@@ -33,8 +34,10 @@ def private_check_url_endpoints(collection, deposit):
     ]
 
 
+@pytest.mark.parametrize(
+    "extension", ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz'])
 def test_deposit_ok(
-        authenticated_client, deposit_collection, ready_deposit_ok):
+        authenticated_client, deposit_collection, ready_deposit_ok, extension):
     """Proper deposit should succeed the checks (-> status ready)
 
     """
@@ -51,30 +54,30 @@ def test_deposit_ok(
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
-
+@pytest.mark.parametrize(
+    "extension", ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz'])
 def test_deposit_invalid_tarball(
-        tmp_path, authenticated_client, deposit_collection):
+        tmp_path, authenticated_client, deposit_collection, extension):
     """Deposit with tarball (of 1 tarball) should fail the checks: rejected
 
     """
-    for archive_extension in ['zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz']:
-        deposit = create_deposit_archive_with_archive(
-            tmp_path, archive_extension,
-            authenticated_client,
-            deposit_collection.name)
-        for url in private_check_url_endpoints(deposit_collection, deposit):
-            response = authenticated_client.get(url)
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data['status'] == DEPOSIT_STATUS_REJECTED
-            details = data['details']
-            # archive checks failure
-            assert len(details['archive']) == 1
-            assert details['archive'][0]['summary'] == \
-                MANDATORY_ARCHIVE_INVALID
+    deposit = create_deposit_archive_with_archive(
+        tmp_path, extension,
+        authenticated_client,
+        deposit_collection.name)
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data['status'] == DEPOSIT_STATUS_REJECTED
+        details = data['details']
+        # archive checks failure
+        assert len(details['archive']) == 1
+        assert details['archive'][0]['summary'] == \
+            MANDATORY_ARCHIVE_INVALID
 
-            deposit = Deposit.objects.get(pk=deposit.id)
-            assert deposit.status == DEPOSIT_STATUS_REJECTED
+        deposit = Deposit.objects.get(pk=deposit.id)
+        assert deposit.status == DEPOSIT_STATUS_REJECTED
 
 
 def test_deposit_ko_missing_tarball(
@@ -237,7 +240,7 @@ def create_deposit_archive_with_archive(
 
     # now we create an archive holding the first created archive
     invalid_archive = create_archive_with_archive(
-        root_path, 'invalid.tar.gz', archive)
+        root_path, 'invalid.tgz', archive)
 
     # we deposit it
     response = client.post(

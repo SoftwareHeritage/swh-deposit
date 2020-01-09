@@ -9,13 +9,20 @@ import pytest
 import psycopg2
 
 from django.urls import reverse
+from django.test.utils import setup_databases  # type: ignore
+# mypy is asked to ignore the import statement above because setup_databases
+# is not part of the d.t.utils.__all__ variable.
+
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from rest_framework import status
 from rest_framework.test import APIClient
 from typing import Mapping
 
+from swh.scheduler import get_scheduler
 from swh.scheduler.tests.conftest import *  # noqa
+from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml
+from swh.deposit.config import SWHDefaultConfig
 from swh.deposit.config import (
     COL_IRI, EDIT_SE_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -36,39 +43,84 @@ TEST_USER = {
 }
 
 
+TEST_CONFIG = {
+    'max_upload_size': 500,
+    'extraction_dir': '/tmp/swh-deposit/test/extraction-dir',
+    'checks': False,
+    'provider': {
+        'provider_name': '',
+        'provider_type': 'deposit_client',
+        'provider_url': '',
+        'metadata': {
+        }
+    },
+    'tool': {
+        'name': 'swh-deposit',
+        'version': '0.0.1',
+        'configuration': {
+            'sword_version': '2'
+        }
+    },
+}
+
+
+def pytest_configure():
+    setup_django_for('testing')
+
+
+@pytest.fixture()
+def deposit_config():
+    return TEST_CONFIG
+
+
+@pytest.fixture(autouse=True)
+def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
+    """Enforce config for deposit classes inherited from SWHDefaultConfig."""
+    def mock_parse_config(*args, **kw):
+        config = deposit_config.copy()
+        config['scheduler'] = {
+            'cls': 'local',
+            'args': swh_scheduler_config,
+        }
+        return config
+    monkeypatch.setattr(
+        SWHDefaultConfig, "parse_config_file",
+        mock_parse_config)
+
+    scheduler = get_scheduler('local', swh_scheduler_config)
+    task_type = {
+        'type': 'load-deposit',
+        'backend_name': 'swh.loader.packages.deposit.tasks.LoadDeposit',
+        'description': 'why does this have not-null constraint?'}
+    scheduler.create_task_type(task_type)
+
+
+@pytest.fixture(scope='session')
+def django_db_setup(
+        request,
+        django_db_blocker,
+        postgresql_proc):
+    from django.conf import settings
+    settings.DATABASES['default'].update({
+        ('ENGINE', 'django.db.backends.postgresql'),
+        ('NAME', 'tests'),
+        ('USER', postgresql_proc.user),  # noqa
+        ('HOST', postgresql_proc.host),  # noqa
+        ('PORT', postgresql_proc.port),  # noqa
+    })
+    with django_db_blocker.unblock():
+        setup_databases(
+            verbosity=request.config.option.verbose,
+            interactive=False,
+            keepdb=False)
+
+
 def execute_sql(sql):
     """Execute sql to postgres db"""
     with psycopg2.connect(database='postgres') as conn:
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
         cur.execute(sql)
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_load_initial_conftests(early_config, parser, args):
-    """This hook is done prior to django loading.
-       Used to initialize the deposit's server db.
-
-    """
-    import project.app.signals  # type: ignore
-
-    def prepare_db(*args, **kwargs):
-        from django.conf import settings
-        db_name = 'tests'
-        # work around db settings for django
-        for k, v in [
-                ('ENGINE', 'django.db.backends.postgresql'),
-                ('NAME', 'tests'),
-                ('USER', postgresql_proc.user),  # noqa
-                ('HOST', postgresql_proc.host),  # noqa
-                ('PORT', postgresql_proc.port),  # noqa
-        ]:
-            settings.DATABASES['default'][k] = v
-
-        execute_sql('DROP DATABASE IF EXISTS %s' % db_name)
-        execute_sql('CREATE DATABASE %s TEMPLATE template0' % db_name)
-
-    project.app.signals.something = prepare_db
 
 
 @pytest.fixture(autouse=True, scope='session')

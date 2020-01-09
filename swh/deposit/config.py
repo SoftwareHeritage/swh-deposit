@@ -107,5 +107,5 @@ class SWHDefaultConfig(SWHConfig):
             additional_configs=[self.ADDITIONAL_CONFIG])
         self.config.update(config)
         self.log = logging.getLogger('swh.deposit')
-        if self.config['checks']:
+        if self.config.get('scheduler'):
             self.scheduler = get_scheduler(**self.config['scheduler'])

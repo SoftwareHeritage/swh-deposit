@@ -18,6 +18,7 @@ swh.deposit.egg-info/top_level.txt
 swh/deposit/__init__.py
 swh/deposit/apps.py
 swh/deposit/auth.py
+swh/deposit/client.py
 swh/deposit/config.py
 swh/deposit/errors.py
 swh/deposit/gunicorn_config.py
@@ -25,7 +26,6 @@ swh/deposit/manage.py
 swh/deposit/models.py
 swh/deposit/parsers.py
 swh/deposit/py.typed
-swh/deposit/signals.py
 swh/deposit/urls.py
 swh/deposit/utils.py
 swh/deposit/api/__init__.py
@@ -46,7 +46,6 @@ swh/deposit/api/private/urls.py
 swh/deposit/cli/__init__.py
 swh/deposit/cli/admin.py
 swh/deposit/cli/client.py
-swh/deposit/client/__init__.py
 swh/deposit/fixtures/__init__.py
 swh/deposit/fixtures/deposit_data.yaml
 swh/deposit/loader/__init__.py

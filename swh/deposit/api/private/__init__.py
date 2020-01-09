@@ -5,7 +5,7 @@
 
 from swh.deposit import utils
 
-from ...config import METADATA_TYPE
+from ...config import METADATA_TYPE, SWHDefaultConfig
 from ...models import DepositRequest, Deposit
 
 from rest_framework.permissions import AllowAny
@@ -56,7 +56,7 @@ class DepositReadMixin:
         return utils.merge(*metadata)
 
 
-class SWHPrivateAPIView(SWHAPIView):
+class SWHPrivateAPIView(SWHDefaultConfig, SWHAPIView):
     """Mixin intended as private api (so no authentication) based API view
        (for the private ones).
 

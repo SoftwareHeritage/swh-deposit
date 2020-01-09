@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,6 +14,7 @@ import xmltodict
 import logging
 
 from abc import ABCMeta, abstractmethod
+from urllib.parse import urljoin
 
 from swh.core.config import SWHConfig
 
@@ -82,7 +83,7 @@ class BaseApiDepositClient(SWHConfig):
             self.config = config
 
         self._client = _client
-        self.base_url = self.config['url']
+        self.base_url = self.config['url'].strip('/') + '/'
         auth = self.config['auth']
         if auth == {}:
             self.auth = None
@@ -109,7 +110,7 @@ class BaseApiDepositClient(SWHConfig):
         if self.auth:
             kwargs['auth'] = self.auth
 
-        full_url = '%s%s' % (self.base_url.rstrip('/'), url)
+        full_url = urljoin(self.base_url, url.lstrip('/'))
         return method_fn(full_url, *args, **kwargs)
 
 
