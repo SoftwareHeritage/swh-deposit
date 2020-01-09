@@ -15,7 +15,6 @@ from rest_framework import status
 from swh.core import tarball
 from swh.model import identifiers
 from swh.deposit.utils import normalize_date
-from swh.deposit import utils
 
 from . import DepositReadMixin, SWHPrivateAPIView
 from ...config import SWH_PERSON, ARCHIVE_TYPE
@@ -36,35 +35,29 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         Tuple (directory to clean up, archive path (aggregated or not))
 
     """
-    if len(archive_paths) > 1:
-        # need to rebuild one archive from multiple ones
-        os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        dir_path = tempfile.mkdtemp(prefix='swh.deposit-',
-                                    dir=extraction_dir)
-        # root folder to build an aggregated tarball
-        aggregated_tarball_rootdir = os.path.join(dir_path, 'aggregate')
-        os.makedirs(aggregated_tarball_rootdir, 0o755, exist_ok=True)
+    # rebuild one zip archive from (possibly) multiple ones
+    os.makedirs(extraction_dir, 0o755, exist_ok=True)
+    dir_path = tempfile.mkdtemp(prefix='swh.deposit-', dir=extraction_dir)
 
-        # uncompress in a temporary location all archives
-        for archive_path in archive_paths:
-            tarball.uncompress(archive_path, aggregated_tarball_rootdir)
+    # root folder to build an aggregated tarball
+    aggregated_tarball_rootdir = os.path.join(dir_path, 'aggregate')
+    os.makedirs(aggregated_tarball_rootdir, 0o755, exist_ok=True)
 
-        # Aggregate into one big tarball the multiple smaller ones
-        temp_tarpath = tarball.compress(
-            aggregated_tarball_rootdir + '.zip',
-            nature='zip',
-            dirpath_or_files=aggregated_tarball_rootdir)
+    # uncompress in a temporary location all archives
+    for archive_path in archive_paths:
+        tarball.uncompress(archive_path, aggregated_tarball_rootdir)
 
-        # can already clean up temporary directory
-        shutil.rmtree(aggregated_tarball_rootdir)
+    # Aggregate into one big tarball the multiple smaller ones
+    temp_tarpath = shutil.make_archive(
+        aggregated_tarball_rootdir, 'zip',
+        aggregated_tarball_rootdir)
+    # can already clean up temporary directory
+    shutil.rmtree(aggregated_tarball_rootdir)
 
-        try:
-            yield temp_tarpath
-        finally:
-            shutil.rmtree(dir_path)
-
-    else:  # only 1 archive, no need to do fancy actions (and no cleanup step)
-        yield archive_paths[0]
+    try:
+        yield temp_tarpath
+    finally:
+        shutil.rmtree(dir_path)
 
 
 class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI,
@@ -102,7 +95,7 @@ class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI,
         with aggregate_tarballs(self.extraction_dir, archive_paths) as path:
             return FileResponse(open(path, 'rb'),
                                 status=status.HTTP_200_OK,
-                                content_type='application/octet-stream')
+                                content_type='application/zip')
 
 
 class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI,
@@ -177,7 +170,7 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI,
         data = {
             'origin': {
                 'type': 'deposit',
-                'url': utils.origin_url_from(deposit),
+                'url': deposit.origin_url,
             }
         }
 

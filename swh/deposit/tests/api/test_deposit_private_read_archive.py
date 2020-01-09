@@ -3,16 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import hashlib
-import shutil
+import io
+import zipfile
 
 from django.urls import reverse
-from os import listdir, path, mkdir
 from rest_framework import status
 
-from swh.core import tarball
 from swh.deposit.config import PRIVATE_GET_RAW_CONTENT, EM_IRI
-
 from swh.deposit.tests.common import create_arborescence_archive
 
 
@@ -39,12 +36,14 @@ def test_access_to_existing_deposit_with_one_archive(
         r = authenticated_client.get(url)
 
         assert r.status_code == status.HTTP_200_OK
-        assert r._headers['content-type'][1] == 'application/octet-stream'
+        assert r._headers['content-type'][1] == 'application/zip'
 
         # read the stream
         data = b''.join(r.streaming_content)
-        actual_sha1 = hashlib.sha1(data).hexdigest()
-        assert actual_sha1 == sample_archive['sha1sum']
+        # extract the file from the zip
+        zfile = zipfile.ZipFile(io.BytesIO(data))
+        assert zfile.namelist() == ['file1']
+        assert zfile.open('file1').read() == b'some content in file'
 
 
 def test_access_to_existing_deposit_with_multiple_archives(
@@ -55,7 +54,7 @@ def test_access_to_existing_deposit_with_multiple_archives(
     """
     deposit = partial_deposit
     archive2 = create_arborescence_archive(
-        tmp_path, 'archive2', 'file2', b'some content in file')
+        tmp_path, 'archive2', 'file2', b'some other content in file')
 
     # Add a second archive to deposit
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit.id])
@@ -77,35 +76,11 @@ def test_access_to_existing_deposit_with_multiple_archives(
         r = authenticated_client.get(url)
 
         assert r.status_code == status.HTTP_200_OK
-        assert r._headers['content-type'][1] == 'application/octet-stream'
+        assert r._headers['content-type'][1] == 'application/zip'
         # read the stream
         data = b''.join(r.streaming_content)
-        actual_sha1 = hashlib.sha1(data).hexdigest()
-        check_tarball_consistency(
-            tmp_path, sample_archive, archive2, actual_sha1)
-
-
-def check_tarball_consistency(tmp_path, archive, archive2, actual_sha1):
-    """Check the tarballs are ok
-
-    """
-    workdir = path.join(tmp_path, 'workdir')
-    mkdir(workdir)
-    lst = set(listdir(workdir))
-    assert lst == set()
-    tarball.uncompress(archive['path'], dest=workdir)
-    assert listdir(workdir) == ['file1']
-    tarball.uncompress(archive2['path'], dest=workdir)
-    lst = set(listdir(workdir))
-    assert lst == {'file1', 'file2'}
-
-    new_path = workdir + '.zip'
-    tarball.compress(new_path, 'zip', workdir)
-    with open(new_path, 'rb') as f:
-        h = hashlib.sha1(f.read()).hexdigest()
-
-    assert actual_sha1 == h
-    assert actual_sha1 != archive['sha1sum']
-    assert actual_sha1 != archive2['sha1sum']
-
-    shutil.rmtree(workdir)
+        # extract the file from the zip
+        zfile = zipfile.ZipFile(io.BytesIO(data))
+        assert zfile.namelist() == ['file1', 'file2']
+        assert zfile.open('file1').read() == b'some content in file'
+        assert zfile.open('file2').read() == b'some other content in file'

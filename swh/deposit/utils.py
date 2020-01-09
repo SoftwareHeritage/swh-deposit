@@ -10,31 +10,6 @@ from types import GeneratorType
 from swh.model.identifiers import normalize_timestamp
 
 
-def origin_url_from(deposit):
-    """Given a deposit instance, return the associated origin url.
-
-    This expects a deposit and the associated client to be correctly
-    configured.
-
-    Args:
-        deposit (Deposit): The deposit from which derives the origin url
-
-    Raises:
-        AssertionError if:
-        - the client's provider_url field is not configured.
-        - the deposit's external_id field is not configured.
-
-    Returns
-       The associated origin url
-
-    """
-    external_id = deposit.external_id
-    assert external_id is not None
-    base_url = deposit.client.provider_url
-    assert base_url is not None
-    return '%s/%s' % (base_url.rstrip('/'), external_id)
-
-
 def merge(*dicts):
     """Given an iterator of dicts, merge them losing no information.
 

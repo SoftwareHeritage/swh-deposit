@@ -151,6 +151,11 @@ class Deposit(models.Model):
             d['status_detail'] = self.status_detail
         return str(d)
 
+    @property
+    def origin_url(self):
+        return '%s/%s' % (self.client.provider_url.rstrip('/'),
+                          self.external_id)
+
 
 def client_directory_path(instance, filename):
     """Callable to upload archive in MEDIA_ROOT/user_<id>/<filename>
