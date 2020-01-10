@@ -125,7 +125,7 @@ def test_post_deposit_atom_entry_initial(
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
-    atom_entry_data = atom_dataset['entry-data0'] % external_id.encode('utf-8')
+    atom_entry_data = atom_dataset['entry-data0'] % external_id
 
     # when
     response = authenticated_client.post(
@@ -149,7 +149,7 @@ def test_post_deposit_atom_entry_initial(
     # one associated request to a deposit
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     assert deposit_request.metadata is not None
-    assert deposit_request.raw_metadata == atom_entry_data.decode('utf-8')
+    assert deposit_request.raw_metadata == atom_entry_data
     assert bool(deposit_request.archive) is False
 
 
@@ -164,8 +164,7 @@ def test_post_deposit_atom_entry_with_codemeta(
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
-    atom_entry_data = atom_dataset['codemeta-sample'] % external_id.encode('utf-8')  # noqa
-
+    atom_entry_data = atom_dataset['codemeta-sample'] % external_id
     # when
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -189,7 +188,7 @@ def test_post_deposit_atom_entry_with_codemeta(
     # one associated request to a deposit
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     assert deposit_request.metadata is not None
-    assert deposit_request.raw_metadata == atom_entry_data.decode('utf-8')
+    assert deposit_request.raw_metadata == atom_entry_data
     assert bool(deposit_request.archive) is False
 
 
@@ -227,7 +226,7 @@ def test_post_deposit_atom_entry_tei(
     # one associated request to a deposit
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     assert deposit_request.metadata is not None
-    assert deposit_request.raw_metadata == atom_entry_data.decode('utf-8')
+    assert deposit_request.raw_metadata == atom_entry_data
     assert bool(deposit_request.archive) is False
 
 
@@ -298,11 +297,11 @@ def test_post_deposit_atom_entry_multiple_steps(
     expected_meta = [
         {
             'metadata': parse_xml(atom_entry_data1),
-            'raw_metadata': atom_entry_data1.decode('utf-8'),
+            'raw_metadata': atom_entry_data1
         },
         {
             'metadata': parse_xml(atom_entry_data),
-            'raw_metadata': atom_entry_data.decode('utf-8'),
+            'raw_metadata': atom_entry_data
         }
     ]
 
