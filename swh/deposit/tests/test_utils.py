@@ -8,43 +8,6 @@ import pytest
 from unittest.mock import patch
 
 from swh.deposit import utils
-from swh.deposit.models import Deposit, DepositClient
-
-
-def test_origin_url_from():
-    """With correctly setup-ed deposit, all is fine
-
-    """
-    for provider_url, external_id in (
-            ('http://somewhere.org', 'uuid'),
-            ('http://overthejungle.org', 'diuu'),
-    ):
-        deposit = Deposit(
-            client=DepositClient(provider_url=provider_url),
-            external_id=external_id
-        )
-
-        actual_origin_url = utils.origin_url_from(deposit)
-
-        assert actual_origin_url == '%s/%s' % (
-            provider_url.rstrip('/'), external_id)
-
-
-def test_origin_url_from_ko():
-    """Badly configured deposit should raise
-
-    """
-    for provider_url, external_id in (
-            (None, 'uuid'),
-            ('http://overthejungle.org', None),
-    ):
-        deposit = Deposit(
-            client=DepositClient(provider_url=provider_url),
-            external_id=None
-        )
-
-        with pytest.raises(AssertionError):
-            utils.origin_url_from(deposit)
 
 
 def test_merge():

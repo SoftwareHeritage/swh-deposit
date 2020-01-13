@@ -6,11 +6,10 @@ requests
 swh.core>=0.0.75
 
 [server]
-Django<2.0
+Django<3
 djangorestframework
 swh.core[http]
-swh.loader.tar>=0.0.39
-swh.loader.core>=0.0.43
+swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
 swh.model>=0.0.26
 
@@ -19,13 +18,13 @@ pytest
 pytest-django
 pytest-mock
 swh.scheduler[testing]
+swh.loader.core[testing]
 pytest-postgresql>=2.1.0
 requests_mock
-django-stubs<1.3.0
-Django<2.0
+django-stubs
+Django<3
 djangorestframework
 swh.core[http]
-swh.loader.tar>=0.0.39
-swh.loader.core>=0.0.43
+swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
 swh.model>=0.0.26

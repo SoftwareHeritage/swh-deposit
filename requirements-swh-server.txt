@@ -1,5 +1,4 @@
 swh.core[http]
-swh.loader.tar >= 0.0.39
-swh.loader.core >= 0.0.43
+swh.loader.core >= 0.0.71
 swh.scheduler >= 0.0.39
 swh.model >= 0.0.26

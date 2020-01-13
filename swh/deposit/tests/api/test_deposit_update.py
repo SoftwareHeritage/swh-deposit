@@ -94,7 +94,7 @@ def test_replace_metadata_to_deposit_is_possible(
         type='metadata')
     assert len(requests_meta) == 1
     request_meta0 = requests_meta[0]
-    assert request_meta0.raw_metadata == raw_metadata0.decode('utf-8')
+    assert request_meta0.raw_metadata == raw_metadata0
 
     requests_archive0 = DepositRequest.objects.filter(
         deposit=deposit, type='archive')
@@ -117,7 +117,7 @@ def test_replace_metadata_to_deposit_is_possible(
     assert len(requests_meta) == 1
     request_meta1 = requests_meta[0]
     raw_metadata1 = request_meta1.raw_metadata
-    assert raw_metadata1 == atom_dataset['entry-data1'].decode('utf-8')
+    assert raw_metadata1 == atom_dataset['entry-data1']
     assert raw_metadata0 != raw_metadata1
     assert request_meta0 != request_meta1
 
@@ -222,8 +222,8 @@ def test_add_metadata_to_deposit_is_possible(
     expected_raw_meta0 = atom_dataset['entry-data0'] % (
         deposit.external_id.encode('utf-8'))
     # a new one was added
-    assert requests[0].raw_metadata == expected_raw_meta0.decode('utf-8')
-    assert requests[1].raw_metadata == atom_entry.decode('utf-8')
+    assert requests[0].raw_metadata == expected_raw_meta0
+    assert requests[1].raw_metadata == atom_entry
 
     # check we did not touch the other parts
     requests_archive1 = DepositRequest.objects.filter(

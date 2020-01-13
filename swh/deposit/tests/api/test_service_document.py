@@ -6,7 +6,6 @@
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit.tests import TEST_CONFIG
 from swh.deposit.config import SD_IRI
 
 
@@ -80,7 +79,7 @@ def check_response(response, username):
         </collection>
     </workspace>
 </service>
-''' % (TEST_CONFIG['max_upload_size'],
+''' % (500,
        username,
        username,
        username,

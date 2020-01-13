@@ -1,8 +1,18 @@
-swh-deposit (0.0.79-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.81-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.81     - (tagged by David Douard
+    <david.douard@sdfa3.org> on 2020-01-13 11:50:07 +0100)
+  * Upstream changes:     - v0.0.81
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 19 Dec 2019 16:43:57 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 13 Jan 2020 11:07:54 +0000
+
+swh-deposit (0.0.80-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.80     - (tagged by David Douard
+    <david.douard@sdfa3.org> on 2020-01-09 15:54:57 +0100)
+  * Upstream changes:     - v0.0.80
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 09 Jan 2020 15:00:32 +0000
 
 swh-deposit (0.0.79-1~swh1) unstable-swh; urgency=medium
 
