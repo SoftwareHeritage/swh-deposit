@@ -511,7 +511,7 @@ def test_post_deposit_then_update_refused(
         charset=None)
 
     atom_entry = InMemoryUploadedFile(
-        BytesIO(atom_dataset['entry-data-deposit-binary']),
+        BytesIO(atom_dataset['entry-data-deposit-binary'].encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',

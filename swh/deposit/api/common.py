@@ -232,7 +232,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
                 type=METADATA_TYPE,
                 deposit=deposit,
                 metadata=metadata,
-                raw_metadata=raw_metadata)
+                raw_metadata=raw_metadata.decode('utf-8'))
             deposit_request.save()
 
         assert deposit_request is not None

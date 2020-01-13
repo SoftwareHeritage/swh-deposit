@@ -32,7 +32,7 @@ def test_post_deposit_multipart_without_slug_header_is_bad_request(
 
     data_atom_entry = atom_dataset['entry-data-deposit-binary']
     atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry),
+        BytesIO(data_atom_entry.encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',
@@ -73,7 +73,7 @@ def test_post_deposit_multipart_zip(
 
     data_atom_entry = atom_dataset['entry-data-deposit-binary']
     atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry),
+        BytesIO(data_atom_entry.encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',
@@ -118,7 +118,7 @@ def test_post_deposit_multipart_zip(
             assert deposit_request.metadata['id'] == \
                 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
             assert deposit_request.raw_metadata == \
-                data_atom_entry.decode('utf-8')
+                data_atom_entry
 
 
 def test_post_deposit_multipart_tar(
@@ -142,7 +142,7 @@ def test_post_deposit_multipart_tar(
         charset=None)
 
     atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry),
+        BytesIO(data_atom_entry.encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',
@@ -187,7 +187,7 @@ def test_post_deposit_multipart_tar(
             assert deposit_request.metadata['id'] == \
                 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
             assert deposit_request.raw_metadata == \
-                data_atom_entry.decode('utf-8')
+                data_atom_entry
 
 
 def test_post_deposit_multipart_put_to_replace_metadata(
@@ -211,7 +211,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
         charset=None)
 
     atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry),
+        BytesIO(data_atom_entry.encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',
@@ -255,7 +255,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             assert deposit_request.metadata['id'] == \
                 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
             assert deposit_request.raw_metadata == \
-                data_atom_entry.decode('utf-8')
+                data_atom_entry
 
     replace_metadata_uri = response._headers['location'][1]
     response = authenticated_client.put(
@@ -283,7 +283,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             assert deposit_request.metadata['id'] == \
                 'urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a'
             assert deposit_request.raw_metadata == \
-                atom_dataset['entry-data-deposit-binary'].decode('utf-8')
+                atom_dataset['entry-data-deposit-binary']
 
 # FAILURE scenarios
 
@@ -295,20 +295,22 @@ def test_post_deposit_multipart_only_archive_and_atom_entry(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     archive_content = b'some content representing archive'
-    archive = InMemoryUploadedFile(BytesIO(archive_content),
-                                   field_name='archive0',
-                                   name='archive0',
-                                   content_type='application/x-tar',
-                                   size=len(archive_content),
-                                   charset=None)
+    archive = InMemoryUploadedFile(
+        BytesIO(archive_content),
+        field_name='archive0',
+        name='archive0',
+        content_type='application/x-tar',
+        size=len(archive_content),
+        charset=None)
 
     other_archive_content = b"some-other-content"
-    other_archive = InMemoryUploadedFile(BytesIO(other_archive_content),
-                                         field_name='atom0',
-                                         name='atom0',
-                                         content_type='application/x-tar',
-                                         size=len(other_archive_content),
-                                         charset='utf-8')
+    other_archive = InMemoryUploadedFile(
+        BytesIO(other_archive_content),
+        field_name='atom0',
+        name='atom0',
+        content_type='application/x-tar',
+        size=len(other_archive_content),
+        charset='utf-8')
 
     # when
     response = authenticated_client.post(
@@ -365,7 +367,7 @@ def test_post_deposit_multipart_400_when_badly_formatted_xml(
 
     data_atom_entry_ko = atom_dataset['entry-data-ko']
     atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry_ko),
+        BytesIO(data_atom_entry_ko.encode('utf-8')),
         field_name='atom0',
         name='atom0',
         content_type='application/atom+xml; charset="utf-8"',

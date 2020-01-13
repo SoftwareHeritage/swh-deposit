@@ -233,7 +233,7 @@ def test_read_metadata_3(
         authenticated_client, deposit_collection, deposit,
         atom_dataset)
     # add metadata to the deposit with datePublished and dateCreated
-    codemeta_entry_data = atom_dataset['metadata'] % b"""
+    codemeta_entry_data = atom_dataset['metadata'] % """
   <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
   <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
 """
@@ -349,7 +349,7 @@ def test_read_metadata_4(
 
     """
     deposit = partial_deposit
-    codemeta_entry_data = atom_dataset['metadata'] % b''
+    codemeta_entry_data = atom_dataset['metadata'] % ''
     deposit = update_deposit_with_metadata(
         authenticated_client, deposit_collection, deposit,
         codemeta_entry_data)
@@ -470,7 +470,7 @@ def test_read_metadata_5(
     """
     deposit = partial_deposit
     # add metadata to the deposit with multiple datePublished/dateCreated
-    codemeta_entry_data = atom_dataset['metadata'] % b"""
+    codemeta_entry_data = atom_dataset['metadata'] % """
   <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
   <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
   <codemeta:dateCreated>2016-04-06T17:08:47+02:00</codemeta:dateCreated>
