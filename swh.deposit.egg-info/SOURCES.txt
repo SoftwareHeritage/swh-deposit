@@ -1,12 +1,14 @@
 MANIFEST.in
 Makefile
 README.md
+pytest.ini
 requirements-server.txt
 requirements-swh-server.txt
 requirements-swh.txt
 requirements-test.txt
 requirements.txt
 setup.py
+tox.ini
 version.txt
 swh/__init__.py
 swh.deposit.egg-info/PKG-INFO

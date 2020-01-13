@@ -216,7 +216,7 @@ def sample_archive(tmp_path):
 
 
 @pytest.fixture
-def atom_dataset(datadir) -> Mapping[str, bytes]:
+def atom_dataset(datadir) -> Mapping[str, str]:
     """Compute the paths to atom files.
 
     Returns:
@@ -228,7 +228,7 @@ def atom_dataset(datadir) -> Mapping[str, bytes]:
     for filename in os.listdir(atom_path):
         filepath = os.path.join(atom_path, filename)
         with open(filepath, 'rb') as f:
-            raw_content = f.read()
+            raw_content = f.read().decode('utf-8')
 
         # Keep the filename without extension
         atom_name = filename.split('.')[0]

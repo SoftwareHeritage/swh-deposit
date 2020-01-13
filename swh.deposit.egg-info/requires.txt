@@ -6,7 +6,7 @@ requests
 swh.core>=0.0.75
 
 [server]
-Django<2.0
+Django<3
 djangorestframework
 swh.core[http]
 swh.loader.core>=0.0.71
@@ -22,7 +22,7 @@ swh.loader.core[testing]
 pytest-postgresql>=2.1.0
 requests_mock
 django-stubs
-Django<2.0
+Django<3
 djangorestframework
 swh.core[http]
 swh.loader.core>=0.0.71

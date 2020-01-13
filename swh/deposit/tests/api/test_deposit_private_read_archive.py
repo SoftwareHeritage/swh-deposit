@@ -81,6 +81,6 @@ def test_access_to_existing_deposit_with_multiple_archives(
         data = b''.join(r.streaming_content)
         # extract the file from the zip
         zfile = zipfile.ZipFile(io.BytesIO(data))
-        assert zfile.namelist() == ['file1', 'file2']
+        assert set(zfile.namelist()) == {'file1', 'file2'}
         assert zfile.open('file1').read() == b'some content in file'
         assert zfile.open('file2').read() == b'some other content in file'
