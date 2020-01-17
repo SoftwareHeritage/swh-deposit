@@ -57,12 +57,14 @@ will be associated to this origin.
 
 .. code-block:: json
 
-    origin: {
-    "id": 89283768,
-    "origin_visits_url": "/api/1/origin/89283768/visits/",
-    "type": "deposit",
-    "url": "https://hal.archives-ouvertes.fr/hal-02140606"
-  }
+    {
+        "origin": {
+            "id": 89283768,
+            "origin_visits_url": "/api/1/origin/89283768/visits/",
+            "type": "deposit",
+            "url": "https://hal.archives-ouvertes.fr/hal-02140606"
+        }
+    }
 
 Visits
 ~~~~~~~
@@ -71,53 +73,57 @@ Here in the example below, two snapshots are identified by two different visits.
 
 .. code-block:: json
 
-    visits: [
-      {
-          "date": "2019-06-03T09:28:10.223007+00:00",
-          "origin": 89283768,
-          "origin_visit_url": "/api/1/origin/89283768/visit/2/",
-          "snapshot": "a3773941561cc557853898773a19c07cfe2efc5a",
-          "snapshot_url": "/api/1/snapshot/a3773941561cc557853898773a19c07cfe2efc5a/",
-          "status": "full",
-          "type": "deposit",
-          "visit": 2
-      },
-      {
-          "date": "2019-05-27T12:23:31.037273+00:00",
-          "origin": 89283768,
-          "origin_visit_url": "/api/1/origin/89283768/visit/1/",
-          "snapshot": "43fdb8291f1bf6962211c370e394f6abb1cbe01d",
-          "snapshot_url": "/api/1/snapshot/43fdb8291f1bf6962211c370e394f6abb1cbe01d/",
-          "status": "full",
-          "type": "deposit",
-          "visit": 1
-      }
-  ]
+    {
+        "visits": [
+          {
+              "date": "2019-06-03T09:28:10.223007+00:00",
+              "origin": 89283768,
+              "origin_visit_url": "/api/1/origin/89283768/visit/2/",
+              "snapshot": "a3773941561cc557853898773a19c07cfe2efc5a",
+              "snapshot_url": "/api/1/snapshot/a3773941561cc557853898773a19c07cfe2efc5a/",
+              "status": "full",
+              "type": "deposit",
+              "visit": 2
+          },
+          {
+              "date": "2019-05-27T12:23:31.037273+00:00",
+              "origin": 89283768,
+              "origin_visit_url": "/api/1/origin/89283768/visit/1/",
+              "snapshot": "43fdb8291f1bf6962211c370e394f6abb1cbe01d",
+              "snapshot_url": "/api/1/snapshot/43fdb8291f1bf6962211c370e394f6abb1cbe01d/",
+              "status": "full",
+              "type": "deposit",
+              "visit": 1
+          }
+        ]
+    }
 
 Snapshot artifact
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 The snapshot represents one deposit push. The master branch points to a
 synthetic revision. We will create a second branch pointing to a release
 artifact, if the indicate that the deposit is a release with a `releaseNotes`.
 
 .. code-block:: json
 
-  snapshot: {
-      "branches": {
-          "master": {
-              "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
-              "target_type": "revision",
-              "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
-          }
-          "refs/tags/v1.1": {
-              "target": "a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97",
-              "target_type": "release",
-              "target_url": "/api/1/release/a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97/"
-          }
-      },
-      "id": "a3773941561cc557853898773a19c07cfe2efc5a",
-      "next_branch": null
-  }
+    {
+        "snapshot": {
+            "branches": {
+                "master": {
+                    "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
+                    "target_type": "revision",
+                    "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+                }
+                "refs/tags/v1.1": {
+                    "target": "a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97",
+                    "target_type": "release",
+                    "target_url": "/api/1/release/a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97/"
+                }
+            },
+            "id": "a3773941561cc557853898773a19c07cfe2efc5a",
+            "next_branch": null
+        }
+    }
 
 Release artifact
 ~~~~~~~~~~~~~~~~
@@ -149,34 +155,35 @@ If present, a release artifact will be created with the mapping below:
 
 .. code-block:: json
 
-    release: {
-      "author": {
-          "email": "hal@ccsd.cnrs.fr",
-          "fullname": "HAL <phal@ccsd.cnrs.fr>",
-          "id": x,
-          "name": "HAL"
-      },
-      "author_url": "/api/1/person/x/",
-      "date": "2019-05-27T16:28:33+02:00",
-      "id": "a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97",
-      "message": "AffectationRO Version 1.1 - added new feature\n",
-      "name": "1.1",
-      "synthetic": true,
-      "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
-      "target_type": "revision",
-      "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
-  }
+    {
+        "release": {
+            "author": {
+                "email": "hal@ccsd.cnrs.fr",
+                "fullname": "HAL <phal@ccsd.cnrs.fr>",
+                "name": "HAL"
+            },
+            "author_url": "/api/1/person/x/",
+            "date": "2019-05-27T16:28:33+02:00",
+            "id": "a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97",
+            "message": "AffectationRO Version 1.1 - added new feature\n",
+            "name": "1.1",
+            "synthetic": true,
+            "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
+            "target_type": "revision",
+            "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+        }
+    }
 
 
 Revision artifact
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 The metadata sent with the deposit is included in the revision which affects
 the hash computation, thus resulting in a unique identifier.
 This way, by depositing the same content with different metadata, will result
 in two different revisions in the SWH archive.
 
 The date mapping
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 A deposit may contain 4 different dates concerning the software artifacts.
 
 The deposit's revision will reflect the most accurate point in time available.
@@ -224,108 +231,112 @@ A release contains one date:
 
 .. code-block:: json
 
-  revision:  {
-      "author": {
-          "email": "robot@softwareheritage.org",
-          "fullname": "Software Heritage",
-          "id": 18233048,
-          "name": "Software Heritage"
-      },
-      "author_url": "/api/1/person/18233048/",
-      "committer": {
-          "email": "robot@softwareheritage.org",
-          "fullname": "Software Heritage",
-          "id": 18233048,
-          "name": "Software Heritage"
-      },
-      "committer_date": "2019-05-27T16:28:33+02:00",
-      "committer_url": "/api/1/person/18233048/",
-      "date": "2012-01-01T00:00:00+00:00",
-      "directory": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
-      "directory_url": "/api/1/directory/fb13b51abbcfd13de85d9ba8d070a23679576cd7/",
-      "history_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/log/",
-      "id": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
-      "merge": false,
-      "message": "hal: Deposit 282 in collection hal",
-      "metadata": {
-          "@xmlns": "http://www.w3.org/2005/Atom",
-          "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-          "author": {
-              "email": "hal@ccsd.cnrs.fr",
-              "name": "HAL"
-          },
-          "client": "hal",
-          "codemeta:applicationCategory": "info",
-          "codemeta:author": {
-              "codemeta:name": "Morane Gruenpeter"
-          },
-          "codemeta:codeRepository": "www.code-repository.com",
-          "codemeta:contributor": "Morane Gruenpeter",
-          "codemeta:dateCreated": "2012",
-          "codemeta:datePublished": "2019-05-27T16:28:33+02:00",
-          "codemeta:description": "description\\_en test v2",
-          "codemeta:developmentStatus": "Inactif",
-          "codemeta:keywords": "mot_cle_en,mot_cle_2_en,mot_cle_fr",
-          "codemeta:license": [
-              {
-                  "codemeta:name": "MIT License"
-              },
-              {
-                  "codemeta:name": "CeCILL Free Software License Agreement v1.1"
-              }
-          ],
-          "codemeta:name": "Test\\_20190527\\_01",
-          "codemeta:operatingSystem": "OS",
-          "codemeta:programmingLanguage": "Java",
-          "codemeta:referencePublication": null,
-          "codemeta:relatedLink": null,
-          "codemeta:releaseNotes": "releaseNote",
-          "codemeta:runtimePlatform": "outil",
-          "codemeta:softwareVersion": "1.0.1",
-          "codemeta:url": "https://hal.archives-ouvertes.fr/hal-02140606",
-          "codemeta:version": "2",
-          "external_identifier": "hal-02140606",
-          "id": "hal-02140606",
-          "original_artifact": [
-              {
-                  "archive_type": "zip",
-                  "blake2s256": "96be3ddedfcee9669ad9c42b0bb3a706daf23824d04311c63505a4d8db02df00",
-                  "length": 193072,
-                  "name": "archive.zip",
-                  "sha1": "5b6ecc9d5bb113ff69fc275dcc9b0d993a8194f1",
-                  "sha1_git": "bd10e4d3ede17162692d7e211e08e87e67994488",
-                  "sha256": "3e2ce93384251ce6d6da7b8f2a061a8ebdaf8a28b8d8513223ca79ded8a10948"
-              }
-          ]
-      },
-      "parents": [
-          {
-              "id": "a9fdc3937d2b704b915852a64de2ab1b4b481003",
-              "url": "/api/1/revision/a9fdc3937d2b704b915852a64de2ab1b4b481003/"
-          }
-      ],
-      "synthetic": true,
-      "type": "tar",
-      "url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+    {
+        "revision":  {
+            "author": {
+                "email": "robot@softwareheritage.org",
+                "fullname": "Software Heritage",
+                "id": 18233048,
+                "name": "Software Heritage"
+            },
+            "author_url": "/api/1/person/18233048/",
+            "committer": {
+                "email": "robot@softwareheritage.org",
+                "fullname": "Software Heritage",
+                "id": 18233048,
+                "name": "Software Heritage"
+            },
+            "committer_date": "2019-05-27T16:28:33+02:00",
+            "committer_url": "/api/1/person/18233048/",
+            "date": "2012-01-01T00:00:00+00:00",
+            "directory": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
+            "directory_url": "/api/1/directory/fb13b51abbcfd13de85d9ba8d070a23679576cd7/",
+            "history_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/log/",
+            "id": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
+            "merge": false,
+            "message": "hal: Deposit 282 in collection hal",
+            "metadata": {
+                "@xmlns": "http://www.w3.org/2005/Atom",
+                "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+                "author": {
+                    "email": "hal@ccsd.cnrs.fr",
+                    "name": "HAL"
+                },
+                "client": "hal",
+                "codemeta:applicationCategory": "info",
+                "codemeta:author": {
+                    "codemeta:name": "Morane Gruenpeter"
+                },
+                "codemeta:codeRepository": "www.code-repository.com",
+                "codemeta:contributor": "Morane Gruenpeter",
+                "codemeta:dateCreated": "2012",
+                "codemeta:datePublished": "2019-05-27T16:28:33+02:00",
+                "codemeta:description": "description\\_en test v2",
+                "codemeta:developmentStatus": "Inactif",
+                "codemeta:keywords": "mot_cle_en,mot_cle_2_en,mot_cle_fr",
+                "codemeta:license": [
+                    {
+                        "codemeta:name": "MIT License"
+                    },
+                    {
+                        "codemeta:name": "CeCILL Free Software License Agreement v1.1"
+                    }
+                ],
+                "codemeta:name": "Test\\_20190527\\_01",
+                "codemeta:operatingSystem": "OS",
+                "codemeta:programmingLanguage": "Java",
+                "codemeta:referencePublication": null,
+                "codemeta:relatedLink": null,
+                "codemeta:releaseNotes": "releaseNote",
+                "codemeta:runtimePlatform": "outil",
+                "codemeta:softwareVersion": "1.0.1",
+                "codemeta:url": "https://hal.archives-ouvertes.fr/hal-02140606",
+                "codemeta:version": "2",
+                "external_identifier": "hal-02140606",
+                "id": "hal-02140606",
+                "original_artifact": [
+                    {
+                        "archive_type": "zip",
+                        "blake2s256": "96be3ddedfcee9669ad9c42b0bb3a706daf23824d04311c63505a4d8db02df00",
+                        "length": 193072,
+                        "name": "archive.zip",
+                        "sha1": "5b6ecc9d5bb113ff69fc275dcc9b0d993a8194f1",
+                        "sha1_git": "bd10e4d3ede17162692d7e211e08e87e67994488",
+                        "sha256": "3e2ce93384251ce6d6da7b8f2a061a8ebdaf8a28b8d8513223ca79ded8a10948"
+                    }
+                ]
+            },
+            "parents": [
+                {
+                    "id": "a9fdc3937d2b704b915852a64de2ab1b4b481003",
+                    "url": "/api/1/revision/a9fdc3937d2b704b915852a64de2ab1b4b481003/"
+                }
+            ],
+            "synthetic": true,
+            "type": "tar",
+            "url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
+        }
     }
 
 Directory artifact
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 The directory artifact is the archive(s)' raw content deposited.
 
 .. code-block:: json
 
-    directory: [
-      {
-          "dir_id": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
-          "length": null,
-          "name": "AffectationRO",
-          "perms": 16384,
-          "target": "fbc418f9ac2c39e8566b04da5dc24b14e65b23b1",
-          "target_url": "/api/1/directory/fbc418f9ac2c39e8566b04da5dc24b14e65b23b1/",
-          "type": "dir"
-      }
-  ]
+    {
+        "directory": [
+            {
+                "dir_id": "fb13b51abbcfd13de85d9ba8d070a23679576cd7",
+                "length": null,
+                "name": "AffectationRO",
+                "perms": 16384,
+                "target": "fbc418f9ac2c39e8566b04da5dc24b14e65b23b1",
+                "target_url": "/api/1/directory/fbc418f9ac2c39e8566b04da5dc24b14e65b23b1/",
+                "type": "dir"
+            }
+        ]
+    }
 
 
 Questions raised concerning loading
