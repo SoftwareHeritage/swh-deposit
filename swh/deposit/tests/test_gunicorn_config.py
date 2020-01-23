@@ -21,12 +21,16 @@ def test_post_fork_with_dsn_env():
     with patch('swh.deposit.gunicorn_config.DjangoIntegration',
                new=lambda: django_integration):
         with patch('sentry_sdk.init') as sentry_sdk_init:
-            with patch.dict(os.environ, {'SWH_SENTRY_DSN': 'test_dsn'}):
+            with patch.dict(os.environ, {
+                    'SWH_SENTRY_DSN': 'test_dsn',
+                    'SWH_SENTRY_ENVIRONMENT': 'test',
+            }):
                 gunicorn_config.post_fork(None, None)
 
     sentry_sdk_init.assert_called_once_with(
         dsn='test_dsn',
         integrations=[django_integration],
+        environment='test',
         debug=False,
         release=None,
     )
@@ -37,13 +41,17 @@ def test_post_fork_debug():
     with patch('swh.deposit.gunicorn_config.DjangoIntegration',
                new=lambda: django_integration):
         with patch('sentry_sdk.init') as sentry_sdk_init:
-            with patch.dict(os.environ, {'SWH_SENTRY_DSN': 'test_dsn',
-                                         'SWH_SENTRY_DEBUG': '1'}):
+            with patch.dict(os.environ, {
+                    'SWH_SENTRY_DSN': 'test_dsn',
+                    'SWH_SENTRY_DEBUG': '1',
+                    'SWH_SENTRY_ENVIRONMENT': 'test',
+            }):
                 gunicorn_config.post_fork(None, None)
 
     sentry_sdk_init.assert_called_once_with(
         dsn='test_dsn',
         integrations=[django_integration],
+        environment='test',
         debug=True,
         release=None,
     )
