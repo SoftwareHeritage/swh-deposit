@@ -8,15 +8,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0005_auto_20171019_1436'),
+        ("deposit", "0005_auto_20171019_1436"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='depositclient',
-            name='url',
-            field=models.TextField(
-                default='https://hal.archives-ouvertes.fr/'),
+            model_name="depositclient",
+            name="url",
+            field=models.TextField(default="https://hal.archives-ouvertes.fr/"),
             preserve_default=False,
         ),
     ]

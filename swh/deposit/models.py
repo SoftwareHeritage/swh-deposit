@@ -14,9 +14,14 @@ from django.db import models
 from django.utils.timezone import now
 
 from .config import (
-    DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE,
-    DEPOSIT_STATUS_REJECTED, ARCHIVE_TYPE, METADATA_TYPE
+    DEPOSIT_STATUS_VERIFIED,
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_REJECTED,
+    ARCHIVE_TYPE,
+    METADATA_TYPE,
 )
 
 
@@ -24,29 +29,32 @@ class Dbversion(models.Model):
     """Db version
 
     """
+
     version = models.IntegerField(primary_key=True)
     release = models.DateTimeField(default=now, null=True)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
-        db_table = 'dbversion'
+        db_table = "dbversion"
 
     def __str__(self):
-        return str({
-            'version': self.version,
-            'release': self.release,
-            'description': self.description
-        })
+        return str(
+            {
+                "version": self.version,
+                "release": self.release,
+                "description": self.description,
+            }
+        )
 
 
 """Possible status"""
 DEPOSIT_STATUS = [
     (DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_PARTIAL),
-    ('expired', 'expired'),
+    ("expired", "expired"),
     (DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_DEPOSITED),
     (DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_VERIFIED),
     (DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_REJECTED),
-    ('loading', 'loading'),
+    ("loading", "loading"),
     (DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_SUCCESS),
     (DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_FAILURE),
 ]
@@ -54,20 +62,20 @@ DEPOSIT_STATUS = [
 
 """Possible status and the detailed meaning."""
 DEPOSIT_STATUS_DETAIL = {
-    DEPOSIT_STATUS_PARTIAL: 'Deposit is partially received. To finalize it, '
-                            'In-Progress header should be false',
-    'expired': 'Deposit has been there too long and is now '
-               'deemed ready to be garbage collected',
-    DEPOSIT_STATUS_DEPOSITED: 'Deposit is ready for additional checks '
-                              '(tarball ok, metadata, etc...)',
-    DEPOSIT_STATUS_VERIFIED: 'Deposit is fully received, checked, and '
-                             'ready for loading',
-    DEPOSIT_STATUS_REJECTED: 'Deposit failed the checks',
-    'loading': "Loading is ongoing on swh's side",
-    DEPOSIT_STATUS_LOAD_SUCCESS: 'The deposit has been successfully '
-                                 'loaded into the Software Heritage archive',
-    DEPOSIT_STATUS_LOAD_FAILURE: 'The deposit loading into the '
-                                 'Software Heritage archive failed',
+    DEPOSIT_STATUS_PARTIAL: "Deposit is partially received. To finalize it, "
+    "In-Progress header should be false",
+    "expired": "Deposit has been there too long and is now "
+    "deemed ready to be garbage collected",
+    DEPOSIT_STATUS_DEPOSITED: "Deposit is ready for additional checks "
+    "(tarball ok, metadata, etc...)",
+    DEPOSIT_STATUS_VERIFIED: "Deposit is fully received, checked, and "
+    "ready for loading",
+    DEPOSIT_STATUS_REJECTED: "Deposit failed the checks",
+    "loading": "Loading is ongoing on swh's side",
+    DEPOSIT_STATUS_LOAD_SUCCESS: "The deposit has been successfully "
+    "loaded into the Software Heritage archive",
+    DEPOSIT_STATUS_LOAD_FAILURE: "The deposit loading into the "
+    "Software Heritage archive failed",
 }
 
 
@@ -75,6 +83,7 @@ class DepositClient(User):
     """Deposit client
 
     """
+
     collections = ArrayField(models.IntegerField(), null=True)
     objects = UserManager()  # type: ignore
     # this typing hint is due to a mypy/django-stubs limitation,
@@ -84,22 +93,25 @@ class DepositClient(User):
     domain = models.TextField(null=False)
 
     class Meta:
-        db_table = 'deposit_client'
+        db_table = "deposit_client"
 
     def __str__(self):
-        return str({
-            'id': self.id,
-            'collections': self.collections,
-            'username': super().username,
-            'domain': self.domain,
-            'provider_url': self.provider_url,
-        })
+        return str(
+            {
+                "id": self.id,
+                "collections": self.collections,
+                "username": super().username,
+                "domain": self.domain,
+                "provider_url": self.provider_url,
+            }
+        )
 
 
 class Deposit(models.Model):
     """Deposit reception table
 
     """
+
     id = models.BigAutoField(primary_key=True)
 
     # First deposit reception date
@@ -107,54 +119,48 @@ class Deposit(models.Model):
     # Date when the deposit is deemed complete and ready for loading
     complete_date = models.DateTimeField(null=True)
     # collection concerned by the deposit
-    collection = models.ForeignKey(
-        'DepositCollection', models.DO_NOTHING)
+    collection = models.ForeignKey("DepositCollection", models.DO_NOTHING)
     # Deposit's external identifier
     external_id = models.TextField()
     # Deposit client
-    client = models.ForeignKey('DepositClient', models.DO_NOTHING)
+    client = models.ForeignKey("DepositClient", models.DO_NOTHING)
     # SWH's loading result identifier
     swh_id = models.TextField(blank=True, null=True)
     swh_id_context = models.TextField(blank=True, null=True)
     swh_anchor_id = models.TextField(blank=True, null=True)
     swh_anchor_id_context = models.TextField(blank=True, null=True)
     # Deposit's status regarding loading
-    status = models.TextField(
-        choices=DEPOSIT_STATUS,
-        default=DEPOSIT_STATUS_PARTIAL)
+    status = models.TextField(choices=DEPOSIT_STATUS, default=DEPOSIT_STATUS_PARTIAL)
     status_detail = JSONField(null=True)
     # deposit can have one parent
-    parent = models.ForeignKey('self', on_delete=models.PROTECT, null=True)
+    parent = models.ForeignKey("self", on_delete=models.PROTECT, null=True)
     check_task_id = models.TextField(
-        blank=True, null=True,
-        verbose_name="Scheduler's associated checking task id"
+        blank=True, null=True, verbose_name="Scheduler's associated checking task id"
     )
     load_task_id = models.TextField(
-        blank=True, null=True,
-        verbose_name="Scheduler's associated loading task id"
+        blank=True, null=True, verbose_name="Scheduler's associated loading task id"
     )
 
     class Meta:
-        db_table = 'deposit'
+        db_table = "deposit"
 
     def __str__(self):
         d = {
-            'id': self.id,
-            'reception_date': self.reception_date,
-            'collection': self.collection.name,
-            'external_id': self.external_id,
-            'client': self.client.username,
-            'status': self.status,
+            "id": self.id,
+            "reception_date": self.reception_date,
+            "collection": self.collection.name,
+            "external_id": self.external_id,
+            "client": self.client.username,
+            "status": self.status,
         }
 
         if self.status in (DEPOSIT_STATUS_REJECTED):
-            d['status_detail'] = self.status_detail
+            d["status_detail"] = self.status_detail
         return str(d)
 
     @property
     def origin_url(self):
-        return '%s/%s' % (self.client.provider_url.rstrip('/'),
-                          self.external_id)
+        return "%s/%s" % (self.client.provider_url.rstrip("/"), self.external_id)
 
 
 def client_directory_path(instance, filename):
@@ -169,17 +175,17 @@ def client_directory_path(instance, filename):
         to the file uploaded.
 
     """
-    return 'client_{0}/{1}'.format(instance.deposit.client.id, filename)
+    return "client_{0}/{1}".format(instance.deposit.client.id, filename)
 
 
-REQUEST_TYPES = [(ARCHIVE_TYPE, ARCHIVE_TYPE),
-                 (METADATA_TYPE, METADATA_TYPE)]
+REQUEST_TYPES = [(ARCHIVE_TYPE, ARCHIVE_TYPE), (METADATA_TYPE, METADATA_TYPE)]
 
 
 class DepositRequest(models.Model):
     """Deposit request associated to one deposit.
 
     """
+
     id = models.BigAutoField(primary_key=True)
     # Deposit concerned by the request
     deposit = models.ForeignKey(Deposit, models.DO_NOTHING)
@@ -191,29 +197,30 @@ class DepositRequest(models.Model):
     # this can be null when type is 'metadata'
     archive = models.FileField(null=True, upload_to=client_directory_path)
 
-    type = models.CharField(max_length=8,
-                            choices=REQUEST_TYPES,
-                            null=True)
+    type = models.CharField(max_length=8, choices=REQUEST_TYPES, null=True)
 
     class Meta:
-        db_table = 'deposit_request'
+        db_table = "deposit_request"
 
     def __str__(self):
         meta = None
         if self.metadata:
             from json import dumps
+
             meta = dumps(self.metadata)
 
         archive_name = None
         if self.archive:
             archive_name = self.archive.name
 
-        return str({
-            'id': self.id,
-            'deposit': self.deposit,
-            'metadata': meta,
-            'archive': archive_name
-        })
+        return str(
+            {
+                "id": self.id,
+                "deposit": self.deposit,
+                "metadata": meta,
+                "archive": archive_name,
+            }
+        )
 
 
 class DepositCollection(models.Model):
@@ -222,7 +229,7 @@ class DepositCollection(models.Model):
     name = models.TextField()
 
     class Meta:
-        db_table = 'deposit_collection'
+        db_table = "deposit_collection"
 
     def __str__(self):
-        return str({'id': self.id, 'name': self.name})
+        return str({"id": self.id, "name": self.name})

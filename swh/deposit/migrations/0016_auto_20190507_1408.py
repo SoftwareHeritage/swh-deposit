@@ -8,24 +8,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0015_depositrequest_typemigration'),
+        ("deposit", "0015_depositrequest_typemigration"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='deposit',
-            name='check_task_id',
+            model_name="deposit",
+            name="check_task_id",
             field=models.TextField(
                 blank=True,
                 null=True,
-                verbose_name="Scheduler's associated checking task id"),
+                verbose_name="Scheduler's associated checking task id",
+            ),
         ),
         migrations.AddField(
-            model_name='deposit',
-            name='load_task_id',
+            model_name="deposit",
+            name="load_task_id",
             field=models.TextField(
                 blank=True,
                 null=True,
-                verbose_name="Scheduler's associated loading task id"),
+                verbose_name="Scheduler's associated loading task id",
+            ),
         ),
     ]

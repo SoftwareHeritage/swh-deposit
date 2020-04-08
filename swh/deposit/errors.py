@@ -11,75 +11,76 @@ from rest_framework import status
 from django.shortcuts import render
 
 
-FORBIDDEN = 'forbidden'
-UNAUTHORIZED = 'unauthorized'
-NOT_FOUND = 'unknown'
-BAD_REQUEST = 'bad-request'
-ERROR_CONTENT = 'error-content'
-CHECKSUM_MISMATCH = 'checksum-mismatch'
-MEDIATION_NOT_ALLOWED = 'mediation-not-allowed'
-METHOD_NOT_ALLOWED = 'method-not-allowed'
-MAX_UPLOAD_SIZE_EXCEEDED = 'max_upload_size_exceeded'
-PARSING_ERROR = 'parsing-error'
+FORBIDDEN = "forbidden"
+UNAUTHORIZED = "unauthorized"
+NOT_FOUND = "unknown"
+BAD_REQUEST = "bad-request"
+ERROR_CONTENT = "error-content"
+CHECKSUM_MISMATCH = "checksum-mismatch"
+MEDIATION_NOT_ALLOWED = "mediation-not-allowed"
+METHOD_NOT_ALLOWED = "method-not-allowed"
+MAX_UPLOAD_SIZE_EXCEEDED = "max_upload_size_exceeded"
+PARSING_ERROR = "parsing-error"
 
 
 class ParserError(ValueError):
     """Specific parsing error detected when parsing the xml metadata input
 
     """
+
     pass
 
 
 ERRORS = {
     FORBIDDEN: {
-        'status': status.HTTP_403_FORBIDDEN,
-        'iri': 'http://purl.org/net/sword/error/ErrorForbidden',
-        'tag': 'sword:ErrorForbidden',
+        "status": status.HTTP_403_FORBIDDEN,
+        "iri": "http://purl.org/net/sword/error/ErrorForbidden",
+        "tag": "sword:ErrorForbidden",
     },
     UNAUTHORIZED: {
-        'status': status.HTTP_401_UNAUTHORIZED,
-        'iri': 'http://purl.org/net/sword/error/ErrorUnauthorized',
-        'tag': 'sword:ErrorUnauthorized',
+        "status": status.HTTP_401_UNAUTHORIZED,
+        "iri": "http://purl.org/net/sword/error/ErrorUnauthorized",
+        "tag": "sword:ErrorUnauthorized",
     },
     NOT_FOUND: {
-        'status': status.HTTP_404_NOT_FOUND,
-        'iri': 'http://purl.org/net/sword/error/ErrorNotFound',
-        'tag': 'sword:ErrorNotFound',
+        "status": status.HTTP_404_NOT_FOUND,
+        "iri": "http://purl.org/net/sword/error/ErrorNotFound",
+        "tag": "sword:ErrorNotFound",
     },
     ERROR_CONTENT: {
-        'status': status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-        'iri': 'http://purl.org/net/sword/error/ErrorContent',
-        'tag': 'sword:ErrorContent',
+        "status": status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        "iri": "http://purl.org/net/sword/error/ErrorContent",
+        "tag": "sword:ErrorContent",
     },
     CHECKSUM_MISMATCH: {
-        'status': status.HTTP_412_PRECONDITION_FAILED,
-        'iri': 'http://purl.org/net/sword/error/ErrorChecksumMismatch',
-        'tag': 'sword:ErrorChecksumMismatch',
+        "status": status.HTTP_412_PRECONDITION_FAILED,
+        "iri": "http://purl.org/net/sword/error/ErrorChecksumMismatch",
+        "tag": "sword:ErrorChecksumMismatch",
     },
     BAD_REQUEST: {
-        'status': status.HTTP_400_BAD_REQUEST,
-        'iri': 'http://purl.org/net/sword/error/ErrorBadRequest',
-        'tag': 'sword:ErrorBadRequest',
+        "status": status.HTTP_400_BAD_REQUEST,
+        "iri": "http://purl.org/net/sword/error/ErrorBadRequest",
+        "tag": "sword:ErrorBadRequest",
     },
     PARSING_ERROR: {
-        'status': status.HTTP_400_BAD_REQUEST,
-        'iri': 'http://purl.org/net/sword/error/ErrorBadRequest',
-        'tag': 'sword:ErrorBadRequest',
+        "status": status.HTTP_400_BAD_REQUEST,
+        "iri": "http://purl.org/net/sword/error/ErrorBadRequest",
+        "tag": "sword:ErrorBadRequest",
     },
     MEDIATION_NOT_ALLOWED: {
-        'status': status.HTTP_412_PRECONDITION_FAILED,
-        'iri': 'http://purl.org/net/sword/error/MediationNotAllowed',
-        'tag': 'sword:MediationNotAllowed',
+        "status": status.HTTP_412_PRECONDITION_FAILED,
+        "iri": "http://purl.org/net/sword/error/MediationNotAllowed",
+        "tag": "sword:MediationNotAllowed",
     },
     METHOD_NOT_ALLOWED: {
-        'status': status.HTTP_405_METHOD_NOT_ALLOWED,
-        'iri': 'http://purl.org/net/sword/error/MethodNotAllowed',
-        'tag': 'sword:MethodNotAllowed',
+        "status": status.HTTP_405_METHOD_NOT_ALLOWED,
+        "iri": "http://purl.org/net/sword/error/MethodNotAllowed",
+        "tag": "sword:MethodNotAllowed",
     },
     MAX_UPLOAD_SIZE_EXCEEDED: {
-        'status': status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-        'iri': 'http://purl.org/net/sword/error/MaxUploadSizeExceeded',
-        'tag': 'sword:MaxUploadSizeExceeded',
+        "status": status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        "iri": "http://purl.org/net/sword/error/MaxUploadSizeExceeded",
+        "tag": "sword:MaxUploadSizeExceeded",
     },
 }
 
@@ -99,10 +100,10 @@ def make_error_dict(key, summary=None, verbose_description=None):
 
     """
     return {
-        'error': {
-            'key': key,
-            'summary': summary,
-            'verboseDescription': verbose_description,
+        "error": {
+            "key": key,
+            "summary": summary,
+            "verboseDescription": verbose_description,
         },
     }
 
@@ -119,13 +120,16 @@ def make_error_response_from_dict(req, error):
         HttpResponse with detailed error.
 
     """
-    error_information = ERRORS[error['key']]
+    error_information = ERRORS[error["key"]]
     context = error
     context.update(error_information)
-    return render(req, 'deposit/error.xml',
-                  context=error,
-                  content_type='application/xml',
-                  status=error_information['status'])
+    return render(
+        req,
+        "deposit/error.xml",
+        context=error,
+        content_type="application/xml",
+        status=error_information["status"],
+    )
 
 
 def make_error_response(req, key, summary=None, verbose_description=None):
@@ -144,4 +148,4 @@ def make_error_response(req, key, summary=None, verbose_description=None):
 
     """
     error = make_error_dict(key, summary, verbose_description)
-    return make_error_response_from_dict(req, error['error'])
+    return make_error_response_from_dict(req, error["error"])

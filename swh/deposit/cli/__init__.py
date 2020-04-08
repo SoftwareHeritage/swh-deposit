@@ -17,22 +17,24 @@ def deposit(ctx):
     """Deposit main command
     """
     ctx.ensure_object(dict)
-    log_level = ctx.obj.get('log_level', logging.INFO)
+    log_level = ctx.obj.get("log_level", logging.INFO)
     logger.setLevel(log_level)
 
 
 def main():
     logging.basicConfig()
-    return deposit(auto_envvar_prefix='SWH_DEPOSIT')
+    return deposit(auto_envvar_prefix="SWH_DEPOSIT")
+
 
 # These import statements MUST be executed after defining the 'deposit' group
 # since the subcommands in these are defined using this 'deposit' group.
 from . import client  # noqa
+
 try:
     from . import admin  # noqa
 except ImportError:  # server part is optional
-    logger.debug('admin subcommand not loaded')
+    logger.debug("admin subcommand not loaded")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

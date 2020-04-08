@@ -16,33 +16,30 @@ from swh.storage.tests.conftest import *  # noqa
 from swh.deposit.loader.checker import DepositChecker
 
 
-@pytest.fixture(scope='session')  # type: ignore  # expected redefinition
+@pytest.fixture(scope="session")  # type: ignore  # expected redefinition
 def celery_includes():
     return [
-        'swh.deposit.loader.tasks',
+        "swh.deposit.loader.tasks",
     ]
 
 
 @pytest.fixture
 def swh_config(tmp_path, swh_storage_postgresql, monkeypatch):
     storage_config = {
-        'url': 'https://deposit.softwareheritage.org/',
-        'storage': {
-            'cls': 'local',
-            'args': {
-                'db': swh_storage_postgresql.dsn,
-                'objstorage': {
-                    'cls': 'memory',
-                    'args': {}
-                },
+        "url": "https://deposit.softwareheritage.org/",
+        "storage": {
+            "cls": "local",
+            "args": {
+                "db": swh_storage_postgresql.dsn,
+                "objstorage": {"cls": "memory", "args": {}},
             },
         },
     }
 
-    conffile = os.path.join(tmp_path, 'deposit.yml')
-    with open(conffile, 'w') as f:
+    conffile = os.path.join(tmp_path, "deposit.yml")
+    with open(conffile, "w") as f:
         f.write(yaml.dump(storage_config))
-    monkeypatch.setenv('SWH_CONFIG_FILENAME', conffile)
+    monkeypatch.setenv("SWH_CONFIG_FILENAME", conffile)
     return conffile
 
 
@@ -57,5 +54,5 @@ def requests_mock_datadir(datadir, requests_mock_datadir):
 
     """
     cb = partial(get_response_cb, datadir=datadir)
-    requests_mock_datadir.put(re.compile('https://'), body=cb)
+    requests_mock_datadir.put(re.compile("https://"), body=cb)
     return requests_mock_datadir

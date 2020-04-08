@@ -13,12 +13,13 @@ from swh.deposit.client import PrivateApiDepositClient
 logger = logging.getLogger(__name__)
 
 
-class DepositChecker():
+class DepositChecker:
     """Deposit checker implementation.
 
     Trigger deposit's checks through the private api.
 
     """
+
     def __init__(self, client=None):
         super().__init__()
         self.client = client if client else PrivateApiDepositClient()
@@ -27,9 +28,8 @@ class DepositChecker():
         status = None
         try:
             r = self.client.check(deposit_check_url)
-            status = 'eventful' if r == 'verified' else 'failed'
+            status = "eventful" if r == "verified" else "failed"
         except Exception:
-            logger.exception("Failure during check on '%s'" % (
-                deposit_check_url, ))
-            status = 'failed'
-        return {'status': status}
+            logger.exception("Failure during check on '%s'" % (deposit_check_url,))
+            status = "failed"
+        return {"status": status}

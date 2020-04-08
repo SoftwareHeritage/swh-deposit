@@ -12,28 +12,28 @@ from swh.core import config
 
 
 DEFAULT_CONFIG = {
-    'port': ('int', 5006),
-    'host': ('str', '127.0.0.1'),
+    "port": ("int", 5006),
+    "host": ("str", "127.0.0.1"),
 }
 
 
 if __name__ == "__main__":
-    settings_file = 'development'
-    if sys.argv[1] == 'runserver':
+    settings_file = "development"
+    if sys.argv[1] == "runserver":
         # override the default host:port for the 'runserver' task
-        conf = config.load_named_config('deposit/server',
-                                        default_conf=DEFAULT_CONFIG)
-        extra_cmd = ['%s:%s' % (conf['host'], conf['port'])]
+        conf = config.load_named_config("deposit/server", default_conf=DEFAULT_CONFIG)
+        extra_cmd = ["%s:%s" % (conf["host"], conf["port"])]
         cmd = sys.argv + extra_cmd
-    elif sys.argv[1] == 'test':
+    elif sys.argv[1] == "test":
         # override the default settings file to read in testing mode
-        settings_file = 'testing'
+        settings_file = "testing"
         cmd = sys.argv
     else:  # otherwise, do nothing
         cmd = sys.argv
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                          'swh.deposit.settings.%s' % settings_file)
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", "swh.deposit.settings.%s" % settings_file
+    )
 
     try:
         from django.core.management import execute_from_command_line

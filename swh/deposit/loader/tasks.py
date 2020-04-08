@@ -8,7 +8,7 @@ from celery import shared_task
 from swh.deposit.loader.checker import DepositChecker
 
 
-@shared_task(name=__name__ + '.ChecksDepositTsk')
+@shared_task(name=__name__ + ".ChecksDepositTsk")
 def check_deposit(deposit_check_url):
     """Check a deposit's status
 

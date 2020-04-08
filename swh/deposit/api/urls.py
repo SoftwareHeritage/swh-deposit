@@ -27,38 +27,44 @@ def api_view(req):
 # PUBLIC API
 urlpatterns = [
     # simple view on the api
-    url(r'^$', api_view, name='api'),
+    url(r"^$", api_view, name="api"),
     # SD IRI - Service Document IRI
     # -> GET
-    url(r'^servicedocument/', SWHServiceDocument.as_view(),
-        name=SD_IRI),
+    url(r"^servicedocument/", SWHServiceDocument.as_view(), name=SD_IRI),
     # Col IRI - Collection IRI
     # -> POST
-    url(r'^(?P<collection_name>[^/]+)/$', SWHDeposit.as_view(),
-        name=COL_IRI),
+    url(r"^(?P<collection_name>[^/]+)/$", SWHDeposit.as_view(), name=COL_IRI),
     # EM IRI - Atom Edit Media IRI (update archive IRI)
     # -> PUT (update-in-place existing archive)
     # -> POST (add new archive)
-    url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$',
+    url(
+        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$",
         SWHUpdateArchiveDeposit.as_view(),
-        name=EM_IRI),
+        name=EM_IRI,
+    ),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
     # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
     # -> PUT (update in place)
     # -> POST (add new metadata)
-    url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$',
+    url(
+        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$",
         SWHUpdateMetadataDeposit.as_view(),
-        name=EDIT_SE_IRI),
+        name=EDIT_SE_IRI,
+    ),
     # State IRI
     # -> GET
-    url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$',
+    url(
+        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$",
         SWHDepositStatus.as_view(),
-        name=STATE_IRI),
+        name=STATE_IRI,
+    ),
     # Cont/File IRI
     # -> GET
-    url(r'^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$',
+    url(
+        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$",
         SWHDepositContent.as_view(),
-        name=CONT_FILE_IRI),  # specification is not clear about
-                              # FILE-IRI, we assume it's the same as
-                              # the CONT-IRI one
+        name=CONT_FILE_IRI,
+    ),  # specification is not clear about
+    # FILE-IRI, we assume it's the same as
+    # the CONT-IRI one
 ]

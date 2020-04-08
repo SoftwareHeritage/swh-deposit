@@ -23,9 +23,7 @@ def test_service_document_no_auth_with_http_auth_should_not_break(client):
 
     """
     url = reverse(SD_IRI)
-    response = client.get(
-        url,
-        HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+    response = client.get(url, HTTP_ACCEPT="text/html,application/xml;q=9,*/*,q=8")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -38,22 +36,22 @@ def test_service_document(authenticated_client, deposit_user):
     check_response(response, deposit_user.username)
 
 
-def test_service_document_with_http_accept_header(
-        authenticated_client, deposit_user):
+def test_service_document_with_http_accept_header(authenticated_client, deposit_user):
     """With authentication, with browser, sd list user's collection
 
     """
     url = reverse(SD_IRI)
     response = authenticated_client.get(
-        url,
-        HTTP_ACCEPT='text/html,application/xml;q=9,*/*,q=8')
+        url, HTTP_ACCEPT="text/html,application/xml;q=9,*/*,q=8"
+    )
     check_response(response, deposit_user.username)
 
 
 def check_response(response, username):
     assert response.status_code == status.HTTP_200_OK
-    assert response.content.decode('utf-8') == \
-                          '''<?xml version="1.0" ?>
+    assert (
+        response.content.decode("utf-8")
+        == """<?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
     xmlns:atom="http://www.w3.org/2005/Atom"
@@ -79,8 +77,6 @@ def check_response(response, username):
         </collection>
     </workspace>
 </service>
-''' % (500,
-       username,
-       username,
-       username,
-       username)  # noqa
+"""
+        % (500, username, username, username, username)
+    )  # noqa

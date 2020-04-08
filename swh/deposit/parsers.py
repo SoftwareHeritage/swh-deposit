@@ -23,32 +23,34 @@ class SWHFileUploadZipParser(FileUploadParser):
     """File upload parser limited to zip archive.
 
     """
-    media_type = 'application/zip'
+
+    media_type = "application/zip"
 
 
 class SWHFileUploadTarParser(FileUploadParser):
     """File upload parser limited to tarball (tar, tar.gz, tar.*) archives.
 
     """
-    media_type = 'application/x-tar'
+
+    media_type = "application/x-tar"
 
 
 class SWHXMLParser(BaseParser):
     """
     XML parser.
     """
-    media_type = 'application/xml'
+
+    media_type = "application/xml"
 
     def parse(self, stream, media_type=None, parser_context=None):
         """
         Parses the incoming bytestream as XML and returns the resulting data.
         """
         parser_context = parser_context or {}
-        encoding = parser_context.get('encoding', settings.DEFAULT_CHARSET)
-        data = xmltodict.parse(stream, encoding=encoding,
-                               process_namespaces=False)
-        if 'entry' in data:
-            data = data['entry']
+        encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
+        data = xmltodict.parse(stream, encoding=encoding, process_namespaces=False)
+        if "entry" in data:
+            data = data["entry"]
         return data
 
 
@@ -56,7 +58,8 @@ class SWHAtomEntryParser(SWHXMLParser):
     """Atom entry parser limited to specific mediatype
 
     """
-    media_type = 'application/atom+xml;type=entry'
+
+    media_type = "application/atom+xml;type=entry"
 
     def parse(self, stream, media_type=None, parser_context=None):
         # We do not actually want to parse the stream yet
@@ -70,7 +73,8 @@ class SWHMultiPartParser(MultiPartParser):
     """Multipart parser limited to a subset of mediatypes.
 
     """
-    media_type = 'multipart/*; *'
+
+    media_type = "multipart/*; *"
 
 
 def parse_xml(raw_content):
