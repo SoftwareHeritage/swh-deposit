@@ -77,12 +77,12 @@ class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
         if not os.path.exists(self.extraction_dir):
             os.makedirs(self.extraction_dir)
 
-    def process_get(self, req, collection_name, deposit_id):
+    def process_get(self, request, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
         Args:
-            req (Request):
+            request (Request):
             collection_name (str): Collection owning the deposit
             deposit_id (id): Deposit concerned by the reading
 
@@ -221,7 +221,7 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
 
         return data
 
-    def process_get(self, req, collection_name, deposit_id):
+    def process_get(self, request, collection_name, deposit_id):
         deposit = Deposit.objects.get(pk=deposit_id)
         data = self.metadata_read(deposit)
         d = {}

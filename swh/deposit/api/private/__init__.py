@@ -87,11 +87,23 @@ class SWHPrivateAPIView(SWHDefaultConfig, SWHAPIView):
         return {"headers": headers}
 
     def get(
-        self, req, collection_name=None, deposit_id=None, format=None, *args, **kwargs
+        self,
+        request,
+        collection_name=None,
+        deposit_id=None,
+        format=None,
+        *args,
+        **kwargs,
     ):
-        return super().get(req, collection_name, deposit_id, format)
+        return super().get(request, collection_name, deposit_id, format)
 
     def put(
-        self, req, collection_name=None, deposit_id=None, format=None, *args, **kwargs
+        self,
+        request,
+        collection_name=None,
+        deposit_id=None,
+        format=None,
+        *args,
+        **kwargs,
     ):
-        return super().put(req, collection_name, deposit_id, format)
+        return super().put(request, collection_name, deposit_id, format)
