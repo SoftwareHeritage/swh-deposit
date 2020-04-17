@@ -403,7 +403,8 @@ Only ``deposited`` deposit are concerned by the loading.
 When the loading is done and successful, the deposit entry is updated:
 
   - ``status`` is updated to ``done``
-  - ``swh-id`` is populated with the resulting `SWH persistent identifier <https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html>`_
+  - ``swh-id`` is populated with the resulting :ref:`SWHID
+    <persistent-identifiers>`
   - ``complete_date`` is updated to the loading's finished time
 
 When the loading has failed, the deposit entry is updated:
