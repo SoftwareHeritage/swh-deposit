@@ -63,7 +63,6 @@ def test_read_metadata(
         data = response.json()
 
         expected_meta = {
-            "branch_name": "master",
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
@@ -88,7 +87,7 @@ def test_read_metadata(
                     "version": "0.0.1",
                 },
             },
-            "revision": {
+            "deposit": {
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
@@ -96,21 +95,15 @@ def test_read_metadata(
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
-                "date": {
+                "author_date": {
                     "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
-                "message": "test: Deposit %s in collection test" % deposit.id,
-                "metadata": {
-                    "@xmlns": ["http://www.w3.org/2005/Atom"],
-                    "author": ["some awesome author", "another one", "no one"],
-                    "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-                    "external_identifier": "some-external-id",
-                    "url": "https://hal-test.archives-ouvertes.fr/some-external-id",  # noqa
-                },
-                "synthetic": True,
-                "type": "tar",
+                "client": "test",
+                "id": deposit.id,
+                "collection": "test",
+                "revision_parents": [],
             },
         }
 
@@ -146,7 +139,6 @@ def test_read_metadata_revision_with_parent(
         data = response.json()
 
         expected_meta = {
-            "branch_name": "master",
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
@@ -171,7 +163,7 @@ def test_read_metadata_revision_with_parent(
                     "version": "0.0.1",
                 },
             },
-            "revision": {
+            "deposit": {
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
@@ -179,22 +171,15 @@ def test_read_metadata_revision_with_parent(
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
-                "date": {
+                "author_date": {
                     "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
-                "message": "test: Deposit %s in collection test" % deposit.id,
-                "metadata": {
-                    "@xmlns": ["http://www.w3.org/2005/Atom"],
-                    "author": ["some awesome author", "another one", "no one"],
-                    "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-                    "external_identifier": "some-external-id",
-                    "url": "https://hal-test.archives-ouvertes.fr/some-external-id",  # noqa
-                },
-                "synthetic": True,
-                "type": "tar",
-                "parents": [rev_id],
+                "client": "test",
+                "id": deposit.id,
+                "collection": "test",
+                "revision_parents": [rev_id],
             },
         }
 
@@ -273,7 +258,6 @@ def test_read_metadata_3(
             "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
         }
         expected_meta = {
-            "branch_name": "master",
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
@@ -292,7 +276,7 @@ def test_read_metadata_3(
                     "version": "0.0.1",
                 },
             },
-            "revision": {
+            "deposit": {
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
@@ -300,16 +284,15 @@ def test_read_metadata_3(
                     "offset": 120,
                     "timestamp": {"microseconds": 0, "seconds": 1493820527},
                 },
-                "date": {
+                "author_date": {
                     "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
-                "message": "%s: Deposit %s in collection %s"
-                % (deposit_collection.name, deposit.id, deposit_collection.name),
-                "metadata": metadata,
-                "synthetic": True,
-                "type": "tar",
+                "client": deposit_collection.name,
+                "id": deposit.id,
+                "collection": deposit_collection.name,
+                "revision_parents": [],
             },
         }
         assert data == expected_meta
@@ -395,39 +378,29 @@ def test_read_metadata_4(
             },
         }
 
-        expected_revision = {
-            "author": {
-                "email": "robot@softwareheritage.org",
-                "fullname": "Software Heritage",
-                "name": "Software Heritage",
-            },
-            "committer": {
-                "email": "robot@softwareheritage.org",
-                "fullname": "Software Heritage",
-                "name": "Software Heritage",
-            },
+        expected_deposit_info = {
+            "author": SWH_PERSON,
+            "committer": SWH_PERSON,
             "committer_date": {
                 "negative_utc": False,
                 "offset": 0,
                 "timestamp": {"microseconds": 0, "seconds": 1459900800},
             },
-            "date": {
+            "author_date": {
                 "negative_utc": False,
                 "offset": 0,
                 "timestamp": {"microseconds": 0, "seconds": 1459900800},
             },
-            "message": "%s: Deposit %s in collection %s"
-            % (deposit_collection.name, deposit.id, deposit_collection.name),
-            "metadata": metadata,
-            "synthetic": True,
-            "type": "tar",
+            "client": deposit_collection.name,
+            "id": deposit.id,
+            "collection": deposit_collection.name,
+            "revision_parents": [],
         }
 
         expected_meta = {
-            "branch_name": "master",
             "origin": expected_origin,
             "origin_metadata": expected_origin_metadata,
-            "revision": expected_revision,
+            "deposit": expected_deposit_info,
         }
 
         assert data == expected_meta
@@ -531,39 +504,29 @@ def test_read_metadata_5(
             },
         }
 
-        expected_revision = {
-            "author": {
-                "email": "robot@softwareheritage.org",
-                "fullname": "Software Heritage",
-                "name": "Software Heritage",
-            },
-            "committer": {
-                "email": "robot@softwareheritage.org",
-                "fullname": "Software Heritage",
-                "name": "Software Heritage",
-            },
+        expected_deposit_info = {
+            "author": SWH_PERSON,
+            "committer": SWH_PERSON,
             "committer_date": {
                 "negative_utc": False,
                 "offset": 120,
                 "timestamp": {"microseconds": 0, "seconds": 1493820527},
             },
-            "date": {
+            "author_date": {
                 "negative_utc": False,
                 "offset": 120,
                 "timestamp": {"microseconds": 0, "seconds": 1428332927},
             },
-            "message": "%s: Deposit %s in collection %s"
-            % (deposit_collection.name, deposit.id, deposit_collection.name),
-            "metadata": metadata,
-            "synthetic": True,
-            "type": "tar",
+            "client": deposit_collection.name,
+            "id": deposit.id,
+            "collection": deposit_collection.name,
+            "revision_parents": [],
         }
 
         expected_meta = {
-            "branch_name": "master",
             "origin": expected_origin,
             "origin_metadata": expected_origin_metadata,
-            "revision": expected_revision,
+            "deposit": expected_deposit_info,
         }
 
         assert data == expected_meta

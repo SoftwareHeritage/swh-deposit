@@ -174,34 +174,11 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
         # Read information metadata
         data = {"origin": {"type": "deposit", "url": deposit.origin_url,}}
 
-        # revision
-
-        fullname = deposit.client.username
-        author_committer = SWH_PERSON
-
         # metadata provider
         self.provider["provider_name"] = deposit.client.last_name
         self.provider["provider_url"] = deposit.client.provider_url
 
-        revision_type = "tar"
-        revision_msg = "%s: Deposit %s in collection %s" % (
-            fullname,
-            deposit.id,
-            deposit.collection.name,
-        )
-
         author_date, commit_date = self._normalize_dates(deposit, metadata)
-
-        data["revision"] = {
-            "synthetic": True,
-            "date": author_date,
-            "committer_date": commit_date,
-            "author": author_committer,
-            "committer": author_committer,
-            "type": revision_type,
-            "message": revision_msg,
-            "metadata": metadata,
-        }
 
         if deposit.parent:
             swh_persistent_id = deposit.parent.swh_id
@@ -209,14 +186,24 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
                 swh_persistent_id
             )
             parent_revision = persistent_identifier.object_id
+            parents = [parent_revision]
+        else:
+            parents = []
 
-            data["revision"]["parents"] = [parent_revision]
-
-        data["branch_name"] = "master"
         data["origin_metadata"] = {
             "provider": self.provider,
             "tool": self.tool,
             "metadata": metadata,
+        }
+        data["deposit"] = {
+            "id": deposit.id,
+            "client": deposit.client.username,
+            "collection": deposit.collection.name,
+            "author": SWH_PERSON,
+            "author_date": author_date,
+            "committer": SWH_PERSON,
+            "committer_date": commit_date,
+            "revision_parents": parents,
         }
 
         return data
