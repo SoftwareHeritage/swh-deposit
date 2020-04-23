@@ -9,8 +9,11 @@ from rest_framework import status
 from typing import Dict, Mapping
 
 from swh.deposit.config import (
-    EDIT_SE_IRI, EM_IRI, ARCHIVE_KEY, METADATA_KEY,
-    DEPOSIT_STATUS_DEPOSITED
+    EDIT_SE_IRI,
+    EM_IRI,
+    ARCHIVE_KEY,
+    METADATA_KEY,
+    DEPOSIT_STATUS_DEPOSITED,
 )
 
 from swh.deposit.models import Deposit, DepositRequest
@@ -24,8 +27,8 @@ def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
 
 
 def test_delete_archive_on_partial_deposit_works(
-        authenticated_client, partial_deposit_with_metadata,
-        deposit_collection):
+    authenticated_client, partial_deposit_with_metadata, deposit_collection
+):
     """Removing partial deposit's archive should return a 204 response
 
     """
@@ -35,10 +38,7 @@ def test_delete_archive_on_partial_deposit_works(
 
     # deposit request type: 'archive', 1 'metadata'
     deposit_request_types = count_deposit_request_types(deposit_requests)
-    assert deposit_request_types == {
-        ARCHIVE_KEY: 1,
-        METADATA_KEY: 1
-    }
+    assert deposit_request_types == {ARCHIVE_KEY: 1, METADATA_KEY: 1}
 
     # when
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit_id])
@@ -51,13 +51,12 @@ def test_delete_archive_on_partial_deposit_works(
     deposit_requests2 = DepositRequest.objects.filter(deposit=deposit)
 
     deposit_request_types = count_deposit_request_types(deposit_requests2)
-    assert deposit_request_types == {
-        METADATA_KEY: 1
-    }
+    assert deposit_request_types == {METADATA_KEY: 1}
 
 
 def test_delete_archive_on_undefined_deposit_fails(
-        authenticated_client, deposit_collection, sample_archive):
+    authenticated_client, deposit_collection, sample_archive
+):
     """Delete undefined deposit returns a 404 response
 
     """
@@ -69,7 +68,8 @@ def test_delete_archive_on_undefined_deposit_fails(
 
 
 def test_delete_non_partial_deposit(
-        authenticated_client, deposit_collection, deposited_deposit):
+    authenticated_client, deposit_collection, deposited_deposit
+):
     """Delete !partial status deposit should return a 400 response
 
     """
@@ -86,7 +86,8 @@ def test_delete_non_partial_deposit(
 
 
 def test_delete_partial_deposit(
-        authenticated_client, deposit_collection, partial_deposit):
+    authenticated_client, deposit_collection, partial_deposit
+):
     """Delete deposit should return a 204 response
 
     """
@@ -105,7 +106,8 @@ def test_delete_partial_deposit(
 
 
 def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(
-        authenticated_client, deposit_collection, complete_deposit):
+    authenticated_client, deposit_collection, complete_deposit
+):
     """Delete !partial deposit should return a 400 response
 
     """

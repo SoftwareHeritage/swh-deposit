@@ -9,16 +9,17 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0008_auto_20171130_1513'),
+        ("deposit", "0008_auto_20171130_1513"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='deposit',
-            name='parent',
+            model_name="deposit",
+            name="parent",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='deposit.Deposit'),
+                to="deposit.Deposit",
+            ),
         ),
     ]

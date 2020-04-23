@@ -8,19 +8,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0009_deposit_parent'),
+        ("deposit", "0009_deposit_parent"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='depositclient',
-            old_name='url',
-            new_name='provider_url',
+            model_name="depositclient", old_name="url", new_name="provider_url",
         ),
         migrations.AddField(
-            model_name='depositclient',
-            name='domain',
-            field=models.TextField(default=''),
+            model_name="depositclient",
+            name="domain",
+            field=models.TextField(default=""),
             preserve_default=False,
         ),
     ]

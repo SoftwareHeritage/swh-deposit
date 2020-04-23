@@ -8,11 +8,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0003_temporaryarchive'),
+        ("deposit", "0003_temporaryarchive"),
     ]
 
     operations = [
-        migrations.DeleteModel(
-            name='TemporaryArchive',
-        ),
+        migrations.DeleteModel(name="TemporaryArchive",),
     ]

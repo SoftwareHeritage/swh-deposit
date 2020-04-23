@@ -16,7 +16,7 @@ from ...models import Deposit
 
 class DefaultPagination(PageNumberPagination):
     page_size = 100
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
 
 
 class StatusDetailField(_UnvalidatedField):
@@ -25,6 +25,7 @@ class StatusDetailField(_UnvalidatedField):
        endpoint to that effect.
 
     """
+
     def to_representation(self, value):
         return convert_status_detail(value)
 
@@ -34,7 +35,7 @@ class DepositSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deposit
-        fields = '__all__'
+        fields = "__all__"
 
 
 class DepositList(ListAPIView, SWHPrivateAPIView):
@@ -43,6 +44,7 @@ class DepositList(ListAPIView, SWHPrivateAPIView):
     HTTP verbs supported: GET
 
     """
-    queryset = Deposit.objects.all().order_by('id')
+
+    queryset = Deposit.objects.all().order_by("id")
     serializer_class = DepositSerializer
     pagination_class = DefaultPagination

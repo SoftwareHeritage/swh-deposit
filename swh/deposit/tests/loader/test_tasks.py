@@ -6,16 +6,16 @@
 from unittest.mock import patch
 
 
-@patch('swh.deposit.loader.checker.DepositChecker.check')
+@patch("swh.deposit.loader.checker.DepositChecker.check")
 def deposit_check(checker, swh_config, swh_app, celery_session_worker):
-    checker.return_value = {'status': 'uneventful'}
+    checker.return_value = {"status": "uneventful"}
 
     res = swh_app.send_task(
-        'swh.deposit.loader.tasks.ChecksDepositTsk',
-        args=['check_deposit_url'])
+        "swh.deposit.loader.tasks.ChecksDepositTsk", args=["check_deposit_url"]
+    )
     assert res
     res.wait()
     assert res.successful()
 
-    assert res.result == {'status': 'uneventful'}
-    checker.assert_called_once_with('check_deposit_url')
+    assert res.result == {"status": "uneventful"}
+    checker.assert_called_once_with("check_deposit_url")

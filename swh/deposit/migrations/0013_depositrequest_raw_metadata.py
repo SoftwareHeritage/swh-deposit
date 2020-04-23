@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0012_deposit_status_detail'),
+        ("deposit", "0012_deposit_status_detail"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='depositrequest',
-            name='raw_metadata',
+            model_name="depositrequest",
+            name="raw_metadata",
             field=models.TextField(null=True),
         ),
     ]

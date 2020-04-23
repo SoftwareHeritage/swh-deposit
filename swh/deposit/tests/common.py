@@ -16,11 +16,11 @@ def compute_info(archive_path):
     """Given a path, compute information on path.
 
     """
-    with open(archive_path, 'rb') as f:
+    with open(archive_path, "rb") as f:
         length = 0
         sha1sum = hashlib.sha1()
         md5sum = hashlib.md5()
-        data = b''
+        data = b""
         for chunk in f:
             sha1sum.update(chunk)
             md5sum.update(chunk)
@@ -28,13 +28,13 @@ def compute_info(archive_path):
             data += chunk
 
     return {
-        'dir': os.path.dirname(archive_path),
-        'name': os.path.basename(archive_path),
-        'path': archive_path,
-        'length': length,
-        'sha1sum': sha1sum.hexdigest(),
-        'md5sum': md5sum.hexdigest(),
-        'data': data
+        "dir": os.path.dirname(archive_path),
+        "name": os.path.basename(archive_path),
+        "path": archive_path,
+        "length": length,
+        "sha1sum": sha1sum.hexdigest(),
+        "md5sum": md5sum.hexdigest(),
+        "data": data,
     }
 
 
@@ -42,32 +42,35 @@ def _compress(path, extension, dir_path):
     """Compress path according to extension
 
     """
-    if extension == 'zip' or extension == 'tar':
+    if extension == "zip" or extension == "tar":
         return tarball.compress(path, extension, dir_path)
-    elif '.' in extension:
-        split_ext = extension.split('.')
-        if split_ext[0] != 'tar':
+    elif "." in extension:
+        split_ext = extension.split(".")
+        if split_ext[0] != "tar":
             raise ValueError(
-                'Development error, only zip or tar archive supported, '
-                '%s not supported' % extension)
+                "Development error, only zip or tar archive supported, "
+                "%s not supported" % extension
+            )
 
         # deal with specific tar
         mode = split_ext[1]
-        supported_mode = ['xz', 'gz', 'bz2']
+        supported_mode = ["xz", "gz", "bz2"]
         if mode not in supported_mode:
             raise ValueError(
-                'Development error, only %s supported, %s not supported' % (
-                    supported_mode, mode))
+                "Development error, only %s supported, %s not supported"
+                % (supported_mode, mode)
+            )
         files = tarball._ls(dir_path)
-        with tarfile.open(path, 'w:%s' % mode) as t:
+        with tarfile.open(path, "w:%s" % mode) as t:
             for fpath, fname in files:
                 t.add(fpath, arcname=fname, recursive=False)
 
         return path
 
 
-def create_arborescence_archive(root_path, archive_name, filename, content,
-                                up_to_size=None, extension='zip'):
+def create_arborescence_archive(
+    root_path, archive_name, filename, content, up_to_size=None, extension="zip"
+):
     """Build an archive named archive_name in the root_path.
     This archive contains one file named filename with the content content.
 
@@ -98,15 +101,15 @@ def create_arborescence_archive(root_path, archive_name, filename, content,
     _length = len(content)
     count = 0
     batch_size = 128
-    with open(filepath, 'wb') as f:
+    with open(filepath, "wb") as f:
         f.write(content)
         if up_to_size:  # fill with blank content up to a given size
             count += _length
             while count < up_to_size:
-                f.write(b'0'*batch_size)
+                f.write(b"0" * batch_size)
                 count += batch_size
 
-    _path = '%s.%s' % (dir_path, extension)
+    _path = "%s.%s" % (dir_path, extension)
     _path = _compress(_path, extension, dir_path)
     return compute_info(_path)
 
@@ -116,8 +119,8 @@ def create_archive_with_archive(root_path, name, archive):
 
     """
     invalid_archive_path = os.path.join(root_path, name)
-    with tarfile.open(invalid_archive_path, 'w:gz') as _archive:
-        _archive.add(archive['path'], arcname=archive['name'])
+    with tarfile.open(invalid_archive_path, "w:gz") as _archive:
+        _archive.add(archive["path"], arcname=archive["name"])
     return compute_info(invalid_archive_path)
 
 
@@ -130,9 +133,9 @@ def check_archive(archive_name: str, archive_name_to_check: str):
             archive_name_to_check
 
     """
-    if '.' in archive_name:
-        filename, extension = archive_name.split('.')
-        pattern = re.compile('.*/%s.*\\.%s' % (filename, extension))
+    if "." in archive_name:
+        filename, extension = archive_name.split(".")
+        pattern = re.compile(".*/%s.*\\.%s" % (filename, extension))
     else:
-        pattern = re.compile('.*/%s' % archive_name)
+        pattern = re.compile(".*/%s" % archive_name)
     assert pattern.match(archive_name_to_check) is not None

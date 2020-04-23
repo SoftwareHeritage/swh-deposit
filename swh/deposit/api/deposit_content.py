@@ -15,8 +15,8 @@ from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
 class SWHDepositContent(SWHBaseDeposit):
     def get(self, req, collection_name, deposit_id, format=None):
         checks = self.checks(req, collection_name, deposit_id)
-        if 'error' in checks:
-            return make_error_response_from_dict(req, checks['error'])
+        if "error" in checks:
+            return make_error_response_from_dict(req, checks["error"])
 
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
@@ -24,19 +24,24 @@ class SWHDepositContent(SWHBaseDeposit):
                 raise Deposit.DoesNotExist
         except Deposit.DoesNotExist:
             return make_error_response(
-                req, NOT_FOUND,
-                'deposit %s does not belong to collection %s' % (
-                    deposit_id, collection_name))
+                req,
+                NOT_FOUND,
+                "deposit %s does not belong to collection %s"
+                % (deposit_id, collection_name),
+            )
 
         requests = DepositRequest.objects.filter(deposit=deposit)
         context = {
-            'deposit_id': deposit.id,
-            'status': deposit.status,
-            'status_detail': DEPOSIT_STATUS_DETAIL[deposit.status],
-            'requests': requests,
+            "deposit_id": deposit.id,
+            "status": deposit.status,
+            "status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
+            "requests": requests,
         }
 
-        return render(req, 'deposit/content.xml',
-                      context=context,
-                      content_type='application/xml',
-                      status=status.HTTP_200_OK)
+        return render(
+            req,
+            "deposit/content.xml",
+            context=context,
+            content_type="application/xml",
+            status=status.HTTP_200_OK,
+        )
