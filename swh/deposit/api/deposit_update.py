@@ -14,8 +14,7 @@ from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
-class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
-                              SWHDeleteDepositAPI):
+class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI):
     """Deposit request class defining api endpoints for sword deposit.
 
        What's known as 'EM IRI' in the sword specification.
@@ -23,7 +22,11 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
        HTTP verbs supported: PUT, POST, DELETE
 
     """
-    parser_classes = (SWHFileUploadZipParser, SWHFileUploadTarParser, )
+
+    parser_classes = (
+        SWHFileUploadZipParser,
+        SWHFileUploadTarParser,
+    )
 
     def process_put(self, req, headers, collection_name, deposit_id):
         """Replace existing content for the existing deposit.
@@ -35,13 +38,14 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
 
         """
         if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            msg = 'Packaging format supported is restricted to %s' % (
-                ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
+            msg = "Packaging format supported is restricted to %s" % (
+                ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
+            )
             return make_error_dict(BAD_REQUEST, msg)
 
-        return self._binary_upload(req, headers, collection_name,
-                                   deposit_id=deposit_id,
-                                   replace_archives=True)
+        return self._binary_upload(
+            req, headers, collection_name, deposit_id=deposit_id, replace_archives=True
+        )
 
     def process_post(self, req, headers, collection_name, deposit_id):
         """Add new content to the existing deposit.
@@ -56,12 +60,16 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
 
         """
         if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            msg = 'Packaging format supported is restricted to %s' % (
-                ', '.join(ACCEPT_ARCHIVE_CONTENT_TYPES))
-            return 'unused', 'unused', make_error_dict(BAD_REQUEST, msg)
+            msg = "Packaging format supported is restricted to %s" % (
+                ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
+            )
+            return "unused", "unused", make_error_dict(BAD_REQUEST, msg)
 
-        return (status.HTTP_201_CREATED, CONT_FILE_IRI,
-                self._binary_upload(req, headers, collection_name, deposit_id))
+        return (
+            status.HTTP_201_CREATED,
+            CONT_FILE_IRI,
+            self._binary_upload(req, headers, collection_name, deposit_id),
+        )
 
     def process_delete(self, req, collection_name, deposit_id):
         """Delete content (archives) from existing deposit.
@@ -75,8 +83,9 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
         return self._delete_archives(collection_name, deposit_id)
 
 
-class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
-                               SWHDeleteDepositAPI):
+class SWHUpdateMetadataDeposit(
+    SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
+):
     """Deposit request class defining api endpoints for sword deposit.
 
        What's known as 'Edit IRI' (and SE IRI) in the sword specification.
@@ -84,6 +93,7 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
        HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
 
     """
+
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
 
     def process_put(self, req, headers, collection_name, deposit_id):
@@ -97,13 +107,18 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
             204 No content
 
         """
-        if req.content_type.startswith('multipart/'):
-            return self._multipart_upload(req, headers, collection_name,
-                                          deposit_id=deposit_id,
-                                          replace_archives=True,
-                                          replace_metadata=True)
-        return self._atom_entry(req, headers, collection_name,
-                                deposit_id=deposit_id, replace_metadata=True)
+        if req.content_type.startswith("multipart/"):
+            return self._multipart_upload(
+                req,
+                headers,
+                collection_name,
+                deposit_id=deposit_id,
+                replace_archives=True,
+                replace_metadata=True,
+            )
+        return self._atom_entry(
+            req, headers, collection_name, deposit_id=deposit_id, replace_metadata=True
+        )
 
     def process_post(self, req, headers, collection_name, deposit_id):
         """Add new metadata/archive to existing deposit.
@@ -124,20 +139,26 @@ class SWHUpdateMetadataDeposit(SWHPostDepositAPI, SWHPutDepositAPI,
             For the empty post case, this returns a 200.
 
         """
-        if req.content_type.startswith('multipart/'):
-            return (status.HTTP_201_CREATED, EM_IRI,
-                    self._multipart_upload(req, headers, collection_name,
-                                           deposit_id=deposit_id))
+        if req.content_type.startswith("multipart/"):
+            return (
+                status.HTTP_201_CREATED,
+                EM_IRI,
+                self._multipart_upload(
+                    req, headers, collection_name, deposit_id=deposit_id
+                ),
+            )
         # check for final empty post
         # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         # #continueddeposit_complete
-        if headers['content-length'] == 0 and headers['in-progress'] is False:
+        if headers["content-length"] == 0 and headers["in-progress"] is False:
             data = self._empty_post(req, headers, collection_name, deposit_id)
             return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 
-        return (status.HTTP_201_CREATED, EM_IRI,
-                self._atom_entry(req, headers, collection_name,
-                                 deposit_id=deposit_id))
+        return (
+            status.HTTP_201_CREATED,
+            EM_IRI,
+            self._atom_entry(req, headers, collection_name, deposit_id=deposit_id),
+        )
 
     def process_delete(self, req, collection_name, deposit_id):
         """Delete the container (deposit).

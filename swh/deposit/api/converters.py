@@ -36,22 +36,22 @@ def convert_status_detail(status_detail):
         return None
 
     def _str_fields(data):
-        fields = data.get('fields')
+        fields = data.get("fields")
         if not fields:
-            return ''
-        return ' (%s)' % ', '.join(map(str, fields))
+            return ""
+        return " (%s)" % ", ".join(map(str, fields))
 
     msg = []
-    for key in ['metadata', 'archive']:
+    for key in ["metadata", "archive"]:
         _detail = status_detail.get(key)
         if _detail:
             for data in _detail:
-                msg.append('- %s%s\n' % (data['summary'], _str_fields(data)))
+                msg.append("- %s%s\n" % (data["summary"], _str_fields(data)))
 
-    _detail = status_detail.get('url')
+    _detail = status_detail.get("url")
     if _detail:
-        msg.append('- %s%s\n' % (_detail['summary'], _str_fields(_detail)))
+        msg.append("- %s%s\n" % (_detail["summary"], _str_fields(_detail)))
 
     if not msg:
         return None
-    return ''.join(msg)
+    return "".join(msg)

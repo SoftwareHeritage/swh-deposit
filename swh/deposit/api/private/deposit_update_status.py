@@ -5,9 +5,7 @@
 
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import (
-    persistent_identifier, REVISION, DIRECTORY
-)
+from swh.model.identifiers import persistent_identifier, REVISION, DIRECTORY
 
 from . import SWHPrivateAPIView
 from ..common import SWHPutDepositAPI
@@ -22,10 +20,10 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
     HTTP verbs supported: PUT
 
     """
-    parser_classes = (JSONParser, )
 
-    def additional_checks(self, req, headers, collection_name,
-                          deposit_id=None):
+    parser_classes = (JSONParser,)
+
+    def additional_checks(self, request, headers, collection_name, deposit_id=None):
         """Enrich existing checks to the default ones.
 
         New checks:
@@ -33,27 +31,27 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
         - Ensure it exists
 
         """
-        data = req.data
-        status = data.get('status')
+        data = request.data
+        status = data.get("status")
         if not status:
-            msg = 'The status key is mandatory with possible values %s' % list(
-                DEPOSIT_STATUS_DETAIL.keys())
+            msg = "The status key is mandatory with possible values %s" % list(
+                DEPOSIT_STATUS_DETAIL.keys()
+            )
             return make_error_dict(BAD_REQUEST, msg)
 
         if status not in DEPOSIT_STATUS_DETAIL:
-            msg = 'Possible status in %s' % list(DEPOSIT_STATUS_DETAIL.keys())
+            msg = "Possible status in %s" % list(DEPOSIT_STATUS_DETAIL.keys())
             return make_error_dict(BAD_REQUEST, msg)
 
         if status == DEPOSIT_STATUS_LOAD_SUCCESS:
-            swh_id = data.get('revision_id')
+            swh_id = data.get("revision_id")
             if not swh_id:
-                msg = 'Updating status to %s requires a revision_id key' % (
-                    status, )
+                msg = "Updating status to %s requires a revision_id key" % (status,)
                 return make_error_dict(BAD_REQUEST, msg)
 
         return {}
 
-    def process_put(self, req, headers, collection_name, deposit_id):
+    def process_put(self, request, headers, collection_name, deposit_id):
         """Update the deposit's status
 
         Returns:
@@ -61,22 +59,23 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
-        deposit.status = req.data['status']  # checks already done before
+        deposit.status = request.data["status"]  # checks already done before
 
-        origin_url = req.data.get('origin_url')
+        origin_url = request.data.get("origin_url")
 
-        dir_id = req.data.get('directory_id')
+        dir_id = request.data.get("directory_id")
         if dir_id:
             deposit.swh_id = persistent_identifier(DIRECTORY, dir_id)
             deposit.swh_id_context = persistent_identifier(
-                DIRECTORY, dir_id, metadata={'origin': origin_url})
+                DIRECTORY, dir_id, metadata={"origin": origin_url}
+            )
 
-        rev_id = req.data.get('revision_id')
+        rev_id = request.data.get("revision_id")
         if rev_id:
-            deposit.swh_anchor_id = persistent_identifier(
-                REVISION, rev_id)
+            deposit.swh_anchor_id = persistent_identifier(REVISION, rev_id)
             deposit.swh_anchor_id_context = persistent_identifier(
-                REVISION, rev_id, metadata={'origin': origin_url})
+                REVISION, rev_id, metadata={"origin": origin_url}
+            )
 
         deposit.save()
 

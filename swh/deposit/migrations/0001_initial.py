@@ -16,123 +16,126 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('auth', '0008_alter_user_username_max_length'),
+        ("auth", "0008_alter_user_username_max_length"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Dbversion',
+            name="Dbversion",
             fields=[
-                ('version', models.IntegerField(
-                    primary_key=True, serialize=False)),
-                ('release', models.DateTimeField(
-                    default=django.utils.timezone.now, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
+                ("version", models.IntegerField(primary_key=True, serialize=False)),
+                (
+                    "release",
+                    models.DateTimeField(default=django.utils.timezone.now, null=True),
+                ),
+                ("description", models.TextField(blank=True, null=True)),
             ],
-            options={
-                'db_table': 'dbversion',
-            },
+            options={"db_table": "dbversion",},
         ),
         migrations.CreateModel(
-            name='Deposit',
+            name="Deposit",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('reception_date', models.DateTimeField(auto_now_add=True)),
-                ('complete_date', models.DateTimeField(null=True)),
-                ('external_id', models.TextField()),
-                ('swh_id', models.TextField(blank=True, null=True)),
-                ('status', models.TextField(
-                    choices=[('partial', 'partial'),
-                             ('expired', 'expired'),
-                             ('ready', 'ready'),
-                             ('injecting', 'injecting'),
-                             ('success', 'success'),
-                             ('failure', 'failure')],
-                    default='partial')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("reception_date", models.DateTimeField(auto_now_add=True)),
+                ("complete_date", models.DateTimeField(null=True)),
+                ("external_id", models.TextField()),
+                ("swh_id", models.TextField(blank=True, null=True)),
+                (
+                    "status",
+                    models.TextField(
+                        choices=[
+                            ("partial", "partial"),
+                            ("expired", "expired"),
+                            ("ready", "ready"),
+                            ("injecting", "injecting"),
+                            ("success", "success"),
+                            ("failure", "failure"),
+                        ],
+                        default="partial",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'deposit',
-            },
+            options={"db_table": "deposit",},
         ),
         migrations.CreateModel(
-            name='DepositClient',
+            name="DepositClient",
             fields=[
-                ('user_ptr', models.OneToOneField(
-                    auto_created=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True,
-                    primary_key=True,
-                    serialize=False,
-                    to=settings.AUTH_USER_MODEL)),
-                ('collections',
-                 django.contrib.postgres.fields.ArrayField(
-                     base_field=models.IntegerField(),
-                     null=True,
-                     size=None)),
+                (
+                    "user_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "collections",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.IntegerField(), null=True, size=None
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'deposit_client',
-            },
-            bases=('auth.user',),
-            managers=[
-                ('objects', django.contrib.auth.models.UserManager()),
-            ],
+            options={"db_table": "deposit_client",},
+            bases=("auth.user",),
+            managers=[("objects", django.contrib.auth.models.UserManager()),],
         ),
         migrations.CreateModel(
-            name='DepositCollection',
+            name="DepositCollection",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.TextField()),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.TextField()),
             ],
-            options={
-                'db_table': 'deposit_collection',
-            },
+            options={"db_table": "deposit_collection",},
         ),
         migrations.CreateModel(
-            name='DepositRequest',
+            name="DepositRequest",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('date', models.DateTimeField(auto_now_add=True)),
-                ('metadata',
-                 django.contrib.postgres.fields.jsonb.JSONField(null=True)),
-                ('deposit',
-                 models.ForeignKey(
-                     on_delete=django.db.models.deletion.DO_NOTHING,
-                     to='deposit.Deposit')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("date", models.DateTimeField(auto_now_add=True)),
+                ("metadata", django.contrib.postgres.fields.jsonb.JSONField(null=True)),
+                (
+                    "deposit",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="deposit.Deposit",
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'deposit_request',
-            },
+            options={"db_table": "deposit_request",},
         ),
         migrations.CreateModel(
-            name='DepositRequestType',
+            name="DepositRequestType",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.TextField()),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.TextField()),
             ],
-            options={
-                'db_table': 'deposit_request_type',
-            },
+            options={"db_table": "deposit_request_type",},
         ),
         migrations.AddField(
-            model_name='depositrequest',
-            name='type',
+            model_name="depositrequest",
+            name="type",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.DO_NOTHING,
-                to='deposit.DepositRequestType'),
+                to="deposit.DepositRequestType",
+            ),
         ),
         migrations.AddField(
-            model_name='deposit',
-            name='client',
+            model_name="deposit",
+            name="client",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.DO_NOTHING,
-                to='deposit.DepositClient'),
+                to="deposit.DepositClient",
+            ),
         ),
         migrations.AddField(
-            model_name='deposit',
-            name='collection',
+            model_name="deposit",
+            name="collection",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.DO_NOTHING,
-                to='deposit.DepositCollection'),
+                to="deposit.DepositCollection",
+            ),
         ),
     ]

@@ -20,6 +20,7 @@ def merge(*dicts):
         dict merged without losing information
 
     """
+
     def _extend(existing_val, value):
         """Given an existing value and a value (as potential lists), merge
            them together without repetition.
@@ -38,8 +39,7 @@ def merge(*dicts):
     d = {}
     for data in dicts:
         if not isinstance(data, dict):
-            raise ValueError(
-                'dicts is supposed to be a variable arguments of dict')
+            raise ValueError("dicts is supposed to be a variable arguments of dict")
 
         for key, value in data.items():
             existing_val = d.get(key)

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: swh.deposit
-Version: 0.0.81
+Version: 0.0.82
 Summary: Software Heritage Deposit Server
 Home-page: https://forge.softwareheritage.org/source/swh-deposit/
 Author: Software Heritage developers
@@ -30,6 +30,7 @@ Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
 Classifier: Operating System :: OS Independent
 Classifier: Development Status :: 5 - Production/Stable
+Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 Provides-Extra: testing
 Provides-Extra: server

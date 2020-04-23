@@ -25,6 +25,7 @@ class InputError(ValueError):
     """Input script error
 
     """
+
     pass
 
 
@@ -46,8 +47,8 @@ def _url(url):
         Top level api url to actually request
 
     """
-    if not url.endswith('/1'):
-        url = '%s/1' % url
+    if not url.endswith("/1"):
+        url = "%s/1" % url
     return url
 
 
@@ -69,25 +70,25 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
         Filepath to the metadata generated file
 
     """
-    path = os.path.join(temp_dir, 'metadata.xml')
+    path = os.path.join(temp_dir, "metadata.xml")
     # generate a metadata file with the minimum required metadata
     codemetadata = {
-        'entry': {
-            '@xmlns': "http://www.w3.org/2005/Atom",
-            '@xmlns:codemeta': "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-            'codemeta:name': name,
-            'codemeta:identifier': external_id,
-            'codemeta:author': [{
-                'codemeta:name': author_name
-            } for author_name in authors],
+        "entry": {
+            "@xmlns": "http://www.w3.org/2005/Atom",
+            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+            "codemeta:name": name,
+            "codemeta:identifier": external_id,
+            "codemeta:author": [
+                {"codemeta:name": author_name} for author_name in authors
+            ],
         },
     }
 
-    logging.debug('Temporary file: %s', path)
-    logging.debug('Metadata dict to generate as xml: %s', codemetadata)
+    logging.debug("Temporary file: %s", path)
+    logging.debug("Metadata dict to generate as xml: %s", codemetadata)
     s = xmltodict.unparse(codemetadata, pretty=True)
-    logging.debug('Metadata dict as xml generated: %s', s)
-    with open(path, 'w') as fp:
+    logging.debug("Metadata dict as xml generated: %s", s)
+    with open(path, "w") as fp:
         fp.write(s)
     return path
 
@@ -101,13 +102,9 @@ def _client(url, username, password):
         password (str): User's password
 
     """
-    client = PublicApiDepositClient({
-        'url': url,
-        'auth': {
-            'username': username,
-            'password': password
-        },
-    })
+    client = PublicApiDepositClient(
+        {"url": url, "auth": {"username": username, "password": password},}
+    )
     return client
 
 
@@ -117,19 +114,29 @@ def _collection(client):
     """
     # retrieve user's collection
     sd_content = client.service_document()
-    if 'error' in sd_content:
-        raise InputError('Service document retrieval: %s' % (
-            sd_content['error'], ))
-    collection = sd_content[
-        'service']['workspace']['collection']['sword:name']
+    if "error" in sd_content:
+        raise InputError("Service document retrieval: %s" % (sd_content["error"],))
+    collection = sd_content["service"]["workspace"]["collection"]["sword:name"]
     return collection
 
 
 def client_command_parse_input(
-        username, password, archive, metadata,
-        archive_deposit, metadata_deposit,
-        collection, slug, partial, deposit_id, replace,
-        url, name, authors, temp_dir):
+    username,
+    password,
+    archive,
+    metadata,
+    archive_deposit,
+    metadata_deposit,
+    collection,
+    slug,
+    partial,
+    deposit_id,
+    replace,
+    url,
+    name,
+    authors,
+    temp_dir,
+):
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -192,13 +199,15 @@ def client_command_parse_input(
             raise InputError(
                 "Either a metadata file (--metadata) or both --author and "
                 "--name must be provided, unless this is an archive-only "
-                "deposit.")
+                "deposit."
+            )
         elif name or authors:
             # If we are generating metadata, then all mandatory metadata
             # must be present
             raise InputError(
                 "Either a metadata file (--metadata) or both --author and "
-                "--name must be provided.")
+                "--name must be provided."
+            )
         else:
             # TODO: this is a multipart deposit, we might want to check that
             # metadata are deposited at some point
@@ -206,7 +215,8 @@ def client_command_parse_input(
     elif name or authors:
         raise InputError(
             "Using a metadata file (--metadata) is incompatible with "
-            "--author and --name, which are used to generate one.")
+            "--author and --name, which are used to generate one."
+        )
 
     if metadata_deposit:
         archive = None
@@ -217,16 +227,16 @@ def client_command_parse_input(
     if metadata_deposit and not metadata:
         raise InputError(
             "Metadata deposit must be provided for metadata "
-            "deposit (either a filepath or --name and --author)")
+            "deposit (either a filepath or --name and --author)"
+        )
 
     if not archive and not metadata and partial:
         raise InputError(
-            'Please provide an actionable command. See --help for more '
-            'information')
+            "Please provide an actionable command. See --help for more " "information"
+        )
 
     if replace and not deposit_id:
-        raise InputError(
-            'To update an existing deposit, you must provide its id')
+        raise InputError("To update an existing deposit, you must provide its id")
 
     client = _client(url, username, password)
 
@@ -234,22 +244,22 @@ def client_command_parse_input(
         collection = _collection(client)
 
     return {
-        'archive': archive,
-        'username': username,
-        'password': password,
-        'metadata': metadata,
-        'collection': collection,
-        'slug': slug,
-        'in_progress': partial,
-        'client': client,
-        'url': url,
-        'deposit_id': deposit_id,
-        'replace': replace,
+        "archive": archive,
+        "username": username,
+        "password": password,
+        "metadata": metadata,
+        "collection": collection,
+        "slug": slug,
+        "in_progress": partial,
+        "client": client,
+        "url": url,
+        "deposit_id": deposit_id,
+        "replace": replace,
     }
 
 
 def _subdict(d, keys):
-    'return a dict from d with only given keys'
+    "return a dict from d with only given keys"
     return {k: v for k, v in d.items() if k in keys}
 
 
@@ -257,69 +267,133 @@ def deposit_create(config, logger):
     """Delegate the actual deposit to the deposit client.
 
     """
-    logger.debug('Create deposit')
+    logger.debug("Create deposit")
 
-    client = config['client']
-    keys = ('collection', 'archive', 'metadata', 'slug', 'in_progress')
-    return client.deposit_create(
-        **_subdict(config, keys))
+    client = config["client"]
+    keys = ("collection", "archive", "metadata", "slug", "in_progress")
+    return client.deposit_create(**_subdict(config, keys))
 
 
 def deposit_update(config, logger):
     """Delegate the actual deposit to the deposit client.
 
     """
-    logger.debug('Update deposit')
+    logger.debug("Update deposit")
 
-    client = config['client']
-    keys = ('collection', 'deposit_id', 'archive', 'metadata',
-            'slug', 'in_progress', 'replace')
-    return client.deposit_update(
-        **_subdict(config, keys))
+    client = config["client"]
+    keys = (
+        "collection",
+        "deposit_id",
+        "archive",
+        "metadata",
+        "slug",
+        "in_progress",
+        "replace",
+    )
+    return client.deposit_update(**_subdict(config, keys))
 
 
 @deposit.command()
-@click.option('--username', required=True,
-              help="(Mandatory) User's name")
-@click.option('--password', required=True,
-              help="(Mandatory) User's associated password")
-@click.option('--archive', type=click.Path(exists=True),
-              help='(Optional) Software archive to deposit')
-@click.option('--metadata', type=click.Path(exists=True),
-              help="(Optional) Path to xml metadata file. If not provided, this will use a file named <archive>.metadata.xml")  # noqa
-@click.option('--archive-deposit/--no-archive-deposit', default=False,
-              help='(Optional) Software archive only deposit')
-@click.option('--metadata-deposit/--no-metadata-deposit', default=False,
-              help='(Optional) Metadata only deposit')
-@click.option('--collection',
-              help="(Optional) User's collection. If not provided, this will be fetched.")  # noqa
-@click.option('--slug',
-              help="""(Optional) External system information identifier. If not provided, it will be generated""")  # noqa
-@click.option('--partial/--no-partial', default=False,
-              help='(Optional) The deposit will be partial, other deposits will have to take place to finalize it.')  # noqa
-@click.option('--deposit-id', default=None,
-              help='(Optional) Update an existing partial deposit with its identifier')  # noqa
-@click.option('--replace/--no-replace', default=False,
-              help='(Optional) Update by replacing existing metadata to a deposit')  # noqa
-@click.option('--url', default='https://deposit.softwareheritage.org',
-              help="(Optional) Deposit server api endpoint. By default, https://deposit.softwareheritage.org/1")  # noqa
-@click.option('--verbose/--no-verbose', default=False,
-              help='Verbose mode')
-@click.option('--name',
-              help='Software name')
-@click.option('--author', multiple=True,
-              help='Software author(s), this can be repeated as many times'
-              ' as there are authors')
-@click.option('-f', '--format', 'output_format', default='logging',
-              type=click.Choice(['logging', 'yaml', 'json']),
-              help='Output format results.')
+@click.option("--username", required=True, help="(Mandatory) User's name")
+@click.option(
+    "--password", required=True, help="(Mandatory) User's associated password"
+)
+@click.option(
+    "--archive",
+    type=click.Path(exists=True),
+    help="(Optional) Software archive to deposit",
+)
+@click.option(
+    "--metadata",
+    type=click.Path(exists=True),
+    help=(
+        "(Optional) Path to xml metadata file. If not provided, "
+        "this will use a file named <archive>.metadata.xml"
+    ),
+)  # noqa
+@click.option(
+    "--archive-deposit/--no-archive-deposit",
+    default=False,
+    help="(Optional) Software archive only deposit",
+)
+@click.option(
+    "--metadata-deposit/--no-metadata-deposit",
+    default=False,
+    help="(Optional) Metadata only deposit",
+)
+@click.option(
+    "--collection",
+    help="(Optional) User's collection. If not provided, this will be fetched.",
+)  # noqa
+@click.option(
+    "--slug",
+    help=(
+        "(Optional) External system information identifier. "
+        "If not provided, it will be generated"
+    ),
+)  # noqa
+@click.option(
+    "--partial/--no-partial",
+    default=False,
+    help=(
+        "(Optional) The deposit will be partial, other deposits "
+        "will have to take place to finalize it."
+    ),
+)  # noqa
+@click.option(
+    "--deposit-id",
+    default=None,
+    help="(Optional) Update an existing partial deposit with its identifier",
+)  # noqa
+@click.option(
+    "--replace/--no-replace",
+    default=False,
+    help="(Optional) Update by replacing existing metadata to a deposit",
+)  # noqa
+@click.option(
+    "--url",
+    default="https://deposit.softwareheritage.org",
+    help=(
+        "(Optional) Deposit server api endpoint. By default, "
+        "https://deposit.softwareheritage.org/1"
+    ),
+)  # noqa
+@click.option("--verbose/--no-verbose", default=False, help="Verbose mode")
+@click.option("--name", help="Software name")
+@click.option(
+    "--author",
+    multiple=True,
+    help="Software author(s), this can be repeated as many times"
+    " as there are authors",
+)
+@click.option(
+    "-f",
+    "--format",
+    "output_format",
+    default="logging",
+    type=click.Choice(["logging", "yaml", "json"]),
+    help="Output format results.",
+)
 @click.pass_context
-def upload(ctx,
-           username, password, archive=None, metadata=None,
-           archive_deposit=False, metadata_deposit=False,
-           collection=None, slug=None, partial=False, deposit_id=None,
-           replace=False, url='https://deposit.softwareheritage.org',
-           verbose=False, name=None, author=None, output_format=None):
+def upload(
+    ctx,
+    username,
+    password,
+    archive=None,
+    metadata=None,
+    archive_deposit=False,
+    metadata_deposit=False,
+    collection=None,
+    slug=None,
+    partial=False,
+    deposit_id=None,
+    replace=False,
+    url="https://deposit.softwareheritage.org",
+    verbose=False,
+    name=None,
+    author=None,
+    output_format=None,
+):
     """Software Heritage Public Deposit Client
 
     Create/Update deposit through the command line.
@@ -333,20 +407,32 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            logger.debug('Parsing cli options')
+            logger.debug("Parsing cli options")
             config = client_command_parse_input(
-                username, password, archive, metadata, archive_deposit,
-                metadata_deposit, collection, slug, partial, deposit_id,
-                replace, url, name, author, temp_dir)
+                username,
+                password,
+                archive,
+                metadata,
+                archive_deposit,
+                metadata_deposit,
+                collection,
+                slug,
+                partial,
+                deposit_id,
+                replace,
+                url,
+                name,
+                author,
+                temp_dir,
+            )
         except InputError as e:
-            logger.error('Problem during parsing options: %s', e)
+            logger.error("Problem during parsing options: %s", e)
             sys.exit(1)
 
         if verbose:
-            logger.info("Parsed configuration: %s" % (
-                config, ))
+            logger.info("Parsed configuration: %s" % (config,))
 
-        deposit_id = config['deposit_id']
+        deposit_id = config["deposit_id"]
 
         if deposit_id:
             r = deposit_update(config, logger)
@@ -356,42 +442,49 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
 
 @deposit.command()
-@click.option('--url', default='https://deposit.softwareheritage.org',
-              help="(Optional) Deposit server api endpoint. By default, "
-              "https://deposit.softwareheritage.org/1")
-@click.option('--username', required=True,
-              help="(Mandatory) User's name")
-@click.option('--password', required=True,
-              help="(Mandatory) User's associated password")
-@click.option('--deposit-id', default=None,
-              required=True,
-              help="Deposit identifier.")
-@click.option('-f', '--format', 'output_format', default='logging',
-              type=click.Choice(['logging', 'yaml', 'json']),
-              help='Output format results.')
+@click.option(
+    "--url",
+    default="https://deposit.softwareheritage.org",
+    help="(Optional) Deposit server api endpoint. By default, "
+    "https://deposit.softwareheritage.org/1",
+)
+@click.option("--username", required=True, help="(Mandatory) User's name")
+@click.option(
+    "--password", required=True, help="(Mandatory) User's associated password"
+)
+@click.option("--deposit-id", default=None, required=True, help="Deposit identifier.")
+@click.option(
+    "-f",
+    "--format",
+    "output_format",
+    default="logging",
+    type=click.Choice(["logging", "yaml", "json"]),
+    help="Output format results.",
+)
 @click.pass_context
 def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
 
     """
     url = _url(url)
-    logger.debug('Status deposit')
+    logger.debug("Status deposit")
     try:
         client = _client(url, username, password)
         collection = _collection(client)
     except InputError as e:
-        logger.error('Problem during parsing options: %s', e)
+        logger.error("Problem during parsing options: %s", e)
         sys.exit(1)
 
-    print_result(client.deposit_status(
-        collection=collection, deposit_id=deposit_id),
-                 output_format)
+    print_result(
+        client.deposit_status(collection=collection, deposit_id=deposit_id),
+        output_format,
+    )
 
 
 def print_result(data, output_format):
-    if output_format == 'json':
+    if output_format == "json":
         click.echo(json.dumps(data))
-    elif output_format == 'yaml':
+    elif output_format == "yaml":
         click.echo(yaml.dump(data))
     else:
         logger.info(data)

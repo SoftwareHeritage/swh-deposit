@@ -24,10 +24,11 @@ class SWHServiceDocument(SWHBaseDeposit):
             collections[col.name] = col_uri
 
         context = {
-            'max_upload_size': self.config['max_upload_size'],
-            'accept_packagings': ACCEPT_PACKAGINGS,
-            'accept_content_types': ACCEPT_ARCHIVE_CONTENT_TYPES,
-            'collections': collections,
+            "max_upload_size": self.config["max_upload_size"],
+            "accept_packagings": ACCEPT_PACKAGINGS,
+            "accept_content_types": ACCEPT_ARCHIVE_CONTENT_TYPES,
+            "collections": collections,
         }
-        return render(req, 'deposit/service_document.xml',
-                      context, content_type='application/xml')
+        return render(
+            req, "deposit/service_document.xml", context, content_type="application/xml"
+        )

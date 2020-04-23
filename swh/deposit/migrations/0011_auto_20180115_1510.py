@@ -8,22 +8,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0010_auto_20180110_0953'),
+        ("deposit", "0010_auto_20180110_0953"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='deposit',
-            name='status',
+            model_name="deposit",
+            name="status",
             field=models.TextField(
-                choices=[('partial', 'partial'),
-                         ('expired', 'expired'),
-                         ('deposited', 'deposited'),
-                         ('verified', 'verified'),
-                         ('rejected', 'rejected'),
-                         ('loading', 'loading'),
-                         ('done', 'done'),
-                         ('failed', 'failed')],
-                default='partial'),
+                choices=[
+                    ("partial", "partial"),
+                    ("expired", "expired"),
+                    ("deposited", "deposited"),
+                    ("verified", "verified"),
+                    ("rejected", "rejected"),
+                    ("loading", "loading"),
+                    ("done", "done"),
+                    ("failed", "failed"),
+                ],
+                default="partial",
+            ),
         ),
     ]

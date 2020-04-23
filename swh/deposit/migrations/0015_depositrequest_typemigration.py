@@ -8,7 +8,7 @@ from django.db import migrations, models
 def populate_deposit_type2(apps, schema_editor):
     # We can't import the DepositRequest model directly as it may be a newer
     # version than this migration expects. We use the historical version.
-    DepositRequest = apps.get_model('deposit', 'DepositRequest')
+    DepositRequest = apps.get_model("deposit", "DepositRequest")
 
     for deposit in DepositRequest.objects.all():
         deposit.type2 = deposit.type.name
@@ -18,29 +18,23 @@ def populate_deposit_type2(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0014_auto_20180720_1221'),
+        ("deposit", "0014_auto_20180720_1221"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='depositrequest',
-            name='type2',
+            model_name="depositrequest",
+            name="type2",
             field=models.CharField(
-                choices=[('archive', 'archive'),
-                         ('metadata', 'metadata')],
-                max_length=8, null=True),
+                choices=[("archive", "archive"), ("metadata", "metadata")],
+                max_length=8,
+                null=True,
+            ),
         ),
         migrations.RunPython(populate_deposit_type2),
-        migrations.RemoveField(
-            model_name='depositrequest',
-            name='type',
-        ),
+        migrations.RemoveField(model_name="depositrequest", name="type",),
         migrations.RenameField(
-            model_name='depositrequest',
-            old_name='type2',
-            new_name='type',
+            model_name="depositrequest", old_name="type2", new_name="type",
         ),
-        migrations.DeleteModel(
-            name='DepositRequestType',
-        ),
+        migrations.DeleteModel(name="DepositRequestType",),
     ]
