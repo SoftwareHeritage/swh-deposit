@@ -4,4 +4,4 @@
 
 
 def register():
-    return {'task_modules': ['%s.tasks' % __name__]}
+    return {"task_modules": ["%s.tasks" % __name__]}

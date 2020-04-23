@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2015-2018  The Software Heritage developers
+# Copyright (C) 2015-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -12,7 +12,7 @@ from io import open
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 
@@ -20,9 +20,9 @@ def parse_requirements(*names):
     requirements = []
     for name in names:
         if name:
-            reqf = 'requirements-%s.txt' % name
+            reqf = "requirements-%s.txt" % name
         else:
-            reqf = 'requirements.txt'
+            reqf = "requirements.txt"
 
         if not path.exists(reqf):
             return requirements
@@ -30,37 +30,39 @@ def parse_requirements(*names):
         with open(reqf) as f:
             for line in f.readlines():
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
                 requirements.append(line)
     return requirements
 
 
 setup(
-    name='swh.deposit',
-    description='Software Heritage Deposit Server',
+    name="swh.deposit",
+    description="Software Heritage Deposit Server",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    author='Software Heritage developers',
-    author_email='swh-devel@inria.fr',
-    url='https://forge.softwareheritage.org/source/swh-deposit/',
+    long_description_content_type="text/markdown",
+    python_requires=">=3.7",
+    author="Software Heritage developers",
+    author_email="swh-devel@inria.fr",
+    url="https://forge.softwareheritage.org/source/swh-deposit/",
     packages=find_packages(),
-    install_requires=parse_requirements(None, 'swh'),
-    tests_require=parse_requirements('test'),
-    setup_requires=['vcversioner'],
+    install_requires=parse_requirements(None, "swh"),
+    tests_require=parse_requirements("test"),
+    setup_requires=["vcversioner"],
     extras_require={
-        'testing': parse_requirements('test', 'server', 'swh-server'),
-        'server': parse_requirements('server', 'swh-server')},
+        "testing": parse_requirements("test", "server", "swh-server"),
+        "server": parse_requirements("server", "swh-server"),
+    },
     vcversioner={},
     include_package_data=True,
-    entry_points='''
+    entry_points="""
         [console_scripts]
         swh-deposit=swh.deposit.cli:main
         [swh.cli.subcommands]
         deposit=swh.deposit.cli:deposit
         [swh.workers]
         deposit.worker=swh.deposit.loader:register
-    ''',
+    """,
     classifiers=[
         "Programming Language :: Python :: 3",
         "Intended Audience :: Developers",
@@ -69,8 +71,8 @@ setup(
         "Development Status :: 5 - Production/Stable",
     ],
     project_urls={
-        'Bug Reports': 'https://forge.softwareheritage.org/maniphest',
-        'Funding': 'https://www.softwareheritage.org/donate',
-        'Source': 'https://forge.softwareheritage.org/source/swh-deposit',
+        "Bug Reports": "https://forge.softwareheritage.org/maniphest",
+        "Funding": "https://www.softwareheritage.org/donate",
+        "Source": "https://forge.softwareheritage.org/source/swh-deposit",
     },
 )

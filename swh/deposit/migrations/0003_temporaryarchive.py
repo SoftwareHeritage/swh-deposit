@@ -8,19 +8,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0002_depositrequest_archive'),
+        ("deposit", "0002_depositrequest_archive"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TemporaryArchive',
+            name="TemporaryArchive",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('path', models.TextField()),
-                ('date', models.DateTimeField(auto_now_add=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("path", models.TextField()),
+                ("date", models.DateTimeField(auto_now_add=True)),
             ],
-            options={
-                'db_table': 'deposit_temporary_archive',
-            },
+            options={"db_table": "deposit_temporary_archive",},
         ),
     ]

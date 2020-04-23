@@ -12,8 +12,9 @@ from django.shortcuts import render
 from django.views.generic.base import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns
 
-favicon_view = RedirectView.as_view(url='/static/img/icons/swh-logo-32x32.png',
-                                    permanent=True)
+favicon_view = RedirectView.as_view(
+    url="/static/img/icons/swh-logo-32x32.png", permanent=True
+)
 
 
 def default_view(req):
@@ -21,10 +22,10 @@ def default_view(req):
 
 
 urlpatterns = [
-    url(r'^favicon\.ico$', favicon_view),
-    url(r'^1/', include('swh.deposit.api.urls')),
-    url(r'^1/private/', include('swh.deposit.api.private.urls')),
-    url(r'^$', default_view, name='home'),
+    url(r"^favicon\.ico$", favicon_view),
+    url(r"^1/", include("swh.deposit.api.urls")),
+    url(r"^1/private/", include("swh.deposit.api.private.urls")),
+    url(r"^$", default_view, name="home"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

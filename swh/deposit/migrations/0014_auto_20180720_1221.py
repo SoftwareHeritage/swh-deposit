@@ -8,23 +8,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0013_depositrequest_raw_metadata'),
+        ("deposit", "0013_depositrequest_raw_metadata"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='deposit',
-            name='swh_anchor_id',
+            model_name="deposit",
+            name="swh_anchor_id",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='deposit',
-            name='swh_anchor_id_context',
+            model_name="deposit",
+            name="swh_anchor_id_context",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='deposit',
-            name='swh_id_context',
+            model_name="deposit",
+            name="swh_id_context",
             field=models.TextField(blank=True, null=True),
         ),
     ]

@@ -9,15 +9,15 @@ import swh.deposit.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0001_initial'),
+        ("deposit", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='depositrequest',
-            name='archive',
+            model_name="depositrequest",
+            name="archive",
             field=models.FileField(
-                null=True,
-                upload_to=swh.deposit.models.client_directory_path),
+                null=True, upload_to=swh.deposit.models.client_directory_path
+            ),
         ),
     ]

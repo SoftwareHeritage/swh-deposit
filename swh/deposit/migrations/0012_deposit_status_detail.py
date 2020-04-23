@@ -9,13 +9,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0011_auto_20180115_1510'),
+        ("deposit", "0011_auto_20180115_1510"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='deposit',
-            name='status_detail',
+            model_name="deposit",
+            name="status_detail",
             field=django.contrib.postgres.fields.jsonb.JSONField(null=True),
         ),
     ]

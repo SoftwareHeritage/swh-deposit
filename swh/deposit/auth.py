@@ -24,20 +24,18 @@ def convert_response(request, content):
     """
     from json import loads
 
-    content = loads(content.decode('utf-8'))
-    detail = content.get('detail')
+    content = loads(content.decode("utf-8"))
+    detail = content.get("detail")
     if detail:
-        verbose_description = 'API is protected by basic authentication'
+        verbose_description = "API is protected by basic authentication"
     else:
-        detail = 'API is protected by basic authentication'
+        detail = "API is protected by basic authentication"
         verbose_description = None
 
     response = make_error_response(
-        request,
-        UNAUTHORIZED,
-        summary=detail,
-        verbose_description=verbose_description)
-    response['WWW-Authenticate'] = 'Basic realm=""'
+        request, UNAUTHORIZED, summary=detail, verbose_description=verbose_description
+    )
+    response["WWW-Authenticate"] = 'Basic realm=""'
 
     return response
 
@@ -49,6 +47,7 @@ class WrapBasicAuthenticationResponseMiddleware:
        This is to be installed in django's settings.py module.
 
     """
+
     def __init__(self, get_response):
         super().__init__()
         self.get_response = get_response
@@ -57,8 +56,8 @@ class WrapBasicAuthenticationResponseMiddleware:
         response = self.get_response(request)
 
         if response.status_code is status.HTTP_401_UNAUTHORIZED:
-            content_type = response._headers.get('content-type')
-            if content_type == ('Content-Type', 'application/json'):
+            content_type = response._headers.get("content-type")
+            if content_type == ("Content-Type", "application/json"):
                 return convert_response(request, response.content)
 
         return response

@@ -9,7 +9,9 @@ import pytest
 from django.urls import reverse
 
 from swh.deposit.config import (
-    DEPOSIT_STATUS_DEPOSITED, COL_IRI, DEPOSIT_STATUS_VERIFIED
+    DEPOSIT_STATUS_DEPOSITED,
+    COL_IRI,
+    DEPOSIT_STATUS_VERIFIED,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
@@ -55,24 +57,25 @@ def ready_deposit_only_metadata(partial_deposit_only_metadata):
 def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
-    data = b'some data which is clearly not a zip file'
+    data = b"some data which is clearly not a zip file"
     md5sum = hashlib.md5(data).hexdigest()
 
     # when
     response = authenticated_client.post(
         url,
-        content_type='application/zip',  # as zip
+        content_type="application/zip",  # as zip
         data=data,
         # + headers
         CONTENT_LENGTH=len(data),
         # other headers needs HTTP_ prefix to be taken into account
-        HTTP_SLUG='external-id-invalid',
+        HTTP_SLUG="external-id-invalid",
         HTTP_CONTENT_MD5=md5sum,
-        HTTP_PACKAGING='http://purl.org/net/sword/package/SimpleZip',
-        HTTP_CONTENT_DISPOSITION='attachment; filename=filename0')
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
+    )
 
     response_content = parse_xml(response.content)
-    deposit_id = int(response_content['deposit_id'])
+    deposit_id = int(response_content["deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     deposit.status = DEPOSIT_STATUS_DEPOSITED
     deposit.save()

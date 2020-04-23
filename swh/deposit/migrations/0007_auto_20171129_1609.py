@@ -8,13 +8,11 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('deposit', '0006_depositclient_url'),
+        ("deposit", "0006_depositclient_url"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='depositclient',
-            name='url',
-            field=models.TextField(null=False),
+            model_name="depositclient", name="url", field=models.TextField(null=False),
         ),
     ]

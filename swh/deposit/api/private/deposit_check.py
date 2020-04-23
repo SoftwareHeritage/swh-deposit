@@ -21,25 +21,38 @@ from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
 from ...config import ARCHIVE_TYPE
 from ...models import Deposit
 
-MANDATORY_FIELDS_MISSING = 'Mandatory fields are missing'
-ALTERNATE_FIELDS_MISSING = 'Mandatory alternate fields are missing'
-MANDATORY_ARCHIVE_UNREADABLE = 'At least one of its associated archives is not readable'  # noqa
-MANDATORY_ARCHIVE_INVALID = 'Mandatory archive is invalid (i.e contains only one archive)'  # noqa
-MANDATORY_ARCHIVE_UNSUPPORTED = 'Mandatory archive type is not supported'
-MANDATORY_ARCHIVE_MISSING = 'Deposit without archive is rejected'
+MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
+ALTERNATE_FIELDS_MISSING = "Mandatory alternate fields are missing"
+MANDATORY_ARCHIVE_UNREADABLE = (
+    "At least one of its associated archives is not readable"  # noqa
+)
+MANDATORY_ARCHIVE_INVALID = (
+    "Mandatory archive is invalid (i.e contains only one archive)"  # noqa
+)
+MANDATORY_ARCHIVE_UNSUPPORTED = "Mandatory archive type is not supported"
+MANDATORY_ARCHIVE_MISSING = "Deposit without archive is rejected"
 
 ARCHIVE_EXTENSIONS = [
-    'zip', 'tar', 'tar.gz', 'xz', 'tar.xz', 'bz2',
-    'tar.bz2', 'Z', 'tar.Z', 'tgz', '7z'
+    "zip",
+    "tar",
+    "tar.gz",
+    "xz",
+    "tar.xz",
+    "bz2",
+    "tar.bz2",
+    "Z",
+    "tar.Z",
+    "tgz",
+    "7z",
 ]
 
-PATTERN_ARCHIVE_EXTENSION = re.compile(
-    r'.*\.(%s)$' % '|'.join(ARCHIVE_EXTENSIONS))
+PATTERN_ARCHIVE_EXTENSION = re.compile(r".*\.(%s)$" % "|".join(ARCHIVE_EXTENSIONS))
 
 
 def known_archive_format(filename):
-    return any(filename.endswith(t) for t in
-               chain(*(x[1] for x in get_unpack_formats())))
+    return any(
+        filename.endswith(t) for t in chain(*(x[1] for x in get_unpack_formats()))
+    )
 
 
 class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
@@ -48,6 +61,7 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
     Only GET is supported.
 
     """
+
     def _check_deposit_archives(self, deposit):
         """Given a deposit, check each deposit request of type archive.
 
@@ -59,29 +73,21 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
             are ok, (False, <detailed-error>) otherwise.
 
         """
-        requests = list(self._deposit_requests(
-            deposit, request_type=ARCHIVE_TYPE))
+        requests = list(self._deposit_requests(deposit, request_type=ARCHIVE_TYPE))
         if len(requests) == 0:  # no associated archive is refused
-            return False, {
-                'archive': [{
-                    'summary': MANDATORY_ARCHIVE_MISSING,
-                }]
-            }
+            return False, {"archive": [{"summary": MANDATORY_ARCHIVE_MISSING,}]}
 
         errors = []
         for archive_request in requests:
             check, error_message = self._check_archive(archive_request)
             if not check:
-                errors.append({
-                    'summary': error_message,
-                    'fields': [archive_request.id]
-                })
+                errors.append(
+                    {"summary": error_message, "fields": [archive_request.id]}
+                )
 
         if not errors:
             return True, None
-        return False, {
-            'archive': errors
-        }
+        return False, {"archive": errors}
 
     def _check_archive(self, archive_request):
         """Check that a deposit associated archive is ok:
@@ -136,10 +142,10 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
 
         """
         required_fields = {
-            'author': False,
+            "author": False,
         }
         alternate_fields = {
-            ('name', 'title'): False,  # alternate field, at least one
+            ("name", "title"): False,  # alternate field, at least one
             # of them must be present
         }
 
@@ -155,25 +161,20 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
                         continue
 
         mandatory_result = [k for k, v in required_fields.items() if not v]
-        optional_result = [
-            ' or '.join(k) for k, v in alternate_fields.items() if not v]
+        optional_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
 
         if mandatory_result == [] and optional_result == []:
             return True, None
         detail = []
         if mandatory_result != []:
-            detail.append({
-                'summary': MANDATORY_FIELDS_MISSING,
-                'fields': mandatory_result
-            })
+            detail.append(
+                {"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}
+            )
         if optional_result != []:
-            detail.append({
-                'summary': ALTERNATE_FIELDS_MISSING,
-                'fields': optional_result,
-            })
-        return False, {
-            'metadata': detail
-        }
+            detail.append(
+                {"summary": ALTERNATE_FIELDS_MISSING, "fields": optional_result,}
+            )
+        return False, {"metadata": detail}
 
     def process_get(self, req, collection_name, deposit_id):
         """Build a unique tarball from the multiple received and stream that
@@ -208,22 +209,22 @@ class SWHChecksDeposit(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
             deposit.status = DEPOSIT_STATUS_REJECTED
             deposit.status_detail = problems
             response = {
-                'status': deposit.status,
-                'details': deposit.status_detail,
+                "status": deposit.status,
+                "details": deposit.status_detail,
             }
         else:
             deposit.status = DEPOSIT_STATUS_VERIFIED
             response = {
-                'status': deposit.status,
+                "status": deposit.status,
             }
-            if not deposit.load_task_id and self.config['checks']:
+            if not deposit.load_task_id and self.config["checks"]:
                 url = deposit.origin_url
                 task = create_oneshot_task_dict(
-                    'load-deposit', url=url, deposit_id=deposit.id,
-                    retries_left=3)
-                load_task_id = self.scheduler.create_tasks([task])[0]['id']
+                    "load-deposit", url=url, deposit_id=deposit.id, retries_left=3
+                )
+                load_task_id = self.scheduler.create_tasks([task])[0]["id"]
                 deposit.load_task_id = load_task_id
 
         deposit.save()
 
-        return status.HTTP_200_OK, json.dumps(response), 'application/json'
+        return status.HTTP_200_OK, json.dumps(response), "application/json"

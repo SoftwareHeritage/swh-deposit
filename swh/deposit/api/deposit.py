@@ -21,17 +21,19 @@ class SWHDeposit(SWHPostDepositAPI):
     HTTP verbs supported: POST
 
     """
-    parser_classes = (SWHMultiPartParser,
-                      SWHFileUploadZipParser,
-                      SWHFileUploadTarParser,
-                      SWHAtomEntryParser)
 
-    def additional_checks(self, req, headers, collection_name,
-                          deposit_id=None):
-        slug = headers['slug']
+    parser_classes = (
+        SWHMultiPartParser,
+        SWHFileUploadZipParser,
+        SWHFileUploadTarParser,
+        SWHAtomEntryParser,
+    )
+
+    def additional_checks(self, req, headers, collection_name, deposit_id=None):
+        slug = headers["slug"]
         if not slug:
-            msg = 'Missing SLUG header in request'
-            verbose_description = 'Provide in the SLUG header one identifier, for example the url pointing to the resource you are depositing.'  # noqa
+            msg = "Missing SLUG header in request"
+            verbose_description = "Provide in the SLUG header one identifier, for example the url pointing to the resource you are depositing."  # noqa
             return make_error_dict(BAD_REQUEST, msg, verbose_description)
 
         return {}
@@ -85,7 +87,7 @@ class SWHDeposit(SWHPostDepositAPI):
         assert deposit_id is None
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
             data = self._binary_upload(req, headers, collection_name)
-        elif req.content_type.startswith('multipart/'):
+        elif req.content_type.startswith("multipart/"):
             data = self._multipart_upload(req, headers, collection_name)
         else:
             data = self._atom_entry(req, headers, collection_name)
