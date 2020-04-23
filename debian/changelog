@@ -1,3 +1,21 @@
+swh-deposit (0.0.82-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.82     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2020-04-23 16:40:34
+    +0200)
+  * Upstream changes:     - v0.0.82     - deposit_read: Simplify api to
+    return only relevant deposit information     - setup: Update the
+    minimum required runtime python3 version     - spec: reference SWHID
+    using explicit anchors     - Update type annotations and signatures
+    to match djangorestframework-stubs     - pytest.ini: Avoid loading
+    flask plugin to prevent fixture name clash     - Add a
+    pyproject.toml file to target py37 for black     - Enable black     -
+    tests: Adapt init_sentry api change call with environment parameter
+    - docs: Fix sphinx warnings     - tests/gunicorn_config: Fix tests
+    after recent changes in swh-core
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 23 Apr 2020 14:45:49 +0000
+
 swh-deposit (0.0.81-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.81     - (tagged by David Douard
