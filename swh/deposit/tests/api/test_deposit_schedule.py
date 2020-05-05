@@ -76,9 +76,11 @@ def test_add_deposit_schedules_check(
     task = tasks[0]
 
     assert timestamp_before_call <= task.pop("next_run") <= timestamp_after_call
-    check_url = f"http://testserver/1/private/test/{deposit_id}/check/"
     assert task == {
-        "arguments": {"args": [], "kwargs": {"deposit_check_url": check_url,},},
+        "arguments": {
+            "args": [],
+            "kwargs": {"collection": "test", "deposit_id": int(deposit_id),},
+        },
         "current_interval": datetime.timedelta(days=1),
         "id": 1,
         "policy": "oneshot",
