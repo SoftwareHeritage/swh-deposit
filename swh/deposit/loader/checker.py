@@ -7,25 +7,38 @@ import logging
 
 from typing import Mapping
 
+from swh.core.config import SWHConfig
+
 from swh.deposit.client import PrivateApiDepositClient
 
 
 logger = logging.getLogger(__name__)
 
 
-class DepositChecker:
+class DepositChecker(SWHConfig):
     """Deposit checker implementation.
 
     Trigger deposit's checks through the private api.
 
     """
 
-    def __init__(self, client=None):
-        super().__init__()
-        self.client = client if client else PrivateApiDepositClient()
+    CONFIG_BASE_FILENAME = "deposit/checker"
 
-    def check(self, deposit_check_url: str) -> Mapping[str, str]:
+    DEFAULT_CONFIG = {
+        "deposit": ("dict", {"url": "http://localhost:5006/1/private/", "auth": {},})
+    }
+
+    def __init__(self, config=None):
+        super().__init__()
+        if config is None:
+            self.config = self.parse_config_file()
+        else:
+            self.config = config
+        self.client = PrivateApiDepositClient(config=self.config["deposit"])
+
+    def check(self, collection: str, deposit_id: str) -> Mapping[str, str]:
         status = None
+        deposit_check_url = f"/{collection}/{deposit_id}/check/"
         try:
             r = self.client.check(deposit_check_url)
             status = "eventful" if r == "verified" else "failed"

@@ -118,6 +118,7 @@ swh/deposit/tests/api/test_deposit_private_check.py
 swh/deposit/tests/api/test_deposit_private_read_archive.py
 swh/deposit/tests/api/test_deposit_private_read_metadata.py
 swh/deposit/tests/api/test_deposit_private_update_status.py
+swh/deposit/tests/api/test_deposit_schedule.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
 swh/deposit/tests/api/test_parser.py
