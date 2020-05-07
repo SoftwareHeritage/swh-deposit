@@ -3,16 +3,18 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Mapping
+
 from celery import shared_task
 
 from swh.deposit.loader.checker import DepositChecker
 
 
 @shared_task(name=__name__ + ".ChecksDepositTsk")
-def check_deposit(deposit_check_url):
+def check_deposit(collection: str, deposit_id: str) -> Mapping[str, str]:
     """Check a deposit's status
 
     Args: see :func:`DepositChecker.check`.
     """
     checker = DepositChecker()
-    return checker.check(deposit_check_url)
+    return checker.check(collection, deposit_id)
