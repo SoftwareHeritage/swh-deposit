@@ -44,8 +44,15 @@ def swh_config(tmp_path, swh_storage_postgresql, monkeypatch):
 
 
 @pytest.fixture
-def deposit_checker(swh_config):
-    return DepositChecker()
+def deposit_checker():
+    return DepositChecker(
+        config={
+            "deposit": {
+                "url": "https://deposit.softwareheritage.org/1/private/",
+                "auth": {},
+            }
+        }
+    )
 
 
 @pytest.fixture

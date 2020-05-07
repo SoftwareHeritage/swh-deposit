@@ -31,7 +31,6 @@ from ..config import (
     STATE_IRI,
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_PARTIAL,
-    PRIVATE_CHECK_DEPOSIT,
     DEPOSIT_STATUS_LOAD_SUCCESS,
     ARCHIVE_TYPE,
     METADATA_TYPE,
@@ -195,14 +194,12 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
 
         if self.config["checks"]:
             deposit.save()  # needed to have a deposit id
-            args = [deposit.collection.name, deposit.id]
             scheduler = self.scheduler
             if deposit.status == DEPOSIT_STATUS_DEPOSITED and not deposit.check_task_id:
-                check_url = request.build_absolute_uri(
-                    reverse(PRIVATE_CHECK_DEPOSIT, args=args)
-                )
                 task = create_oneshot_task_dict(
-                    "check-deposit", deposit_check_url=check_url
+                    "check-deposit",
+                    collection=deposit.collection.name,
+                    deposit_id=deposit.id,
                 )
                 check_task_id = scheduler.create_tasks([task])[0]["id"]
                 deposit.check_task_id = check_task_id
