@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 
 @pytest.mark.db
-@patch("swh.deposit.loader.checker.DepositChecker.check")
-def test_deposit_check(checker, swh_config, swh_app, celery_session_worker):
+def test_deposit_check(mocker, swh_config, swh_app, celery_session_worker):
+    checker = mocker.patch("swh.deposit.loader.checker.DepositChecker.check")
     checker.return_value = {"status": "uneventful"}
 
     res = swh_app.send_task(
