@@ -1,4 +1,4 @@
-# Copyright (C) 2019 The Software Heritage developers
+# Copyright (C) 2019-2020 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -30,6 +30,19 @@ def slug():
 
 @pytest.fixture
 def client_mock(mocker, slug):
+    """A succesfull deposit client with hard-coded default values
+
+    """
+    mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
+    mock_client = MagicMock()
+    mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
+    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
+    mock_client.deposit_create.return_value = '{"foo": "bar"}'
+    return mock_client
+
+
+@pytest.fixture
+def client_mock_down(mocker, slug):
     mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
     mock_client = MagicMock()
     mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
@@ -64,6 +77,67 @@ def test_collection_ok():
     collection_name = _collection(mock_client)
 
     assert collection_name == "softcol"
+
+
+def test_deposit_with_server_ok_backend_down(
+    sample_archive, mocker, caplog, client_mock, slug, tmp_path
+):
+    """ Deposit failure due to maintenance down time should be explicit in error msg
+    """
+    metadata_path = os.path.join(tmp_path, "metadata.xml")
+    mocker.patch(
+        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        return_value=contextlib.nullcontext(str(tmp_path)),
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url",
+            "mock://deposit.swh/1",
+            "--username",
+            TEST_USER["username"],
+            "--password",
+            TEST_USER["password"],
+            "--name",
+            "test-project",
+            "--archive",
+            sample_archive["path"],
+            "--author",
+            "Jane Doe",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert result.output == ""
+    assert caplog.record_tuples == [
+        ("swh.deposit.cli.client", logging.INFO, '{"foo": "bar"}'),
+    ]
+
+    client_mock.deposit_create.assert_called_once_with(
+        archive=sample_archive["path"],
+        collection="softcol",
+        in_progress=False,
+        metadata=metadata_path,
+        slug=slug,
+    )
+
+    with open(metadata_path) as fd:
+        assert (
+            fd.read()
+            == f"""\
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" \
+xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+\t<codemeta:name>test-project</codemeta:name>
+\t<codemeta:identifier>{slug}</codemeta:identifier>
+\t<codemeta:author>
+\t\t<codemeta:name>Jane Doe</codemeta:name>
+\t</codemeta:author>
+</entry>"""
+        )
 
 
 def test_single_minimal_deposit(
