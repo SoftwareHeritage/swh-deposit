@@ -14,12 +14,21 @@ import xmltodict
 import logging
 
 from abc import ABCMeta, abstractmethod
+from typing import Any, Dict
 from urllib.parse import urljoin
 
 from swh.core.config import SWHConfig
 
 
 logger = logging.getLogger(__name__)
+
+
+class MaintenanceError(ValueError):
+    """Informational maintenance error exception
+
+    """
+
+    pass
 
 
 def _parse(stream, encoding="utf-8"):
@@ -277,8 +286,14 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
         """
         return self.do(method, url)
 
-    def execute(self, *args, **kwargs):
+    def execute(self, *args, **kwargs) -> Dict[str, Any]:
         """Main endpoint to prepare and execute the http query to the api.
+
+        Raises:
+            MaintenanceError if some api maintenance is happening.
+
+        Returns:
+            Dict of computed api data
 
         """
         url = self.compute_url(*args, **kwargs)
@@ -304,6 +319,12 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
                 error = self.parse_result_error(r.text)
                 empty = self.empty_result
                 error.update(empty)
+                if r.status_code == 503:
+                    summary = error.get("summary")
+                    detail = error.get("sword:verboseDescription")
+                    # Maintenance error
+                    if summary and detail:
+                        raise MaintenanceError(f"{summary}: {detail}")
                 error.update(
                     {"status": r.status_code,}
                 )
