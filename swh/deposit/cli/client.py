@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,7 +14,7 @@ import yaml
 import click
 import xmltodict
 
-from swh.deposit.client import PublicApiDepositClient
+from swh.deposit.client import PublicApiDepositClient, MaintenanceError
 from swh.deposit.cli import deposit
 
 
@@ -161,7 +161,8 @@ def client_command_parse_input(
         errors are already dealt with by the underlying api client.
 
     Raises:
-        InputError explaining the issue
+        InputError explaining the user input related issue
+        MaintenanceError explaining the api status
 
     Returns:
         dict with the following keys:
@@ -428,6 +429,9 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         except InputError as e:
             logger.error("Problem during parsing options: %s", e)
             sys.exit(1)
+        except MaintenanceError as e:
+            logger.error(e)
+            sys.exit(1)
 
         if verbose:
             logger.info("Parsed configuration: %s" % (config,))
@@ -473,6 +477,9 @@ def status(ctx, url, username, password, deposit_id, output_format):
         collection = _collection(client)
     except InputError as e:
         logger.error("Problem during parsing options: %s", e)
+        sys.exit(1)
+    except MaintenanceError as e:
+        logger.error(e)
         sys.exit(1)
 
     print_result(
