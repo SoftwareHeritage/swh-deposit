@@ -23,10 +23,11 @@ def custom_exception_handler(exc: APIException, context: Dict) -> Optional[Respo
         status = "Database backend maintenance"
         detail = "Service temporarily unavailable, try again later."
         data = f"""<?xml version="1.0" encoding="utf-8"?>
-<api>
-  <status>{status}</status>
-  <detail>{detail}</detail>
-</api>
+<sword:error xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/">
+    <summary>{status}</summary>
+    <sword:verboseDescription>{detail}</sword:verboseDescription>
+</sword:error>
 """
         return Response(data, status=503, content_type="application/xml")
 

@@ -21,17 +21,20 @@ def test_custom_exception_handler_operational_error(mocker):
 
     assert response is not None
     assert response.content_type == "application/xml"
+    assert response.status_code == 503
+
+    status = "Database backend maintenance"
+    detail = "Service temporarily unavailable, try again later."
     assert (
         response.data
-        == """<?xml version="1.0" encoding="utf-8"?>
-<api>
-  <status>Database backend maintenance</status>
-  <detail>Service temporarily unavailable, try again later.</detail>
-</api>
+        == f"""<?xml version="1.0" encoding="utf-8"?>
+<sword:error xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/">
+    <summary>{status}</summary>
+    <sword:verboseDescription>{detail}</sword:verboseDescription>
+</sword:error>
 """
     )
-
-    assert response.status_code == 503
 
 
 def test_custom_exception_handler_default_behavior_maintained(mocker):
