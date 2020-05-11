@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 from click.testing import CliRunner
 import pytest
 
-from swh.deposit.client import PublicApiDepositClient
+from swh.deposit.client import PublicApiDepositClient, MaintenanceError
 from swh.deposit.cli.client import generate_slug, _url, _client, _collection, InputError
 from swh.deposit.cli import deposit as cli
 from ..conftest import TEST_USER
@@ -42,12 +42,16 @@ def client_mock(mocker, slug):
 
 
 @pytest.fixture
-def client_mock_down(mocker, slug):
+def client_mock_api_down(mocker, slug):
+    """A mock client whose connection with api fails due to maintenance issue
+
+    """
     mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
     mock_client = MagicMock()
     mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
-    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
-    mock_client.deposit_create.return_value = '{"foo": "bar"}'
+    mock_client.service_document.side_effect = MaintenanceError(
+        "Database backend maintenance: Temporarily unavailable, try again later."
+    )
     return mock_client
 
 
@@ -79,17 +83,19 @@ def test_collection_ok():
     assert collection_name == "softcol"
 
 
-def test_deposit_with_server_ok_backend_down(
-    sample_archive, mocker, caplog, client_mock, slug, tmp_path
-):
-    """ Deposit failure due to maintenance down time should be explicit in error msg
-    """
-    metadata_path = os.path.join(tmp_path, "metadata.xml")
-    mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
-        return_value=contextlib.nullcontext(str(tmp_path)),
-    )
+def test_collection_ko_because_downtime():
+    mock_client = MagicMock()
+    mock_client.service_document.side_effect = MaintenanceError("downtime")
+    with pytest.raises(MaintenanceError, match="downtime"):
+        _collection(mock_client)
 
+
+def test_deposit_with_server_down_for_maintenance(
+    sample_archive, mocker, caplog, client_mock_api_down, slug, tmp_path
+):
+    """ Deposit failure due to maintenance down time should be explicit
+
+    """
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -110,34 +116,17 @@ def test_deposit_with_server_ok_backend_down(
         ],
     )
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 1, result.output
     assert result.output == ""
     assert caplog.record_tuples == [
-        ("swh.deposit.cli.client", logging.INFO, '{"foo": "bar"}'),
+        (
+            "swh.deposit.cli.client",
+            logging.ERROR,
+            "Database backend maintenance: Temporarily unavailable, try again later.",
+        )
     ]
 
-    client_mock.deposit_create.assert_called_once_with(
-        archive=sample_archive["path"],
-        collection="softcol",
-        in_progress=False,
-        metadata=metadata_path,
-        slug=slug,
-    )
-
-    with open(metadata_path) as fd:
-        assert (
-            fd.read()
-            == f"""\
-<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom" \
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-\t<codemeta:name>test-project</codemeta:name>
-\t<codemeta:identifier>{slug}</codemeta:identifier>
-\t<codemeta:author>
-\t\t<codemeta:name>Jane Doe</codemeta:name>
-\t</codemeta:author>
-</entry>"""
-        )
+    client_mock_api_down.service_document.assert_called_once_with()
 
 
 def test_single_minimal_deposit(
