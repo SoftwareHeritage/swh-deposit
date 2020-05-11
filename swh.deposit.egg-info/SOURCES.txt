@@ -25,6 +25,7 @@ swh/deposit/auth.py
 swh/deposit/client.py
 swh/deposit/config.py
 swh/deposit/errors.py
+swh/deposit/exception.py
 swh/deposit/gunicorn_config.py
 swh/deposit/manage.py
 swh/deposit/models.py
@@ -121,6 +122,7 @@ swh/deposit/tests/api/test_deposit_private_update_status.py
 swh/deposit/tests/api/test_deposit_schedule.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
+swh/deposit/tests/api/test_exception.py
 swh/deposit/tests/api/test_parser.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/api/data/atom/codemeta-sample.xml
