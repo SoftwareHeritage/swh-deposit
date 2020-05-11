@@ -6,13 +6,15 @@
 from typing import Dict, Optional
 
 from rest_framework.exceptions import APIException
-from rest_framework.response import Response
 from rest_framework.views import exception_handler
+from django.http import HttpResponse
 
 from django.db.utils import OperationalError
 
 
-def custom_exception_handler(exc: APIException, context: Dict) -> Optional[Response]:
+def custom_exception_handler(
+    exc: APIException, context: Dict
+) -> Optional[HttpResponse]:
     """Custom deposit exception handler to ensure consistent xml output
 
     """
@@ -28,7 +30,9 @@ def custom_exception_handler(exc: APIException, context: Dict) -> Optional[Respo
     <summary>{status}</summary>
     <sword:verboseDescription>{detail}</sword:verboseDescription>
 </sword:error>
-"""
-        return Response(data, status=503, content_type="application/xml")
+""".encode(
+            "utf-8"
+        )
+        return HttpResponse(data, status=503, content_type="application/xml")
 
     return response
