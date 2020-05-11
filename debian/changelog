@@ -1,3 +1,14 @@
+swh-deposit (0.0.86-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.86     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-05-11 18:04:03
+    +0200)
+  * Upstream changes:     - v0.0.86     - origin/master Make deposit
+    client deal properly with maintenance issues     - maintenance
+    exception: Make the exception appear as raw content
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 11 May 2020 16:07:28 +0000
+
 swh-deposit (0.0.85-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.85     - (tagged by Antoine R. Dumont
