@@ -58,7 +58,7 @@ Sample response
             <deposit_status>done</deposit_status>
             <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
             <deposit_swh_id>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9</deposit_swh_id>
-            <deposit_swh_id_context>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/</deposit_swh_id>
+            <deposit_swh_id_context>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/;visit=swh:1:snp:68c0d26104d47e278dd6be07ed61fafb561d0d20;anchor=swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;path=/</deposit_swh_id>
             <deposit_swh_anchor_id>swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb</deposit_swh_id>
             <deposit_swh_anchor_id_context>swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;origin=https://forge.softwareheritage.org/source/jesuisgpl/</deposit_swh_id>
         </entry>
