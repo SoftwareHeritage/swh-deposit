@@ -1,8 +1,13 @@
-swh-deposit (0.0.86-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.0.87-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.87     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-05-15 12:48:31
+    +0200)
+  * Upstream changes:     - v0.0.87     - Migrate deposit SWHIDs (data)
+    to the new specification     - Update deposit swhid to respect the
+    latest specification update     - Fix typos
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 11 May 2020 16:09:51 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 15 May 2020 10:52:33 +0000
 
 swh-deposit (0.0.86-1~swh1) unstable-swh; urgency=medium
 
