@@ -11,7 +11,7 @@ djangorestframework
 swh.core[http]
 swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
-swh.model>=0.0.26
+swh.model>=0.1.0
 
 [testing]
 pytest
@@ -27,4 +27,4 @@ djangorestframework
 swh.core[http]
 swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
-swh.model>=0.0.26
+swh.model>=0.1.0

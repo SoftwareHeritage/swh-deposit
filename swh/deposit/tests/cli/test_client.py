@@ -30,7 +30,7 @@ def slug():
 
 @pytest.fixture
 def client_mock(mocker, slug):
-    """A succesfull deposit client with hard-coded default values
+    """A successful deposit client with hard-coded default values
 
     """
     mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
