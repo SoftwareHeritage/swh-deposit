@@ -27,7 +27,7 @@ DEBUG = False
 config_file = os.environ.get("SWH_CONFIG_FILENAME")
 if not config_file:
     raise ValueError(
-        "Production: SWH_CONFIG_FILENANE must be set to the"
+        "Production: SWH_CONFIG_FILENAME must be set to the"
         " configuration file needed!"
     )
 
