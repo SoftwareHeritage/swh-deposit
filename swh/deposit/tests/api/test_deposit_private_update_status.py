@@ -61,8 +61,6 @@ def test_update_deposit_status_success_with_info(
         expected_swh_id_context = (
             f"{dir_id};origin={origin_url};" + f"visit={snp_id};anchor={rev_id};path=/"
         )
-        expected_swh_anchor_id = rev_id
-        expected_swh_anchor_id_context = f"{rev_id};origin={origin_url}"
 
         response = authenticated_client.put(
             url, content_type="application/json", data=json.dumps(full_body_info),
@@ -74,8 +72,6 @@ def test_update_deposit_status_success_with_info(
         assert deposit.status == expected_status
         assert deposit.swh_id == expected_swh_id
         assert deposit.swh_id_context == expected_swh_id_context
-        assert deposit.swh_anchor_id == expected_swh_anchor_id
-        assert deposit.swh_anchor_id_context == expected_swh_anchor_id_context
 
         # Reset deposit
         deposit = ready_deposit_verified
@@ -104,8 +100,6 @@ def test_update_deposit_status_rejected_with_info(
 
         assert deposit.swh_id is None
         assert deposit.swh_id_context is None
-        assert deposit.swh_anchor_id is None
-        assert deposit.swh_anchor_id_context is None
 
         # Reset status
         deposit = ready_deposit_verified
