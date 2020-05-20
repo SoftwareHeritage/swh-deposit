@@ -1,3 +1,13 @@
+swh-deposit (0.0.89-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.89     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-05-20 17:45:23
+    +0200)
+  * Upstream changes:     - v0.0.89     - private/deposit_list: Allow
+    exclusion patterns from listing
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 20 May 2020 15:49:10 +0000
+
 swh-deposit (0.0.88-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.88     - (tagged by Antoine R. Dumont
