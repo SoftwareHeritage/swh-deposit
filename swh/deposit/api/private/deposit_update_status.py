@@ -97,12 +97,6 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
                     "path": "/",
                 },
             )
-
-            # backward compatibility for now
-            deposit.swh_anchor_id = rev_id
-            deposit.swh_anchor_id_context = persistent_identifier(
-                REVISION, revision_id, metadata={"origin": origin_url}
-            )
         else:  # rejected
             deposit.status = status
 

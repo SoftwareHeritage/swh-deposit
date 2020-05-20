@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -261,8 +261,6 @@ def adm_deposit_reschedule(ctx, deposit_id):
     # Reset the deposit's state
     deposit.swh_id = None
     deposit.swh_id_context = None
-    deposit.swh_anchor_id = None
-    deposit.swh_anchor_id_context = None
     deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
 

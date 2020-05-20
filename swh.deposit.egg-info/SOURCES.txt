@@ -74,6 +74,7 @@ swh/deposit/migrations/0015_depositrequest_typemigration.py
 swh/deposit/migrations/0016_auto_20190507_1408.py
 swh/deposit/migrations/0017_auto_20190925_0906.py
 swh/deposit/migrations/0018_migrate_swhids.py
+swh/deposit/migrations/0019_auto_20200519_1035.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py

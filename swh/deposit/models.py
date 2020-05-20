@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -127,8 +127,6 @@ class Deposit(models.Model):
     # SWH's loading result identifier
     swh_id = models.TextField(blank=True, null=True)
     swh_id_context = models.TextField(blank=True, null=True)
-    swh_anchor_id = models.TextField(blank=True, null=True)
-    swh_anchor_id_context = models.TextField(blank=True, null=True)
     # Deposit's status regarding loading
     status = models.TextField(choices=DEPOSIT_STATUS, default=DEPOSIT_STATUS_PARTIAL)
     status_detail = JSONField(null=True)
