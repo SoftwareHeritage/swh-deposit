@@ -133,6 +133,11 @@ def check_archive(archive_name: str, archive_name_to_check: str):
             archive_name_to_check
 
     """
+    ARCHIVE_FILEPATH_PATTERN = re.compile(
+        r"client_[0-9].*/[0-9]{8}-[0-9]{6}\.[0-9]{6}/[a-zA-Z0-9.].*"
+    )
+    assert ARCHIVE_FILEPATH_PATTERN.match(archive_name_to_check)
+
     if "." in archive_name:
         filename, extension = archive_name.split(".")
         pattern = re.compile(".*/%s.*\\.%s" % (filename, extension))

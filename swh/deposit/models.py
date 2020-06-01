@@ -7,6 +7,7 @@
 # cd swh_deposit && \
 #    python3 -m manage inspectdb
 
+import datetime
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.auth.models import User, UserManager
@@ -161,19 +162,25 @@ class Deposit(models.Model):
         return "%s/%s" % (self.client.provider_url.rstrip("/"), self.external_id)
 
 
-def client_directory_path(instance, filename):
-    """Callable to upload archive in MEDIA_ROOT/user_<id>/<filename>
+def client_directory_path(instance: "DepositRequest", filename: str) -> str:
+    """Callable to determine the upload archive path. This defaults to
+     MEDIA_ROOT/client_<user_id>/%Y%m%d-%H%M%S.%f/<filename>.
+
+    The format "%Y%m%d-%H%M%S.%f" is the reception date of the associated deposit
+    formatted using strftime.
 
     Args:
-        instance (DepositRequest): DepositRequest concerned by the upload
-        filename (str): Filename of the uploaded file
+        instance: DepositRequest concerned by the upload
+        filename: Filename of the uploaded file
 
     Returns:
-        A path to be prefixed by the MEDIA_ROOT to access physically
-        to the file uploaded.
+        The upload archive path.
 
     """
-    return "client_{0}/{1}".format(instance.deposit.client.id, filename)
+    reception_date = instance.deposit.reception_date
+    assert isinstance(reception_date, datetime.datetime)
+    folder = reception_date.strftime("%Y%m%d-%H%M%S.%f")
+    return f"client_{instance.deposit.client.id}/{folder}/{filename}"
 
 
 REQUEST_TYPES = [(ARCHIVE_TYPE, ARCHIVE_TYPE), (METADATA_TYPE, METADATA_TYPE)]
