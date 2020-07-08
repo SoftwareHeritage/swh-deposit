@@ -4,7 +4,6 @@ Section: python
 Priority: optional
 Build-Depends: debhelper (>= 9),
                dh-python (>= 3),
-               python3-setuptools,
                python3-all,
                python3-click,
                python3-django,
@@ -16,11 +15,12 @@ Build-Depends: debhelper (>= 9),
                python3-pytest-postgresql,
                python3-requests,
                python3-requests-mock,
+               python3-setuptools,
+               python3-setuptools-scm,
                python3-swh.core (>= 0.0.75~),
-               python3-swh.model (>= 0.0.26~),
+               python3-swh.model (>= 0.3.8~),
                python3-swh.loader.core (>= 0.0.71~),
                python3-swh.scheduler (>= 0.0.39~),
-               python3-vcversioner,
                python3-xmltodict,
 Standards-Version: 3.9.6
 Homepage: https://forge.softwareheritage.org/source/swh-deposit/
@@ -28,7 +28,7 @@ Homepage: https://forge.softwareheritage.org/source/swh-deposit/
 Package: python3-swh.deposit
 Architecture: all
 Depends: python3-swh.core (>= 0.0.75~),
-         python3-swh.model (>= 0.0.26~),
+         python3-swh.model (>= 0.3.8~),
          python3-swh.scheduler (>= 0.0.39~),
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Server
@@ -36,7 +36,7 @@ Description: Software Heritage Deposit Server
 Package: python3-swh.deposit.client
 Architecture: all
 Depends: python3-swh.core (>= 0.0.75~),
-         python3-swh.model (>= 0.0.26~),
+         python3-swh.model (>= 0.3.8~),
          python3-requests,
          python3-xmltodict,
          ${misc:Depends}, ${python3:Depends}
@@ -46,7 +46,7 @@ Package: python3-swh.deposit.loader
 Architecture: all
 Depends: python3-swh.deposit.client (= ${binary:Version}),
          python3-swh.core (>= 0.0.36~),
-         python3-swh.model (>= 0.0.26~),
+         python3-swh.model (>= 0.3.8~),
          python3-swh.loader.core (>= 0.0.71~),
          python3-swh.scheduler (>= 0.0.39~),
          ${misc:Depends}, ${python3:Depends}
