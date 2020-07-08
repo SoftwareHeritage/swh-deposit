@@ -5,7 +5,7 @@
 
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import DIRECTORY, persistent_identifier, REVISION, SNAPSHOT
+from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 
 from . import SWHPrivateAPIView
 from ..common import SWHPutDepositAPI
@@ -81,13 +81,13 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
             origin_url = data["origin_url"]
             directory_id = data["directory_id"]
             revision_id = data["revision_id"]
-            dir_id = persistent_identifier(DIRECTORY, directory_id)
-            snp_id = persistent_identifier(SNAPSHOT, data["snapshot_id"])
-            rev_id = persistent_identifier(REVISION, revision_id)
+            dir_id = swhid(DIRECTORY, directory_id)
+            snp_id = swhid(SNAPSHOT, data["snapshot_id"])
+            rev_id = swhid(REVISION, revision_id)
 
             deposit.swh_id = dir_id
             # new id with contextual information
-            deposit.swh_id_context = persistent_identifier(
+            deposit.swh_id_context = swhid(
                 DIRECTORY,
                 directory_id,
                 metadata={

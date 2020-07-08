@@ -11,8 +11,8 @@ from swh.core import config
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
 from swh.model.identifiers import (
-    parse_persistent_identifier,
-    persistent_identifier,
+    parse_swhid,
+    swhid,
     DIRECTORY,
     REVISION,
     SNAPSHOT,
@@ -105,10 +105,10 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=False
     ):
-        obj_dir = parse_persistent_identifier(deposit.swh_id_context)
+        obj_dir = parse_swhid(deposit.swh_id_context)
         assert obj_dir.object_type == DIRECTORY
 
-        obj_rev = parse_persistent_identifier(deposit.swh_anchor_id)
+        obj_rev = parse_swhid(deposit.swh_anchor_id)
         assert obj_rev.object_type == REVISION
 
         if set(obj_dir.metadata.keys()) != {"origin"}:
@@ -146,13 +146,13 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         old_swh_anchor_id_context = deposit.swh_anchor_id_context
 
         # Update
-        deposit.swh_id_context = persistent_identifier(
+        deposit.swh_id_context = swhid(
             DIRECTORY,
             dir_id,
             metadata={
                 "origin": origin,
-                "visit": persistent_identifier(SNAPSHOT, snp_id),
-                "anchor": persistent_identifier(REVISION, rev_id),
+                "visit": swhid(SNAPSHOT, snp_id),
+                "anchor": swhid(REVISION, rev_id),
                 "path": "/",
             },
         )
@@ -250,7 +250,7 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=True
     ):
-        obj_rev = parse_persistent_identifier(deposit.swh_id)
+        obj_rev = parse_swhid(deposit.swh_id)
         if obj_rev.object_type == DIRECTORY:
             # Assuming the migration is already done for that deposit
             logger.warning(
@@ -301,20 +301,20 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
             continue
 
         # New SWHIDs ids
-        deposit.swh_id = persistent_identifier(DIRECTORY, dir_id)
-        deposit.swh_id_context = persistent_identifier(
+        deposit.swh_id = swhid(DIRECTORY, dir_id)
+        deposit.swh_id_context = swhid(
             DIRECTORY,
             dir_id,
             metadata={
                 "origin": origin,
-                "visit": persistent_identifier(SNAPSHOT, snp_id),
-                "anchor": persistent_identifier(REVISION, rev_id),
+                "visit": swhid(SNAPSHOT, snp_id),
+                "anchor": swhid(REVISION, rev_id),
                 "path": "/",
             },
         )
         # Realign the remaining deposit SWHIDs fields
-        deposit.swh_anchor_id = persistent_identifier(REVISION, rev_id)
-        deposit.swh_anchor_id_context = persistent_identifier(
+        deposit.swh_anchor_id = swhid(REVISION, rev_id)
+        deposit.swh_anchor_id_context = swhid(
             REVISION, rev_id, metadata={"origin": origin,}
         )
 

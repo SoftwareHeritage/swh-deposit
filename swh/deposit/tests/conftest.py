@@ -21,7 +21,7 @@ from typing import Mapping
 
 from swh.scheduler import get_scheduler
 from swh.scheduler.tests.conftest import *  # noqa
-from swh.model.identifiers import DIRECTORY, persistent_identifier, REVISION, SNAPSHOT
+from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml
 from swh.deposit.config import SWHDefaultConfig
@@ -408,14 +408,14 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
     revision_id = "548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10"
     snapshot_id = "e5e82d064a9c3df7464223042e0c55d72ccff7f0"
-    deposit.swh_id = persistent_identifier(DIRECTORY, directory_id)
-    deposit.swh_id_context = persistent_identifier(
+    deposit.swh_id = swhid(DIRECTORY, directory_id)
+    deposit.swh_id_context = swhid(
         DIRECTORY,
         directory_id,
         metadata={
             "origin": origin,
-            "visit": persistent_identifier(SNAPSHOT, snapshot_id),
-            "anchor": persistent_identifier(REVISION, revision_id),
+            "visit": swhid(SNAPSHOT, snapshot_id),
+            "anchor": swhid(REVISION, revision_id),
             "path": "/",
         },
     )
