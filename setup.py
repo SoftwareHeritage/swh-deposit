@@ -48,12 +48,12 @@ setup(
     packages=find_packages(),
     install_requires=parse_requirements(None, "swh"),
     tests_require=parse_requirements("test"),
-    setup_requires=["vcversioner"],
+    setup_requires=["setuptools-scm"],
+    use_scm_version=True,
     extras_require={
         "testing": parse_requirements("test", "server", "swh-server"),
         "server": parse_requirements("server", "swh-server"),
     },
-    vcversioner={},
     include_package_data=True,
     entry_points="""
         [console_scripts]

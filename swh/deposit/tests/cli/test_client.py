@@ -24,6 +24,12 @@ EXAMPLE_SERVICE_DOCUMENT = {
 
 
 @pytest.fixture
+def datadir(request):
+    """Override default datadir to target main test datadir"""
+    return os.path.join(os.path.dirname(str(request.fspath)), "../data")
+
+
+@pytest.fixture
 def slug():
     return generate_slug()
 
