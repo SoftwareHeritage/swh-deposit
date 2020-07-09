@@ -20,7 +20,6 @@ from rest_framework.test import APIClient
 from typing import Mapping
 
 from swh.scheduler import get_scheduler
-from swh.scheduler.tests.conftest import *  # noqa
 from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml

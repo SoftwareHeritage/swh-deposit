@@ -11,16 +11,7 @@ import yaml
 from functools import partial
 
 from swh.core.pytest_plugin import get_response_cb
-from swh.scheduler.tests.conftest import *  # noqa
-from swh.storage.tests.conftest import *  # noqa
 from swh.deposit.loader.checker import DepositChecker
-
-
-@pytest.fixture(scope="session")  # expected redefinition
-def celery_includes():
-    return [
-        "swh.deposit.loader.tasks",
-    ]
 
 
 @pytest.fixture
