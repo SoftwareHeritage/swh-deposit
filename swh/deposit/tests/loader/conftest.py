@@ -16,7 +16,7 @@ from swh.storage.tests.conftest import *  # noqa
 from swh.deposit.loader.checker import DepositChecker
 
 
-@pytest.fixture(scope="session")  # type: ignore  # expected redefinition
+@pytest.fixture(scope="session")  # expected redefinition
 def celery_includes():
     return [
         "swh.deposit.loader.tasks",
