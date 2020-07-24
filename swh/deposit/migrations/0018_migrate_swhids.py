@@ -123,7 +123,7 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         dir_id = obj_dir.object_id
         origin = obj_dir.metadata["origin"]
 
-        check_origin = storage.origin_get({"url": origin})
+        check_origin = storage.origin_get([origin])[0]
         if not check_origin:
             logger.warning("Deposit id %s: Origin %s not found!", deposit.id, origin)
             continue
@@ -277,7 +277,7 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
         external_id = deposit.external_id
 
         origin = resolve_origin(deposit.id, provider_url, external_id)
-        check_origin = storage.origin_get({"url": origin})
+        check_origin = storage.origin_get([origin])[0]
         if not check_origin:
             logger.warning("Deposit id %s: Origin %s not found!", deposit.id, origin)
             continue
