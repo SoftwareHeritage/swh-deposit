@@ -253,11 +253,10 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
 
         rev_id = obj_rev.object_id
         rev_id_bytes = hash_to_bytes(rev_id)
-        revisions = list(storage.revision_get([rev_id_bytes]))
-        if not revisions:
+        revision = storage.revision_get([rev_id_bytes])[0]
+        if not revision:
             logger.warning("Deposit id %s: Revision %s not found!", deposit.id, rev_id)
             continue
-        revision = revisions[0]
 
         provider_url = deposit.client.provider_url
         external_id = deposit.external_id
