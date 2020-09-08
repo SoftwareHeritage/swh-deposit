@@ -96,6 +96,18 @@ directories, revisions, releases, and snapshots:
     </swh:reference>
   </swh:deposit>
 
+The value of the ``swhid`` attribute must be a `SWHID <persistent-identifiers>`,
+with any context qualifiers in this list:
+
+* ``origin``
+* ``visit``
+* ``anchor``
+* ``path``
+
+and they should be provided whenever relevant, especially ``origin``.
+
+Other qualifiers are not allowed (for example, ``line`` isn't because SWH
+cannot store metadata at a finer level than entire contents).
 
 
 Loading procedure
