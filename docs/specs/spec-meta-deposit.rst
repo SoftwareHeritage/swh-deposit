@@ -14,13 +14,15 @@ Requirements
 ------------
 The scope of the metadata-deposit is different than the
 sparse-deposit. While a sparse-deposit creates a revision with referenced
-directories and content files, the metadata-deposit references one of the
+directories and content files, the metadata-deposit references any of the
 following:
 
 - origin
 - snapshot
-- revision
 - release
+- revision
+- directory
+- content
 
 
 A complete metadata example
@@ -83,7 +85,8 @@ The metadata may be on an origin, identified by the origin's URL:
 Graph objects
 =============
 
-Reference a snapshot, revision or release:
+It may also reference an object in the `SWH graph <data-model>`: contents,
+directories, revisions, releases, and snapshots:
 
 .. code:: xml
 
