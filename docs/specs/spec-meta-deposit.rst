@@ -8,7 +8,7 @@ Software Heritage archive.
 
 The metadata-deposit is a special deposit where no content is
 provided and the data transferred to Software Heritage is only
-the metadata about an object or several objects in the archive.
+the metadata about an object in the archive.
 
 Requirements
 ------------
