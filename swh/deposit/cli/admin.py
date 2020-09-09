@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+# WARNING: do not import unnecessary things here to keep cli startup time under
+# control
 import click
 
-from swh.deposit.config import setup_django_for
 from swh.deposit.cli import deposit
 
 
@@ -26,6 +27,8 @@ from swh.deposit.cli import deposit
 @click.pass_context
 def admin(ctx, config_file, platform):
     """Server administration tasks (manipulate user or collections)"""
+    from swh.deposit.config import setup_django_for
+
     # configuration happens here
     setup_django_for(platform, config_file=config_file)
 

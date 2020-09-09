@@ -144,7 +144,7 @@ def test_single_minimal_deposit(
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
 
@@ -211,7 +211,7 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
     with open(metadata_path, "a"):
@@ -320,7 +320,7 @@ def test_single_deposit_slug_generation(
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
 
