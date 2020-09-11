@@ -23,7 +23,7 @@ from swh.scheduler import get_scheduler
 from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml
-from swh.deposit.config import SWHDefaultConfig
+from swh.deposit.config import APIConfig
 from swh.deposit.config import (
     COL_IRI,
     EDIT_SE_IRI,
@@ -76,7 +76,7 @@ def deposit_config():
 
 @pytest.fixture(autouse=True)
 def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
-    """Enforce config for deposit classes inherited from SWHDefaultConfig."""
+    """Enforce config for deposit classes inherited from APIConfig."""
 
     def mock_parse_config(*args, **kw):
         config = deposit_config.copy()
@@ -86,7 +86,7 @@ def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
         }
         return config
 
-    monkeypatch.setattr(SWHDefaultConfig, "parse_config_file", mock_parse_config)
+    monkeypatch.setattr(APIConfig, "parse_config_file", mock_parse_config)
 
     scheduler = get_scheduler("local", swh_scheduler_config)
     task_type = {

@@ -1,11 +1,11 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from rest_framework import status
 
-from .common import SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
+from .common import APIPost, APIPut, APIDelete
 from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
 from ..errors import make_error_dict, BAD_REQUEST
@@ -14,7 +14,7 @@ from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
-class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI):
+class APIUpdateArchive(APIPost, APIPut, APIDelete):
     """Deposit request class defining api endpoints for sword deposit.
 
        What's known as 'EM IRI' in the sword specification.
@@ -83,9 +83,7 @@ class SWHUpdateArchiveDeposit(SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepo
         return self._delete_archives(collection_name, deposit_id)
 
 
-class SWHUpdateMetadataDeposit(
-    SWHPostDepositAPI, SWHPutDepositAPI, SWHDeleteDepositAPI
-):
+class APIUpdateMetadata(APIPost, APIPut, APIDelete):
     """Deposit request class defining api endpoints for sword deposit.
 
        What's known as 'Edit IRI' (and SE IRI) in the sword specification.

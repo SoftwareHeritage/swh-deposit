@@ -231,7 +231,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
         DEPOSIT_STATUS_LOAD_SUCCESS,
         DEPOSIT_STATUS_LOAD_FAILURE,
         DEPOSIT_STATUS_VERIFIED,
-        SWHDefaultConfig,
+        APIConfig,
     )
 
     try:
@@ -268,7 +268,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
     deposit.save()
 
     # Trigger back the deposit
-    scheduler = SWHDefaultConfig().scheduler
+    scheduler = APIConfig().scheduler
     scheduler.set_status_tasks(
         [task_id], status="next_run_not_scheduled", next_run=datetime.now()
     )

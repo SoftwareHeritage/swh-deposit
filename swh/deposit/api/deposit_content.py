@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,13 +6,13 @@
 from django.shortcuts import render
 from rest_framework import status
 
-from .common import SWHBaseDeposit
+from .common import APIBase
 from ..errors import NOT_FOUND, make_error_response
 from ..errors import make_error_response_from_dict
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
 
 
-class SWHDepositContent(SWHBaseDeposit):
+class APIContent(APIBase):
     def get(self, req, collection_name, deposit_id, format=None):
         checks = self.checks(req, collection_name, deposit_id)
         if "error" in checks:

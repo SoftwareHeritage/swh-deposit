@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 
 from . import SWHPrivateAPIView
-from ..common import SWHPutDepositAPI
+from ..common import APIPut
 from ...errors import make_error_dict, BAD_REQUEST
 from ...models import Deposit, DEPOSIT_STATUS_DETAIL
 from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
@@ -17,7 +17,7 @@ from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 
 
-class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
+class SWHUpdateStatusDeposit(SWHPrivateAPIView, APIPut):
     """Deposit request class to update the deposit's status.
 
     HTTP verbs supported: PUT

@@ -81,7 +81,7 @@ def setup_django_for(platform=None, config_file=None):
     django.setup()
 
 
-class SWHDefaultConfig(SWHConfig):
+class APIConfig(SWHConfig):
     """Mixin intended to enrich views with SWH configuration.
 
     """

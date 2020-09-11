@@ -1,11 +1,11 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from rest_framework import status
 
-from .common import SWHPostDepositAPI, ACCEPT_ARCHIVE_CONTENT_TYPES
+from .common import APIPost, ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import EDIT_SE_IRI
 from ..errors import make_error_dict, BAD_REQUEST
 from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
@@ -13,7 +13,7 @@ from ..parsers import SWHAtomEntryParser
 from ..parsers import SWHMultiPartParser
 
 
-class SWHDeposit(SWHPostDepositAPI):
+class APIPostDeposit(APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Col IRI' in the sword specification.

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -21,7 +21,7 @@ from swh.model import hashutil
 from swh.scheduler.utils import create_oneshot_task_dict
 
 from ..config import (
-    SWHDefaultConfig,
+    APIConfig,
     EDIT_SE_IRI,
     EM_IRI,
     CONT_FILE_IRI,
@@ -58,7 +58,7 @@ ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
 
 
-class SWHAPIView(APIView):
+class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
 
@@ -68,7 +68,7 @@ class SWHAPIView(APIView):
     permission_classes: Sequence[Type[BasePermission]] = (IsAuthenticated,)
 
 
-class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
+class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
@@ -797,7 +797,7 @@ class SWHBaseDeposit(SWHDefaultConfig, SWHAPIView, metaclass=ABCMeta):
         return self._basic_not_allowed_method(request, "DELETE")
 
 
-class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+class APIGet(APIBase, metaclass=ABCMeta):
     """Mixin for class to support GET method.
 
     """
@@ -834,7 +834,7 @@ class SWHGetDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         pass
 
 
-class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+class APIPost(APIBase, metaclass=ABCMeta):
     """Mixin for class to support DELETE method.
 
     """
@@ -888,7 +888,7 @@ class SWHPostDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         pass
 
 
-class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+class APIPut(APIBase, metaclass=ABCMeta):
     """Mixin for class to support PUT method.
 
     """
@@ -926,7 +926,7 @@ class SWHPutDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         pass
 
 
-class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
+class APIDelete(APIBase, metaclass=ABCMeta):
     """Mixin for class to support DELETE method.
 
     """
@@ -956,7 +956,7 @@ class SWHDeleteDepositAPI(SWHBaseDeposit, metaclass=ABCMeta):
         """Routine to delete a resource.
 
         This is mostly not allowed except for the
-        EM_IRI (cf. .api.deposit_update.SWHUpdateArchiveDeposit)
+        EM_IRI (cf. .api.deposit_update.APIUpdateArchive)
 
         """
         pass

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -65,7 +65,7 @@ class SWHAtomEntryParser(SWHXMLParser):
         # We do not actually want to parse the stream yet
         # because we want to keep the raw data as well
         # this is done later in the atom entry call
-        # (cf. swh.deposit.api.common.SWHBaseDeposit._atom_entry)
+        # (cf. swh.deposit.api.common.APIBase._atom_entry)
         return stream
 
 
