@@ -58,7 +58,7 @@ class DepositReadMixin:
         return utils.merge(*metadata)
 
 
-class SWHPrivateAPIView(APIConfig, AuthenticatedAPIView):
+class APIPrivateView(APIConfig, AuthenticatedAPIView):
     """Mixin intended as private api (so no authentication) based API view
        (for the private ones).
 

@@ -9,7 +9,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 
-from . import SWHPrivateAPIView
+from . import APIPrivateView
 from ..converters import convert_status_detail
 from ...models import Deposit
 
@@ -38,7 +38,7 @@ class DepositSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class DepositList(ListAPIView, SWHPrivateAPIView):
+class APIList(ListAPIView, APIPrivateView):
     """Deposit request class to list the deposit's status per page.
 
     HTTP verbs supported: GET

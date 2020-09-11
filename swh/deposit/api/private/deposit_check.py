@@ -15,7 +15,7 @@ from rest_framework import status
 
 from swh.scheduler.utils import create_oneshot_task_dict
 
-from . import DepositReadMixin, SWHPrivateAPIView
+from . import DepositReadMixin, APIPrivateView
 from ..common import APIGet
 from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
 from ...config import ARCHIVE_TYPE
@@ -55,7 +55,7 @@ def known_archive_format(filename):
     )
 
 
-class SWHChecksDeposit(SWHPrivateAPIView, APIGet, DepositReadMixin):
+class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.

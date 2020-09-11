@@ -17,7 +17,7 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
-from swh.deposit.api.private.deposit_check import SWHChecksDeposit
+from swh.deposit.api.private.deposit_check import APIChecks
 
 
 @pytest.fixture
@@ -91,4 +91,4 @@ def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
 
 @pytest.fixture
 def swh_checks_deposit():
-    return SWHChecksDeposit()
+    return APIChecks()
