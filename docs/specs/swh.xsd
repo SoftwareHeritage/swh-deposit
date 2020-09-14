@@ -9,7 +9,7 @@
             <xsd:choice>
               <xsd:element name="object">
                 <xsd:complexType>
-                <xsd:attribute type="xsd:string" name="id"/>
+                <xsd:attribute type="xsd:string" name="swhid"/>
                 </xsd:complexType>
               </xsd:element>
               <xsd:element name="origin">
