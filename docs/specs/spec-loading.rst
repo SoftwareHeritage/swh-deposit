@@ -52,9 +52,8 @@ This is a global view of the deposit ingestion
 Origin artifact
 ~~~~~~~~~~~~~~~
 
-We create an origin using the url in the deposited metadata.
-The current deposit and future deposits with the same url or external_id
-will be associated to this origin.
+We create an origin URL by concatenating the client URI and the value of the
+Slug header of the initial POST request of the deposit.
 
 .. code-block:: json
 
@@ -103,24 +102,18 @@ Here in the example below, two snapshots are identified by two different visits.
 Snapshot artifact
 ~~~~~~~~~~~~~~~~~
 
-The snapshot represents one deposit push. The master branch points to a
-synthetic revision. We will create a second branch pointing to a release
-artifact, if the indicate that the deposit is a release with a `releaseNotes`.
+The snapshot represents one deposit push. The ``HEAD`` branch points to a
+synthetic revision.
 
-.. code-block:: json
+   .. code-block:: json
 
     {
         "snapshot": {
             "branches": {
-                "master": {
+                "HEAD": {
                     "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
                     "target_type": "revision",
                     "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
-                }
-                "refs/tags/v1.1": {
-                    "target": "a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97",
-                    "target_type": "release",
-                    "target_url": "/api/1/release/a9f3396f372ed4a51d75e15ca16c1c2df1fc5c97/"
                 }
             },
             "id": "a3773941561cc557853898773a19c07cfe2efc5a",
@@ -128,8 +121,17 @@ artifact, if the indicate that the deposit is a release with a `releaseNotes`.
         }
     }
 
+Note that previous versions of the deposit-loader named the branch ``master``
+instead, and created release branches under certain conditions.
+
 Release artifact
 ~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   This part of the specification is not implemented yet, only releases are
+   currently being created.
+
 The content is deposited with a set of descriptive metadata in the CodeMeta
 vocabulary. The following CodeMeta terms implies that the
 artifact is a release:
@@ -181,10 +183,8 @@ If present, a release artifact will be created with the mapping below:
 Revision artifact
 ~~~~~~~~~~~~~~~~~
 
-The metadata sent with the deposit is included in the revision which affects
-the hash computation, thus resulting in a unique identifier.
-This way, by depositing the same content with different metadata, will result
-in two different revisions in the SWH archive.
+The metadata sent with the deposit is stored outside the revision,
+and does not affect the hash computation.
 
 The date mapping
 ^^^^^^^^^^^^^^^^
@@ -423,23 +423,10 @@ graceful delays for further scheduling.
 Metadata loading
 ~~~~~~~~~~~~~~~~
 
-- the metadata received with the deposit are kept in the `metadata` fields
-  of the revision and in the ```origin_metadata`` table to facilitate search
-  over origin metadata.
+- the metadata received with the deposit are kept in a dedicated table
+  ``raw_extrinsic_metadata``, distinct from the ``revision`` and ``origin``
+  tables.
 
-- provider\_id and tool\_id are resolved by the prepare\_metadata method in the
-  loader-core
+- ``authority`` is computed from the deposit client information, and ``fetcher``
+  is the deposit loader.
 
-- the origin\_metadata entry is sent to storage by the send\_origin\_metadata
-  in the loader-core
-
-origin\_metadata table:
-
-::
-
-    id                                      bigint        PK
-    origin                                  bigint
-    discovery_date                          date
-    provider_id                             bigint        FK      // (from provider table)
-    tool_id                                 bigint        FK     // indexer_configuration_id tool used for extraction
-    metadata                                jsonb                // before translation
