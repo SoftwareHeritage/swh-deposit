@@ -185,6 +185,24 @@ Revision artifact
 
 The metadata sent with the deposit is stored outside the revision,
 and does not affect the hash computation.
+It contains the same fields as any revision object; in particular:
+
++-------------------+-----------------------------------------+
+| SWH revision field| Description                             |
++===================+=========================================+
+| message           | synthetic message, containing the name  |
+|                   | of the deposit client and an internal   |
+|                   | identifier of the deposit. For example: |
+|                   | ``hal: Deposit 817 in collection hal``  |
++-------------------+-----------------------------------------+
+| author            | synthetic author (SWH itself, for now)  |
++-------------------+-----------------------------------------+
+| committer         | same as the author (for now)            |
++-------------------+-----------------------------------------+
+| date              | see below                               |
++-------------------+-----------------------------------------+
+| committer_date    | see below                               |
++-------------------+-----------------------------------------+
 
 The date mapping
 ^^^^^^^^^^^^^^^^
