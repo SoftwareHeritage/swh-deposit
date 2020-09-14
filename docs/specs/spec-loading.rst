@@ -1,9 +1,9 @@
 Loading specification
 =====================
 
-AN important part of the deposit specifications is the loading procedure whereas
+An important part of the deposit specifications is the loading procedure where
 a deposit is ingested into the Software Heritage (archive), using
-the tarball loader and the complete schema of software artifacts creation
+the tarball loader and the complete process of software artifacts creation
 in the archive.
 
 Tarball Loading
@@ -19,7 +19,7 @@ The loading of the deposit will use the deposit's associated data:
 
 
 Artifacts creation
-----------------------
+------------------
 
 Deposit to artifacts mapping
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +50,8 @@ This is a global view of the deposit ingestion
 
 
 Origin artifact
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+
 We create an origin using the url in the deposited metadata.
 The current deposit and future deposits with the same url or external_id
 will be associated to this origin.
@@ -67,7 +68,8 @@ will be associated to this origin.
     }
 
 Visits
-~~~~~~~
+~~~~~~
+
 We identify with a visit each deposit push of the same external_id.
 Here in the example below, two snapshots are identified by two different visits.
 
@@ -100,6 +102,7 @@ Here in the example below, two snapshots are identified by two different visits.
 
 Snapshot artifact
 ~~~~~~~~~~~~~~~~~
+
 The snapshot represents one deposit push. The master branch points to a
 synthetic revision. We will create a second branch pointing to a release
 artifact, if the indicate that the deposit is a release with a `releaseNotes`.
@@ -177,6 +180,7 @@ If present, a release artifact will be created with the mapping below:
 
 Revision artifact
 ~~~~~~~~~~~~~~~~~
+
 The metadata sent with the deposit is included in the revision which affects
 the hash computation, thus resulting in a unique identifier.
 This way, by depositing the same content with different metadata, will result
@@ -184,22 +188,23 @@ in two different revisions in the SWH archive.
 
 The date mapping
 ^^^^^^^^^^^^^^^^
+
 A deposit may contain 4 different dates concerning the software artifacts.
 
 The deposit's revision will reflect the most accurate point in time available.
 Here are all dates that can be available in a deposit:
 
-+-------------------+-----------------------------------+-----------------------------------------------+
-| dates             | location                          | Description                                   |
-+===================+===================================+===============================================+
-| reception_date    | On SWORD reception (automatic)    |the deposit was received at this ts            |
-+-------------------+-----------------------------------+-----------------------------------------------+
-| complete_date     | On SWH ingestion  (automatic)     |the ingestion was completed by SWH at this ts  |
-+-------------------+-----------------------------------+-----------------------------------------------+
-| dateCreated       | metadata in codeMeta (optional)   |the software artifact was created at this ts   |
-+-------------------+-----------------------------------+----------------------+------------------------+
-| datePublished     | metadata in codeMeta (optional)   |the software was published (contributed in HAL)|
-+-------------------+-----------------------------------+----------------------+------------------------+
++----------------+---------------------------------+------------------------------------------------+
+| dates          | location                        | Description                                    |
++================+=================================+================================================+
+| reception_date | On SWORD reception (automatic)  | the deposit was received at this ts            |
++----------------+---------------------------------+------------------------------------------------+
+| complete_date  | On SWH ingestion  (automatic)   | the ingestion was completed by SWH at this ts  |
++----------------+---------------------------------+------------------------------------------------+
+| dateCreated    | metadata in codeMeta (optional) | the software artifact was created at this ts   |
++----------------+---------------------------------+------------------------------------------------+
+| datePublished  | metadata in codeMeta (optional) | the software was published (contributed in HAL)|
++----------------+---------------------------------+------------------------------------------------+
 
 A visit targeting a snapshot contains one date:
 
@@ -222,11 +227,11 @@ A revision contains two dates:
 
 A release contains one date:
 
-+-------------------+----------------------------------+---------------+----------------+
-| SWH release field |Description                       |CodeMeta term  | Fallback value |
-+===================+==================================+===============+================+
-| date              |release date = publication date   |datePublished  |reception_date  |
-+-------------------+----------------------------------+---------------+----------------+
++-------------------+----------------------------------+----------------+-----------------+
+| SWH release field |Description                       | CodeMeta term  | Fallback value  |
++===================+==================================+================+=================+
+| date              |release date = publication date   | datePublished  | reception_date  |
++-------------------+----------------------------------+----------------+-----------------+
 
 
 .. code-block:: json
@@ -320,6 +325,7 @@ A release contains one date:
 
 Directory artifact
 ~~~~~~~~~~~~~~~~~~
+
 The directory artifact is the archive(s)' raw content deposited.
 
 .. code-block:: json
