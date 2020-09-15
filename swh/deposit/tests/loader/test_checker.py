@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,7 +6,7 @@
 from unittest.mock import patch
 
 
-def test_check_deposit_ready(swh_config, requests_mock_datadir, deposit_checker):
+def test_checker_deposit_ready(requests_mock_datadir, deposit_checker):
     """Check on a valid 'deposited' deposit should result in 'verified'
 
     """
@@ -14,7 +14,7 @@ def test_check_deposit_ready(swh_config, requests_mock_datadir, deposit_checker)
     assert actual_result == {"status": "eventful"}
 
 
-def test_check_deposit_rejected(swh_config, requests_mock_datadir, deposit_checker):
+def test_checker_deposit_rejected(requests_mock_datadir, deposit_checker):
     """Check on invalid 'deposited' deposit should result in 'rejected'
 
     """
@@ -23,7 +23,7 @@ def test_check_deposit_rejected(swh_config, requests_mock_datadir, deposit_check
 
 
 @patch("swh.deposit.client.requests.get")
-def test_check_deposit_rejected_exception(mock_requests, swh_config, deposit_checker):
+def test_checker_deposit_rejected_exception(mock_requests, deposit_checker):
     """Check on invalid 'deposited' deposit should result in 'rejected'
 
     """

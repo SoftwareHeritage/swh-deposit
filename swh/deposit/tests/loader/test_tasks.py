@@ -7,8 +7,8 @@ import pytest
 
 
 @pytest.mark.db
-def test_deposit_check_eventful(
-    mocker, swh_config, swh_scheduler_celery_app, swh_scheduler_celery_worker
+def test_task_check_eventful(
+    mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
     """Successful check should make the check succeed
 
@@ -30,8 +30,8 @@ def test_deposit_check_eventful(
 
 
 @pytest.mark.db
-def test_deposit_check_failure(
-    mocker, swh_config, swh_scheduler_celery_app, swh_scheduler_celery_worker
+def test_task_check_failure(
+    mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
     """Unverified check status should make the check fail
 
@@ -53,8 +53,8 @@ def test_deposit_check_failure(
 
 
 @pytest.mark.db
-def test_deposit_check_3(
-    mocker, swh_config, swh_scheduler_celery_app, swh_scheduler_celery_worker
+def test_task_check_3(
+    mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
     """Unexpected failures should fail the check
 
