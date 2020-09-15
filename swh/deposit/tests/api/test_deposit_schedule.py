@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import copy
 import datetime
+
 from io import BytesIO
-from typing import Dict
 
 from django.urls import reverse
 import pytest
@@ -18,20 +19,13 @@ from swh.deposit.config import (
 from swh.deposit.parsers import parse_xml
 
 
-from ..conftest import TEST_CONFIG
-
-
-TEST_CONFIG_WITH_CHECKS: Dict[str, object] = {
-    **TEST_CONFIG,
-    "checks": True,
-}
-
-
 @pytest.fixture()
-def deposit_config():
+def deposit_config(deposit_config):
     """Overrides the `deposit_config` fixture define in swh/deposit/tests/conftest.py
     to re-enable the checks."""
-    return TEST_CONFIG_WITH_CHECKS
+    config_d = copy.deepcopy(deposit_config)
+    config_d["checks"] = True
+    return config_d
 
 
 def now() -> datetime.datetime:

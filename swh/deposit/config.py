@@ -1,15 +1,16 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import os
-import logging
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
-from swh.core.config import SWHConfig
+from swh.core import config
 from swh.scheduler import get_scheduler
+from swh.scheduler.interface import SchedulerInterface
+
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
 EDIT_SE_IRI = "edit_se_iri"
@@ -49,6 +50,12 @@ SWH_PERSON = {
 }
 
 
+DEFAULT_CONFIG = {
+    "max_upload_size": 209715200,
+    "checks": True,
+}
+
+
 def setup_django_for(platform=None, config_file=None):
     """Setup function for command line tools (swh.deposit.create_user) to
        initialize the needed db access.
@@ -81,30 +88,14 @@ def setup_django_for(platform=None, config_file=None):
     django.setup()
 
 
-class APIConfig(SWHConfig):
-    """Mixin intended to enrich views with SWH configuration.
+class APIConfig:
+    """API Configuration centralized class. This loads explicitly the configuration file out
+    of the SWH_CONFIG_FILENAME environment variable.
 
     """
 
-    CONFIG_BASE_FILENAME = "deposit/server"
-
-    DEFAULT_CONFIG = {
-        "max_upload_size": ("int", 209715200),
-        "checks": ("bool", True),
-        "scheduler": (
-            "dict",
-            {"cls": "remote", "args": {"url": "http://localhost:5008/"}},
-        ),
-    }
-
-    ADDITIONAL_CONFIG = {}  # type: Dict[str, Tuple[str, Any]]
-
-    def __init__(self, **config):
-        super().__init__()
-        self.config = self.parse_config_file(
-            additional_configs=[self.ADDITIONAL_CONFIG]
-        )
-        self.config.update(config)
-        self.log = logging.getLogger("swh.deposit")
-        if self.config.get("scheduler"):
-            self.scheduler = get_scheduler(**self.config["scheduler"])
+    def __init__(self):
+        config_file = os.environ["SWH_CONFIG_FILENAME"]
+        conf = config.read_raw_config(config.config_basepath(config_file))
+        self.config: Dict[str, Any] = config.merge_configs(DEFAULT_CONFIG, conf)
+        self.scheduler: SchedulerInterface = get_scheduler(**self.config["scheduler"])

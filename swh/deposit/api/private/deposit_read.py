@@ -67,10 +67,6 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
 
     """
 
-    ADDITIONAL_CONFIG = {
-        "extraction_dir": ("str", "/tmp/swh-deposit/archive/"),
-    }
-
     def __init__(self):
         super().__init__()
         self.extraction_dir = self.config["extraction_dir"]
@@ -106,26 +102,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
     """Class in charge of aggregating metadata on a deposit.
 
     """
-
-    ADDITIONAL_CONFIG = {
-        "provider": (
-            "dict",
-            {
-                # 'provider_name': '',  # those are not set since read from the
-                # 'provider_url': '',   # deposit's client
-                "provider_type": "deposit_client",
-                "metadata": {},
-            },
-        ),
-        "tool": (
-            "dict",
-            {
-                "name": "swh-deposit",
-                "version": "0.0.1",
-                "configuration": {"sword_version": "2"},
-            },
-        ),
-    }
 
     def __init__(self):
         super().__init__()

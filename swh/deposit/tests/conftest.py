@@ -8,6 +8,8 @@ import base64
 import pytest
 import psycopg2
 
+import yaml
+
 from django.urls import reverse
 from django.test.utils import setup_databases  # type: ignore
 
@@ -23,7 +25,6 @@ from swh.scheduler import get_scheduler
 from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
 from swh.deposit.config import setup_django_for
 from swh.deposit.parsers import parse_xml
-from swh.deposit.config import APIConfig
 from swh.deposit.config import (
     COL_IRI,
     EDIT_SE_IRI,
@@ -47,52 +48,49 @@ TEST_USER = {
 }
 
 
-TEST_CONFIG = {
-    "max_upload_size": 500,
-    "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
-    "checks": False,
-    "provider": {
-        "provider_name": "",
-        "provider_type": "deposit_client",
-        "provider_url": "",
-        "metadata": {},
-    },
-    "tool": {
-        "name": "swh-deposit",
-        "version": "0.0.1",
-        "configuration": {"sword_version": "2"},
-    },
-}
-
-
 def pytest_configure():
     setup_django_for("testing")
 
 
 @pytest.fixture()
-def deposit_config():
-    return TEST_CONFIG
+def deposit_config(swh_scheduler_config):
+    return {
+        "max_upload_size": 500,
+        "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
+        "checks": False,
+        "provider": {
+            "provider_name": "",
+            "provider_type": "deposit_client",
+            "provider_url": "",
+            "metadata": {},
+        },
+        "tool": {
+            "name": "swh-deposit",
+            "version": "0.0.1",
+            "configuration": {"sword_version": "2"},
+        },
+        "scheduler": {"cls": "local", "args": swh_scheduler_config,},
+    }
+
+
+@pytest.fixture()
+def deposit_config_path(tmp_path, monkeypatch, deposit_config):
+    conf_path = os.path.join(tmp_path, "deposit.yml")
+    with open(conf_path, "w") as f:
+        f.write(yaml.dump(deposit_config))
+    monkeypatch.setenv("SWH_CONFIG_FILENAME", conf_path)
+    return conf_path
 
 
 @pytest.fixture(autouse=True)
-def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
+def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
     """Enforce config for deposit classes inherited from APIConfig."""
-
-    def mock_parse_config(*args, **kw):
-        config = deposit_config.copy()
-        config["scheduler"] = {
-            "cls": "local",
-            "args": swh_scheduler_config,
-        }
-        return config
-
-    monkeypatch.setattr(APIConfig, "parse_config_file", mock_parse_config)
 
     scheduler = get_scheduler("local", swh_scheduler_config)
     task_type = {
         "type": "load-deposit",
         "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
-        "description": "why does this have not-null constraint?",
+        "description": "Load deposit task",
     }
     scheduler.create_task_type(task_type)
 
