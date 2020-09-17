@@ -6,11 +6,10 @@
 from django.shortcuts import render
 from rest_framework import status
 
+from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
+from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 from .common import APIBase
 from .converters import convert_status_detail
-from ..errors import NOT_FOUND, make_error_response
-from ..errors import make_error_response_from_dict
-from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 
 
 class APIStatus(APIBase):

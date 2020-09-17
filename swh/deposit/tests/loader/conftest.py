@@ -3,10 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import re
-import pytest
-
 from functools import partial
+import re
+
+import pytest
 
 from swh.core.pytest_plugin import get_response_cb
 from swh.deposit.loader.checker import DepositChecker

@@ -7,17 +7,17 @@
 
 """
 
-import hashlib
-import os
-import logging
-import requests
-import xmltodict
-
 from abc import ABCMeta, abstractmethod
+import hashlib
+import logging
+import os
 from typing import Any, Dict
 from urllib.parse import urljoin
 
-from swh.core.config import read_raw_config, config_basepath
+import requests
+import xmltodict
+
+from swh.core.config import config_basepath, read_raw_config
 
 logger = logging.getLogger(__name__)
 

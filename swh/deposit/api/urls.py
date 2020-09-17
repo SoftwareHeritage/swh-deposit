@@ -10,13 +10,11 @@
 from django.conf.urls import url
 from django.shortcuts import render
 
-from ..config import EDIT_SE_IRI, EM_IRI, CONT_FILE_IRI
-from ..config import SD_IRI, COL_IRI, STATE_IRI
+from ..config import COL_IRI, CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI, SD_IRI, STATE_IRI
 from .deposit import APIPostDeposit
-from .deposit_status import APIStatus
-from .deposit_update import APIUpdateMetadata
-from .deposit_update import APIUpdateArchive
 from .deposit_content import APIContent
+from .deposit_status import APIStatus
+from .deposit_update import APIUpdateArchive, APIUpdateMetadata
 from .service_document import APIServiceDocument
 
 

@@ -6,17 +6,16 @@
 from django.conf.urls import url
 
 from ...config import (
-    PRIVATE_GET_RAW_CONTENT,
-    PRIVATE_PUT_DEPOSIT,
-    PRIVATE_GET_DEPOSIT_METADATA,
     PRIVATE_CHECK_DEPOSIT,
+    PRIVATE_GET_DEPOSIT_METADATA,
+    PRIVATE_GET_RAW_CONTENT,
     PRIVATE_LIST_DEPOSITS,
+    PRIVATE_PUT_DEPOSIT,
 )
-from .deposit_read import APIReadArchives
-from .deposit_read import APIReadMetadata
-from .deposit_update_status import APIUpdateStatus
 from .deposit_check import APIChecks
 from .deposit_list import APIList
+from .deposit_read import APIReadArchives, APIReadMetadata
+from .deposit_update_status import APIUpdateStatus
 
 urlpatterns = [
     # Retrieve deposit's raw archives' content

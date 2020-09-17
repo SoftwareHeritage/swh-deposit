@@ -3,39 +3,37 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
 import base64
-import pytest
-import psycopg2
+import os
+from typing import Mapping
 
+from django.test.utils import setup_databases  # type: ignore
+from django.urls import reverse
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import pytest
+from rest_framework import status
+from rest_framework.test import APIClient
 import yaml
 
-from django.urls import reverse
-from django.test.utils import setup_databases  # type: ignore
+from swh.deposit.config import (
+    COL_IRI,
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_REJECTED,
+    DEPOSIT_STATUS_VERIFIED,
+    EDIT_SE_IRI,
+    setup_django_for,
+)
+from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import create_arborescence_archive
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
+from swh.scheduler import get_scheduler
 
 # mypy is asked to ignore the import statement above because setup_databases
 # is not part of the d.t.utils.__all__ variable.
-
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from rest_framework import status
-from rest_framework.test import APIClient
-from typing import Mapping
-
-from swh.scheduler import get_scheduler
-from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
-from swh.deposit.config import setup_django_for
-from swh.deposit.parsers import parse_xml
-from swh.deposit.config import (
-    COL_IRI,
-    EDIT_SE_IRI,
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_REJECTED,
-    DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    DEPOSIT_STATUS_VERIFIED,
-    DEPOSIT_STATUS_LOAD_FAILURE,
-)
-from swh.deposit.tests.common import create_arborescence_archive
 
 
 TEST_USER = {

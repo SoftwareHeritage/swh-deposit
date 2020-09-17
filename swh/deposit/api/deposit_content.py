@@ -6,10 +6,9 @@
 from django.shortcuts import render
 from rest_framework import status
 
-from .common import APIBase
-from ..errors import NOT_FOUND, make_error_response
-from ..errors import make_error_response_from_dict
+from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
+from .common import APIBase
 
 
 class APIContent(APIBase):

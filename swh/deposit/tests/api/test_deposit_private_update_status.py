@@ -9,17 +9,14 @@ import json
 from django.urls import reverse
 from rest_framework import status
 
-from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
-
 from swh.deposit.api.private.deposit_update_status import MANDATORY_KEYS
-
-from swh.deposit.models import Deposit
 from swh.deposit.config import (
-    PRIVATE_PUT_DEPOSIT,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    PRIVATE_PUT_DEPOSIT,
 )
-
+from swh.deposit.models import Deposit
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 PRIVATE_PUT_DEPOSIT_NC = PRIVATE_PUT_DEPOSIT + "-nc"
 

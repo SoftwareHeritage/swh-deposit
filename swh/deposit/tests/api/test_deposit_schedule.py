@@ -5,17 +5,13 @@
 
 import copy
 import datetime
-
 from io import BytesIO
 
 from django.urls import reverse
 import pytest
 from rest_framework import status
 
-from swh.deposit.config import (
-    COL_IRI,
-    DEPOSIT_STATUS_DEPOSITED,
-)
+from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.parsers import parse_xml
 
 

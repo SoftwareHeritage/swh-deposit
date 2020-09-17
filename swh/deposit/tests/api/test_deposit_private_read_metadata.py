@@ -6,9 +6,8 @@
 from django.urls import reverse
 from rest_framework import status
 
+from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
 from swh.deposit.models import Deposit
-from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON, EDIT_SE_IRI
-
 
 PRIVATE_GET_DEPOSIT_METADATA_NC = PRIVATE_GET_DEPOSIT_METADATA + "-nc"
 

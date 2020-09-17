@@ -3,9 +3,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import pytest
-
 from unittest.mock import patch
+
+import pytest
 
 from swh.deposit import utils
 

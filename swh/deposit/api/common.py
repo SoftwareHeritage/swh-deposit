@@ -3,14 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from abc import ABCMeta, abstractmethod
 import hashlib
-
 from typing import Sequence, Type
 
-from abc import ABCMeta, abstractmethod
-from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authentication import BaseAuthentication, BasicAuthentication
@@ -21,38 +20,37 @@ from swh.model import hashutil
 from swh.scheduler.utils import create_oneshot_task_dict
 
 from ..config import (
-    APIConfig,
+    ARCHIVE_KEY,
+    ARCHIVE_TYPE,
+    CONT_FILE_IRI,
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_PARTIAL,
     EDIT_SE_IRI,
     EM_IRI,
-    CONT_FILE_IRI,
-    ARCHIVE_KEY,
     METADATA_KEY,
+    METADATA_TYPE,
     RAW_METADATA_KEY,
     STATE_IRI,
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    ARCHIVE_TYPE,
-    METADATA_TYPE,
+    APIConfig,
 )
 from ..errors import (
-    MAX_UPLOAD_SIZE_EXCEEDED,
     BAD_REQUEST,
-    ERROR_CONTENT,
     CHECKSUM_MISMATCH,
-    make_error_dict,
-    MEDIATION_NOT_ALLOWED,
-    make_error_response_from_dict,
+    ERROR_CONTENT,
     FORBIDDEN,
-    NOT_FOUND,
-    make_error_response,
+    MAX_UPLOAD_SIZE_EXCEEDED,
+    MEDIATION_NOT_ALLOWED,
     METHOD_NOT_ALLOWED,
-    ParserError,
+    NOT_FOUND,
     PARSING_ERROR,
+    ParserError,
+    make_error_dict,
+    make_error_response,
+    make_error_response_from_dict,
 )
-from ..models import Deposit, DepositRequest, DepositCollection, DepositClient
+from ..models import Deposit, DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_xml
-
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]

@@ -5,13 +5,15 @@
 
 from rest_framework import status
 
-from .common import APIPost, APIPut, APIDelete
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
-from ..errors import make_error_dict, BAD_REQUEST
-from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
-from ..parsers import SWHAtomEntryParser
-from ..parsers import SWHMultiPartParser
+from ..errors import BAD_REQUEST, make_error_dict
+from ..parsers import (
+    SWHAtomEntryParser,
+    SWHFileUploadTarParser,
+    SWHFileUploadZipParser,
+    SWHMultiPartParser,
+)
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIDelete, APIPost, APIPut
 
 
 class APIUpdateArchive(APIPost, APIPut, APIDelete):

@@ -9,19 +9,19 @@
 
 import datetime
 
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.auth.models import User, UserManager
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
 from django.utils.timezone import now
 
 from .config import (
-    DEPOSIT_STATUS_VERIFIED,
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    DEPOSIT_STATUS_LOAD_FAILURE,
-    DEPOSIT_STATUS_REJECTED,
     ARCHIVE_TYPE,
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_REJECTED,
+    DEPOSIT_STATUS_VERIFIED,
     METADATA_TYPE,
 )
 

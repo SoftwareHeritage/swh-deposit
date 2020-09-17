@@ -4,14 +4,14 @@
 # See top-level LICENSE file for more information
 
 
+from rest_framework import serializers
 from rest_framework.fields import _UnvalidatedField
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import serializers
 
 from . import APIPrivateView
-from ..converters import convert_status_detail
 from ...models import Deposit
+from ..converters import convert_status_detail
 
 
 class DefaultPagination(PageNumberPagination):

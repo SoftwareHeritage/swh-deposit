@@ -4,13 +4,11 @@
 # See top-level LICENSE file for more information
 
 import os
-
 from typing import Any, Dict
 
 from swh.core import config
 from swh.scheduler import get_scheduler
 from swh.scheduler.interface import SchedulerInterface
-
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
 EDIT_SE_IRI = "edit_se_iri"

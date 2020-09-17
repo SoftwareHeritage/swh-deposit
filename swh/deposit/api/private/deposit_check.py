@@ -3,23 +3,21 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from itertools import chain
 import json
 import re
+from shutil import get_unpack_formats
 import tarfile
 import zipfile
-
-from itertools import chain
-from shutil import get_unpack_formats
 
 from rest_framework import status
 
 from swh.scheduler.utils import create_oneshot_task_dict
 
-from . import DepositReadMixin, APIPrivateView
-from ..common import APIGet
-from ...config import DEPOSIT_STATUS_VERIFIED, DEPOSIT_STATUS_REJECTED
-from ...config import ARCHIVE_TYPE
+from . import APIPrivateView, DepositReadMixin
+from ...config import ARCHIVE_TYPE, DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_VERIFIED
 from ...models import Deposit
+from ..common import APIGet
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
 ALTERNATE_FIELDS_MISSING = "Mandatory alternate fields are missing"

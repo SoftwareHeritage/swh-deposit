@@ -3,12 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.deposit.exception import custom_exception_handler
-
+from django.db.utils import OperationalError
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
-from django.db.utils import OperationalError
+from swh.deposit.exception import custom_exception_handler
 
 
 def test_custom_exception_handler_operational_error(mocker):

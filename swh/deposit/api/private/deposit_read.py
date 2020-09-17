@@ -3,23 +3,23 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from contextlib import contextmanager
 import json
 import os
 import shutil
 import tempfile
 
-from contextlib import contextmanager
 from django.http import FileResponse
 from rest_framework import status
 
 from swh.core import tarball
-from swh.model import identifiers
 from swh.deposit.utils import normalize_date
+from swh.model import identifiers
 
-from . import DepositReadMixin, APIPrivateView
-from ...config import SWH_PERSON, ARCHIVE_TYPE
-from ..common import APIGet
+from . import APIPrivateView, DepositReadMixin
+from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
+from ..common import APIGet
 
 
 @contextmanager

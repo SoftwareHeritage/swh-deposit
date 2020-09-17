@@ -8,13 +8,11 @@
 
 """
 
-import xmltodict
+from xml.parsers.expat import ExpatError
 
 from django.conf import settings
-from rest_framework.parsers import BaseParser
-from rest_framework.parsers import FileUploadParser
-from rest_framework.parsers import MultiPartParser
-from xml.parsers.expat import ExpatError
+from rest_framework.parsers import BaseParser, FileUploadParser, MultiPartParser
+import xmltodict
 
 from swh.deposit.errors import ParserError
 

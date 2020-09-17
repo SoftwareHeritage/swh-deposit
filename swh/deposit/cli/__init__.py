@@ -3,10 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import logging
+
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
 import click
-import logging
 
 from swh.core.cli import CONTEXT_SETTINGS
 

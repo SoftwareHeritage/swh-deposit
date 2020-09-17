@@ -6,10 +6,9 @@
 from django.shortcuts import render
 from django.urls import reverse
 
-from .common import APIBase, ACCEPT_PACKAGINGS
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import COL_IRI
 from ..models import DepositClient, DepositCollection
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, ACCEPT_PACKAGINGS, APIBase
 
 
 class APIServiceDocument(APIBase):

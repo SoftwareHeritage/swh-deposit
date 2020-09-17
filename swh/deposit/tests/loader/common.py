@@ -4,10 +4,9 @@
 # See top-level LICENSE file for more information
 
 import json
-
 from typing import Dict, Optional
-from swh.deposit.client import PrivateApiDepositClient
 
+from swh.deposit.client import PrivateApiDepositClient
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
 from swh.model.model import SnapshotBranch, TargetType
 from swh.storage.algos.snapshot import snapshot_get_all_branches

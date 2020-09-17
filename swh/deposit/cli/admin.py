@@ -226,13 +226,14 @@ def adm_deposit_reschedule(ctx, deposit_id):
     """
     # to avoid loading too early django namespaces
     from datetime import datetime
-    from swh.deposit.models import Deposit
+
     from swh.deposit.config import (
-        DEPOSIT_STATUS_LOAD_SUCCESS,
         DEPOSIT_STATUS_LOAD_FAILURE,
+        DEPOSIT_STATUS_LOAD_SUCCESS,
         DEPOSIT_STATUS_VERIFIED,
         APIConfig,
     )
+    from swh.deposit.models import Deposit
 
     try:
         deposit = Deposit.objects.get(pk=deposit_id)

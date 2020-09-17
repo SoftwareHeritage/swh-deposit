@@ -5,14 +5,12 @@
 
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import DIRECTORY, swhid, REVISION, SNAPSHOT
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 from . import APIPrivateView
+from ...errors import BAD_REQUEST, make_error_dict
+from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
 from ..common import APIPut
-from ...errors import make_error_dict, BAD_REQUEST
-from ...models import Deposit, DEPOSIT_STATUS_DETAIL
-from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
-
 
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 

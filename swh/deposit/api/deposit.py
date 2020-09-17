@@ -5,12 +5,15 @@
 
 from rest_framework import status
 
-from .common import APIPost, ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import EDIT_SE_IRI
-from ..errors import make_error_dict, BAD_REQUEST
-from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
-from ..parsers import SWHAtomEntryParser
-from ..parsers import SWHMultiPartParser
+from ..errors import BAD_REQUEST, make_error_dict
+from ..parsers import (
+    SWHAtomEntryParser,
+    SWHFileUploadTarParser,
+    SWHFileUploadZipParser,
+    SWHMultiPartParser,
+)
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost
 
 
 class APIPostDeposit(APIPost):

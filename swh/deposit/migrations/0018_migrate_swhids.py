@@ -6,22 +6,16 @@
 
 from __future__ import unicode_literals
 
-import os
 import logging
+import os
+from typing import Any, Dict, Optional, Tuple
 
 from django.db import migrations
-from typing import Any, Dict, Optional, Tuple
 
 from swh.core import config
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
-from swh.model.identifiers import (
-    parse_swhid,
-    swhid,
-    DIRECTORY,
-    REVISION,
-    SNAPSHOT,
-)
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, parse_swhid, swhid
 from swh.storage import get_storage as get_storage_client
 from swh.storage.algos.snapshot import snapshot_id_get_from_revision
 

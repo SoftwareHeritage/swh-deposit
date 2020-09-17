@@ -3,16 +3,16 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import logging
+
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
 import os
-import logging
 import sys
 
 import click
 
 from swh.deposit.cli import deposit
-
 
 logger = logging.getLogger(__name__)
 
@@ -406,6 +406,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
     import tempfile
+
     from swh.deposit.client import MaintenanceError
 
     url = _url(url)
@@ -497,6 +498,7 @@ def status(ctx, url, username, password, deposit_id, output_format):
 
 def print_result(data, output_format):
     import json
+
     import yaml
 
     if output_format == "json":

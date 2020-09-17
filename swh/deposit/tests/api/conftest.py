@@ -3,21 +3,20 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
 import hashlib
-import pytest
+import os
 
 from django.urls import reverse
+import pytest
 
+from swh.deposit.api.private.deposit_check import APIChecks
 from swh.deposit.config import (
-    DEPOSIT_STATUS_DEPOSITED,
     COL_IRI,
+    DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_VERIFIED,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
-
-from swh.deposit.api.private.deposit_check import APIChecks
 
 
 @pytest.fixture

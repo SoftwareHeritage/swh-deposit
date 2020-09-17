@@ -3,15 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.deposit import utils
-
-from ...config import METADATA_TYPE, APIConfig
-from ...models import DepositRequest, Deposit
-
 from rest_framework.permissions import AllowAny
 
+from swh.deposit import utils
 from swh.deposit.api.common import AuthenticatedAPIView
-from swh.deposit.errors import make_error_dict, NOT_FOUND
+from swh.deposit.errors import NOT_FOUND, make_error_dict
+
+from ...config import METADATA_TYPE, APIConfig
+from ...models import Deposit, DepositRequest
 
 
 class DepositReadMixin:
