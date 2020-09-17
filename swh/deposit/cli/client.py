@@ -235,7 +235,7 @@ def client_command_parse_input(
 
     if not archive and not metadata and partial:
         raise InputError(
-            "Please provide an actionable command. See --help for more " "information"
+            "Please provide an actionable command. See --help for more information"
         )
 
     if replace and not deposit_id:

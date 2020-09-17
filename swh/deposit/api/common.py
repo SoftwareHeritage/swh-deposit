@@ -264,7 +264,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             deposit = Deposit.objects.get(pk=deposit_id)
         except Deposit.DoesNotExist:
             return make_error_dict(
-                NOT_FOUND, "The deposit %s does not exist" % deposit_id
+                NOT_FOUND, f"The deposit {deposit_id} does not exist"
             )
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
@@ -286,7 +286,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             deposit = Deposit.objects.get(pk=deposit_id)
         except Deposit.DoesNotExist:
             return make_error_dict(
-                NOT_FOUND, "The deposit %s does not exist" % deposit_id
+                NOT_FOUND, f"The deposit {deposit_id} does not exist"
             )
 
         if deposit.collection.name != collection_name:
@@ -318,13 +318,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             detailing the problem.
 
         """
+        max_upload_size = self.config["max_upload_size"]
         if content_length:
-            if content_length > self.config["max_upload_size"]:
+            if content_length > max_upload_size:
                 return make_error_dict(
                     MAX_UPLOAD_SIZE_EXCEEDED,
-                    "Upload size limit exceeded (max %s bytes)."
-                    % self.config["max_upload_size"],
-                    "Please consider sending the archive in " "multiple steps.",
+                    f"Upload size limit exceeded (max {max_upload_size} bytes)."
+                    "Please consider sending the archive in multiple steps.",
                 )
 
             length = filehandler.size
@@ -339,9 +339,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 return make_error_dict(
                     CHECKSUM_MISMATCH,
                     "Wrong md5 hash",
-                    "The checksum sent %s and the actual checksum "
-                    "%s does not match."
-                    % (hashutil.hash_to_hex(md5sum), hashutil.hash_to_hex(_md5sum)),
+                    f"The checksum sent {hashutil.hash_to_hex(md5sum)} and the actual "
+                    f"checksum {hashutil.hash_to_hex(_md5sum)} does not match.",
                 )
 
         return None
@@ -396,7 +395,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             return make_error_dict(
                 BAD_REQUEST,
                 "CONTENT_LENGTH header is mandatory",
-                "For archive deposit, the " "CONTENT_LENGTH header must be sent.",
+                "For archive deposit, the CONTENT_LENGTH header must be sent.",
             )
 
         content_disposition = headers["content-disposition"]
@@ -404,15 +403,15 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             return make_error_dict(
                 BAD_REQUEST,
                 "CONTENT_DISPOSITION header is mandatory",
-                "For archive deposit, the " "CONTENT_DISPOSITION header must be sent.",
+                "For archive deposit, the CONTENT_DISPOSITION header must be sent.",
             )
 
         packaging = headers["packaging"]
         if packaging and packaging not in ACCEPT_PACKAGINGS:
             return make_error_dict(
                 BAD_REQUEST,
-                "Only packaging %s is supported" % ACCEPT_PACKAGINGS,
-                "The packaging provided %s is not supported" % packaging,
+                f"Only packaging {ACCEPT_PACKAGINGS} is supported",
+                f"The packaging provided {packaging} is not supported",
             )
 
         filehandler = request.FILES["file"]
@@ -725,7 +724,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             self._collection = DepositCollection.objects.get(name=collection_name)
         except DepositCollection.DoesNotExist:
             return make_error_dict(
-                NOT_FOUND, "Unknown collection name %s" % collection_name
+                NOT_FOUND, f"Unknown collection name {collection_name}"
             )
 
         username = request.user.username
@@ -733,13 +732,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             try:
                 self._client = DepositClient.objects.get(username=username)
             except DepositClient.DoesNotExist:
-                return make_error_dict(NOT_FOUND, "Unknown client name %s" % username)
+                return make_error_dict(NOT_FOUND, f"Unknown client name {username}")
 
             if self._collection.id not in self._client.collections:
                 return make_error_dict(
                     FORBIDDEN,
-                    "Client %s cannot access collection %s"
-                    % (username, collection_name),
+                    f"Client {username} cannot access collection {collection_name}",
                 )
 
         if deposit_id:
@@ -747,7 +745,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 deposit = Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
                 return make_error_dict(
-                    NOT_FOUND, "Deposit with id %s does not exist" % deposit_id
+                    NOT_FOUND, f"Deposit with id {deposit_id} does not exist"
                 )
 
             checks = self.restrict_access(request, deposit)
@@ -770,7 +768,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 summary = "You can only act on deposit with status '%s'" % (
                     DEPOSIT_STATUS_PARTIAL,
                 )
-                description = "This deposit has status '%s'" % deposit.status
+                description = f"This deposit has status '{deposit.status}'"
                 return make_error_dict(
                     BAD_REQUEST, summary=summary, verbose_description=description
                 )
@@ -779,7 +777,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return make_error_response(
             request,
             METHOD_NOT_ALLOWED,
-            "%s method is not supported on this endpoint" % method,
+            f"{method} method is not supported on this endpoint",
         )
 
     def get(self, request, *args, **kwargs):

@@ -254,7 +254,7 @@ def test_read_metadata_3(
             "codemeta:version": "1",
             "external_identifier": ["some-external-id", "hal-01243065"],
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
             "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
         }
         expected_meta = {
@@ -327,8 +327,8 @@ def test_read_metadata_4(
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane " "Gruenpeter"},
-            "codemeta:description": "this is the " "description",
+            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
+            "codemeta:description": "this is the description",
             "codemeta:developmentStatus": "stable",
             "codemeta:keywords": "DSP programming",
             "codemeta:license": [
@@ -355,7 +355,7 @@ def test_read_metadata_4(
             "codemeta:version": "1",
             "external_identifier": "hal-01243065",
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
         }
 
         expected_origin = {
@@ -450,7 +450,7 @@ def test_read_metadata_5(
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane " "Gruenpeter"},
+            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
             "codemeta:dateCreated": [
                 "2015-04-06T17:08:47+02:00",
                 "2016-04-06T17:08:47+02:00",
@@ -486,7 +486,7 @@ def test_read_metadata_5(
             "codemeta:version": "1",
             "external_identifier": "hal-01243065",
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
         }
 
         expected_origin_metadata = {
