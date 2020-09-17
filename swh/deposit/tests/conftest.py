@@ -62,11 +62,6 @@ def deposit_config(swh_scheduler_config):
             "provider_url": "",
             "metadata": {},
         },
-        "tool": {
-            "name": "swh-deposit",
-            "version": "0.0.1",
-            "configuration": {"sword_version": "2"},
-        },
         "scheduler": {"cls": "local", "args": swh_scheduler_config,},
     }
 
