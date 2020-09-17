@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 
@@ -21,7 +22,7 @@ class APIStatus(APIBase):
 
     """
 
-    def get(self, req, collection_name, deposit_id, format=None):
+    def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
         checks = self.checks(req, collection_name, deposit_id)
         if "error" in checks:
             return make_error_response_from_dict(req, checks["error"])

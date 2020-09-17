@@ -4,10 +4,10 @@
 # See top-level LICENSE file for more information
 
 from itertools import chain
-import json
 import re
 from shutil import get_unpack_formats
 import tarfile
+from typing import Dict, Optional, Tuple
 import zipfile
 
 from rest_framework import status
@@ -16,7 +16,7 @@ from swh.scheduler.utils import create_oneshot_task_dict
 
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_VERIFIED
-from ...models import Deposit
+from ...models import Deposit, DepositRequest
 from ..common import APIGet
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
@@ -60,7 +60,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
 
     """
 
-    def _check_deposit_archives(self, deposit):
+    def _check_deposit_archives(self, deposit: Deposit) -> Tuple[bool, Optional[Dict]]:
         """Given a deposit, check each deposit request of type archive.
 
         Args:
@@ -87,7 +87,9 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             return True, None
         return False, {"archive": errors}
 
-    def _check_archive(self, archive_request):
+    def _check_archive(
+        self, archive_request: DepositRequest
+    ) -> Tuple[bool, Optional[str]]:
         """Check that a deposit associated archive is ok:
         - readable
         - supported archive format
@@ -111,11 +113,11 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
 
         try:
             if zipfile.is_zipfile(archive_path):
-                with zipfile.ZipFile(archive_path) as f:
-                    files = f.namelist()
+                with zipfile.ZipFile(archive_path) as zipfile_:
+                    files = zipfile_.namelist()
             elif tarfile.is_tarfile(archive_path):
-                with tarfile.open(archive_path) as f:
-                    files = f.getnames()
+                with tarfile.open(archive_path) as tarfile_:
+                    files = tarfile_.getnames()
             else:
                 return False, MANDATORY_ARCHIVE_UNSUPPORTED
         except Exception:
@@ -128,7 +130,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             return False, MANDATORY_ARCHIVE_INVALID
         return True, None
 
-    def _check_metadata(self, metadata):
+    def _check_metadata(self, metadata: Dict) -> Tuple[bool, Optional[Dict]]:
         """Check to execute on all metadata for mandatory field presence.
 
         Args:
@@ -174,7 +176,9 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             )
         return False, {"metadata": detail}
 
-    def process_get(self, req, collection_name, deposit_id):
+    def process_get(
+        self, req, collection_name: str, deposit_id: int
+    ) -> Tuple[int, Dict, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
@@ -189,15 +193,17 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         metadata = self._metadata_get(deposit)
-        problems = {}
+        problems: Dict = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
         archives_status, error_detail = self._check_deposit_archives(deposit)
         if not archives_status:
+            assert error_detail is not None
             problems.update(error_detail)
 
         metadata_status, error_detail = self._check_metadata(metadata)
         if not metadata_status:
+            assert error_detail is not None
             problems.update(error_detail)
 
         deposit_status = archives_status and metadata_status
@@ -225,4 +231,4 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
 
         deposit.save()
 
-        return status.HTTP_200_OK, json.dumps(response), "application/json"
+        return status.HTTP_200_OK, response, "application/json"

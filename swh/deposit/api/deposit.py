@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Any, Dict, Optional, Tuple
+
 from rest_framework import status
 
 from ..config import EDIT_SE_IRI
@@ -32,7 +34,13 @@ class APIPostDeposit(APIPost):
         SWHAtomEntryParser,
     )
 
-    def additional_checks(self, req, headers, collection_name, deposit_id=None):
+    def additional_checks(
+        self,
+        req,
+        headers: Dict[str, Any],
+        collection_name: str,
+        deposit_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         slug = headers["slug"]
         if not slug:
             msg = "Missing SLUG header in request"
@@ -41,7 +49,13 @@ class APIPostDeposit(APIPost):
 
         return {}
 
-    def process_post(self, req, headers, collection_name, deposit_id=None):
+    def process_post(
+        self,
+        req,
+        headers: Dict[str, Any],
+        collection_name: str,
+        deposit_id: Optional[int] = None,
+    ) -> Tuple[int, str, Dict[str, Any]]:
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)

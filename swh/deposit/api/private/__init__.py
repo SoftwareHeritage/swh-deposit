@@ -86,23 +86,11 @@ class APIPrivateView(APIConfig, AuthenticatedAPIView):
         return {"headers": headers}
 
     def get(
-        self,
-        request,
-        collection_name=None,
-        deposit_id=None,
-        format=None,
-        *args,
-        **kwargs,
+        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
     ):
-        return super().get(request, collection_name, deposit_id, format)
+        return super().get(request, collection_name, deposit_id)
 
     def put(
-        self,
-        request,
-        collection_name=None,
-        deposit_id=None,
-        format=None,
-        *args,
-        **kwargs,
+        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
     ):
-        return super().put(request, collection_name, deposit_id, format)
+        return super().put(request, collection_name, deposit_id)

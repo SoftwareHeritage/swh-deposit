@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Dict
+
 from rest_framework.parsers import JSONParser
 
 from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
@@ -61,7 +63,9 @@ class APIUpdateStatus(APIPrivateView, APIPut):
 
         return {}
 
-    def process_put(self, request, headers, collection_name, deposit_id):
+    def process_put(
+        self, request, headers: Dict, collection_name: str, deposit_id: int
+    ) -> Dict:
         """Update the deposit with status and SWHIDs
 
         Returns:

@@ -4,12 +4,11 @@
 # See top-level LICENSE file for more information
 
 from contextlib import contextmanager
-import json
 import os
 import shutil
 import tempfile
+from typing import Any, Dict, Tuple
 
-from django.http import FileResponse
 from rest_framework import status
 
 from swh.core import tarball
@@ -74,14 +73,16 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
         if not os.path.exists(self.extraction_dir):
             os.makedirs(self.extraction_dir)
 
-    def process_get(self, request, collection_name, deposit_id):
+    def process_get(
+        self, request, collection_name: str, deposit_id: int
+    ) -> Tuple[int, Any, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
         Args:
             request (Request):
-            collection_name (str): Collection owning the deposit
-            deposit_id (id): Deposit concerned by the reading
+            collection_name: Collection owning the deposit
+            deposit_id: Deposit concerned by the reading
 
         Returns:
             Tuple status, stream of content, content-type
@@ -91,12 +92,11 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
             r.archive.path
             for r in self._deposit_requests(deposit_id, request_type=ARCHIVE_TYPE)
         ]
-        with aggregate_tarballs(self.extraction_dir, archive_paths) as path:
-            return FileResponse(
-                open(path, "rb"),
-                status=status.HTTP_200_OK,
-                content_type="application/zip",
-            )
+        return (
+            status.HTTP_200_OK,
+            aggregate_tarballs(self.extraction_dir, archive_paths),
+            "swh/generator",
+        )
 
 
 class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
@@ -187,11 +187,9 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
         return data
 
-    def process_get(self, request, collection_name, deposit_id):
+    def process_get(
+        self, request, collection_name: str, deposit_id: int
+    ) -> Tuple[int, Dict, str]:
         deposit = Deposit.objects.get(pk=deposit_id)
         data = self.metadata_read(deposit)
-        d = {}
-        if data:
-            d = json.dumps(data)
-
-        return status.HTTP_200_OK, d, "application/json"
+        return status.HTTP_200_OK, data if data else {}, "application/json"
