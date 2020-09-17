@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,6 +6,7 @@
 from django.urls import reverse
 from rest_framework import status
 
+from swh.deposit.api import __version__
 from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
 from swh.deposit.models import Deposit
 
@@ -83,7 +84,7 @@ def test_read_metadata(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -159,7 +160,7 @@ def test_read_metadata_revision_with_parent(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -272,7 +273,7 @@ def test_read_metadata_3(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -373,7 +374,7 @@ def test_read_metadata_4(
             "tool": {
                 "configuration": {"sword_version": "2"},
                 "name": "swh-deposit",
-                "version": "0.0.1",
+                "version": __version__,
             },
         }
 
@@ -499,7 +500,7 @@ def test_read_metadata_5(
             "tool": {
                 "configuration": {"sword_version": "2"},
                 "name": "swh-deposit",
-                "version": "0.0.1",
+                "version": __version__,
             },
         }
 

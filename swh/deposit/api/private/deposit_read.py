@@ -13,6 +13,7 @@ from django.http import FileResponse
 from rest_framework import status
 
 from swh.core import tarball
+from swh.deposit.api import __version__
 from swh.deposit.utils import normalize_date
 from swh.model import identifiers
 
@@ -106,7 +107,11 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
     def __init__(self):
         super().__init__()
         self.provider = self.config["provider"]
-        self.tool = self.config["tool"]
+        self.tool = {
+            "name": "swh-deposit",
+            "version": __version__,
+            "configuration": {"sword_version": "2"},
+        }
 
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
