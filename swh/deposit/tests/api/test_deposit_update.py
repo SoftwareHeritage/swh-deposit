@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -18,6 +18,8 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive, create_arborescence_archive
+from swh.model.hashutil import hash_to_bytes
+from swh.model.identifiers import parse_swhid, swhid
 
 
 def test_replace_archive_to_deposit_is_possible(
@@ -561,3 +563,199 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
     requests_archive1 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive1) == 1
     assert set(requests_archive0) != set(requests_archive1)
+
+
+def test_put_update_metadata_done_deposit_nominal(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    sample_data,
+    swh_storage,
+):
+    """Nominal scenario, client send an update of metadata on a deposit with status "done"
+       with an existing swhid. Such swhid has its metadata updated accordingly both in
+       the deposit backend and in the metadata storage.
+
+       Response: 204
+
+    """
+    deposit_swhid = parse_swhid(complete_deposit.swh_id)
+    assert deposit_swhid.object_type == "directory"
+    directory_id = hash_to_bytes(deposit_swhid.object_id)
+
+    # directory targeted by the complete_deposit does not exist in the storage
+    assert list(swh_storage.directory_missing([directory_id])) == [directory_id]
+
+    # so let's create a directory reference in the storage (current deposit targets an
+    # unknown swhid)
+    existing_directory = sample_data.directory
+    swh_storage.directory_add([existing_directory])
+    assert list(swh_storage.directory_missing([existing_directory.id])) == []
+
+    # and patch one complete deposit swh_id so it targets said reference
+    complete_deposit.swh_id = swhid("directory", existing_directory.id)
+    complete_deposit.save()
+
+    actual_existing_requests_archive = DepositRequest.objects.filter(
+        deposit=complete_deposit, type="archive"
+    )
+    nb_archives = len(actual_existing_requests_archive)
+    actual_existing_requests_metadata = DepositRequest.objects.filter(
+        deposit=complete_deposit, type="metadata"
+    )
+    nb_metadata = len(actual_existing_requests_metadata)
+
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data1"],
+        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    new_requests_meta = DepositRequest.objects.filter(
+        deposit=complete_deposit, type="metadata"
+    )
+    assert len(new_requests_meta) == nb_metadata + 1
+    request_meta1 = new_requests_meta[0]
+    raw_metadata1 = request_meta1.raw_metadata
+    assert raw_metadata1 == atom_dataset["entry-data1"]
+
+    # check we did not touch the other parts
+    requests_archive1 = DepositRequest.objects.filter(
+        deposit=complete_deposit, type="archive"
+    )
+    assert len(requests_archive1) == nb_archives
+    assert set(actual_existing_requests_archive) == set(requests_archive1)
+
+    # FIXME: Check the metadata storage information created is consistent
+    pass
+
+
+def test_put_update_metadata_done_deposit_failure_swhid_unknown(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
+):
+    """Failure: client updates metadata with a SWHID matching the deposit's. Said SWHID does
+       not exist in the archive somehow.
+
+       This should not happen though, it is still technically possible so it's
+       covered...
+
+       Response: 400
+
+    """
+    # directory targeted by the complete_deposit does not exist in the storage
+    missing_directory_id = hash_to_bytes(parse_swhid(complete_deposit.swh_id).object_id)
+    assert list(swh_storage.directory_missing([missing_directory_id])) == [
+        missing_directory_id
+    ]
+
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data1"],
+        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Unknown directory SWHID" in response.content
+
+
+def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
+):
+    """failure: client updates metadata on deposit with SWHID not matching the deposit's.
+
+       Response: 400
+
+    """
+    incorrect_swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
+    assert complete_deposit.swh_id != incorrect_swhid
+
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data1"],
+        HTTP_X_CHECK_SWHID=incorrect_swhid,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Mismatched provided SWHID" in response.content
+
+
+def test_put_update_metadata_done_deposit_failure_malformed_xml(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
+):
+    """failure: client updates metadata on deposit done with a malformed xml
+
+       Response: 400
+
+    """
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-ko"],
+        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Malformed xml metadata" in response.content
+
+
+def test_put_update_metadata_done_deposit_failure_empty_xml(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
+):
+    """failure: client updates metadata on deposit done with an empty xml.
+
+       Response: 400
+
+    """
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-empty-body"],
+        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Empty body request is not supported" in response.content

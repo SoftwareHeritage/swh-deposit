@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict
 
 from swh.core import config
+from swh.deposit import __version__
 from swh.scheduler import get_scheduler
 from swh.scheduler.interface import SchedulerInterface
 
@@ -97,3 +98,8 @@ class APIConfig:
         conf = config.read_raw_config(config.config_basepath(config_file))
         self.config: Dict[str, Any] = config.merge_configs(DEFAULT_CONFIG, conf)
         self.scheduler: SchedulerInterface = get_scheduler(**self.config["scheduler"])
+        self.tool = {
+            "name": "swh-deposit",
+            "version": __version__,
+            "configuration": {"sword_version": "2"},
+        }

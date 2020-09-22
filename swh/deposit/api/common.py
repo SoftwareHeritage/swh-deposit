@@ -114,6 +114,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         on_behalf_of = meta.get("HTTP_ON_BEHALF_OF")
         metadata_relevant = meta.get("HTTP_METADATA_RELEVANT")
 
+        swhid = meta.get("HTTP_X_CHECK_SWHID")
+
         return {
             "content-type": content_type,
             "content-length": content_length,
@@ -124,6 +126,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             "slug": slug,
             "on-behalf-of": on_behalf_of,
             "metadata-relevant": metadata_relevant,
+            "swhid": swhid,
         }
 
     def _compute_md5(self, filehandler) -> bytes:
@@ -222,7 +225,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit_request_data: Dict[str, Any],
         replace_metadata: bool = False,
         replace_archives: bool = False,
-    ) -> None:
+    ) -> DepositRequest:
         """Save a deposit request with metadata attached to a deposit.
 
         Args:
@@ -235,7 +238,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               archives to existing deposit
 
         Returns:
-            None
+            the DepositRequest object stored in the backend
 
         """
         if replace_metadata:
@@ -265,6 +268,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             deposit_request.save()
 
         assert deposit_request is not None
+        return deposit_request
 
     def _delete_archives(self, collection_name: str, deposit_id: int) -> Dict:
         """Delete archive references from the deposit id.
@@ -610,7 +614,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """Atom entry deposit.
 
         Args:
-            request (Request): the request holding information to parse
+            request: the request holding information to parse
                 and inject in db
             headers: request headers formatted
             collection_name: the associated client
@@ -777,6 +781,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     f"Client {username} cannot access collection {collection_name}",
                 )
 
+        headers = self._read_headers(request)
+
         if deposit_id:
             try:
                 deposit = Deposit.objects.get(pk=deposit_id)
@@ -785,11 +791,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     NOT_FOUND, f"Deposit with id {deposit_id} does not exist"
                 )
 
-            checks = self.restrict_access(request, deposit)
+            assert deposit is not None
+            checks = self.restrict_access(request, headers, deposit)
             if checks:
                 return checks
 
-        headers = self._read_headers(request)
         if headers["on-behalf-of"]:
             return make_error_dict(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
 
@@ -800,17 +806,19 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return {"headers": headers}
 
     def restrict_access(
-        self, request: Request, deposit: Optional[Deposit] = None
+        self, request: Request, headers: Dict, deposit: Deposit
     ) -> Dict[str, Any]:
-        if deposit:
-            if request.method != "GET" and deposit.status != DEPOSIT_STATUS_PARTIAL:
-                summary = "You can only act on deposit with status '%s'" % (
-                    DEPOSIT_STATUS_PARTIAL,
-                )
-                description = f"This deposit has status '{deposit.status}'"
-                return make_error_dict(
-                    BAD_REQUEST, summary=summary, verbose_description=description
-                )
+        """Allow modifications on deposit with status 'partial' only, reject the rest.
+
+        """
+        if request.method != "GET" and deposit.status != DEPOSIT_STATUS_PARTIAL:
+            summary = "You can only act on deposit with status '%s'" % (
+                DEPOSIT_STATUS_PARTIAL,
+            )
+            description = f"This deposit has status '{deposit.status}'"
+            return make_error_dict(
+                BAD_REQUEST, summary=summary, verbose_description=description
+            )
         return {}
 
     def _basic_not_allowed_method(self, request: Request, method: str):

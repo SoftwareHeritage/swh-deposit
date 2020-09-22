@@ -16,6 +16,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 import yaml
 
+from swh.core.config import read
 from swh.deposit.config import (
     COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
@@ -51,18 +52,13 @@ def pytest_configure():
 
 
 @pytest.fixture()
-def deposit_config(swh_scheduler_config):
+def deposit_config(swh_scheduler_config, swh_storage_backend_config):
     return {
         "max_upload_size": 500,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
         "checks": False,
-        "provider": {
-            "provider_name": "",
-            "provider_type": "deposit_client",
-            "provider_url": "",
-            "metadata": {},
-        },
         "scheduler": {"cls": "local", "args": swh_scheduler_config,},
+        "storage_metadata": swh_storage_backend_config,
     }
 
 
@@ -78,14 +74,18 @@ def deposit_config_path(tmp_path, monkeypatch, deposit_config):
 @pytest.fixture(autouse=True)
 def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
     """Enforce config for deposit classes inherited from APIConfig."""
+    cfg = read(deposit_config_path)
 
-    scheduler = get_scheduler("local", swh_scheduler_config)
-    task_type = {
-        "type": "load-deposit",
-        "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
-        "description": "Load deposit task",
-    }
-    scheduler.create_task_type(task_type)
+    if "scheduler" in cfg:
+        # scheduler setup: require the load-deposit tasks (already existing in
+        # production)
+        scheduler = get_scheduler(**cfg["scheduler"])
+        task_type = {
+            "type": "load-deposit",
+            "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
+            "description": "Load deposit task",
+        }
+        scheduler.create_task_type(task_type)
 
 
 @pytest.fixture(scope="session")

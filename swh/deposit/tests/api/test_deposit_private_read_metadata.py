@@ -6,7 +6,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit.api import __version__
+from swh.deposit import __version__
 from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
 from swh.deposit.models import Deposit
 

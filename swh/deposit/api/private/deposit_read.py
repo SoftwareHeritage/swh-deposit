@@ -12,9 +12,9 @@ from typing import Any, Dict, Tuple
 from rest_framework import status
 
 from swh.core import tarball
-from swh.deposit.api import __version__
 from swh.deposit.utils import normalize_date
 from swh.model import identifiers
+from swh.model.model import MetadataAuthorityType
 
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
@@ -104,15 +104,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
     """
 
-    def __init__(self):
-        super().__init__()
-        self.provider = self.config["provider"]
-        self.tool = {
-            "name": "swh-deposit",
-            "version": __version__,
-            "configuration": {"sword_version": "2"},
-        }
-
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
            from the incoming metadata.
@@ -155,10 +146,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         # Read information metadata
         data = {"origin": {"type": "deposit", "url": deposit.origin_url,}}
 
-        # metadata provider
-        self.provider["provider_name"] = deposit.client.last_name
-        self.provider["provider_url"] = deposit.client.provider_url
-
         author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         if deposit.parent:
@@ -170,7 +157,13 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             parents = []
 
         data["origin_metadata"] = {
-            "provider": self.provider,
+            # metadata provider
+            "provider": {
+                "provider_name": deposit.client.last_name,
+                "provider_url": deposit.client.provider_url,
+                "provider_type": MetadataAuthorityType.DEPOSIT_CLIENT.value,
+                "metadata": {},
+            },
             "tool": self.tool,
             "metadata": metadata,
         }
