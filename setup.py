@@ -59,7 +59,7 @@ setup(
         [console_scripts]
         swh-deposit=swh.deposit.cli:main
         [swh.cli.subcommands]
-        deposit=swh.deposit.cli:deposit
+        deposit=swh.deposit.cli
         [swh.workers]
         deposit.worker=swh.deposit.loader:register
     """,
