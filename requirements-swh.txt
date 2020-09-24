@@ -1,1 +1,1 @@
-swh.core >= 0.3
+swh.core[http] >= 0.3
