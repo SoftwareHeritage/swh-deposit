@@ -3,9 +3,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import iso8601
-
 from types import GeneratorType
+
+import iso8601
 
 from swh.model.identifiers import normalize_timestamp
 

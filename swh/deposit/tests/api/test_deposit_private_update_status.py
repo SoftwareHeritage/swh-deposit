@@ -9,17 +9,14 @@ import json
 from django.urls import reverse
 from rest_framework import status
 
-from swh.model.identifiers import DIRECTORY, persistent_identifier, REVISION, SNAPSHOT
-
 from swh.deposit.api.private.deposit_update_status import MANDATORY_KEYS
-
-from swh.deposit.models import Deposit
 from swh.deposit.config import (
-    PRIVATE_PUT_DEPOSIT,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    PRIVATE_PUT_DEPOSIT,
 )
-
+from swh.deposit.models import Deposit
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 PRIVATE_PUT_DEPOSIT_NC = PRIVATE_PUT_DEPOSIT + "-nc"
 
@@ -53,9 +50,9 @@ def test_update_deposit_status_success_with_info(
         "origin_url": origin_url,
     }
     for url in private_check_url_endpoints(deposit_collection, deposit):
-        dir_id = persistent_identifier(DIRECTORY, directory_id)
-        rev_id = persistent_identifier(REVISION, revision_id)
-        snp_id = persistent_identifier(SNAPSHOT, snapshot_id)
+        dir_id = swhid(DIRECTORY, directory_id)
+        rev_id = swhid(REVISION, revision_id)
+        snp_id = swhid(SNAPSHOT, snapshot_id)
 
         expected_swh_id = "swh:1:dir:%s" % directory_id
         expected_swh_id_context = (

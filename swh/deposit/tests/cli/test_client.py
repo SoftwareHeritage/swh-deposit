@@ -12,15 +12,21 @@ from unittest.mock import MagicMock
 from click.testing import CliRunner
 import pytest
 
-from swh.deposit.client import PublicApiDepositClient, MaintenanceError
-from swh.deposit.cli.client import generate_slug, _url, _client, _collection, InputError
 from swh.deposit.cli import deposit as cli
-from ..conftest import TEST_USER
+from swh.deposit.cli.client import InputError, _client, _collection, _url, generate_slug
+from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 
+from ..conftest import TEST_USER
 
 EXAMPLE_SERVICE_DOCUMENT = {
     "service": {"workspace": {"collection": {"sword:name": "softcol",}}}
 }
+
+
+@pytest.fixture
+def datadir(request):
+    """Override default datadir to target main test datadir"""
+    return os.path.join(os.path.dirname(str(request.fspath)), "../data")
 
 
 @pytest.fixture
@@ -138,7 +144,7 @@ def test_single_minimal_deposit(
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
 
@@ -205,7 +211,7 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
     with open(metadata_path, "a"):
@@ -314,7 +320,7 @@ def test_single_deposit_slug_generation(
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
-        "swh.deposit.cli.client.tempfile.TemporaryDirectory",
+        "tempfile.TemporaryDirectory",
         return_value=contextlib.nullcontext(str(tmp_path)),
     )
 

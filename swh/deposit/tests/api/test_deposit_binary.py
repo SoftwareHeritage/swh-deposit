@@ -3,22 +3,17 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import pytest
+from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
-from io import BytesIO
-
+import pytest
 from rest_framework import status
 
-from swh.deposit.config import (
-    COL_IRI,
-    EM_IRI,
-    DEPOSIT_STATUS_DEPOSITED,
-)
+from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED, EM_IRI
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import create_arborescence_archive, check_archive
+from swh.deposit.tests.common import check_archive, create_arborescence_archive
 
 
 def test_post_deposit_binary_no_slug(

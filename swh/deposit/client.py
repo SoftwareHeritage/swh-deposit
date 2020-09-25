@@ -7,18 +7,17 @@
 
 """
 
-import hashlib
-import os
-import requests
-import xmltodict
-import logging
-
 from abc import ABCMeta, abstractmethod
+import hashlib
+import logging
+import os
 from typing import Any, Dict
 from urllib.parse import urljoin
 
-from swh.core.config import SWHConfig
+import requests
+import xmltodict
 
+from swh.core.config import config_basepath, read_raw_config
 
 logger = logging.getLogger(__name__)
 
@@ -74,21 +73,15 @@ def _parse_with_filter(stream, encoding="utf-8", keys=[]):
     return m
 
 
-class BaseApiDepositClient(SWHConfig):
+class BaseApiDepositClient:
     """Deposit client base class
 
     """
 
-    CONFIG_BASE_FILENAME = "deposit/client"
-    DEFAULT_CONFIG = {
-        "url": ("str", "http://localhost:5006"),
-        "auth": ("dict", {}),  # with optional 'username'/'password' keys
-    }
-
     def __init__(self, config=None, _client=requests):
-        super().__init__()
         if config is None:
-            self.config = super().parse_config_file()
+            config_file = os.environ["SWH_CONFIG_FILENAME"]
+            self.config: Dict[str, Any] = read_raw_config(config_basepath(config_file))
         else:
             self.config = config
 

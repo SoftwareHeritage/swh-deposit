@@ -3,15 +3,16 @@ click
 xmltodict
 iso8601
 requests
-swh.core>=0.0.75
+swh.core[http]>=0.3
 
 [server]
 Django<3
 djangorestframework
+setuptools
 swh.core[http]
 swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
-swh.model>=0.1.0
+swh.model>=0.3.8
 
 [testing]
 pytest
@@ -24,7 +25,8 @@ requests_mock
 django-stubs
 Django<3
 djangorestframework
+setuptools
 swh.core[http]
 swh.loader.core>=0.0.71
 swh.scheduler>=0.0.39
-swh.model>=0.1.0
+swh.model>=0.3.8

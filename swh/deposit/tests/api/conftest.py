@@ -1,22 +1,28 @@
-# Copyright (C) 2019  The Software Heritage developers
+# Copyright (C) 2019-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import hashlib
-import pytest
+import os
 
 from django.urls import reverse
+import pytest
 
+from swh.deposit.api.private.deposit_check import APIChecks
 from swh.deposit.config import (
-    DEPOSIT_STATUS_DEPOSITED,
     COL_IRI,
+    DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_VERIFIED,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
-from swh.deposit.api.private.deposit_check import SWHChecksDeposit
+
+@pytest.fixture
+def datadir(request):
+    """Override default datadir to target main test datadir"""
+    return os.path.join(os.path.dirname(str(request.fspath)), "../data")
 
 
 @pytest.fixture
@@ -84,4 +90,4 @@ def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
 
 @pytest.fixture
 def swh_checks_deposit():
-    return SWHChecksDeposit()
+    return APIChecks()

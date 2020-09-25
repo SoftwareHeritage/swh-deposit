@@ -4,18 +4,18 @@
 # See top-level LICENSE file for more information
 
 from collections import defaultdict
-from django.urls import reverse
-from rest_framework import status
 from typing import Dict, Mapping
 
+from django.urls import reverse
+from rest_framework import status
+
 from swh.deposit.config import (
+    ARCHIVE_KEY,
+    DEPOSIT_STATUS_DEPOSITED,
     EDIT_SE_IRI,
     EM_IRI,
-    ARCHIVE_KEY,
     METADATA_KEY,
-    DEPOSIT_STATUS_DEPOSITED,
 )
-
 from swh.deposit.models import Deposit, DepositRequest
 
 

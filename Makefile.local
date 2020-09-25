@@ -1,0 +1,34 @@
+FLAKEFLAGS='--exclude=swh/deposit/manage.py,swh/deposit/settings.py,swh/deposit/migrations/'
+
+MANAGE=python3 -m swh.deposit.manage
+
+db-drop:
+	dropdb swh-deposit-dev || return 0
+
+db-create: db-drop
+	createdb swh-deposit-dev
+
+db-prepare:
+	$(MANAGE) makemigrations
+
+db-migrate:
+	$(MANAGE) migrate
+
+db-load-data:
+	$(MANAGE) loaddata deposit_data
+
+db-load-private-data: db-load-data
+	$(MANAGE) loaddata ../private_data.yaml
+
+run-dev:
+	$(MANAGE) runserver
+
+run:
+	gunicorn3 -b 127.0.0.1:5006 swh.deposit.wsgi
+
+# Override default rule to make sure DJANGO env var is properly set. It
+# *should* work without any override thanks to the mypy django-stubs plugin,
+# but it currently doesn't; see
+# https://github.com/typeddjango/django-stubs/issues/166
+check-mypy:
+	DJANGO_SETTINGS_MODULE=swh.deposit.settings.testing $(MYPY) $(MYPYFLAGS) swh

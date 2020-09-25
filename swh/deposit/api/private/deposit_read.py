@@ -1,25 +1,25 @@
-# Copyright (C) 2017-2019 The Software Heritage developers
+# Copyright (C) 2017-2020 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import json
+from contextlib import contextmanager
 import os
 import shutil
 import tempfile
+from typing import Any, Dict, Tuple
 
-from contextlib import contextmanager
-from django.http import FileResponse
 from rest_framework import status
 
 from swh.core import tarball
-from swh.model import identifiers
+from swh.deposit.api import __version__
 from swh.deposit.utils import normalize_date
+from swh.model import identifiers
 
-from . import DepositReadMixin, SWHPrivateAPIView
-from ...config import SWH_PERSON, ARCHIVE_TYPE
-from ..common import SWHGetDepositAPI
+from . import APIPrivateView, DepositReadMixin
+from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
+from ..common import APIGet
 
 
 @contextmanager
@@ -60,16 +60,12 @@ def aggregate_tarballs(extraction_dir, archive_paths):
         shutil.rmtree(dir_path)
 
 
-class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
+class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
     """Dedicated class to read a deposit's raw archives content.
 
     Only GET is supported.
 
     """
-
-    ADDITIONAL_CONFIG = {
-        "extraction_dir": ("str", "/tmp/swh-deposit/archive/"),
-    }
 
     def __init__(self):
         super().__init__()
@@ -77,14 +73,16 @@ class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
         if not os.path.exists(self.extraction_dir):
             os.makedirs(self.extraction_dir)
 
-    def process_get(self, request, collection_name, deposit_id):
+    def process_get(
+        self, request, collection_name: str, deposit_id: int
+    ) -> Tuple[int, Any, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
         Args:
             request (Request):
-            collection_name (str): Collection owning the deposit
-            deposit_id (id): Deposit concerned by the reading
+            collection_name: Collection owning the deposit
+            deposit_id: Deposit concerned by the reading
 
         Returns:
             Tuple status, stream of content, content-type
@@ -94,43 +92,26 @@ class SWHDepositReadArchives(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
             r.archive.path
             for r in self._deposit_requests(deposit_id, request_type=ARCHIVE_TYPE)
         ]
-        with aggregate_tarballs(self.extraction_dir, archive_paths) as path:
-            return FileResponse(
-                open(path, "rb"),
-                status=status.HTTP_200_OK,
-                content_type="application/zip",
-            )
+        return (
+            status.HTTP_200_OK,
+            aggregate_tarballs(self.extraction_dir, archive_paths),
+            "swh/generator",
+        )
 
 
-class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMixin):
+class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
     """Class in charge of aggregating metadata on a deposit.
 
- """
-
-    ADDITIONAL_CONFIG = {
-        "provider": (
-            "dict",
-            {
-                # 'provider_name': '',  # those are not set since read from the
-                # 'provider_url': '',   # deposit's client
-                "provider_type": "deposit_client",
-                "metadata": {},
-            },
-        ),
-        "tool": (
-            "dict",
-            {
-                "name": "swh-deposit",
-                "version": "0.0.1",
-                "configuration": {"sword_version": "2"},
-            },
-        ),
-    }
+    """
 
     def __init__(self):
         super().__init__()
         self.provider = self.config["provider"]
-        self.tool = self.config["tool"]
+        self.tool = {
+            "name": "swh-deposit",
+            "version": __version__,
+            "configuration": {"sword_version": "2"},
+        }
 
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
@@ -182,10 +163,8 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
 
         if deposit.parent:
             swh_persistent_id = deposit.parent.swh_id
-            persistent_identifier = identifiers.parse_persistent_identifier(
-                swh_persistent_id
-            )
-            parent_revision = persistent_identifier.object_id
+            swhid = identifiers.parse_swhid(swh_persistent_id)
+            parent_revision = swhid.object_id
             parents = [parent_revision]
         else:
             parents = []
@@ -208,11 +187,9 @@ class SWHDepositReadMetadata(SWHPrivateAPIView, SWHGetDepositAPI, DepositReadMix
 
         return data
 
-    def process_get(self, request, collection_name, deposit_id):
+    def process_get(
+        self, request, collection_name: str, deposit_id: int
+    ) -> Tuple[int, Dict, str]:
         deposit = Deposit.objects.get(pk=deposit_id)
         data = self.metadata_read(deposit)
-        d = {}
-        if data:
-            d = json.dumps(data)
-
-        return status.HTTP_200_OK, d, "application/json"
+        return status.HTTP_200_OK, data if data else {}, "application/json"

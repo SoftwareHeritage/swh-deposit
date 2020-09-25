@@ -6,11 +6,10 @@
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit.models import Deposit, DepositRequest, DepositCollection
 from swh.deposit.config import EDIT_SE_IRI, EM_IRI
+from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
-
-from swh.deposit.tests.common import create_arborescence_archive, check_archive
+from swh.deposit.tests.common import check_archive, create_arborescence_archive
 
 
 def test_replace_archive_to_deposit_is_possible(

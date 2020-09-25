@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,13 +6,12 @@
 from django.shortcuts import render
 from django.urls import reverse
 
-from .common import SWHBaseDeposit, ACCEPT_PACKAGINGS
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import COL_IRI
 from ..models import DepositClient, DepositCollection
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, ACCEPT_PACKAGINGS, APIBase
 
 
-class SWHServiceDocument(SWHBaseDeposit):
+class APIServiceDocument(APIBase):
     def get(self, req, *args, **kwargs):
         client = DepositClient.objects.get(username=req.user)
 

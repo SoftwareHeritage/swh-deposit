@@ -7,9 +7,8 @@
 
 """
 
-from rest_framework import status
 from django.shortcuts import render
-
+from rest_framework import status
 
 FORBIDDEN = "forbidden"
 UNAUTHORIZED = "unauthorized"

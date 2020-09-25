@@ -4,10 +4,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from setuptools import setup, find_packages
-
-from os import path
 from io import open
+from os import path
+
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 
@@ -48,18 +48,18 @@ setup(
     packages=find_packages(),
     install_requires=parse_requirements(None, "swh"),
     tests_require=parse_requirements("test"),
-    setup_requires=["vcversioner"],
+    setup_requires=["setuptools-scm"],
+    use_scm_version=True,
     extras_require={
         "testing": parse_requirements("test", "server", "swh-server"),
         "server": parse_requirements("server", "swh-server"),
     },
-    vcversioner={},
     include_package_data=True,
     entry_points="""
         [console_scripts]
         swh-deposit=swh.deposit.cli:main
         [swh.cli.subcommands]
-        deposit=swh.deposit.cli:deposit
+        deposit=swh.deposit.cli
         [swh.workers]
         deposit.worker=swh.deposit.loader:register
     """,

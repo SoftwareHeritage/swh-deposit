@@ -3,39 +3,37 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
 import base64
-import pytest
-import psycopg2
+import os
+from typing import Mapping
 
-from django.urls import reverse
 from django.test.utils import setup_databases  # type: ignore
+from django.urls import reverse
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import pytest
+from rest_framework import status
+from rest_framework.test import APIClient
+import yaml
+
+from swh.deposit.config import (
+    COL_IRI,
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_REJECTED,
+    DEPOSIT_STATUS_VERIFIED,
+    EDIT_SE_IRI,
+    setup_django_for,
+)
+from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import create_arborescence_archive
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
+from swh.scheduler import get_scheduler
 
 # mypy is asked to ignore the import statement above because setup_databases
 # is not part of the d.t.utils.__all__ variable.
-
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from rest_framework import status
-from rest_framework.test import APIClient
-from typing import Mapping
-
-from swh.scheduler import get_scheduler
-from swh.scheduler.tests.conftest import *  # noqa
-from swh.model.identifiers import DIRECTORY, persistent_identifier, REVISION, SNAPSHOT
-from swh.deposit.config import setup_django_for
-from swh.deposit.parsers import parse_xml
-from swh.deposit.config import SWHDefaultConfig
-from swh.deposit.config import (
-    COL_IRI,
-    EDIT_SE_IRI,
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_REJECTED,
-    DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    DEPOSIT_STATUS_VERIFIED,
-    DEPOSIT_STATUS_LOAD_FAILURE,
-)
-from swh.deposit.tests.common import create_arborescence_archive
 
 
 TEST_USER = {
@@ -48,52 +46,44 @@ TEST_USER = {
 }
 
 
-TEST_CONFIG = {
-    "max_upload_size": 500,
-    "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
-    "checks": False,
-    "provider": {
-        "provider_name": "",
-        "provider_type": "deposit_client",
-        "provider_url": "",
-        "metadata": {},
-    },
-    "tool": {
-        "name": "swh-deposit",
-        "version": "0.0.1",
-        "configuration": {"sword_version": "2"},
-    },
-}
-
-
 def pytest_configure():
     setup_django_for("testing")
 
 
 @pytest.fixture()
-def deposit_config():
-    return TEST_CONFIG
+def deposit_config(swh_scheduler_config):
+    return {
+        "max_upload_size": 500,
+        "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
+        "checks": False,
+        "provider": {
+            "provider_name": "",
+            "provider_type": "deposit_client",
+            "provider_url": "",
+            "metadata": {},
+        },
+        "scheduler": {"cls": "local", "args": swh_scheduler_config,},
+    }
+
+
+@pytest.fixture()
+def deposit_config_path(tmp_path, monkeypatch, deposit_config):
+    conf_path = os.path.join(tmp_path, "deposit.yml")
+    with open(conf_path, "w") as f:
+        f.write(yaml.dump(deposit_config))
+    monkeypatch.setenv("SWH_CONFIG_FILENAME", conf_path)
+    return conf_path
 
 
 @pytest.fixture(autouse=True)
-def deposit_autoconfig(monkeypatch, deposit_config, swh_scheduler_config):
-    """Enforce config for deposit classes inherited from SWHDefaultConfig."""
-
-    def mock_parse_config(*args, **kw):
-        config = deposit_config.copy()
-        config["scheduler"] = {
-            "cls": "local",
-            "args": swh_scheduler_config,
-        }
-        return config
-
-    monkeypatch.setattr(SWHDefaultConfig, "parse_config_file", mock_parse_config)
+def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
+    """Enforce config for deposit classes inherited from APIConfig."""
 
     scheduler = get_scheduler("local", swh_scheduler_config)
     task_type = {
         "type": "load-deposit",
         "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
-        "description": "why does this have not-null constraint?",
+        "description": "Load deposit task",
     }
     scheduler.create_task_type(task_type)
 
@@ -408,14 +398,14 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
     revision_id = "548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10"
     snapshot_id = "e5e82d064a9c3df7464223042e0c55d72ccff7f0"
-    deposit.swh_id = persistent_identifier(DIRECTORY, directory_id)
-    deposit.swh_id_context = persistent_identifier(
+    deposit.swh_id = swhid(DIRECTORY, directory_id)
+    deposit.swh_id_context = swhid(
         DIRECTORY,
         directory_id,
         metadata={
             "origin": origin,
-            "visit": persistent_identifier(SNAPSHOT, snapshot_id),
-            "anchor": persistent_identifier(REVISION, revision_id),
+            "visit": swhid(SNAPSHOT, snapshot_id),
+            "anchor": swhid(REVISION, revision_id),
             "path": "/",
         },
     )

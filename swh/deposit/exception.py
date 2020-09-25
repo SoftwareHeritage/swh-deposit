@@ -5,11 +5,10 @@
 
 from typing import Dict, Optional
 
+from django.db.utils import OperationalError
+from django.http import HttpResponse
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
-from django.http import HttpResponse
-
-from django.db.utils import OperationalError
 
 
 def custom_exception_handler(
