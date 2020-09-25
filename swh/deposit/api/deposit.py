@@ -1,19 +1,24 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Any, Dict, Optional, Tuple
+
 from rest_framework import status
 
-from .common import SWHPostDepositAPI, ACCEPT_ARCHIVE_CONTENT_TYPES
 from ..config import EDIT_SE_IRI
-from ..errors import make_error_dict, BAD_REQUEST
-from ..parsers import SWHFileUploadZipParser, SWHFileUploadTarParser
-from ..parsers import SWHAtomEntryParser
-from ..parsers import SWHMultiPartParser
+from ..errors import BAD_REQUEST, make_error_dict
+from ..parsers import (
+    SWHAtomEntryParser,
+    SWHFileUploadTarParser,
+    SWHFileUploadZipParser,
+    SWHMultiPartParser,
+)
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost
 
 
-class SWHDeposit(SWHPostDepositAPI):
+class APIPostDeposit(APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Col IRI' in the sword specification.
@@ -29,7 +34,13 @@ class SWHDeposit(SWHPostDepositAPI):
         SWHAtomEntryParser,
     )
 
-    def additional_checks(self, req, headers, collection_name, deposit_id=None):
+    def additional_checks(
+        self,
+        req,
+        headers: Dict[str, Any],
+        collection_name: str,
+        deposit_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         slug = headers["slug"]
         if not slug:
             msg = "Missing SLUG header in request"
@@ -38,7 +49,13 @@ class SWHDeposit(SWHPostDepositAPI):
 
         return {}
 
-    def process_post(self, req, headers, collection_name, deposit_id=None):
+    def process_post(
+        self,
+        req,
+        headers: Dict[str, Any],
+        collection_name: str,
+        deposit_id: Optional[int] = None,
+    ) -> Tuple[int, str, Dict[str, Any]]:
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)

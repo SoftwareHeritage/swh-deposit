@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2020  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
 from __future__ import unicode_literals
 
-import os
 import logging
+import os
+from typing import Any, Dict, Optional, Tuple
 
 from django.db import migrations
-from typing import Any, Dict, Optional, Tuple
 
 from swh.core import config
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
-from swh.model.identifiers import (
-    parse_persistent_identifier,
-    persistent_identifier,
-    DIRECTORY,
-    REVISION,
-    SNAPSHOT,
-)
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, parse_swhid, swhid
 from swh.storage import get_storage as get_storage_client
-
+from swh.storage.algos.snapshot import snapshot_id_get_from_revision
 
 SWH_PROVIDER_URL = "https://www.softwareheritage.org"
 
@@ -69,26 +68,6 @@ def get_storage() -> Optional[Any]:
     return swh_storage
 
 
-def get_snapshot(storage, origin: str, revision_id: str) -> Optional[str]:
-    """Retrieve the snapshot targeting the revision_id for the given origin.
-
-    """
-    all_visits = storage.origin_visit_get(origin)
-    for visit in all_visits:
-        if not visit["snapshot"]:
-            continue
-        detail_snapshot = storage.snapshot_get(visit["snapshot"])
-        if not detail_snapshot:
-            continue
-        for branch_name, branch in detail_snapshot["branches"].items():
-            if branch["target_type"] == "revision":
-                revision = branch["target"]
-                if hash_to_hex(revision) == revision_id:
-                    # Found the snapshot
-                    return hash_to_hex(visit["snapshot"])
-    return None
-
-
 def migrate_deposit_swhid_context_not_null(apps, schema_editor):
     """Migrate deposit SWHIDs to the new format.
 
@@ -105,10 +84,10 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=False
     ):
-        obj_dir = parse_persistent_identifier(deposit.swh_id_context)
+        obj_dir = parse_swhid(deposit.swh_id_context)
         assert obj_dir.object_type == DIRECTORY
 
-        obj_rev = parse_persistent_identifier(deposit.swh_anchor_id)
+        obj_rev = parse_swhid(deposit.swh_anchor_id)
         assert obj_rev.object_type == REVISION
 
         if set(obj_dir.metadata.keys()) != {"origin"}:
@@ -123,15 +102,15 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         dir_id = obj_dir.object_id
         origin = obj_dir.metadata["origin"]
 
-        check_origin = storage.origin_get({"url": origin})
+        check_origin = storage.origin_get([origin])[0]
         if not check_origin:
             logger.warning("Deposit id %s: Origin %s not found!", deposit.id, origin)
             continue
 
         rev_id = obj_rev.object_id
         # Find the snapshot targeting the revision
-        snp_id = get_snapshot(storage, origin, rev_id)
-        if not snp_id:
+        snp_id = snapshot_id_get_from_revision(storage, origin, hash_to_bytes(rev_id))
+        if snp_id is None:
             logger.warning(
                 "Deposit id %s: Snapshot targeting revision %s not found!",
                 deposit.id,
@@ -146,13 +125,13 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         old_swh_anchor_id_context = deposit.swh_anchor_id_context
 
         # Update
-        deposit.swh_id_context = persistent_identifier(
+        deposit.swh_id_context = swhid(
             DIRECTORY,
             dir_id,
             metadata={
                 "origin": origin,
-                "visit": persistent_identifier(SNAPSHOT, snp_id),
-                "anchor": persistent_identifier(REVISION, rev_id),
+                "visit": swhid(SNAPSHOT, snp_id.hex()),
+                "anchor": swhid(REVISION, rev_id),
                 "path": "/",
             },
         )
@@ -250,7 +229,7 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=True
     ):
-        obj_rev = parse_persistent_identifier(deposit.swh_id)
+        obj_rev = parse_swhid(deposit.swh_id)
         if obj_rev.object_type == DIRECTORY:
             # Assuming the migration is already done for that deposit
             logger.warning(
@@ -267,17 +246,17 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
         assert deposit.swh_anchor_id_context is None
 
         rev_id = obj_rev.object_id
-        revisions = list(storage.revision_get([hash_to_bytes(rev_id)]))
-        if not revisions:
+        rev_id_bytes = hash_to_bytes(rev_id)
+        revision = storage.revision_get([rev_id_bytes])[0]
+        if not revision:
             logger.warning("Deposit id %s: Revision %s not found!", deposit.id, rev_id)
             continue
-        revision = revisions[0]
 
         provider_url = deposit.client.provider_url
         external_id = deposit.external_id
 
         origin = resolve_origin(deposit.id, provider_url, external_id)
-        check_origin = storage.origin_get({"url": origin})
+        check_origin = storage.origin_get([origin])[0]
         if not check_origin:
             logger.warning("Deposit id %s: Origin %s not found!", deposit.id, origin)
             continue
@@ -291,8 +270,8 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
         old_swh_anchor_id_context = deposit.swh_anchor_id_context
 
         # retrieve the snapshot from the archive
-        snp_id = get_snapshot(storage, origin, rev_id)
-        if not snp_id:
+        snp_id = snapshot_id_get_from_revision(storage, origin, rev_id_bytes)
+        if snp_id is None:
             logger.warning(
                 "Deposit id %s: Snapshot targeting revision %s not found!",
                 deposit.id,
@@ -301,20 +280,20 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
             continue
 
         # New SWHIDs ids
-        deposit.swh_id = persistent_identifier(DIRECTORY, dir_id)
-        deposit.swh_id_context = persistent_identifier(
+        deposit.swh_id = swhid(DIRECTORY, dir_id)
+        deposit.swh_id_context = swhid(
             DIRECTORY,
             dir_id,
             metadata={
                 "origin": origin,
-                "visit": persistent_identifier(SNAPSHOT, snp_id),
-                "anchor": persistent_identifier(REVISION, rev_id),
+                "visit": swhid(SNAPSHOT, snp_id.hex()),
+                "anchor": swhid(REVISION, rev_id),
                 "path": "/",
             },
         )
         # Realign the remaining deposit SWHIDs fields
-        deposit.swh_anchor_id = persistent_identifier(REVISION, rev_id)
-        deposit.swh_anchor_id_context = persistent_identifier(
+        deposit.swh_anchor_id = swhid(REVISION, rev_id)
+        deposit.swh_anchor_id_context = swhid(
             REVISION, rev_id, metadata={"origin": origin,}
         )
 

@@ -4,11 +4,12 @@
 # See top-level LICENSE file for more information
 
 import json
+from typing import Dict, Optional
 
-from typing import Dict
 from swh.deposit.client import PrivateApiDepositClient
-
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
+from swh.model.model import SnapshotBranch, TargetType
+from swh.storage.algos.snapshot import snapshot_get_all_branches
 
 CLIENT_TEST_CONFIG = {
     "url": "http://nowhere:9000/",
@@ -85,18 +86,18 @@ def get_stats(storage) -> Dict:
     return {k: stats.get(k) for k in keys}
 
 
-def decode_target(target):
+def decode_target(branch: Optional[SnapshotBranch]) -> Optional[Dict]:
     """Test helper to ease readability in test
 
     """
-    if not target:
-        return target
-    target_type = target["target_type"]
+    if not branch:
+        return None
+    target_type = branch.target_type
 
-    if target_type == "alias":
-        decoded_target = target["target"].decode("utf-8")
+    if target_type == TargetType.ALIAS:
+        decoded_target = branch.target.decode("utf-8")
     else:
-        decoded_target = hash_to_hex(target["target"])
+        decoded_target = hash_to_hex(branch.target)
 
     return {"target": decoded_target, "target_type": target_type}
 
@@ -114,7 +115,7 @@ def check_snapshot(expected_snapshot, storage):
     """
     expected_snapshot_id = expected_snapshot["id"]
     expected_branches = expected_snapshot["branches"]
-    snap = storage.snapshot_get(hash_to_bytes(expected_snapshot_id))
+    snap = snapshot_get_all_branches(hash_to_bytes(expected_snapshot_id))
     if snap is None:
         # display known snapshots instead if possible
         if hasattr(storage, "_snapshots"):  # in-mem storage
@@ -132,7 +133,7 @@ def check_snapshot(expected_snapshot, storage):
         raise AssertionError("Snapshot is not found")
 
     branches = {
-        branch.decode("utf-8"): decode_target(target)
-        for branch, target in snap["branches"].items()
+        branch.decode("utf-8"): decode_target(branch)
+        for branch_name, branch in snap["branches"].items()
     }
     assert expected_branches == branches

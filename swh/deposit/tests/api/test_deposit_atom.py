@@ -3,14 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import pytest
+from io import BytesIO
 
 from django.urls import reverse
-from io import BytesIO
+import pytest
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
-from swh.deposit.models import Deposit, DepositRequest, DepositCollection
+from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 
 

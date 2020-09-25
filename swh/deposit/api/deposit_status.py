@@ -3,17 +3,17 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 
-from .common import SWHBaseDeposit
-from .converters import convert_status_detail
-from ..errors import NOT_FOUND, make_error_response
-from ..errors import make_error_response_from_dict
+from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
+from .common import APIBase
+from .converters import convert_status_detail
 
 
-class SWHDepositStatus(SWHBaseDeposit):
+class APIStatus(APIBase):
     """Deposit status.
 
     What's known as 'State IRI' in the sword specification.
@@ -22,7 +22,7 @@ class SWHDepositStatus(SWHBaseDeposit):
 
     """
 
-    def get(self, req, collection_name, deposit_id, format=None):
+    def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
         checks = self.checks(req, collection_name, deposit_id)
         if "error" in checks:
             return make_error_response_from_dict(req, checks["error"])

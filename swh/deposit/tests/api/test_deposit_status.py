@@ -4,14 +4,15 @@
 # See top-level LICENSE file for more information
 
 
-from django.urls import reverse
 from io import BytesIO
+
+from django.urls import reverse
 from rest_framework import status
 
 from swh.deposit.config import (
-    STATE_IRI,
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_REJECTED,
+    STATE_IRI,
 )
 from swh.deposit.models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.parsers import parse_xml

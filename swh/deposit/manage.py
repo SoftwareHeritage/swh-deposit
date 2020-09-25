@@ -10,7 +10,6 @@ import sys
 
 from swh.core import config
 
-
 DEFAULT_CONFIG = {
     "port": ("int", 5006),
     "host": ("str", "127.0.0.1"),

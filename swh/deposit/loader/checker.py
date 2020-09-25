@@ -4,39 +4,30 @@
 # See top-level LICENSE file for more information
 
 import logging
+import os
+from typing import Any, Dict
 
-from typing import Mapping
-
-from swh.core.config import SWHConfig
-
+from swh.core import config
 from swh.deposit.client import PrivateApiDepositClient
-
 
 logger = logging.getLogger(__name__)
 
 
-class DepositChecker(SWHConfig):
+class DepositChecker:
     """Deposit checker implementation.
 
     Trigger deposit's checks through the private api.
 
     """
 
-    CONFIG_BASE_FILENAME = "deposit/checker"
-
-    DEFAULT_CONFIG = {
-        "deposit": ("dict", {"url": "http://localhost:5006/1/private/", "auth": {},})
-    }
-
-    def __init__(self, config=None):
-        super().__init__()
-        if config is None:
-            self.config = self.parse_config_file()
-        else:
-            self.config = config
+    def __init__(self):
+        config_file = os.environ["SWH_CONFIG_FILENAME"]
+        self.config: Dict[str, Any] = config.read_raw_config(
+            config.config_basepath(config_file)
+        )
         self.client = PrivateApiDepositClient(config=self.config["deposit"])
 
-    def check(self, collection: str, deposit_id: str) -> Mapping[str, str]:
+    def check(self, collection: str, deposit_id: str) -> Dict[str, str]:
         status = None
         deposit_check_url = f"/{collection}/{deposit_id}/check/"
         logger.debug("deposit-check-url: %s", deposit_check_url)

@@ -5,9 +5,10 @@
 
 import os
 
+from swh.core import config
+
 from .common import *  # noqa
 from .common import ALLOWED_HOSTS
-from swh.core import config
 
 ALLOWED_HOSTS += ["deposit.softwareheritage.org"]
 # Setup support for proxy headers

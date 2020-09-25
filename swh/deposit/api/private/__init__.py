@@ -1,17 +1,16 @@
-# Copyright (C) 2017-2019 The Software Heritage developers
+# Copyright (C) 2017-2020 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.deposit import utils
-
-from ...config import METADATA_TYPE, SWHDefaultConfig
-from ...models import DepositRequest, Deposit
-
 from rest_framework.permissions import AllowAny
 
-from swh.deposit.api.common import SWHAPIView
-from swh.deposit.errors import make_error_dict, NOT_FOUND
+from swh.deposit import utils
+from swh.deposit.api.common import AuthenticatedAPIView
+from swh.deposit.errors import NOT_FOUND, make_error_dict
+
+from ...config import METADATA_TYPE, APIConfig
+from ...models import Deposit, DepositRequest
 
 
 class DepositReadMixin:
@@ -58,7 +57,7 @@ class DepositReadMixin:
         return utils.merge(*metadata)
 
 
-class SWHPrivateAPIView(SWHDefaultConfig, SWHAPIView):
+class APIPrivateView(APIConfig, AuthenticatedAPIView):
     """Mixin intended as private api (so no authentication) based API view
        (for the private ones).
 
@@ -87,23 +86,11 @@ class SWHPrivateAPIView(SWHDefaultConfig, SWHAPIView):
         return {"headers": headers}
 
     def get(
-        self,
-        request,
-        collection_name=None,
-        deposit_id=None,
-        format=None,
-        *args,
-        **kwargs,
+        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
     ):
-        return super().get(request, collection_name, deposit_id, format)
+        return super().get(request, collection_name, deposit_id)
 
     def put(
-        self,
-        request,
-        collection_name=None,
-        deposit_id=None,
-        format=None,
-        *args,
-        **kwargs,
+        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
     ):
-        return super().put(request, collection_name, deposit_id, format)
+        return super().put(request, collection_name, deposit_id)

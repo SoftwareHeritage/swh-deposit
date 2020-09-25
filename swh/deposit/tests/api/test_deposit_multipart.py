@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from io import BytesIO
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
-from io import BytesIO
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED

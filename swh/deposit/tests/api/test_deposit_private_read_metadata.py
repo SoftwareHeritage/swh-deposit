@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,9 +6,9 @@
 from django.urls import reverse
 from rest_framework import status
 
+from swh.deposit.api import __version__
+from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
 from swh.deposit.models import Deposit
-from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON, EDIT_SE_IRI
-
 
 PRIVATE_GET_DEPOSIT_METADATA_NC = PRIVATE_GET_DEPOSIT_METADATA + "-nc"
 
@@ -84,7 +84,7 @@ def test_read_metadata(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -160,7 +160,7 @@ def test_read_metadata_revision_with_parent(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -254,7 +254,7 @@ def test_read_metadata_3(
             "codemeta:version": "1",
             "external_identifier": ["some-external-id", "hal-01243065"],
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
             "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
         }
         expected_meta = {
@@ -273,7 +273,7 @@ def test_read_metadata_3(
                 "tool": {
                     "configuration": {"sword_version": "2"},
                     "name": "swh-deposit",
-                    "version": "0.0.1",
+                    "version": __version__,
                 },
             },
             "deposit": {
@@ -327,8 +327,8 @@ def test_read_metadata_4(
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane " "Gruenpeter"},
-            "codemeta:description": "this is the " "description",
+            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
+            "codemeta:description": "this is the description",
             "codemeta:developmentStatus": "stable",
             "codemeta:keywords": "DSP programming",
             "codemeta:license": [
@@ -355,7 +355,7 @@ def test_read_metadata_4(
             "codemeta:version": "1",
             "external_identifier": "hal-01243065",
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
         }
 
         expected_origin = {
@@ -374,7 +374,7 @@ def test_read_metadata_4(
             "tool": {
                 "configuration": {"sword_version": "2"},
                 "name": "swh-deposit",
-                "version": "0.0.1",
+                "version": __version__,
             },
         }
 
@@ -450,7 +450,7 @@ def test_read_metadata_5(
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane " "Gruenpeter"},
+            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
             "codemeta:dateCreated": [
                 "2015-04-06T17:08:47+02:00",
                 "2016-04-06T17:08:47+02:00",
@@ -486,7 +486,7 @@ def test_read_metadata_5(
             "codemeta:version": "1",
             "external_identifier": "hal-01243065",
             "id": "hal-01243065",
-            "title": "Composing a Web of Audio " "Applications",
+            "title": "Composing a Web of Audio Applications",
         }
 
         expected_origin_metadata = {
@@ -500,7 +500,7 @@ def test_read_metadata_5(
             "tool": {
                 "configuration": {"sword_version": "2"},
                 "name": "swh-deposit",
-                "version": "0.0.1",
+                "version": __version__,
             },
         }
 

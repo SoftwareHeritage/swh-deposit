@@ -3,21 +3,21 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Dict
+
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import DIRECTORY, persistent_identifier, REVISION, SNAPSHOT
+from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
-from . import SWHPrivateAPIView
-from ..common import SWHPutDepositAPI
-from ...errors import make_error_dict, BAD_REQUEST
-from ...models import Deposit, DEPOSIT_STATUS_DETAIL
-from ...models import DEPOSIT_STATUS_LOAD_SUCCESS
-
+from . import APIPrivateView
+from ...errors import BAD_REQUEST, make_error_dict
+from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
+from ..common import APIPut
 
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 
 
-class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
+class APIUpdateStatus(APIPrivateView, APIPut):
     """Deposit request class to update the deposit's status.
 
     HTTP verbs supported: PUT
@@ -63,7 +63,9 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
 
         return {}
 
-    def process_put(self, request, headers, collection_name, deposit_id):
+    def process_put(
+        self, request, headers: Dict, collection_name: str, deposit_id: int
+    ) -> Dict:
         """Update the deposit with status and SWHIDs
 
         Returns:
@@ -81,13 +83,13 @@ class SWHUpdateStatusDeposit(SWHPrivateAPIView, SWHPutDepositAPI):
             origin_url = data["origin_url"]
             directory_id = data["directory_id"]
             revision_id = data["revision_id"]
-            dir_id = persistent_identifier(DIRECTORY, directory_id)
-            snp_id = persistent_identifier(SNAPSHOT, data["snapshot_id"])
-            rev_id = persistent_identifier(REVISION, revision_id)
+            dir_id = swhid(DIRECTORY, directory_id)
+            snp_id = swhid(SNAPSHOT, data["snapshot_id"])
+            rev_id = swhid(REVISION, revision_id)
 
             deposit.swh_id = dir_id
             # new id with contextual information
-            deposit.swh_id_context = persistent_identifier(
+            deposit.swh_id_context = swhid(
                 DIRECTORY,
                 directory_id,
                 metadata={

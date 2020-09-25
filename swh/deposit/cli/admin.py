@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+# WARNING: do not import unnecessary things here to keep cli startup time under
+# control
 import click
 
-from swh.deposit.config import setup_django_for
 from swh.deposit.cli import deposit
 
 
@@ -26,6 +27,8 @@ from swh.deposit.cli import deposit
 @click.pass_context
 def admin(ctx, config_file, platform):
     """Server administration tasks (manipulate user or collections)"""
+    from swh.deposit.config import setup_django_for
+
     # configuration happens here
     setup_django_for(platform, config_file=config_file)
 
@@ -223,13 +226,14 @@ def adm_deposit_reschedule(ctx, deposit_id):
     """
     # to avoid loading too early django namespaces
     from datetime import datetime
-    from swh.deposit.models import Deposit
+
     from swh.deposit.config import (
-        DEPOSIT_STATUS_LOAD_SUCCESS,
         DEPOSIT_STATUS_LOAD_FAILURE,
+        DEPOSIT_STATUS_LOAD_SUCCESS,
         DEPOSIT_STATUS_VERIFIED,
-        SWHDefaultConfig,
+        APIConfig,
     )
+    from swh.deposit.models import Deposit
 
     try:
         deposit = Deposit.objects.get(pk=deposit_id)
@@ -265,7 +269,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
     deposit.save()
 
     # Trigger back the deposit
-    scheduler = SWHDefaultConfig().scheduler
+    scheduler = APIConfig().scheduler
     scheduler.set_status_tasks(
         [task_id], status="next_run_not_scheduled", next_run=datetime.now()
     )
