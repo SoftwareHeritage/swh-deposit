@@ -139,8 +139,8 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
         """Add new metadata/archive to existing deposit.
 
            source:
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_metadata  # noqa
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_multipart  # noqa
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_metadata
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_multipart
 
         This also deals with an empty post corner case to finalize a
         deposit.
@@ -153,16 +153,13 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
 
             For the empty post case, this returns a 200.
 
-        """
+        """  # noqa
         assert deposit_id is not None
         if request.content_type.startswith("multipart/"):
-            return (
-                status.HTTP_201_CREATED,
-                EM_IRI,
-                self._multipart_upload(
-                    request, headers, collection_name, deposit_id=deposit_id
-                ),
+            data = self._multipart_upload(
+                request, headers, collection_name, deposit_id=deposit_id
             )
+            return (status.HTTP_201_CREATED, EM_IRI, data)
         # check for final empty post
         # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
         # #continueddeposit_complete
@@ -170,11 +167,10 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
             data = self._empty_post(request, headers, collection_name, deposit_id)
             return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 
-        return (
-            status.HTTP_201_CREATED,
-            EM_IRI,
-            self._atom_entry(request, headers, collection_name, deposit_id=deposit_id),
+        data = self._atom_entry(
+            request, headers, collection_name, deposit_id=deposit_id
         )
+        return (status.HTTP_201_CREATED, EM_IRI, data)
 
     def process_delete(self, req, collection_name: str, deposit_id: int) -> Dict:
         """Delete the container (deposit).

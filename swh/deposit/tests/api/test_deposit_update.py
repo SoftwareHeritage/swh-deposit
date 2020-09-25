@@ -230,6 +230,70 @@ def test_add_metadata_to_deposit_is_possible(
     assert set(requests_archive0) == set(requests_archive1)
 
 
+def test_add_both_archive_and_metadata_to_deposit(
+    authenticated_client,
+    deposit_collection,
+    partial_deposit_with_metadata,
+    atom_dataset,
+    sample_archive,
+):
+    """Scenario: Add both a new archive and new metadata to a partial deposit is ok
+
+    Response: 201
+
+    """
+    deposit = partial_deposit_with_metadata
+    requests = DepositRequest.objects.filter(deposit=deposit, type="metadata")
+    assert len(requests) == 1
+
+    requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
+    assert len(requests_archive0) == 1
+
+    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    archive = InMemoryUploadedFile(
+        BytesIO(sample_archive["data"]),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/x-tar",
+        size=sample_archive["length"],
+        charset=None,
+    )
+
+    data_atom_entry = atom_dataset["entry-data1"]
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(data_atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(data_atom_entry),
+        charset="utf-8",
+    )
+
+    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.post(
+        update_uri,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    requests = DepositRequest.objects.filter(deposit=deposit, type="metadata").order_by(
+        "id"
+    )
+
+    assert len(requests) == 1 + 1, "New deposit request archive got added"
+    expected_raw_meta0 = atom_dataset["entry-data0"] % (
+        deposit.external_id.encode("utf-8")
+    )
+    # a new one was added
+    assert requests[0].raw_metadata == expected_raw_meta0
+    assert requests[1].raw_metadata == data_atom_entry
+
+    # check we did not touch the other parts
+    requests_archive1 = DepositRequest.objects.filter(deposit=deposit, type="archive")
+    assert len(requests_archive1) == 1 + 1, "New deposit request metadata got added"
+
+
 def test_add_metadata_to_unknown_deposit(
     deposit_collection, authenticated_client, atom_dataset
 ):
