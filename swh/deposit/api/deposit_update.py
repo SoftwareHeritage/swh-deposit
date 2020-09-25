@@ -160,10 +160,12 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
                 request, headers, collection_name, deposit_id=deposit_id
             )
             return (status.HTTP_201_CREATED, EM_IRI, data)
-        # check for final empty post
-        # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        # #continueddeposit_complete
-        if headers["content-length"] == 0 and headers["in-progress"] is False:
+
+        content_length = headers["content-length"] or 0
+        if content_length == 0 and headers["in-progress"] is False:
+            # check for final empty post
+            # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
+            # #continueddeposit_complete
             data = self._empty_post(request, headers, collection_name, deposit_id)
             return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 

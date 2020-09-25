@@ -9,7 +9,12 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit.config import EDIT_SE_IRI, EM_IRI
+from swh.deposit.config import (
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_PARTIAL,
+    EDIT_SE_IRI,
+    EM_IRI,
+)
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive, create_arborescence_archive
@@ -292,6 +297,35 @@ def test_add_both_archive_and_metadata_to_deposit(
     # check we did not touch the other parts
     requests_archive1 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive1) == 1 + 1, "New deposit request metadata got added"
+
+
+def test_post_metadata_empty_post_finalize_deposit_ok(
+    authenticated_client,
+    deposit_collection,
+    partial_deposit_with_metadata,
+    atom_dataset,
+):
+    """Empty atom post entry with header in-progress to false transitions deposit to
+       'deposited' status
+
+    Response: 200
+
+    """
+    deposit = partial_deposit_with_metadata
+    assert deposit.status == DEPOSIT_STATUS_PARTIAL
+
+    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.post(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data="",
+        size=0,
+        HTTP_IN_PROGRESS=False,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    deposit = Deposit.objects.get(pk=deposit.id)
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_add_metadata_to_unknown_deposit(
