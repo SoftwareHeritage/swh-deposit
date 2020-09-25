@@ -8,6 +8,8 @@ from typing import Any, Dict, Optional, Tuple
 from rest_framework import status
 from rest_framework.request import Request
 
+from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.models import Deposit
 from swh.model.hashutil import hash_to_bytes
 from swh.model.identifiers import parse_swhid
@@ -226,6 +228,15 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
                 "Empty body request is not supported",
                 "Atom entry deposit is supposed to send for metadata. "
                 "If the body is empty, there is no metadata.",
+            )
+
+        metadata_ok, error_details = check_metadata(metadata)
+        if not metadata_ok:
+            assert error_details, "Details should be set when a failure occurs"
+            return make_error_dict(
+                BAD_REQUEST,
+                "Functional metadata checks failure",
+                convert_status_detail(error_details),
             )
 
         metadata_authority = MetadataAuthority(

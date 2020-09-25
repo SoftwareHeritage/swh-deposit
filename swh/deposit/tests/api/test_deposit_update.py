@@ -759,3 +759,37 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Empty body request is not supported" in response.content
+
+
+def test_put_update_metadata_done_deposit_failure_functional_checks(
+    tmp_path,
+    authenticated_client,
+    complete_deposit,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
+):
+    """failure: client updates metadata on deposit done without required incomplete metadata
+
+       Response: 400
+
+    """
+    update_uri = reverse(
+        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
+    )
+
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        # no title, nor author, nor name fields
+        data=atom_dataset["entry-data-fail-metadata-functional-checks"],
+        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Functional metadata checks failure" in response.content
+    # detail on the errors
+    assert b"- Mandatory fields are missing (author)" in response.content
+    assert (
+        b"- Mandatory alternate fields are missing (name or title)" in response.content
+    )
