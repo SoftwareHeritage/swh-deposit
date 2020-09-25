@@ -9,9 +9,8 @@ import zipfile
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit.config import PRIVATE_GET_RAW_CONTENT, EM_IRI
+from swh.deposit.config import EM_IRI, PRIVATE_GET_RAW_CONTENT
 from swh.deposit.tests.common import create_arborescence_archive
-
 
 PRIVATE_GET_RAW_CONTENT_NC = PRIVATE_GET_RAW_CONTENT + "-nc"
 

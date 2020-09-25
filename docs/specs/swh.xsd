@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="deposit">
+    <xsd:complexType>
+      <xsd:choice>
+
+        <xsd:element name="reference">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="object">
+                <xsd:complexType>
+                <xsd:attribute type="xsd:string" name="swhid"/>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="origin">
+                <xsd:complexType>
+                <xsd:attribute type="xsd:string" name="url"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:choice>
+          </xsd:complexType>
+        </xsd:element>
+
+
+        <xsd:element name="bindings">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="binding" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:attribute type="xsd:string" name="source"/>
+                    <xsd:attribute type="xsd:string" name="destination"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+      </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

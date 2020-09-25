@@ -7,7 +7,7 @@
 
 """
 
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 from django.shortcuts import render
 from django.views.generic.base import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns

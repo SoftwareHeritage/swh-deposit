@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <external_identifier>some-external-id</external_identifier>
-  <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
-  <author>some awesome author</author>
-</entry>

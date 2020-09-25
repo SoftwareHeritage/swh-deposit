@@ -8,9 +8,9 @@ from rest_framework import status
 
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.config import (
+    DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_PARTIAL,
     PRIVATE_LIST_DEPOSITS,
-    DEPOSIT_STATUS_DEPOSITED,
 )
 
 STATUS_DETAIL = {

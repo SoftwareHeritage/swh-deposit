@@ -7,19 +7,19 @@ from django.urls import reverse
 import pytest
 from rest_framework import status
 
+from swh.deposit.api.private.deposit_check import (
+    ALTERNATE_FIELDS_MISSING,
+    MANDATORY_ARCHIVE_INVALID,
+    MANDATORY_ARCHIVE_MISSING,
+    MANDATORY_ARCHIVE_UNSUPPORTED,
+    MANDATORY_FIELDS_MISSING,
+)
 from swh.deposit.config import (
-    DEPOSIT_STATUS_VERIFIED,
-    PRIVATE_CHECK_DEPOSIT,
+    COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_REJECTED,
-    COL_IRI,
-)
-from swh.deposit.api.private.deposit_check import (
-    MANDATORY_ARCHIVE_INVALID,
-    MANDATORY_FIELDS_MISSING,
-    MANDATORY_ARCHIVE_UNSUPPORTED,
-    ALTERNATE_FIELDS_MISSING,
-    MANDATORY_ARCHIVE_MISSING,
+    DEPOSIT_STATUS_VERIFIED,
+    PRIVATE_CHECK_DEPOSIT,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
@@ -27,7 +27,6 @@ from swh.deposit.tests.common import (
     create_arborescence_archive,
     create_archive_with_archive,
 )
-
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 

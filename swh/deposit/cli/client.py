@@ -3,20 +3,16 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
 import logging
+
+# WARNING: do not import unnecessary things here to keep cli startup time under
+# control
+import os
 import sys
-import tempfile
-import uuid
-import json
-import yaml
 
 import click
-import xmltodict
 
-from swh.deposit.client import PublicApiDepositClient, MaintenanceError
 from swh.deposit.cli import deposit
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +29,8 @@ def generate_slug():
     """Generate a slug (sample purposes).
 
     """
+    import uuid
+
     return str(uuid.uuid4())
 
 
@@ -70,6 +68,8 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
         Filepath to the metadata generated file
 
     """
+    import xmltodict
+
     path = os.path.join(temp_dir, "metadata.xml")
     # generate a metadata file with the minimum required metadata
     codemetadata = {
@@ -102,6 +102,8 @@ def _client(url, username, password):
         password (str): User's password
 
     """
+    from swh.deposit.client import PublicApiDepositClient
+
     client = PublicApiDepositClient(
         {"url": url, "auth": {"username": username, "password": password},}
     )
@@ -233,7 +235,7 @@ def client_command_parse_input(
 
     if not archive and not metadata and partial:
         raise InputError(
-            "Please provide an actionable command. See --help for more " "information"
+            "Please provide an actionable command. See --help for more information"
         )
 
     if replace and not deposit_id:
@@ -403,6 +405,10 @@ More documentation can be found at
 https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
+    import tempfile
+
+    from swh.deposit.client import MaintenanceError
+
     url = _url(url)
     config = {}
 
@@ -470,6 +476,8 @@ def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
 
     """
+    from swh.deposit.client import MaintenanceError
+
     url = _url(url)
     logger.debug("Status deposit")
     try:
@@ -489,6 +497,10 @@ def status(ctx, url, username, password, deposit_id, output_format):
 
 
 def print_result(data, output_format):
+    import json
+
+    import yaml
+
     if output_format == "json":
         click.echo(json.dumps(data))
     elif output_format == "yaml":

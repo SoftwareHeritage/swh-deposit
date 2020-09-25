@@ -4,20 +4,19 @@
 # See top-level LICENSE file for more information
 
 import hashlib
+from io import BytesIO
 
 from django.urls import reverse
-from io import BytesIO
 from rest_framework import status
 
 from swh.deposit.config import (
     COL_IRI,
-    EDIT_SE_IRI,
-    DEPOSIT_STATUS_REJECTED,
-    DEPOSIT_STATUS_PARTIAL,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_LOAD_FAILURE,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_REJECTED,
+    EDIT_SE_IRI,
 )
-
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 

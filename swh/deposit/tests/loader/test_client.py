@@ -3,17 +3,16 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
 import json
-import pytest
-import unittest
-
+import os
 from typing import Any, Callable, Optional
+import unittest
 from urllib.parse import urlparse
 
-from swh.deposit.client import PrivateApiDepositClient
-from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE
+import pytest
 
+from swh.deposit.client import PrivateApiDepositClient
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_SUCCESS
 
 CLIENT_TEST_CONFIG = {
     "url": "https://nowhere.org/",
