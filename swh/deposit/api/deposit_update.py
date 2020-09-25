@@ -109,13 +109,13 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
         """Replace existing deposit's metadata/archive with new ones.
 
            source:
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_metadata  # noqa
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_multipart  # noqa
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_metadata
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_multipart
 
         Returns:
             204 No content
 
-        """
+        """  # noqa
         if req.content_type.startswith("multipart/"):
             return self._multipart_upload(
                 req,

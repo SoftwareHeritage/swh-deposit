@@ -3,6 +3,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from io import BytesIO
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
@@ -392,3 +395,71 @@ def test_put_metadata_to_em_iri_failure(
         + "application/zip, application/x-tar"
     )
     assert msg == response_content["sword:error"]["summary"]
+
+
+def test_put_update_metadata_and_archive_deposit_partial_nominal(
+    tmp_path,
+    authenticated_client,
+    partial_deposit_with_metadata,
+    deposit_collection,
+    atom_dataset,
+    sample_archive,
+):
+    """Scenario: Replace metadata and archive(s) with new ones should be ok
+
+    Response: 204
+
+    """
+    # given
+    deposit = partial_deposit_with_metadata
+    raw_metadata0 = atom_dataset["entry-data0"] % deposit.external_id.encode("utf-8")
+
+    requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
+    assert len(requests_meta) == 1
+    request_meta0 = requests_meta[0]
+    assert request_meta0.raw_metadata == raw_metadata0
+
+    requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
+    assert len(requests_archive0) == 1
+
+    archive = InMemoryUploadedFile(
+        BytesIO(sample_archive["data"]),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/x-tar",
+        size=sample_archive["length"],
+        charset=None,
+    )
+
+    data_atom_entry = atom_dataset["entry-data1"]
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(data_atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(data_atom_entry),
+        charset="utf-8",
+    )
+
+    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    response = authenticated_client.put(
+        update_uri,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # check we updated the metadata part
+    requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
+    assert len(requests_meta) == 1
+    request_meta1 = requests_meta[0]
+    raw_metadata1 = request_meta1.raw_metadata
+    assert raw_metadata1 == data_atom_entry
+    assert raw_metadata0 != raw_metadata1
+    assert request_meta0 != request_meta1
+
+    # and the archive part
+    requests_archive1 = DepositRequest.objects.filter(deposit=deposit, type="archive")
+    assert len(requests_archive1) == 1
+    assert set(requests_archive0) != set(requests_archive1)
