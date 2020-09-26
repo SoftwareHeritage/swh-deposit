@@ -54,8 +54,10 @@ def test_post_deposit_atom_400_with_empty_body(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-empty-body"],
+        HTTP_SLUG="something",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Empty body request is not supported" in response.content
 
 
 def test_post_deposit_atom_400_badly_formatted_atom(
