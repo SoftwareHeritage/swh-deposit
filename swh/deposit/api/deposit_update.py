@@ -284,6 +284,7 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
             fetcher=metadata_fetcher,
             format="sword-v2-atom-codemeta",
             metadata=raw_metadata,
+            origin=deposit.origin_url,
         )
 
         # write to metadata storage

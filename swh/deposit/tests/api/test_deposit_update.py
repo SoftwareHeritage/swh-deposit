@@ -5,6 +5,7 @@
 
 from io import BytesIO
 
+import attr
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
 from rest_framework import status
@@ -14,12 +15,21 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_PARTIAL,
     EDIT_SE_IRI,
     EM_IRI,
+    APIConfig,
 )
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive, create_arborescence_archive
 from swh.model.hashutil import hash_to_bytes
 from swh.model.identifiers import parse_swhid, swhid
+from swh.model.model import (
+    MetadataAuthority,
+    MetadataAuthorityType,
+    MetadataFetcher,
+    MetadataTargetType,
+    RawExtrinsicMetadata,
+)
+from swh.storage.interface import PagedResult
 
 
 def test_replace_archive_to_deposit_is_possible(
@@ -634,8 +644,49 @@ def test_put_update_metadata_done_deposit_nominal(
     assert len(requests_archive1) == nb_archives
     assert set(actual_existing_requests_archive) == set(requests_archive1)
 
-    # FIXME: Check the metadata storage information created is consistent
-    pass
+    # Ensure metadata stored in the metadata storage is consistent
+    metadata_authority = MetadataAuthority(
+        type=MetadataAuthorityType.DEPOSIT_CLIENT,
+        url=complete_deposit.client.provider_url,
+        metadata={"name": complete_deposit.client.last_name},
+    )
+
+    actual_authority = swh_storage.metadata_authority_get(
+        MetadataAuthorityType.DEPOSIT_CLIENT, url=complete_deposit.client.provider_url
+    )
+    assert actual_authority == metadata_authority
+
+    config = APIConfig()
+    metadata_fetcher = MetadataFetcher(
+        name=config.tool["name"],
+        version=config.tool["version"],
+        metadata=config.tool["configuration"],
+    )
+
+    actual_fetcher = swh_storage.metadata_fetcher_get(
+        config.tool["name"], config.tool["version"]
+    )
+    assert actual_fetcher == metadata_fetcher
+
+    directory_swhid = parse_swhid(complete_deposit.swh_id)
+    page_results = swh_storage.raw_extrinsic_metadata_get(
+        MetadataTargetType.DIRECTORY, directory_swhid, metadata_authority
+    )
+    assert page_results == PagedResult(
+        results=[
+            RawExtrinsicMetadata(
+                type=MetadataTargetType.DIRECTORY,
+                id=directory_swhid,
+                discovery_date=request_meta1.date,
+                authority=attr.evolve(metadata_authority, metadata=None),
+                fetcher=attr.evolve(metadata_fetcher, metadata=None),
+                format="sword-v2-atom-codemeta",
+                metadata=raw_metadata1.encode(),
+                origin=complete_deposit.origin_url,
+            )
+        ],
+        next_page_token=None,
+    )
 
 
 def test_put_update_metadata_done_deposit_failure_swhid_unknown(
