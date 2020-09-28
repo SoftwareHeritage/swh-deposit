@@ -155,6 +155,7 @@ def test_update_deposit_status_will_fail_with_unknown_status(
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert b"Possible status in " in response.content
 
 
 def test_update_deposit_status_will_fail_with_no_status_key(
@@ -172,6 +173,7 @@ def test_update_deposit_status_will_fail_with_no_status_key(
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert b"The status key is mandatory with possible values" in response.content
 
 
 def test_update_deposit_status_success_without_swh_id_fail(
@@ -189,3 +191,6 @@ def test_update_deposit_status_success_without_swh_id_fail(
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert (
+            b"Updating deposit status to done requires information" in response.content
+        )

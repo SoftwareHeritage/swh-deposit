@@ -155,6 +155,11 @@ def test_post_deposit_binary_failure_unsupported_packaging_header(
 
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        b"The packaging provided something-unsupported is not supported"
+        in response.content
+    )
+
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
@@ -185,6 +190,8 @@ def test_post_deposit_binary_upload_no_content_disposition_header(
 
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"CONTENT_DISPOSITION header is mandatory" in response.content
+
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
@@ -481,6 +488,7 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content
 
     # adding file is no longer possible since the deposit's status
     # is ready
@@ -497,6 +505,7 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content
 
     # replacing metadata is no longer possible since the deposit's
     # status is ready
@@ -509,6 +518,7 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content
 
     # adding new metadata is no longer possible since the
     # deposit's status is ready
@@ -521,6 +531,7 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content
 
     archive_content = b"some content representing archive"
     archive = InMemoryUploadedFile(
@@ -550,6 +561,7 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content
 
     # adding new metadata is no longer possible since the
     # deposit's status is ready
@@ -560,3 +572,4 @@ def test_post_deposit_then_update_refused(
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"You can only act on deposit with status &#39;partial&#39;" in r.content

@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
+from swh.deposit.api.common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_PARTIAL,
@@ -474,12 +475,9 @@ def test_post_metadata_to_em_iri_failure(
         data=atom_dataset["entry-data1"],
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response_content = parse_xml(response.content)
-    msg = (
-        "Packaging format supported is restricted to "
-        + "application/zip, application/x-tar"
-    )
-    assert msg == response_content["sword:error"]["summary"]
+    assert b"Packaging format supported is restricted" in response.content
+    for supported_format in ACCEPT_ARCHIVE_CONTENT_TYPES:
+        assert supported_format.encode() in response.content
 
 
 def test_put_metadata_to_em_iri_failure(
@@ -499,12 +497,9 @@ def test_put_metadata_to_em_iri_failure(
     )
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response_content = parse_xml(response.content)
-    msg = (
-        "Packaging format supported is restricted to "
-        + "application/zip, application/x-tar"
-    )
-    assert msg == response_content["sword:error"]["summary"]
+    assert b"Packaging format supported is restricted" in response.content
+    for supported_format in ACCEPT_ARCHIVE_CONTENT_TYPES:
+        assert supported_format.encode() in response.content
 
 
 def test_put_update_metadata_and_archive_deposit_partial_nominal(
