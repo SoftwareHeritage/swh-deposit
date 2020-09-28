@@ -3,6 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Functional Metadata checks:
+
+Mandatory fields:
+- 'author'
+- 'name' or 'title'
+
+"""
+
 from typing import Dict, Optional, Tuple
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
@@ -20,12 +28,13 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
           ok (False, <detailed-error>) otherwise.
 
     """
+    # following fields are mandatory
     required_fields = {
         "author": False,
     }
+    # at least one value per couple below is mandatory
     alternate_fields = {
-        ("name", "title"): False,  # alternate field, at least one
-        # of them must be present
+        ("name", "title"): False,
     }
 
     for field, value in metadata.items():
