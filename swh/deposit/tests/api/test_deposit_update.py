@@ -763,15 +763,17 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
         EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
     )
 
-    response = authenticated_client.put(
-        update_uri,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data-empty-body"],
-        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
-    )
+    for atom_key in ["entry-data-empty-body", "entry-data-empty-body-no-namespace"]:
+        atom_content = atom_dataset[atom_key]
+        response = authenticated_client.put(
+            update_uri,
+            content_type="application/atom+xml;type=entry",
+            data=atom_content,
+            HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+        )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert b"Empty body request is not supported" in response.content
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert b"Empty body request is not supported" in response.content
 
 
 def test_put_update_metadata_done_deposit_failure_functional_checks(
