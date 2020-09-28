@@ -32,8 +32,6 @@ def test_parsing_without_duplicates():
     actual_result = SWHXMLParser().parse(xml_no_duplicate)
     expected_dict = OrderedDict(
         [
-            ("@xmlns", "http://www.w3.org/2005/Atom"),
-            ("@xmlns:codemeta", "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"),
             ("title", "Awesome Compiler"),
             (
                 "codemeta:license",
@@ -92,8 +90,6 @@ def test_parsing_with_duplicates():
 
     expected_dict = OrderedDict(
         [
-            ("@xmlns", "http://www.w3.org/2005/Atom"),
-            ("@xmlns:codemeta", "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"),
             ("title", "Another Compiler"),
             ("codemeta:runtimePlatform", ["GNU/Linux", "Un*x"]),
             (

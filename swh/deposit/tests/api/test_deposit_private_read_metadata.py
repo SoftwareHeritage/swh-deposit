@@ -69,7 +69,6 @@ def test_read_metadata(
             },
             "origin_metadata": {
                 "metadata": {
-                    "@xmlns": ["http://www.w3.org/2005/Atom"],
                     "author": ["some awesome author", "another one", "no one"],
                     "codemeta:dateCreated": "2017-10-07T15:17:08Z",
                     "external_identifier": "some-external-id",
@@ -145,7 +144,6 @@ def test_read_metadata_revision_with_parent(
             },
             "origin_metadata": {
                 "metadata": {
-                    "@xmlns": ["http://www.w3.org/2005/Atom"],
                     "author": ["some awesome author", "another one", "no one"],
                     "codemeta:dateCreated": "2017-10-07T15:17:08Z",
                     "external_identifier": "some-external-id",
@@ -218,8 +216,6 @@ def test_read_metadata_3(
         data = response.json()
 
         metadata = {
-            "@xmlns": ["http://www.w3.org/2005/Atom"],
-            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
             "author": [
                 "some awesome author",
                 "another one",
@@ -322,8 +318,6 @@ def test_read_metadata_4(
         data = response.json()
 
         metadata = {
-            "@xmlns": "http://www.w3.org/2005/Atom",
-            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
@@ -445,8 +439,6 @@ def test_read_metadata_5(
         }
 
         metadata = {
-            "@xmlns": "http://www.w3.org/2005/Atom",
-            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
             "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
             "client": "hal",
             "codemeta:applicationCategory": "test",
