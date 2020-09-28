@@ -11,7 +11,6 @@ from rest_framework.request import Request
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.models import Deposit
-from swh.model.hashutil import hash_to_bytes
 from swh.model.identifiers import parse_swhid
 from swh.model.model import (
     MetadataAuthority,
@@ -252,20 +251,6 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
         )
 
         deposit_swhid = parse_swhid(swhid)
-
-        directory_id = hash_to_bytes(deposit_swhid.object_id)
-
-        # check the swhid exists in the archive
-        directories_missing = list(
-            self.storage_metadata.directory_missing([directory_id])
-        )
-        if len(directories_missing) > 0:
-            return make_error_dict(
-                BAD_REQUEST,
-                f"Unknown directory SWHID {swhid} reference",
-                "The SWHID provided is not a known directory SWHID in SWH archive. "
-                "Please provide an existing SWHID.",
-            )
 
         # replace metadata within the deposit backend
         deposit_request_data = {

@@ -689,44 +689,6 @@ def test_put_update_metadata_done_deposit_nominal(
     )
 
 
-def test_put_update_metadata_done_deposit_failure_swhid_unknown(
-    tmp_path,
-    authenticated_client,
-    complete_deposit,
-    deposit_collection,
-    atom_dataset,
-    swh_storage,
-):
-    """Failure: client updates metadata with a SWHID matching the deposit's. Said SWHID does
-       not exist in the archive somehow.
-
-       This should not happen though, it is still technically possible so it's
-       covered...
-
-       Response: 400
-
-    """
-    # directory targeted by the complete_deposit does not exist in the storage
-    missing_directory_id = hash_to_bytes(parse_swhid(complete_deposit.swh_id).object_id)
-    assert list(swh_storage.directory_missing([missing_directory_id])) == [
-        missing_directory_id
-    ]
-
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
-
-    response = authenticated_client.put(
-        update_uri,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
-        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
-    )
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert b"Unknown directory SWHID" in response.content
-
-
 def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
     tmp_path,
     authenticated_client,
