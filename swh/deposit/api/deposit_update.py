@@ -203,10 +203,10 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
         deposit = Deposit.objects.get(pk=deposit_id)
         assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
 
-        if swhid != deposit.swh_id:
+        if swhid != deposit.swhid:
             return make_error_dict(
                 BAD_REQUEST,
-                f"Mismatched provided SWHID {swhid} with deposit's {deposit.swh_id}.",
+                f"Mismatched provided SWHID {swhid} with deposit's {deposit.swhid}.",
                 "The provided SWHID does not match the deposit to update. "
                 "Please ensure you send the correct deposit SWHID.",
             )

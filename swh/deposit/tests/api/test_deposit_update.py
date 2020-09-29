@@ -586,7 +586,7 @@ def test_put_update_metadata_done_deposit_nominal(
        Response: 204
 
     """
-    deposit_swhid = parse_swhid(complete_deposit.swh_id)
+    deposit_swhid = parse_swhid(complete_deposit.swhid)
     assert deposit_swhid.object_type == "directory"
     directory_id = hash_to_bytes(deposit_swhid.object_id)
 
@@ -599,8 +599,8 @@ def test_put_update_metadata_done_deposit_nominal(
     swh_storage.directory_add([existing_directory])
     assert list(swh_storage.directory_missing([existing_directory.id])) == []
 
-    # and patch one complete deposit swh_id so it targets said reference
-    complete_deposit.swh_id = swhid("directory", existing_directory.id)
+    # and patch one complete deposit swhid so it targets said reference
+    complete_deposit.swhid = swhid("directory", existing_directory.id)
     complete_deposit.save()
 
     actual_existing_requests_archive = DepositRequest.objects.filter(
@@ -619,7 +619,7 @@ def test_put_update_metadata_done_deposit_nominal(
         update_uri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
-        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+        HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -663,7 +663,7 @@ def test_put_update_metadata_done_deposit_nominal(
     )
     assert actual_fetcher == metadata_fetcher
 
-    directory_swhid = parse_swhid(complete_deposit.swh_id)
+    directory_swhid = parse_swhid(complete_deposit.swhid)
     page_results = swh_storage.raw_extrinsic_metadata_get(
         MetadataTargetType.DIRECTORY, directory_swhid, metadata_authority
     )
@@ -698,7 +698,7 @@ def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
 
     """
     incorrect_swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
-    assert complete_deposit.swh_id != incorrect_swhid
+    assert complete_deposit.swhid != incorrect_swhid
 
     update_uri = reverse(
         EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
@@ -734,7 +734,7 @@ def test_put_update_metadata_done_deposit_failure_malformed_xml(
         update_uri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-ko"],
-        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+        HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -764,7 +764,7 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
             update_uri,
             content_type="application/atom+xml;type=entry",
             data=atom_content,
-            HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+            HTTP_X_CHECK_SWHID=complete_deposit.swhid,
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -793,7 +793,7 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
         content_type="application/atom+xml;type=entry",
         # no title, nor author, nor name fields
         data=atom_dataset["entry-data-fail-metadata-functional-checks"],
-        HTTP_X_CHECK_SWHID=complete_deposit.swh_id,
+        HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST

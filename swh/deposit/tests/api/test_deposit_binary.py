@@ -108,7 +108,7 @@ def test_post_deposit_binary_upload_ok(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     check_archive(sample_archive["name"], deposit_request.archive.name)
@@ -363,7 +363,7 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     assert deposit.status == "partial"
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     assert deposit_request.deposit == deposit
@@ -398,7 +398,7 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_requests = list(
         DepositRequest.objects.filter(deposit=deposit).order_by("id")
@@ -454,7 +454,7 @@ def test_post_deposit_then_update_refused(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_request = DepositRequest.objects.get(deposit=deposit)
     assert deposit_request.deposit == deposit

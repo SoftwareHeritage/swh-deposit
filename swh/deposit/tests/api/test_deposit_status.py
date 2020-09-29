@@ -74,8 +74,8 @@ def test_status_deposit_rejected(authenticated_client, rejected_deposit):
     assert int(r["deposit_id"]) == deposit.id
     assert r["deposit_status"] == DEPOSIT_STATUS_REJECTED
     assert r["deposit_status_detail"] == "Deposit failed the checks"
-    if deposit.swh_id:
-        assert r["deposit_swh_id"] == deposit.swh_id
+    if deposit.swhid:
+        assert r["deposit_swhid"] == deposit.swhid
 
 
 def test_status_with_http_accept_header_should_not_break(
@@ -115,7 +115,7 @@ def test_status_complete_deposit(authenticated_client, complete_deposit):
     assert (
         r["deposit_status_detail"] == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS]
     )
-    assert deposit.swh_id is not None
-    assert r["deposit_swh_id"] == deposit.swh_id
-    assert deposit.swh_id_context is not None
-    assert r["deposit_swh_id_context"] == deposit.swh_id_context
+    assert deposit.swhid is not None
+    assert r["deposit_swh_id"] == deposit.swhid
+    assert deposit.swhid_context is not None
+    assert r["deposit_swh_id_context"] == deposit.swhid_context

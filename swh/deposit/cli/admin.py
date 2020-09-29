@@ -263,8 +263,8 @@ def adm_deposit_reschedule(ctx, deposit_id):
         ctx.exit(1)
 
     # Reset the deposit's state
-    deposit.swh_id = None
-    deposit.swh_id_context = None
+    deposit.swhid = None
+    deposit.swhid_context = None
     deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
 

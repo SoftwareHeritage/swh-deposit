@@ -87,9 +87,9 @@ class APIUpdateStatus(APIPrivateView, APIPut):
             snp_id = swhid(SNAPSHOT, data["snapshot_id"])
             rev_id = swhid(REVISION, revision_id)
 
-            deposit.swh_id = dir_id
+            deposit.swhid = dir_id
             # new id with contextual information
-            deposit.swh_id_context = swhid(
+            deposit.swhid_context = swhid(
                 DIRECTORY,
                 directory_id,
                 metadata={

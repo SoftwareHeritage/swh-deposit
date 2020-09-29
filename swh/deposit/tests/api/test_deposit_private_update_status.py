@@ -54,8 +54,8 @@ def test_update_deposit_status_success_with_info(
         rev_id = swhid(REVISION, revision_id)
         snp_id = swhid(SNAPSHOT, snapshot_id)
 
-        expected_swh_id = "swh:1:dir:%s" % directory_id
-        expected_swh_id_context = (
+        expected_swhid = "swh:1:dir:%s" % directory_id
+        expected_swhid_context = (
             f"{dir_id};origin={origin_url};" + f"visit={snp_id};anchor={rev_id};path=/"
         )
 
@@ -67,8 +67,8 @@ def test_update_deposit_status_success_with_info(
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == expected_status
-        assert deposit.swh_id == expected_swh_id
-        assert deposit.swh_id_context == expected_swh_id_context
+        assert deposit.swhid == expected_swhid
+        assert deposit.swhid_context == expected_swhid_context
 
         # Reset deposit
         deposit = ready_deposit_verified
@@ -95,8 +95,8 @@ def test_update_deposit_status_rejected_with_info(
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_LOAD_FAILURE
 
-        assert deposit.swh_id is None
-        assert deposit.swh_id_context is None
+        assert deposit.swhid is None
+        assert deposit.swhid_context is None
 
         # Reset status
         deposit = ready_deposit_verified
@@ -176,10 +176,10 @@ def test_update_deposit_status_will_fail_with_no_status_key(
         assert b"The status key is mandatory with possible values" in response.content
 
 
-def test_update_deposit_status_success_without_swh_id_fail(
+def test_update_deposit_status_success_without_swhid_fail(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Providing successful status without swh_id should return a 400
+    """Providing successful status without swhid should return a 400
 
     """
     deposit = ready_deposit_verified

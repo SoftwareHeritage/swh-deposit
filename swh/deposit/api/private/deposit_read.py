@@ -149,7 +149,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         if deposit.parent:
-            swh_persistent_id = deposit.parent.swh_id
+            swh_persistent_id = deposit.parent.swhid
             swhid = identifiers.parse_swhid(swh_persistent_id)
             parent_revision = swhid.object_id
             parents = [parent_revision]

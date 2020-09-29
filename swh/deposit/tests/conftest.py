@@ -398,8 +398,8 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
     revision_id = "548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10"
     snapshot_id = "e5e82d064a9c3df7464223042e0c55d72ccff7f0"
-    deposit.swh_id = swhid(DIRECTORY, directory_id)
-    deposit.swh_id_context = swhid(
+    deposit.swhid = swhid(DIRECTORY, directory_id)
+    deposit.swhid_context = swhid(
         DIRECTORY,
         directory_id,
         metadata={

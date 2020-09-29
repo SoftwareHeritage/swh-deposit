@@ -122,9 +122,9 @@ def test_read_metadata_revision_with_parent(
         authenticated_client, deposit_collection, deposit, atom_dataset
     )
     rev_id = "da78a9d4cf1d5d29873693fd496142e3a18c20fa"
-    swh_id = "swh:1:rev:%s" % rev_id
+    swhid = "swh:1:rev:%s" % rev_id
     fake_parent = Deposit(
-        swh_id=swh_id, client=deposit.client, collection=deposit.collection
+        swhid=swhid, client=deposit.client, collection=deposit.collection
     )
     fake_parent.save()
     deposit.parent = fake_parent
