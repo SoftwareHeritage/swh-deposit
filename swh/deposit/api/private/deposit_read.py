@@ -131,26 +131,44 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             commit_date = deposit.complete_date
         return (normalize_date(author_date), normalize_date(commit_date))
 
-    def metadata_read(self, deposit):
-        """Read and aggregate multiple data on deposit into one unified data
-           dictionary.
+    def metadata_read(self, deposit: Deposit) -> Dict[str, Any]:
+        """Read and aggregate multiple deposit information into one unified dictionary.
 
         Args:
-            deposit (Deposit): Deposit concerned by the data aggregation.
+            deposit: Deposit concerned by the data aggregation.
 
         Returns:
-            Dictionary of data representing the deposit to inject in swh.
+            Dictionary of deposit information read by the deposit loader, with the
+            following keys:
+
+                **origin** (Dict): Information about the origin
+
+                **origin_metadata (Dict): Metadata about the origin to load
+
+                    **metadata_raw** (List[str]): List of raw metadata received for the
+                      deposit
+
+                    **metadata_dict** (Dict): Deposit aggregated metadata into one dict
+
+                    **provider** (Dict): the metadata provider information about the
+                      deposit client
+
+                    **tool** (Dict): the deposit information
+
+                **deposit** (Dict): deposit information relevant to build the revision
+                  (author_date, committer_date, etc...)
 
         """
-        metadata = self._metadata_get(deposit)
+        metadata, raw_metadata = self._metadata_get(deposit)
         # Read information metadata
         data = {"origin": {"type": "deposit", "url": deposit.origin_url,}}
 
         author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         if deposit.parent:
-            swh_persistent_id = deposit.parent.swhid
-            swhid = identifiers.parse_swhid(swh_persistent_id)
+            parent_swhid = deposit.parent.swhid
+            assert parent_swhid is not None
+            swhid = identifiers.parse_swhid(parent_swhid)
             parent_revision = swhid.object_id
             parents = [parent_revision]
         else:
@@ -165,7 +183,8 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
                 "metadata": {},
             },
             "tool": self.tool,
-            "metadata": metadata,
+            "metadata_raw": raw_metadata,
+            "metadata_dict": metadata,
         }
         data["deposit"] = {
             "id": deposit.id,

@@ -6,9 +6,10 @@
 from django.urls import reverse
 from rest_framework import status
 
-from swh.deposit import __version__
+from swh.deposit import __version__, utils
 from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
 from swh.deposit.models import Deposit
+from swh.deposit.parsers import parse_xml
 
 PRIVATE_GET_DEPOSIT_METADATA_NC = PRIVATE_GET_DEPOSIT_METADATA + "-nc"
 
@@ -20,14 +21,6 @@ def private_get_raw_url_endpoints(collection, deposit):
         reverse(PRIVATE_GET_DEPOSIT_METADATA, args=[collection.name, deposit_id]),
         reverse(PRIVATE_GET_DEPOSIT_METADATA_NC, args=[deposit_id]),
     ]
-
-
-def update_deposit(authenticated_client, collection, deposit, atom_dataset):
-    for atom_data in ["entry-data2", "entry-data3"]:
-        update_deposit_with_metadata(
-            authenticated_client, collection, deposit, atom_dataset[atom_data]
-        )
-    return deposit
 
 
 def update_deposit_with_metadata(authenticated_client, collection, deposit, metadata):
@@ -52,28 +45,29 @@ def test_read_metadata(
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.save()
-    deposit = update_deposit(
-        authenticated_client, deposit_collection, deposit, atom_dataset
-    )
+
+    metadata_xml_atoms = [
+        atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
+    ]
+    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
+    for atom_xml in metadata_xml_atoms:
+        deposit = update_deposit_with_metadata(
+            authenticated_client, deposit_collection, deposit, atom_xml,
+        )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
         data = response.json()
-
-        expected_meta = {
+        assert data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
             "origin_metadata": {
-                "metadata": {
-                    "author": ["some awesome author", "another one", "no one"],
-                    "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-                    "external_identifier": "some-external-id",
-                    "url": "https://hal-test.archives-ouvertes.fr/some-external-id",  # noqa
-                },
+                "metadata_raw": metadata_xml_atoms,
+                "metadata_dict": utils.merge(*metadata_xml_raws),
                 "provider": {
                     "metadata": {},
                     "provider_name": "",
@@ -106,8 +100,6 @@ def test_read_metadata(
             },
         }
 
-        assert data == expected_meta
-
 
 def test_read_metadata_revision_with_parent(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
@@ -118,9 +110,15 @@ def test_read_metadata_revision_with_parent(
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.save()
-    deposit = update_deposit(
-        authenticated_client, deposit_collection, deposit, atom_dataset
-    )
+    metadata_xml_atoms = [
+        atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
+    ]
+    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
+    for atom_xml in metadata_xml_atoms:
+        deposit = update_deposit_with_metadata(
+            authenticated_client, deposit_collection, deposit, atom_xml,
+        )
+
     rev_id = "da78a9d4cf1d5d29873693fd496142e3a18c20fa"
     swhid = "swh:1:rev:%s" % rev_id
     fake_parent = Deposit(
@@ -136,19 +134,14 @@ def test_read_metadata_revision_with_parent(
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
         data = response.json()
-
-        expected_meta = {
+        assert data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
             "origin_metadata": {
-                "metadata": {
-                    "author": ["some awesome author", "another one", "no one"],
-                    "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-                    "external_identifier": "some-external-id",
-                    "url": "https://hal-test.archives-ouvertes.fr/some-external-id",  # noqa
-                },
+                "metadata_raw": metadata_xml_atoms,
+                "metadata_dict": utils.merge(*metadata_xml_raws),
                 "provider": {
                     "metadata": {},
                     "provider_name": "",
@@ -181,8 +174,6 @@ def test_read_metadata_revision_with_parent(
             },
         }
 
-        assert data == expected_meta
-
 
 def test_read_metadata_3(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
@@ -193,9 +184,7 @@ def test_read_metadata_3(
     deposit = partial_deposit
     deposit.external_id = "hal-01243065"
     deposit.save()
-    deposit = update_deposit(
-        authenticated_client, deposit_collection, deposit, atom_dataset
-    )
+
     # add metadata to the deposit with datePublished and dateCreated
     codemeta_entry_data = (
         atom_dataset["metadata"]
@@ -204,9 +193,16 @@ def test_read_metadata_3(
   <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
 """
     )
-    update_deposit_with_metadata(
-        authenticated_client, deposit_collection, deposit, codemeta_entry_data
-    )
+    metadata_xml_atoms = [
+        atom_dataset["entry-data2"],
+        atom_dataset["entry-data3"],
+        codemeta_entry_data,
+    ]
+    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
+    for atom_xml in metadata_xml_atoms:
+        update_deposit_with_metadata(
+            authenticated_client, deposit_collection, deposit, atom_xml,
+        )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -214,52 +210,14 @@ def test_read_metadata_3(
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
         data = response.json()
-
-        metadata = {
-            "author": [
-                "some awesome author",
-                "another one",
-                "no one",
-                {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
-            ],
-            "client": "hal",
-            "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
-            "codemeta:dateCreated": [
-                "2017-10-07T15:17:08Z",
-                "2015-04-06T17:08:47+02:00",
-            ],
-            "codemeta:datePublished": "2017-05-03T16:08:47+02:00",
-            "codemeta:description": "this is the description",
-            "codemeta:developmentStatus": "stable",
-            "codemeta:keywords": "DSP programming",
-            "codemeta:license": [
-                {"codemeta:name": "GNU General Public License v3.0 only"},
-                {
-                    "codemeta:name": "CeCILL "
-                    "Free "
-                    "Software "
-                    "License "
-                    "Agreement "
-                    "v1.1"
-                },
-            ],
-            "codemeta:programmingLanguage": ["php", "python", "C"],
-            "codemeta:runtimePlatform": "phpstorm",
-            "codemeta:url": "https://hal-test.archives-ouvertes.fr/hal-01243065",  # noqa
-            "codemeta:version": "1",
-            "external_identifier": ["some-external-id", "hal-01243065"],
-            "id": "hal-01243065",
-            "title": "Composing a Web of Audio Applications",
-            "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
-        }
-        expected_meta = {
+        assert data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
             "origin_metadata": {
-                "metadata": metadata,
+                "metadata_raw": metadata_xml_atoms,
+                "metadata_dict": utils.merge(*metadata_xml_raws),
                 "provider": {
                     "metadata": {},
                     "provider_name": "",
@@ -291,7 +249,6 @@ def test_read_metadata_3(
                 "revision_parents": [],
             },
         }
-        assert data == expected_meta
 
 
 def test_read_metadata_4(
@@ -317,48 +274,14 @@ def test_read_metadata_4(
         assert response._headers["content-type"][1] == "application/json"
         data = response.json()
 
-        metadata = {
-            "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
-            "client": "hal",
-            "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
-            "codemeta:description": "this is the description",
-            "codemeta:developmentStatus": "stable",
-            "codemeta:keywords": "DSP programming",
-            "codemeta:license": [
-                {
-                    "codemeta:name": "GNU "
-                    "General "
-                    "Public "
-                    "License "
-                    "v3.0 "
-                    "only"
-                },
-                {
-                    "codemeta:name": "CeCILL "
-                    "Free "
-                    "Software "
-                    "License "
-                    "Agreement "
-                    "v1.1"
-                },
-            ],
-            "codemeta:programmingLanguage": ["php", "python", "C"],
-            "codemeta:runtimePlatform": "phpstorm",
-            "codemeta:url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
-            "codemeta:version": "1",
-            "external_identifier": "hal-01243065",
-            "id": "hal-01243065",
-            "title": "Composing a Web of Audio Applications",
-        }
-
         expected_origin = {
             "type": "deposit",
             "url": "https://hal-test.archives-ouvertes.fr/%s" % (deposit.external_id),
         }
 
         expected_origin_metadata = {
-            "metadata": metadata,
+            "metadata_raw": [codemeta_entry_data],
+            "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -438,51 +361,9 @@ def test_read_metadata_5(
             "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
         }
 
-        metadata = {
-            "author": {"email": "hal@ccsd.cnrs.fr", "name": "HAL"},
-            "client": "hal",
-            "codemeta:applicationCategory": "test",
-            "codemeta:author": {"codemeta:name": "Morane Gruenpeter"},
-            "codemeta:dateCreated": [
-                "2015-04-06T17:08:47+02:00",
-                "2016-04-06T17:08:47+02:00",
-            ],
-            "codemeta:datePublished": [
-                "2017-05-03T16:08:47+02:00",
-                "2018-05-03T16:08:47+02:00",
-            ],
-            "codemeta:description": "this is the description",
-            "codemeta:developmentStatus": "stable",
-            "codemeta:keywords": "DSP programming",
-            "codemeta:license": [
-                {
-                    "codemeta:name": "GNU "
-                    "General "
-                    "Public "
-                    "License "
-                    "v3.0 "
-                    "only"
-                },
-                {
-                    "codemeta:name": "CeCILL "
-                    "Free "
-                    "Software "
-                    "License "
-                    "Agreement "
-                    "v1.1"
-                },
-            ],
-            "codemeta:programmingLanguage": ["php", "python", "C"],
-            "codemeta:runtimePlatform": "phpstorm",
-            "codemeta:url": "https://hal-test.archives-ouvertes.fr/hal-01243065",  # noqa
-            "codemeta:version": "1",
-            "external_identifier": "hal-01243065",
-            "id": "hal-01243065",
-            "title": "Composing a Web of Audio Applications",
-        }
-
         expected_origin_metadata = {
-            "metadata": metadata,
+            "metadata_raw": [codemeta_entry_data],
+            "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
                 "provider_name": "",

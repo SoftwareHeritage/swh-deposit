@@ -11,6 +11,7 @@ from typing import Dict, Optional, Tuple
 import zipfile
 
 from rest_framework import status
+from rest_framework.request import Request
 
 from swh.scheduler.utils import create_oneshot_task_dict
 
@@ -130,22 +131,22 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
         return True, None
 
     def process_get(
-        self, req, collection_name: str, deposit_id: int
+        self, req: Request, collection_name: str, deposit_id: int
     ) -> Tuple[int, Dict, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
         Args:
-            req (Request):
-            collection_name (str): Collection owning the deposit
-            deposit_id (id): Deposit concerned by the reading
+            req: Client request
+            collection_name: Collection owning the deposit
+            deposit_id: Deposit concerned by the reading
 
         Returns:
             Tuple status, stream of content, content-type
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
-        metadata = self._metadata_get(deposit)
+        metadata, _ = self._metadata_get(deposit)
         problems: Dict = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
