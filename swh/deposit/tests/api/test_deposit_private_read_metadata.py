@@ -59,26 +59,24 @@ def test_read_metadata(
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
-        data = response.json()
-        assert data == {
+        actual_data = response.json()
+        assert actual_data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "origin_metadata": {
-                "metadata_raw": metadata_xml_atoms,
-                "metadata_dict": utils.merge(*metadata_xml_raws),
-                "provider": {
-                    "metadata": {},
-                    "provider_name": "",
-                    "provider_type": "deposit_client",
-                    "provider_url": "https://hal-test.archives-ouvertes.fr/",
-                },
-                "tool": {
-                    "configuration": {"sword_version": "2"},
-                    "name": "swh-deposit",
-                    "version": __version__,
-                },
+            "metadata_raw": metadata_xml_atoms,
+            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "provider": {
+                "metadata": {},
+                "provider_name": "",
+                "provider_type": "deposit_client",
+                "provider_url": "https://hal-test.archives-ouvertes.fr/",
+            },
+            "tool": {
+                "configuration": {"sword_version": "2"},
+                "name": "swh-deposit",
+                "version": __version__,
             },
             "deposit": {
                 "author": SWH_PERSON,
@@ -133,26 +131,24 @@ def test_read_metadata_revision_with_parent(
 
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
-        data = response.json()
-        assert data == {
+        actual_data = response.json()
+        assert actual_data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "origin_metadata": {
-                "metadata_raw": metadata_xml_atoms,
-                "metadata_dict": utils.merge(*metadata_xml_raws),
-                "provider": {
-                    "metadata": {},
-                    "provider_name": "",
-                    "provider_type": "deposit_client",
-                    "provider_url": "https://hal-test.archives-ouvertes.fr/",
-                },
-                "tool": {
-                    "configuration": {"sword_version": "2"},
-                    "name": "swh-deposit",
-                    "version": __version__,
-                },
+            "metadata_raw": metadata_xml_atoms,
+            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "provider": {
+                "metadata": {},
+                "provider_name": "",
+                "provider_type": "deposit_client",
+                "provider_url": "https://hal-test.archives-ouvertes.fr/",
+            },
+            "tool": {
+                "configuration": {"sword_version": "2"},
+                "name": "swh-deposit",
+                "version": __version__,
             },
             "deposit": {
                 "author": SWH_PERSON,
@@ -209,26 +205,24 @@ def test_read_metadata_3(
 
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
-        data = response.json()
-        assert data == {
+        actual_data = response.json()
+        assert actual_data == {
             "origin": {
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
-            "origin_metadata": {
-                "metadata_raw": metadata_xml_atoms,
-                "metadata_dict": utils.merge(*metadata_xml_raws),
-                "provider": {
-                    "metadata": {},
-                    "provider_name": "",
-                    "provider_type": "deposit_client",
-                    "provider_url": "https://hal-test.archives-ouvertes.fr/",
-                },
-                "tool": {
-                    "configuration": {"sword_version": "2"},
-                    "name": "swh-deposit",
-                    "version": __version__,
-                },
+            "metadata_raw": metadata_xml_atoms,
+            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "provider": {
+                "metadata": {},
+                "provider_name": "",
+                "provider_type": "deposit_client",
+                "provider_url": "https://hal-test.archives-ouvertes.fr/",
+            },
+            "tool": {
+                "configuration": {"sword_version": "2"},
+                "name": "swh-deposit",
+                "version": __version__,
             },
             "deposit": {
                 "author": SWH_PERSON,
@@ -272,14 +266,13 @@ def test_read_metadata_4(
 
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
-        data = response.json()
+        actual_data = response.json()
 
-        expected_origin = {
-            "type": "deposit",
-            "url": "https://hal-test.archives-ouvertes.fr/%s" % (deposit.external_id),
-        }
-
-        expected_origin_metadata = {
+        assert actual_data == {
+            "origin": {
+                "type": "deposit",
+                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
+            },
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
@@ -293,34 +286,25 @@ def test_read_metadata_4(
                 "name": "swh-deposit",
                 "version": __version__,
             },
-        }
-
-        expected_deposit_info = {
-            "author": SWH_PERSON,
-            "committer": SWH_PERSON,
-            "committer_date": {
-                "negative_utc": False,
-                "offset": 0,
-                "timestamp": {"microseconds": 0, "seconds": 1459900800},
+            "deposit": {
+                "author": SWH_PERSON,
+                "committer": SWH_PERSON,
+                "committer_date": {
+                    "negative_utc": False,
+                    "offset": 0,
+                    "timestamp": {"microseconds": 0, "seconds": 1459900800},
+                },
+                "author_date": {
+                    "negative_utc": False,
+                    "offset": 0,
+                    "timestamp": {"microseconds": 0, "seconds": 1459900800},
+                },
+                "client": deposit_collection.name,
+                "id": deposit.id,
+                "collection": deposit_collection.name,
+                "revision_parents": [],
             },
-            "author_date": {
-                "negative_utc": False,
-                "offset": 0,
-                "timestamp": {"microseconds": 0, "seconds": 1459900800},
-            },
-            "client": deposit_collection.name,
-            "id": deposit.id,
-            "collection": deposit_collection.name,
-            "revision_parents": [],
         }
-
-        expected_meta = {
-            "origin": expected_origin,
-            "origin_metadata": expected_origin_metadata,
-            "deposit": expected_deposit_info,
-        }
-
-        assert data == expected_meta
 
 
 def test_read_metadata_5(
@@ -354,14 +338,13 @@ def test_read_metadata_5(
 
         assert response.status_code == status.HTTP_200_OK
         assert response._headers["content-type"][1] == "application/json"
-        data = response.json()
+        actual_data = response.json()
 
-        expected_origin = {
-            "type": "deposit",
-            "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
-        }
-
-        expected_origin_metadata = {
+        assert actual_data == {
+            "origin": {
+                "type": "deposit",
+                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
+            },
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
@@ -375,34 +358,25 @@ def test_read_metadata_5(
                 "name": "swh-deposit",
                 "version": __version__,
             },
-        }
-
-        expected_deposit_info = {
-            "author": SWH_PERSON,
-            "committer": SWH_PERSON,
-            "committer_date": {
-                "negative_utc": False,
-                "offset": 120,
-                "timestamp": {"microseconds": 0, "seconds": 1493820527},
+            "deposit": {
+                "author": SWH_PERSON,
+                "committer": SWH_PERSON,
+                "committer_date": {
+                    "negative_utc": False,
+                    "offset": 120,
+                    "timestamp": {"microseconds": 0, "seconds": 1493820527},
+                },
+                "author_date": {
+                    "negative_utc": False,
+                    "offset": 120,
+                    "timestamp": {"microseconds": 0, "seconds": 1428332927},
+                },
+                "client": deposit_collection.name,
+                "id": deposit.id,
+                "collection": deposit_collection.name,
+                "revision_parents": [],
             },
-            "author_date": {
-                "negative_utc": False,
-                "offset": 120,
-                "timestamp": {"microseconds": 0, "seconds": 1428332927},
-            },
-            "client": deposit_collection.name,
-            "id": deposit.id,
-            "collection": deposit_collection.name,
-            "revision_parents": [],
         }
-
-        expected_meta = {
-            "origin": expected_origin,
-            "origin_metadata": expected_origin_metadata,
-            "deposit": expected_deposit_info,
-        }
-
-        assert data == expected_meta
 
 
 def test_access_to_nonexisting_deposit_returns_404_response(

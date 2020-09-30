@@ -135,7 +135,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         """Read and aggregate multiple deposit information into one unified dictionary.
 
         Args:
-            deposit: Deposit concerned by the data aggregation.
+            deposit: Deposit to retrieve information from
 
         Returns:
             Dictionary of deposit information read by the deposit loader, with the
@@ -143,26 +143,21 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
                 **origin** (Dict): Information about the origin
 
-                **origin_metadata (Dict): Metadata about the origin to load
+                **metadata_raw** (List[str]): List of raw metadata received for the
+                  deposit
 
-                    **metadata_raw** (List[str]): List of raw metadata received for the
-                      deposit
+                **metadata_dict** (Dict): Deposit aggregated metadata into one dict
 
-                    **metadata_dict** (Dict): Deposit aggregated metadata into one dict
+                **provider** (Dict): the metadata provider information about the
+                  deposit client
 
-                    **provider** (Dict): the metadata provider information about the
-                      deposit client
-
-                    **tool** (Dict): the deposit information
+                **tool** (Dict): the deposit information
 
                 **deposit** (Dict): deposit information relevant to build the revision
                   (author_date, committer_date, etc...)
 
         """
         metadata, raw_metadata = self._metadata_get(deposit)
-        # Read information metadata
-        data = {"origin": {"type": "deposit", "url": deposit.origin_url,}}
-
         author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         if deposit.parent:
@@ -174,8 +169,8 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             parents = []
 
-        data["origin_metadata"] = {
-            # metadata provider
+        return {
+            "origin": {"type": "deposit", "url": deposit.origin_url},
             "provider": {
                 "provider_name": deposit.client.last_name,
                 "provider_url": deposit.client.provider_url,
@@ -185,19 +180,17 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             "tool": self.tool,
             "metadata_raw": raw_metadata,
             "metadata_dict": metadata,
+            "deposit": {
+                "id": deposit.id,
+                "client": deposit.client.username,
+                "collection": deposit.collection.name,
+                "author": SWH_PERSON,
+                "author_date": author_date,
+                "committer": SWH_PERSON,
+                "committer_date": commit_date,
+                "revision_parents": parents,
+            },
         }
-        data["deposit"] = {
-            "id": deposit.id,
-            "client": deposit.client.username,
-            "collection": deposit.collection.name,
-            "author": SWH_PERSON,
-            "author_date": author_date,
-            "committer": SWH_PERSON,
-            "committer_date": commit_date,
-            "revision_parents": parents,
-        }
-
-        return data
 
     def process_get(
         self, request, collection_name: str, deposit_id: int
