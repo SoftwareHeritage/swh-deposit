@@ -1,3 +1,18 @@
+swh-deposit (0.2.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.2.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-10-01 15:25:42
+    +0200)
+  * Upstream changes:     - v0.2.0     - Allow deposit metadata update
+    on deposit already completed     - Transit raw metadata to the
+    loader to unify with metadata update scenario     - deposit*: Rename
+    internally swh_id references to swhid     - deposit.parsers: Process
+    namespace when using xmltodict.parse     - tests: Add missing update
+    scenarios     - tests: Explicit the bad request scenario error
+    messages     - tests: Ensure all empty body test cases are covered
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 01 Oct 2020 13:29:29 +0000
+
 swh-deposit (0.1.0-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.1.0     - (tagged by David Douard
