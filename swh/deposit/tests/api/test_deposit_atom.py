@@ -50,12 +50,16 @@ def test_post_deposit_atom_400_with_empty_body(
     """Posting empty body request should return a 400 response
 
     """
-    response = authenticated_client.post(
-        reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data-empty-body"],
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    for atom_key in ["entry-data-empty-body", "entry-data-empty-body-no-namespace"]:
+        atom_content = atom_dataset[atom_key]
+        response = authenticated_client.post(
+            reverse(COL_IRI, args=[deposit_collection.name]),
+            content_type="application/atom+xml;type=entry",
+            data=atom_content,
+            HTTP_SLUG="external-id",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert b"Empty body request is not supported" in response.content
 
 
 def test_post_deposit_atom_400_badly_formatted_atom(
@@ -68,8 +72,10 @@ def test_post_deposit_atom_400_badly_formatted_atom(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-badly-formatted"],
+        HTTP_SLUG="external-id",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Malformed xml metadata" in response.content
 
 
 def test_post_deposit_atom_parsing_error(
@@ -82,8 +88,10 @@ def test_post_deposit_atom_parsing_error(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-parsing-error-prone"],
+        HTTP_SLUG="external-id",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Malformed xml metadata" in response.content
 
 
 def test_post_deposit_atom_no_slug_header(
@@ -122,6 +130,7 @@ def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset
         HTTP_SLUG="something",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert b"Unknown collection" in response.content
 
 
 def test_post_deposit_atom_entry_initial(

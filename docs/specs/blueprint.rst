@@ -55,10 +55,18 @@ Updating an existing deposit
   2. Server stores information received (metadata or software archive source
      code or both)
 
-    This would be the case for example if the client initially posted a
-    ``partial`` deposit (e.g. only metadata with no archive, or an archive
-    without metadata, or a split archive because the initial one exceeded
-    the limit size imposed by swh repository deposit)
+This would be the case for example if the client initially posted a
+``partial`` deposit (e.g. only metadata with no archive, or an archive
+without metadata, or a split archive because the initial one exceeded
+the limit size imposed by swh repository deposit).
+
+.. note::
+
+   It is currently only possible to update deposits in the ``partial`` state,
+   but we are planning to allow depositing metadata in the ``done`` state
+   as well.
+   In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
+   in the ``partial`` state, but only to ``deposited``.
 
 Schema representation
 ^^^^^^^^^^^^^^^^^^^^^

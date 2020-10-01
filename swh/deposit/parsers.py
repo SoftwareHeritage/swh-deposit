@@ -46,7 +46,16 @@ class SWHXMLParser(BaseParser):
         """
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
-        data = xmltodict.parse(stream, encoding=encoding, process_namespaces=False)
+        namespaces = {
+            "http://www.w3.org/2005/Atom": None,
+            "http://purl.org/dc/terms/": None,
+            "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
+            "http://purl.org/net/sword/": "sword",
+        }
+
+        data = xmltodict.parse(
+            stream, encoding=encoding, namespaces=namespaces, process_namespaces=True
+        )
         if "entry" in data:
             data = data["entry"]
         return data

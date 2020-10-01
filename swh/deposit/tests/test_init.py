@@ -5,6 +5,6 @@
 
 
 def test_version():
-    from swh.deposit.api import __version__
+    from swh.deposit import __version__
 
     assert __version__ is not None

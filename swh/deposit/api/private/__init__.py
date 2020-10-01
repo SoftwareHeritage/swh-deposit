@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Any, Dict, List, Tuple
+
 from rest_framework.permissions import AllowAny
 
 from swh.deposit import utils
@@ -39,22 +41,27 @@ class DepositReadMixin:
         for deposit_request in deposit_requests:
             yield deposit_request
 
-    def _metadata_get(self, deposit):
-        """Given a deposit, aggregate all metadata requests.
+    def _metadata_get(self, deposit: Deposit) -> Tuple[Dict[str, Any], List[str]]:
+        """Given a deposit, retrieve all metadata requests into one Dict and returns both that
+           aggregated metadata dict and the list of raw_metdadata.
 
         Args:
-            deposit (Deposit): The deposit instance to extract
-            metadata from.
+            deposit: The deposit instance to extract metadata from
 
         Returns:
-            metadata dict from the deposit.
+            Tuple of aggregated metadata dict, list of raw_metadata
 
         """
-        metadata = (
-            m.metadata
-            for m in self._deposit_requests(deposit, request_type=METADATA_TYPE)
-        )
-        return utils.merge(*metadata)
+        metadata: List[Dict[str, Any]] = []
+        raw_metadata: List[str] = []
+        for deposit_request in self._deposit_requests(
+            deposit, request_type=METADATA_TYPE
+        ):
+            metadata.append(deposit_request.metadata)
+            raw_metadata.append(deposit_request.raw_metadata)
+
+        aggregated_metadata = utils.merge(*metadata)
+        return (aggregated_metadata, raw_metadata)
 
 
 class APIPrivateView(APIConfig, AuthenticatedAPIView):
