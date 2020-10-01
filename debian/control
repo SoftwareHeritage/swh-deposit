@@ -29,6 +29,8 @@ Architecture: all
 Depends: python3-swh.core (>= 0.0.75~),
          python3-swh.model (>= 0.3.8~),
          python3-swh.scheduler (>= 0.0.39~),
+         python3-django,
+         python3-djangorestframework,
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Server
 
