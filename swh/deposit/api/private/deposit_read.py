@@ -12,9 +12,9 @@ from typing import Any, Dict, Tuple
 from rest_framework import status
 
 from swh.core import tarball
-from swh.deposit.api import __version__
 from swh.deposit.utils import normalize_date
 from swh.model import identifiers
+from swh.model.model import MetadataAuthorityType
 
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
@@ -104,15 +104,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
     """
 
-    def __init__(self):
-        super().__init__()
-        self.provider = self.config["provider"]
-        self.tool = {
-            "name": "swh-deposit",
-            "version": __version__,
-            "configuration": {"sword_version": "2"},
-        }
-
     def _normalize_dates(self, deposit, metadata):
         """Normalize the date to use as a tuple of author date, committer date
            from the incoming metadata.
@@ -140,52 +131,66 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             commit_date = deposit.complete_date
         return (normalize_date(author_date), normalize_date(commit_date))
 
-    def metadata_read(self, deposit):
-        """Read and aggregate multiple data on deposit into one unified data
-           dictionary.
+    def metadata_read(self, deposit: Deposit) -> Dict[str, Any]:
+        """Read and aggregate multiple deposit information into one unified dictionary.
 
         Args:
-            deposit (Deposit): Deposit concerned by the data aggregation.
+            deposit: Deposit to retrieve information from
 
         Returns:
-            Dictionary of data representing the deposit to inject in swh.
+            Dictionary of deposit information read by the deposit loader, with the
+            following keys:
+
+                **origin** (Dict): Information about the origin
+
+                **metadata_raw** (List[str]): List of raw metadata received for the
+                  deposit
+
+                **metadata_dict** (Dict): Deposit aggregated metadata into one dict
+
+                **provider** (Dict): the metadata provider information about the
+                  deposit client
+
+                **tool** (Dict): the deposit information
+
+                **deposit** (Dict): deposit information relevant to build the revision
+                  (author_date, committer_date, etc...)
 
         """
-        metadata = self._metadata_get(deposit)
-        # Read information metadata
-        data = {"origin": {"type": "deposit", "url": deposit.origin_url,}}
-
-        # metadata provider
-        self.provider["provider_name"] = deposit.client.last_name
-        self.provider["provider_url"] = deposit.client.provider_url
-
+        metadata, raw_metadata = self._metadata_get(deposit)
         author_date, commit_date = self._normalize_dates(deposit, metadata)
 
         if deposit.parent:
-            swh_persistent_id = deposit.parent.swh_id
-            swhid = identifiers.parse_swhid(swh_persistent_id)
+            parent_swhid = deposit.parent.swhid
+            assert parent_swhid is not None
+            swhid = identifiers.parse_swhid(parent_swhid)
             parent_revision = swhid.object_id
             parents = [parent_revision]
         else:
             parents = []
 
-        data["origin_metadata"] = {
-            "provider": self.provider,
+        return {
+            "origin": {"type": "deposit", "url": deposit.origin_url},
+            "provider": {
+                "provider_name": deposit.client.last_name,
+                "provider_url": deposit.client.provider_url,
+                "provider_type": MetadataAuthorityType.DEPOSIT_CLIENT.value,
+                "metadata": {},
+            },
             "tool": self.tool,
-            "metadata": metadata,
+            "metadata_raw": raw_metadata,
+            "metadata_dict": metadata,
+            "deposit": {
+                "id": deposit.id,
+                "client": deposit.client.username,
+                "collection": deposit.collection.name,
+                "author": SWH_PERSON,
+                "author_date": author_date,
+                "committer": SWH_PERSON,
+                "committer_date": commit_date,
+                "revision_parents": parents,
+            },
         }
-        data["deposit"] = {
-            "id": deposit.id,
-            "client": deposit.client.username,
-            "collection": deposit.collection.name,
-            "author": SWH_PERSON,
-            "author_date": author_date,
-            "committer": SWH_PERSON,
-            "committer_date": commit_date,
-            "revision_parents": parents,
-        }
-
-        return data
 
     def process_get(
         self, request, collection_name: str, deposit_id: int

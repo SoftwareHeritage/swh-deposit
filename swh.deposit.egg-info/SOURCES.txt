@@ -86,6 +86,7 @@ swh/deposit/py.typed
 swh/deposit/urls.py
 swh/deposit/utils.py
 swh/deposit/api/__init__.py
+swh/deposit/api/checks.py
 swh/deposit/api/common.py
 swh/deposit/api/converters.py
 swh/deposit/api/deposit.py
@@ -127,6 +128,7 @@ swh/deposit/migrations/0016_auto_20190507_1408.py
 swh/deposit/migrations/0017_auto_20190925_0906.py
 swh/deposit/migrations/0018_migrate_swhids.py
 swh/deposit/migrations/0019_auto_20200519_1035.py
+swh/deposit/migrations/0020_auto_20200929_0855.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
@@ -163,6 +165,7 @@ swh/deposit/tests/test_init.py
 swh/deposit/tests/test_utils.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/conftest.py
+swh/deposit/tests/api/test_checks.py
 swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
@@ -185,7 +188,9 @@ swh/deposit/tests/cli/test_client.py
 swh/deposit/tests/data/atom/codemeta-sample.xml
 swh/deposit/tests/data/atom/entry-data-badly-formatted.xml
 swh/deposit/tests/data/atom/entry-data-deposit-binary.xml
+swh/deposit/tests/data/atom/entry-data-empty-body-no-namespace.xml
 swh/deposit/tests/data/atom/entry-data-empty-body.xml
+swh/deposit/tests/data/atom/entry-data-fail-metadata-functional-checks.xml
 swh/deposit/tests/data/atom/entry-data-ko.xml
 swh/deposit/tests/data/atom/entry-data-minimal.xml
 swh/deposit/tests/data/atom/entry-data-parsing-error-prone.xml

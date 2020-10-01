@@ -11,16 +11,16 @@ from typing import Dict, Optional, Tuple
 import zipfile
 
 from rest_framework import status
+from rest_framework.request import Request
 
 from swh.scheduler.utils import create_oneshot_task_dict
 
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_VERIFIED
 from ...models import Deposit, DepositRequest
+from ..checks import check_metadata
 from ..common import APIGet
 
-MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
-ALTERNATE_FIELDS_MISSING = "Mandatory alternate fields are missing"
 MANDATORY_ARCHIVE_UNREADABLE = (
     "At least one of its associated archives is not readable"  # noqa
 )
@@ -130,69 +130,23 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             return False, MANDATORY_ARCHIVE_INVALID
         return True, None
 
-    def _check_metadata(self, metadata: Dict) -> Tuple[bool, Optional[Dict]]:
-        """Check to execute on all metadata for mandatory field presence.
-
-        Args:
-            metadata (dict): Metadata dictionary to check for mandatory fields
-
-        Returns:
-            tuple (status, error_detail): True, None if metadata are
-              ok (False, <detailed-error>) otherwise.
-
-        """
-        required_fields = {
-            "author": False,
-        }
-        alternate_fields = {
-            ("name", "title"): False,  # alternate field, at least one
-            # of them must be present
-        }
-
-        for field, value in metadata.items():
-            for name in required_fields:
-                if name in field:
-                    required_fields[name] = True
-
-            for possible_names in alternate_fields:
-                for possible_name in possible_names:
-                    if possible_name in field:
-                        alternate_fields[possible_names] = True
-                        continue
-
-        mandatory_result = [k for k, v in required_fields.items() if not v]
-        optional_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
-
-        if mandatory_result == [] and optional_result == []:
-            return True, None
-        detail = []
-        if mandatory_result != []:
-            detail.append(
-                {"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}
-            )
-        if optional_result != []:
-            detail.append(
-                {"summary": ALTERNATE_FIELDS_MISSING, "fields": optional_result,}
-            )
-        return False, {"metadata": detail}
-
     def process_get(
-        self, req, collection_name: str, deposit_id: int
+        self, req: Request, collection_name: str, deposit_id: int
     ) -> Tuple[int, Dict, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
 
         Args:
-            req (Request):
-            collection_name (str): Collection owning the deposit
-            deposit_id (id): Deposit concerned by the reading
+            req: Client request
+            collection_name: Collection owning the deposit
+            deposit_id: Deposit concerned by the reading
 
         Returns:
             Tuple status, stream of content, content-type
 
         """
         deposit = Deposit.objects.get(pk=deposit_id)
-        metadata = self._metadata_get(deposit)
+        metadata, _ = self._metadata_get(deposit)
         problems: Dict = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
@@ -201,7 +155,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             assert error_detail is not None
             problems.update(error_detail)
 
-        metadata_status, error_detail = self._check_metadata(metadata)
+        metadata_status, error_detail = check_metadata(metadata)
         if not metadata_status:
             assert error_detail is not None
             problems.update(error_detail)

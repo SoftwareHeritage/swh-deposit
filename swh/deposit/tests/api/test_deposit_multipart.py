@@ -104,7 +104,7 @@ def test_post_deposit_multipart_zip(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
     assert len(deposit_requests) == 2
@@ -174,7 +174,7 @@ def test_post_deposit_multipart_tar(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
     assert len(deposit_requests) == 2
@@ -244,7 +244,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     assert deposit.status == "partial"
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
 
@@ -275,7 +275,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
     assert deposit.external_id == external_id
     assert deposit.collection == deposit_collection
-    assert deposit.swh_id is None
+    assert deposit.swhid is None
 
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
     assert len(deposit_requests) == 2

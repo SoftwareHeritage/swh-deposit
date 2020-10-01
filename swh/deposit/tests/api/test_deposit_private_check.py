@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,12 +7,11 @@ from django.urls import reverse
 import pytest
 from rest_framework import status
 
+from swh.deposit.api.checks import ALTERNATE_FIELDS_MISSING, MANDATORY_FIELDS_MISSING
 from swh.deposit.api.private.deposit_check import (
-    ALTERNATE_FIELDS_MISSING,
     MANDATORY_ARCHIVE_INVALID,
     MANDATORY_ARCHIVE_MISSING,
     MANDATORY_ARCHIVE_UNSUPPORTED,
-    MANDATORY_FIELDS_MISSING,
 )
 from swh.deposit.config import (
     COL_IRI,
@@ -169,78 +168,6 @@ def test_check_deposit_metadata_ok(
 
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
-
-
-def test_check_metadata_ok(swh_checks_deposit):
-    actual_check, detail = swh_checks_deposit._check_metadata(
-        {
-            "url": "something",
-            "external_identifier": "something-else",
-            "name": "foo",
-            "author": "someone",
-        }
-    )
-
-    assert actual_check is True
-    assert detail is None
-
-
-def test_check_metadata_ok2(swh_checks_deposit):
-    actual_check, detail = swh_checks_deposit._check_metadata(
-        {
-            "url": "something",
-            "external_identifier": "something-else",
-            "title": "bar",
-            "author": "someone",
-        }
-    )
-
-    assert actual_check is True
-    assert detail is None
-
-
-def test_check_metadata_ko(swh_checks_deposit):
-    """Missing optional field should be caught
-
-    """
-    actual_check, error_detail = swh_checks_deposit._check_metadata(
-        {
-            "url": "something",
-            "external_identifier": "something-else",
-            "author": "someone",
-        }
-    )
-
-    expected_error = {
-        "metadata": [
-            {
-                "summary": "Mandatory alternate fields are missing",
-                "fields": ["name or title"],
-            }
-        ]
-    }
-    assert actual_check is False
-    assert error_detail == expected_error
-
-
-def test_check_metadata_ko2(swh_checks_deposit):
-    """Missing mandatory fields should be caught
-
-    """
-    actual_check, error_detail = swh_checks_deposit._check_metadata(
-        {
-            "url": "something",
-            "external_identifier": "something-else",
-            "title": "foobar",
-        }
-    )
-
-    expected_error = {
-        "metadata": [{"summary": "Mandatory fields are missing", "fields": ["author"],}]
-    }
-
-    assert actual_check is False
-    assert error_detail == expected_error
 
 
 def create_deposit_archive_with_archive(
