@@ -6,9 +6,31 @@
 from typing import Any, Dict, Optional, Tuple
 
 from rest_framework import status
+from rest_framework.request import Request
 
-from ..config import CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI
-from ..errors import BAD_REQUEST, make_error_dict
+from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.models import Deposit
+from swh.model.identifiers import parse_swhid
+from swh.model.model import (
+    MetadataAuthority,
+    MetadataAuthorityType,
+    MetadataFetcher,
+    MetadataTargetType,
+    RawExtrinsicMetadata,
+)
+from swh.storage import get_storage
+from swh.storage.interface import StorageInterface
+
+from ..config import (
+    CONT_FILE_IRI,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    EDIT_SE_IRI,
+    EM_IRI,
+    METADATA_KEY,
+    RAW_METADATA_KEY,
+)
+from ..errors import BAD_REQUEST, ParserError, make_error_dict
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
@@ -103,31 +125,164 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
 
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
 
-    def process_put(
-        self, req, headers: Dict, collection_name: str, deposit_id: int
+    def __init__(self):
+        super().__init__()
+        self.storage_metadata: StorageInterface = get_storage(
+            **self.config["storage_metadata"]
+        )
+
+    def restrict_access(
+        self, request: Request, headers: Dict, deposit: Deposit
     ) -> Dict[str, Any]:
-        """Replace existing deposit's metadata/archive with new ones.
+        """Relax restriction access to allow metadata update on deposit with status "done" when
+        a swhid is provided.
+
+        """
+        if (
+            request.method == "PUT"
+            and headers["swhid"] is not None
+            and deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+        ):
+            # Allow metadata update on deposit with status "done" when swhid provided
+            return {}
+        # otherwise, let the standard access restriction check occur
+        return super().restrict_access(request, headers, deposit)
+
+    def process_put(
+        self, request, headers: Dict, collection_name: str, deposit_id: int
+    ) -> Dict[str, Any]:
+        """This allows the following scenarios:
+
+        - multipart: replace all the deposit (status partial) metadata and archive
+          with the provided ones.
+        - atom: replace all the deposit (status partial) metadata with the
+          provided ones.
+        - with swhid, atom: Add new metatada to deposit (status done) with provided ones
+          and push such metadata to the metadata storage directly.
 
            source:
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_metadata  # noqa
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_multipart  # noqa
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_metadata
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_multipart
+
+        Raises:
+            400 if any of the following occur:
+            - the swhid provided and the deposit swhid do not match
+            - the provided metadata xml file is malformed
+            - the provided xml atom entry is empty
+            - the provided swhid does not exist in the archive
 
         Returns:
             204 No content
 
-        """
-        if req.content_type.startswith("multipart/"):
-            return self._multipart_upload(
-                req,
+        """  # noqa
+        swhid = headers.get("swhid")
+        if swhid is None:
+            if request.content_type.startswith("multipart/"):
+                return self._multipart_upload(
+                    request,
+                    headers,
+                    collection_name,
+                    deposit_id=deposit_id,
+                    replace_archives=True,
+                    replace_metadata=True,
+                )
+            # standard metadata update (replace all metadata already provided to the
+            # deposit by the new ones)
+            return self._atom_entry(
+                request,
                 headers,
                 collection_name,
                 deposit_id=deposit_id,
-                replace_archives=True,
                 replace_metadata=True,
             )
-        return self._atom_entry(
-            req, headers, collection_name, deposit_id=deposit_id, replace_metadata=True
+
+        # Update metadata on a deposit already ingested
+        # Write to the metadata storage (and the deposit backend)
+        # no ingestion triggered
+
+        deposit = Deposit.objects.get(pk=deposit_id)
+        assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+
+        if swhid != deposit.swhid:
+            return make_error_dict(
+                BAD_REQUEST,
+                f"Mismatched provided SWHID {swhid} with deposit's {deposit.swhid}.",
+                "The provided SWHID does not match the deposit to update. "
+                "Please ensure you send the correct deposit SWHID.",
+            )
+
+        try:
+            raw_metadata, metadata = self._read_metadata(request.data)
+        except ParserError:
+            return make_error_dict(
+                BAD_REQUEST,
+                "Malformed xml metadata",
+                "The xml received is malformed. "
+                "Please ensure your metadata file is correctly formatted.",
+            )
+
+        if not metadata:
+            return make_error_dict(
+                BAD_REQUEST,
+                "Empty body request is not supported",
+                "Atom entry deposit is supposed to send for metadata. "
+                "If the body is empty, there is no metadata.",
+            )
+
+        metadata_ok, error_details = check_metadata(metadata)
+        if not metadata_ok:
+            assert error_details, "Details should be set when a failure occurs"
+            return make_error_dict(
+                BAD_REQUEST,
+                "Functional metadata checks failure",
+                convert_status_detail(error_details),
+            )
+
+        metadata_authority = MetadataAuthority(
+            type=MetadataAuthorityType.DEPOSIT_CLIENT,
+            url=deposit.client.provider_url,
+            metadata={"name": deposit.client.last_name},
         )
+
+        metadata_fetcher = MetadataFetcher(
+            name=self.tool["name"],
+            version=self.tool["version"],
+            metadata=self.tool["configuration"],
+        )
+
+        deposit_swhid = parse_swhid(swhid)
+
+        # replace metadata within the deposit backend
+        deposit_request_data = {
+            METADATA_KEY: metadata,
+            RAW_METADATA_KEY: raw_metadata,
+        }
+
+        # actually add the metadata to the completed deposit
+        deposit_request = self._deposit_request_put(deposit, deposit_request_data)
+        # store that metadata to the metadata storage
+        metadata_object = RawExtrinsicMetadata(
+            type=MetadataTargetType.DIRECTORY,
+            id=deposit_swhid,
+            discovery_date=deposit_request.date,
+            authority=metadata_authority,
+            fetcher=metadata_fetcher,
+            format="sword-v2-atom-codemeta",
+            metadata=raw_metadata,
+            origin=deposit.origin_url,
+        )
+
+        # write to metadata storage
+        self.storage_metadata.metadata_authority_add([metadata_authority])
+        self.storage_metadata.metadata_fetcher_add([metadata_fetcher])
+        self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
+
+        return {
+            "deposit_id": deposit_id,
+            "deposit_date": deposit_request.date,
+            "status": deposit.status,
+            "archive": None,
+        }
 
     def process_post(
         self,
@@ -138,12 +293,18 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
     ) -> Tuple[int, str, Dict]:
         """Add new metadata/archive to existing deposit.
 
-           source:
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_metadata  # noqa
-           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_multipart  # noqa
+        This allows the following scenarios to occur:
 
-        This also deals with an empty post corner case to finalize a
-        deposit.
+        - multipart: Add new metadata and archive to a deposit in status partial with
+          the provided ones.
+
+        - empty atom: Allows to finalize a deposit in status partial (transition to
+          deposited).
+
+           source:
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_metadata
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_multipart
+           - http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#continueddeposit_complete
 
         Returns:
             In optimal case for a multipart and atom-entry update, a
@@ -153,28 +314,24 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
 
             For the empty post case, this returns a 200.
 
-        """
+        """  # noqa
         assert deposit_id is not None
         if request.content_type.startswith("multipart/"):
-            return (
-                status.HTTP_201_CREATED,
-                EM_IRI,
-                self._multipart_upload(
-                    request, headers, collection_name, deposit_id=deposit_id
-                ),
+            data = self._multipart_upload(
+                request, headers, collection_name, deposit_id=deposit_id
             )
-        # check for final empty post
-        # source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
-        # #continueddeposit_complete
-        if headers["content-length"] == 0 and headers["in-progress"] is False:
+            return (status.HTTP_201_CREATED, EM_IRI, data)
+
+        content_length = headers["content-length"] or 0
+        if content_length == 0 and headers["in-progress"] is False:
+            # check for final empty post
             data = self._empty_post(request, headers, collection_name, deposit_id)
             return (status.HTTP_200_OK, EDIT_SE_IRI, data)
 
-        return (
-            status.HTTP_201_CREATED,
-            EM_IRI,
-            self._atom_entry(request, headers, collection_name, deposit_id=deposit_id),
+        data = self._atom_entry(
+            request, headers, collection_name, deposit_id=deposit_id
         )
+        return (status.HTTP_201_CREATED, EM_IRI, data)
 
     def process_delete(self, req, collection_name: str, deposit_id: int) -> Dict:
         """Delete the container (deposit).

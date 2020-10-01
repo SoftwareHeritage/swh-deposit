@@ -81,6 +81,10 @@ def test_delete_non_partial_deposit(
     response = authenticated_client.delete(update_uri)
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        b"You can only act on deposit with status &#39;partial&#39;" in response.content
+    )
+
     deposit = Deposit.objects.get(pk=deposit.id)
     assert deposit is not None
 
@@ -119,5 +123,9 @@ def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(
     response = authenticated_client.delete(url)
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        b"You can only act on deposit with status &#39;partial&#39;" in response.content
+    )
+
     deposit = Deposit.objects.get(pk=deposit.id)
     assert deposit is not None

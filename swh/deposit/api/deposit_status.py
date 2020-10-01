@@ -49,8 +49,8 @@ class APIStatus(APIBase):
         }
         keys = (
             "status",
-            "swh_id",
-            "swh_id_context",
+            "swhid",
+            "swhid_context",
             "external_id",
         )
         for k in keys:
