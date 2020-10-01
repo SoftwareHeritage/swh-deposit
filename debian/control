@@ -19,7 +19,6 @@ Build-Depends: debhelper (>= 9),
                python3-setuptools-scm,
                python3-swh.core (>= 0.0.75~),
                python3-swh.model (>= 0.3.8~),
-               python3-swh.loader.core (>= 0.0.71~),
                python3-swh.scheduler (>= 0.0.39~),
                python3-xmltodict,
 Standards-Version: 3.9.6
@@ -47,7 +46,6 @@ Architecture: all
 Depends: python3-swh.deposit.client (= ${binary:Version}),
          python3-swh.core (>= 0.0.36~),
          python3-swh.model (>= 0.3.8~),
-         python3-swh.loader.core (>= 0.0.71~),
          python3-swh.scheduler (>= 0.0.39~),
          ${misc:Depends}, ${python3:Depends}
 Description: Software Heritage Deposit Loader
