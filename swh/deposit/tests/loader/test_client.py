@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,10 +14,26 @@ import pytest
 from swh.deposit.client import PrivateApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_SUCCESS
 
+
 CLIENT_TEST_CONFIG = {
     "url": "https://nowhere.org/",
     "auth": {},  # no authentication in test scenario
 }
+
+
+@pytest.fixture
+def deposit_config():
+    return CLIENT_TEST_CONFIG
+
+
+def test_client_config(deposit_config_path):
+    for client in [
+            # config passed as constructor parameter
+            PrivateApiDepositClient(config=CLIENT_TEST_CONFIG),
+            # config loaded from environment
+            PrivateApiDepositClient()
+    ]:
+        assert client.config == CLIENT_TEST_CONFIG
 
 
 def build_expected_path(datadir, base_url: str, api_url: str) -> str:
@@ -77,7 +93,7 @@ def test_archive_get(tmp_path, datadir, requests_mock_datadir):
 
     """
     api_url = "/1/private/test/1/raw/"
-    client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+    client = PrivateApiDepositClient(CLIENT_TEST_CONFIG)
 
     expected_content = read_served_path(datadir, client.base_url, api_url)
 

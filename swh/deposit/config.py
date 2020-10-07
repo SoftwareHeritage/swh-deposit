@@ -94,9 +94,7 @@ class APIConfig:
     """
 
     def __init__(self):
-        config_file = os.environ["SWH_CONFIG_FILENAME"]
-        conf = config.read_raw_config(config.config_basepath(config_file))
-        self.config: Dict[str, Any] = config.merge_configs(DEFAULT_CONFIG, conf)
+        self.config: Dict[str, Any] = config.load_from_envvar(DEFAULT_CONFIG)
         self.scheduler: SchedulerInterface = get_scheduler(**self.config["scheduler"])
         self.tool = {
             "name": "swh-deposit",

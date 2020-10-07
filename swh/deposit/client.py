@@ -17,7 +17,7 @@ from urllib.parse import urljoin
 import requests
 import xmltodict
 
-from swh.core.config import config_basepath, read_raw_config
+from swh.core.config import load_from_envvar
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +79,7 @@ class BaseApiDepositClient:
     """
 
     def __init__(self, config=None, _client=requests):
-        if config is None:
-            config_file = os.environ["SWH_CONFIG_FILENAME"]
-            self.config: Dict[str, Any] = read_raw_config(config_basepath(config_file))
-        else:
-            self.config = config
-
+        self.config: Dict[str, Any] = config or load_from_envvar()
         self._client = _client
         self.base_url = self.config["url"].strip("/") + "/"
         auth = self.config["auth"]
