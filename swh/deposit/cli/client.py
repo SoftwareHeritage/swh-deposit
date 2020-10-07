@@ -9,12 +9,17 @@ import logging
 # control
 import os
 import sys
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import click
 
 from swh.deposit.cli import deposit
 
 logger = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from swh.deposit.client import PublicApiDepositClient
 
 
 class InputError(ValueError):
@@ -25,7 +30,7 @@ class InputError(ValueError):
     pass
 
 
-def generate_slug():
+def generate_slug() -> str:
     """Generate a slug (sample purposes).
 
     """
@@ -34,7 +39,7 @@ def generate_slug():
     return str(uuid.uuid4())
 
 
-def _url(url):
+def _url(url: str) -> str:
     """Force the /1 api version at the end of the url (avoiding confusing
        issues without it).
 
@@ -50,7 +55,9 @@ def _url(url):
     return url
 
 
-def generate_metadata_file(name, external_id, authors, temp_dir):
+def generate_metadata_file(
+    name: str, external_id: str, authors: List[str], temp_dir: str
+) -> str:
     """Generate a temporary metadata file with the minimum required metadata
 
     This generates a xml file in a temporary location and returns the
@@ -60,9 +67,9 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
     temporary file.
 
     Args:
-        name (str): Software's name
-        external_id (str): External identifier (slug) or generated one
-        authors (List[str]): List of author names
+        name: Software's name
+        external_id: External identifier (slug) or generated one
+        authors: List of author names
 
     Returns:
         Filepath to the metadata generated file
@@ -93,7 +100,7 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
     return path
 
 
-def _client(url, username, password):
+def _client(url: str, username: str, password: str) -> "PublicApiDepositClient":
     """Instantiate a client to access the deposit api server
 
     Args:
@@ -104,13 +111,12 @@ def _client(url, username, password):
     """
     from swh.deposit.client import PublicApiDepositClient
 
-    client = PublicApiDepositClient(
+    return PublicApiDepositClient(
         {"url": url, "auth": {"username": username, "password": password},}
     )
-    return client
 
 
-def _collection(client):
+def _collection(client: "PublicApiDepositClient") -> str:
     """Retrieve the client's collection
 
     """
@@ -123,22 +129,22 @@ def _collection(client):
 
 
 def client_command_parse_input(
-    username,
-    password,
-    archive,
-    metadata,
-    archive_deposit,
-    metadata_deposit,
-    collection,
-    slug,
-    partial,
-    deposit_id,
-    replace,
-    url,
-    name,
-    authors,
-    temp_dir,
-):
+    username: str,
+    password: str,
+    archive: Optional[str],
+    metadata: Optional[str],
+    archive_deposit: bool,
+    metadata_deposit: bool,
+    collection: Optional[str],
+    slug: Optional[str],
+    partial: bool,
+    deposit_id: Optional[int],
+    replace: bool,
+    url: str,
+    name: Optional[str],
+    authors: List[str],
+    temp_dir: str,
+) -> Dict[str, Any]:
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -261,12 +267,12 @@ def client_command_parse_input(
     }
 
 
-def _subdict(d, keys):
+def _subdict(d: Dict[str, Any], keys: Tuple[str, ...]) -> Dict[str, Any]:
     "return a dict from d with only given keys"
     return {k: v for k, v in d.items() if k in keys}
 
 
-def deposit_create(config, logger):
+def deposit_create(config: Dict[str, Any]) -> Dict[str, Any]:
     """Delegate the actual deposit to the deposit client.
 
     """
@@ -277,7 +283,7 @@ def deposit_create(config, logger):
     return client.deposit_create(**_subdict(config, keys))
 
 
-def deposit_update(config, logger):
+def deposit_update(config: Dict[str, Any]) -> Dict[str, Any]:
     """Delegate the actual deposit to the deposit client.
 
     """
@@ -380,22 +386,22 @@ def deposit_update(config, logger):
 @click.pass_context
 def upload(
     ctx,
-    username,
-    password,
-    archive=None,
-    metadata=None,
-    archive_deposit=False,
-    metadata_deposit=False,
-    collection=None,
-    slug=None,
-    partial=False,
-    deposit_id=None,
-    replace=False,
-    url="https://deposit.softwareheritage.org",
-    verbose=False,
-    name=None,
-    author=None,
-    output_format=None,
+    username: str,
+    password: str,
+    archive: Optional[str] = None,
+    metadata: Optional[str] = None,
+    archive_deposit: bool = False,
+    metadata_deposit: bool = False,
+    collection: Optional[str] = None,
+    slug: Optional[str] = None,
+    partial: bool = False,
+    deposit_id: Optional[int] = None,
+    replace: bool = False,
+    url: str = "https://deposit.softwareheritage.org",
+    verbose: bool = False,
+    name: Optional[str] = None,
+    author: List[str] = [],
+    output_format: Optional[str] = None,
 ):
     """Software Heritage Public Deposit Client
 
@@ -440,15 +446,15 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             sys.exit(1)
 
         if verbose:
-            logger.info("Parsed configuration: %s" % (config,))
+            logger.info("Parsed configuration: %s", config)
 
         deposit_id = config["deposit_id"]
 
         if deposit_id:
-            r = deposit_update(config, logger)
+            data = deposit_update(config)
         else:
-            r = deposit_create(config, logger)
-        print_result(r, output_format)
+            data = deposit_create(config)
+        print_result(data, output_format)
 
 
 @deposit.command()
@@ -496,7 +502,10 @@ def status(ctx, url, username, password, deposit_id, output_format):
     )
 
 
-def print_result(data, output_format):
+def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
+    """Display the result data into a dedicated output format.
+
+    """
     import json
 
     import yaml
