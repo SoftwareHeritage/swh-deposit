@@ -24,6 +24,14 @@ EXAMPLE_SERVICE_DOCUMENT = {
 
 
 @pytest.fixture
+def deposit_config():
+    return {
+        "url": "https://deposit.swh.test/1",
+        "auth": {"username": "test", "password": "test",},
+    }
+
+
+@pytest.fixture
 def datadir(request):
     """Override default datadir to target main test datadir"""
     return os.path.join(os.path.dirname(str(request.fspath)), "../data")
@@ -81,12 +89,10 @@ def test_collection_error():
     assert "Service document retrieval: something went wrong" == str(e.value)
 
 
-def test_collection_ok():
-    mock_client = MagicMock()
-    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
-    collection_name = _collection(mock_client)
-
-    assert collection_name == "softcol"
+def test_collection_ok(deposit_config, requests_mock_datadir):
+    client = PublicApiDepositClient(deposit_config)
+    collection_name = _collection(client)
+    assert collection_name == "test"
 
 
 def test_collection_ko_because_downtime():
