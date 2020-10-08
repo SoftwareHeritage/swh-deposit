@@ -14,6 +14,7 @@ import pytest
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _client, _collection, _url, generate_slug
 from swh.deposit.client import MaintenanceError, PublicApiDepositClient
+from swh.deposit.parsers import parse_xml
 
 from ..conftest import TEST_USER
 
@@ -329,14 +330,11 @@ def test_metadata_validation(
 
 
 def test_single_deposit_slug_generation(
-    sample_archive, mocker, caplog, tmp_path, client_mock
+    sample_archive, mocker, caplog, tmp_path, requests_mock_datadir
 ):
-    """ from:
+    """Single deposit scenario without providing the slug, the slug is generated nonetheless
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
-    slug = "my-slug"
-    collection = "my-collection"
-
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
         "tempfile.TemporaryDirectory",
@@ -349,7 +347,7 @@ def test_single_deposit_slug_generation(
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
@@ -358,43 +356,31 @@ def test_single_deposit_slug_generation(
             "test-project",
             "--archive",
             sample_archive["path"],
-            "--slug",
-            slug,
-            "--collection",
-            collection,
             "--author",
             "Jane Doe",
         ],
     )
-
     assert result.exit_code == 0, result.output
     assert result.output == ""
-    assert caplog.record_tuples == [
-        ("swh.deposit.cli.client", logging.INFO, '{"foo": "bar"}'),
+
+    interesting_records = []
+    for record in caplog.record_tuples:
+        if record[0] == "swh.deposit.cli.client":
+            interesting_records.append(record)
+
+    assert len(interesting_records) == 1
+    assert interesting_records == [
+        (
+            "swh.deposit.cli.client",
+            logging.INFO,
+            "{'deposit_id': '615', 'deposit_status': 'partial', 'deposit_status_detail': None, 'deposit_date': 'Oct. 8, 2020, 4:57 p.m.'}",  # noqa
+        ),
     ]
 
-    client_mock.deposit_create.assert_called_once_with(
-        archive=sample_archive["path"],
-        collection=collection,
-        in_progress=False,
-        metadata=metadata_path,
-        slug=slug,
-    )
-
     with open(metadata_path) as fd:
-        assert (
-            fd.read()
-            == """\
-<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom" \
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-\t<codemeta:name>test-project</codemeta:name>
-\t<codemeta:identifier>my-slug</codemeta:identifier>
-\t<codemeta:author>
-\t\t<codemeta:name>Jane Doe</codemeta:name>
-\t</codemeta:author>
-</entry>"""
-        )
+        metadata_xml = fd.read()
+        actual_metadata = parse_xml(metadata_xml)
+        assert actual_metadata["codemeta:identifier"] is not None
 
 
 def test_multisteps_deposit(
