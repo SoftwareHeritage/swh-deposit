@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from __future__ import annotations
+
 import logging
 
 # WARNING: do not import unnecessary things here to keep cli startup time under
@@ -100,7 +102,7 @@ def generate_metadata_file(
     return path
 
 
-def _client(url: str, username: str, password: str) -> "PublicApiDepositClient":
+def _client(url: str, username: str, password: str) -> PublicApiDepositClient:
     """Instantiate a client to access the deposit api server
 
     Args:
@@ -116,7 +118,7 @@ def _client(url: str, username: str, password: str) -> "PublicApiDepositClient":
     )
 
 
-def _collection(client: "PublicApiDepositClient") -> str:
+def _collection(client: PublicApiDepositClient) -> str:
     """Retrieve the client's collection
 
     """
