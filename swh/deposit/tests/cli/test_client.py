@@ -6,7 +6,6 @@
 import contextlib
 import logging
 import os
-import re
 from unittest.mock import MagicMock
 
 from click.testing import CliRunner
@@ -144,7 +143,7 @@ def test_deposit_with_server_down_for_maintenance(
 def test_single_minimal_deposit(
     sample_archive, mocker, caplog, slug, tmp_path, requests_mock_datadir
 ):
-    """ from:
+    """ This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
 
@@ -209,16 +208,13 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         )
 
 
-def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
-    """ from:
-    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
-    """  # noqa
+def test_metadata_validation(
+    sample_archive, mocker, caplog, tmp_path, requests_mock_datadir
+):
+    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
+
+    """
     slug = generate_slug()
-    mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
-    mock_client = MagicMock()
-    mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
-    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
-    mock_client.deposit_create.return_value = '{"foo": "bar"}'
 
     metadata_path = os.path.join(tmp_path, "metadata.xml")
     mocker.patch(
@@ -245,6 +241,8 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
             "test-project",
             "--archive",
             sample_archive["path"],
+            "--slug",
+            slug,
         ],
     )
 
@@ -253,11 +251,14 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
     assert len(caplog.record_tuples) == 1
     (_logger, level, message) = caplog.record_tuples[0]
     assert level == logging.ERROR
-    assert " --author " in message
+    assert message == (
+        "Problem during parsing options: Either a metadata file"
+        " (--metadata) or both --author and --name must be provided, "
+        "unless this is an archive-only deposit."
+    )
 
     # Clear mocking state
     caplog.clear()
-    mock_client.reset_mock()
 
     # Test missing name
     result = runner.invoke(
@@ -265,7 +266,7 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
@@ -274,6 +275,8 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
             sample_archive["path"],
             "--author",
             "Jane Doe",
+            "--slug",
+            slug,
         ],
     )
 
@@ -282,11 +285,14 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
     assert len(caplog.record_tuples) == 1
     (_logger, level, message) = caplog.record_tuples[0]
     assert level == logging.ERROR
-    assert " --name " in message
+    assert message == (
+        "Problem during parsing options: Either a metadata file"
+        " (--metadata) or both --author and --name must be provided, "
+        "unless this is an archive-only deposit."
+    )
 
     # Clear mocking state
     caplog.clear()
-    mock_client.reset_mock()
 
     # Test both --metadata and --author
     result = runner.invoke(
@@ -294,7 +300,7 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
@@ -305,6 +311,8 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
             metadata_path,
             "--author",
             "Jane Doe",
+            "--slug",
+            slug,
         ],
     )
 
@@ -313,11 +321,11 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
     assert len(caplog.record_tuples) == 1
     (_logger, level, message) = caplog.record_tuples[0]
     assert level == logging.ERROR
-    assert re.search("--metadata.*is incompatible with", message)
-
-    # Clear mocking state
-    caplog.clear()
-    mock_client.reset_mock()
+    assert message == (
+        "Problem during parsing options: Using a metadata file "
+        "(--metadata) is incompatible with --author and --name, "
+        "which are used to generate one."
+    )
 
 
 def test_single_deposit_slug_generation(
