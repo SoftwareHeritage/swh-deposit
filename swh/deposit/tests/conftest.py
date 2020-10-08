@@ -4,7 +4,9 @@
 # See top-level LICENSE file for more information
 
 import base64
+from functools import partial
 import os
+import re
 from typing import Mapping
 
 from django.test.utils import setup_databases  # type: ignore
@@ -17,6 +19,7 @@ from rest_framework.test import APIClient
 import yaml
 
 from swh.core.config import read
+from swh.core.pytest_plugin import get_response_cb
 from swh.deposit.config import (
     COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
@@ -49,6 +52,17 @@ TEST_USER = {
 
 def pytest_configure():
     setup_django_for("testing")
+
+
+@pytest.fixture
+def requests_mock_datadir(datadir, requests_mock_datadir):
+    """Override default behavior to deal with put/post methods
+
+    """
+    cb = partial(get_response_cb, datadir=datadir)
+    requests_mock_datadir.put(re.compile("https://"), body=cb)
+    requests_mock_datadir.post(re.compile("https://"), body=cb)
+    return requests_mock_datadir
 
 
 @pytest.fixture()

@@ -114,7 +114,7 @@ def test_deposit_with_server_down_for_maintenance(
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
@@ -142,7 +142,7 @@ def test_deposit_with_server_down_for_maintenance(
 
 
 def test_single_minimal_deposit(
-    sample_archive, mocker, caplog, client_mock, slug, tmp_path
+    sample_archive, mocker, caplog, slug, tmp_path, requests_mock_datadir
 ):
     """ from:
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
@@ -160,7 +160,7 @@ def test_single_minimal_deposit(
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
@@ -171,22 +171,27 @@ def test_single_minimal_deposit(
             sample_archive["path"],
             "--author",
             "Jane Doe",
+            "--slug",
+            slug,
         ],
     )
 
     assert result.exit_code == 0, result.output
     assert result.output == ""
-    assert caplog.record_tuples == [
-        ("swh.deposit.cli.client", logging.INFO, '{"foo": "bar"}'),
-    ]
 
-    client_mock.deposit_create.assert_called_once_with(
-        archive=sample_archive["path"],
-        collection="softcol",
-        in_progress=False,
-        metadata=metadata_path,
-        slug=slug,
-    )
+    interesting_records = []
+    for record in caplog.record_tuples:
+        if record[0] == "swh.deposit.cli.client":
+            interesting_records.append(record)
+
+    assert len(interesting_records) == 1
+    assert interesting_records == [
+        (
+            "swh.deposit.cli.client",
+            logging.INFO,
+            "{'deposit_id': '615', 'deposit_status': 'partial', 'deposit_status_detail': None, 'deposit_date': 'Oct. 8, 2020, 4:57 p.m.'}",  # noqa
+        ),
+    ]
 
     with open(metadata_path) as fd:
         assert (
@@ -231,7 +236,7 @@ def test_metadata_validation(sample_archive, mocker, caplog, tmp_path):
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            "https://deposit.swh.test/1",
             "--username",
             TEST_USER["username"],
             "--password",
