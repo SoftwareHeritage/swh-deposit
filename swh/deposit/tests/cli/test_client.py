@@ -356,8 +356,10 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#multisteps-deposit
     """  # noqa
     api_url = "https://deposit.test.metadata/1"
+    deposit_id = 666
 
     runner = CliRunner()
+    # Create a partial deposit with only 1 archive
     result = runner.invoke(
         cli,
         [
@@ -381,12 +383,43 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     assert result.exit_code == 0, f"unexpected output: {result.output}"
     actual_deposit = json.loads(result.output)
     assert actual_deposit == {
-        "deposit_id": "666",
+        "deposit_id": str(deposit_id),
         "deposit_status": "partial",
         "deposit_status_detail": None,
         "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
     }
 
+    # Update the partial deposit with only 1 archive
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url",
+            api_url,
+            "--username",
+            TEST_USER["username"],
+            "--password",
+            TEST_USER["password"],
+            "--archive",
+            sample_archive["path"],
+            "--deposit-id",
+            deposit_id,
+            "--partial",  # in-progress: True, because remains the metadata to upload
+            "--slug",
+            slug,
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, f"unexpected output: {result.output}"
+    assert result.output is not None
+    actual_deposit = json.loads(result.output)
+    # deposit update scenario actually returns a deposit status dict
+    assert actual_deposit["deposit_id"] == str(deposit_id)
+    assert actual_deposit["deposit_status"] == "partial"
+
+    # Update the partial deposit with only some metadata (and then finalize it)
     # https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#add-content-or-metadata-to-the-deposit
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
@@ -404,19 +437,20 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
             "--metadata",
             metadata_path,
             "--deposit-id",
-            666,
+            deposit_id,
             "--slug",
             slug,
             "--format",
             "json",
-        ],
+        ],  # this time, ^ we no longer flag it to partial, so the status changes to
+        # in-progress false
     )
 
     assert result.exit_code == 0, f"unexpected output: {result.output}"
     assert result.output is not None
     actual_deposit = json.loads(result.output)
     # deposit update scenario actually returns a deposit status dict
-    assert actual_deposit["deposit_id"] == "666"
+    assert actual_deposit["deposit_id"] == str(deposit_id)
     # FIXME: should be "deposited" but current limitation in the
     # requests_mock_datadir_visits use, cannot find a way to make it work right now
     assert actual_deposit["deposit_status"] == "partial"
