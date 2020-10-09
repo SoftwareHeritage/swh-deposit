@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import ast
 import contextlib
 import json
 import logging
@@ -11,6 +12,7 @@ from unittest.mock import MagicMock
 
 from click.testing import CliRunner
 import pytest
+import yaml
 
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _client, _collection, _url, generate_slug
@@ -418,3 +420,59 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     # FIXME: should be "deposited" but current limitation in the
     # requests_mock_datadir_visits use, cannot find a way to make it work right now
     assert actual_deposit["deposit_status"] == "partial"
+
+
+@pytest.mark.parametrize(
+    "output_format,callable_fn",
+    [
+        ("json", json.loads),
+        ("yaml", yaml.safe_load),
+        (
+            "logging",
+            ast.literal_eval,
+        ),  # not enough though, the caplog fixture is needed
+    ],
+)
+def test_cli_deposit_status_json(
+    output_format, callable_fn, datadir, slug, requests_mock_datadir, caplog
+):
+    """Check deposit status cli with all possible output formats
+
+    """
+    api_url_basename = "deposit.test.status"
+    deposit_id = 1033
+    deposit_status_xml_path = os.path.join(
+        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
+    )
+    with open(deposit_status_xml_path, "r") as f:
+        deposit_status_xml = f.read()
+    expected_deposit_dict = dict(parse_xml(deposit_status_xml))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "status",
+            "--url",
+            f"https://{api_url_basename}/1",
+            "--username",
+            TEST_USER["username"],
+            "--password",
+            TEST_USER["password"],
+            "--deposit-id",
+            deposit_id,
+            "--format",
+            output_format,
+        ],
+    )
+    assert result.exit_code == 0, f"unexpected output: {result.output}"
+
+    if output_format == "logging":
+        assert len(caplog.record_tuples) == 1
+        # format: (<module>, <log-level>, <log-msg>)
+        _, _, result_output = caplog.record_tuples[0]
+    else:
+        result_output = result.output
+
+    actual_deposit = callable_fn(result_output)
+    assert actual_deposit == expected_deposit_dict
