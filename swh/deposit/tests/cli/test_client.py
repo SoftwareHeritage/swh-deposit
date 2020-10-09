@@ -19,10 +19,6 @@ from swh.deposit.parsers import parse_xml
 
 from ..conftest import TEST_USER
 
-EXAMPLE_SERVICE_DOCUMENT = {
-    "service": {"workspace": {"collection": {"sword:name": "softcol",}}}
-}
-
 
 @pytest.fixture
 def deposit_config():
@@ -57,17 +53,17 @@ def client_mock_api_down(mocker, slug):
     return mock_client
 
 
-def test_url():
+def test_cli_url():
     assert _url("http://deposit") == "http://deposit/1"
     assert _url("https://other/1") == "https://other/1"
 
 
-def test_client():
+def test_cli_client():
     client = _client("http://deposit", "user", "pass")
     assert isinstance(client, PublicApiDepositClient)
 
 
-def test_collection_error():
+def test_cli_collection_error():
     mock_client = MagicMock()
     mock_client.service_document.return_value = {"error": "something went wrong"}
 
@@ -77,20 +73,20 @@ def test_collection_error():
     assert "Service document retrieval: something went wrong" == str(e.value)
 
 
-def test_collection_ok(deposit_config, requests_mock_datadir):
+def test_cli_collection_ok(deposit_config, requests_mock_datadir):
     client = PublicApiDepositClient(deposit_config)
     collection_name = _collection(client)
     assert collection_name == "test"
 
 
-def test_collection_ko_because_downtime():
+def test_cli_collection_ko_because_downtime():
     mock_client = MagicMock()
     mock_client.service_document.side_effect = MaintenanceError("downtime")
     with pytest.raises(MaintenanceError, match="downtime"):
         _collection(mock_client)
 
 
-def test_deposit_with_server_down_for_maintenance(
+def test_cli_deposit_with_server_down_for_maintenance(
     sample_archive, mocker, caplog, client_mock_api_down, slug, tmp_path
 ):
     """ Deposit failure due to maintenance down time should be explicit
@@ -118,19 +114,18 @@ def test_deposit_with_server_down_for_maintenance(
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
-    assert caplog.record_tuples == [
-        (
-            "swh.deposit.cli.client",
-            logging.ERROR,
-            "Database backend maintenance: Temporarily unavailable, try again later.",
-        )
-    ]
+    down_for_maintenance_log_record = (
+        "swh.deposit.cli.client",
+        logging.ERROR,
+        "Database backend maintenance: Temporarily unavailable, try again later.",
+    )
+    assert down_for_maintenance_log_record in caplog.record_tuples
 
     client_mock_api_down.service_document.assert_called_once_with()
 
 
-def test_single_minimal_deposit(
-    sample_archive, mocker, caplog, slug, tmp_path, requests_mock_datadir
+def test_cli_single_minimal_deposit(
+    sample_archive, mocker, slug, tmp_path, requests_mock_datadir
 ):
     """ This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
@@ -161,25 +156,18 @@ def test_single_minimal_deposit(
             "Jane Doe",
             "--slug",
             slug,
+            "--format",
+            "json",
         ],
     )
 
     assert result.exit_code == 0, result.output
-    assert result.output == ""
-
-    interesting_records = []
-    for record in caplog.record_tuples:
-        if record[0] == "swh.deposit.cli.client":
-            interesting_records.append(record)
-
-    assert len(interesting_records) == 1
-    assert interesting_records == [
-        (
-            "swh.deposit.cli.client",
-            logging.INFO,
-            "{'deposit_id': '615', 'deposit_status': 'partial', 'deposit_status_detail': None, 'deposit_date': 'Oct. 8, 2020, 4:57 p.m.'}",  # noqa
-        ),
-    ]
+    assert json.loads(result.output) == {
+        "deposit_id": "615",
+        "deposit_status": "partial",
+        "deposit_status_detail": None,
+        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+    }
 
     with open(metadata_path) as fd:
         assert (
@@ -197,7 +185,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         )
 
 
-def test_metadata_validation(
+def test_cli_metadata_validation(
     sample_archive, mocker, caplog, tmp_path, requests_mock_datadir
 ):
     """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
@@ -235,16 +223,18 @@ def test_metadata_validation(
         ],
     )
 
-    assert result.exit_code == 1, result.output
+    assert result.exit_code == 1, f"unexpected result: {result.output}"
     assert result.output == ""
-    assert len(caplog.record_tuples) == 1
-    (_logger, level, message) = caplog.record_tuples[0]
-    assert level == logging.ERROR
-    assert message == (
-        "Problem during parsing options: Either a metadata file"
-        " (--metadata) or both --author and --name must be provided, "
-        "unless this is an archive-only deposit."
+    expected_error_log_record = (
+        "swh.deposit.cli.client",
+        logging.ERROR,
+        (
+            "Problem during parsing options: Either a metadata file"
+            " (--metadata) or both --author and --name must be provided, "
+            "unless this is an archive-only deposit."
+        ),
     )
+    assert expected_error_log_record in caplog.record_tuples
 
     # Clear mocking state
     caplog.clear()
@@ -271,14 +261,7 @@ def test_metadata_validation(
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
-    assert len(caplog.record_tuples) == 1
-    (_logger, level, message) = caplog.record_tuples[0]
-    assert level == logging.ERROR
-    assert message == (
-        "Problem during parsing options: Either a metadata file"
-        " (--metadata) or both --author and --name must be provided, "
-        "unless this is an archive-only deposit."
-    )
+    assert expected_error_log_record in caplog.record_tuples
 
     # Clear mocking state
     caplog.clear()
@@ -307,18 +290,20 @@ def test_metadata_validation(
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
-    assert len(caplog.record_tuples) == 1
-    (_logger, level, message) = caplog.record_tuples[0]
-    assert level == logging.ERROR
-    assert message == (
-        "Problem during parsing options: Using a metadata file "
-        "(--metadata) is incompatible with --author and --name, "
-        "which are used to generate one."
+    expected_error_log_record_2 = (
+        "swh.deposit.cli.client",
+        logging.ERROR,
+        (
+            "Problem during parsing options: Using a metadata file "
+            "(--metadata) is incompatible with --author and --name, "
+            "which are used to generate one."
+        ),
     )
+    assert expected_error_log_record_2 in caplog.record_tuples
 
 
-def test_single_deposit_slug_generation(
-    sample_archive, mocker, caplog, tmp_path, requests_mock_datadir
+def test_cli_single_deposit_slug_generation(
+    sample_archive, mocker, tmp_path, requests_mock_datadir
 ):
     """Single deposit scenario without providing the slug, the slug is generated nonetheless
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
@@ -346,24 +331,17 @@ def test_single_deposit_slug_generation(
             sample_archive["path"],
             "--author",
             "Jane Doe",
+            "--format",
+            "json",
         ],
     )
     assert result.exit_code == 0, result.output
-    assert result.output == ""
-
-    interesting_records = []
-    for record in caplog.record_tuples:
-        if record[0] == "swh.deposit.cli.client":
-            interesting_records.append(record)
-
-    assert len(interesting_records) == 1
-    assert interesting_records == [
-        (
-            "swh.deposit.cli.client",
-            logging.INFO,
-            "{'deposit_id': '615', 'deposit_status': 'partial', 'deposit_status_detail': None, 'deposit_date': 'Oct. 8, 2020, 4:57 p.m.'}",  # noqa
-        ),
-    ]
+    assert json.loads(result.output) == {
+        "deposit_id": "615",
+        "deposit_status": "partial",
+        "deposit_status_detail": None,
+        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+    }
 
     with open(metadata_path) as fd:
         metadata_xml = fd.read()
@@ -371,7 +349,7 @@ def test_single_deposit_slug_generation(
         assert actual_metadata["codemeta:identifier"] is not None
 
 
-def test_multisteps_deposit(sample_archive, datadir, slug, requests_mock_datadir):
+def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_datadir):
     """ First deposit a partial deposit (no metadata, only archive), then update the metadata part.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#multisteps-deposit
     """  # noqa
