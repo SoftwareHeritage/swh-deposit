@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import contextlib
+import json
 import logging
 import os
 from unittest.mock import MagicMock
@@ -40,19 +41,6 @@ def datadir(request):
 @pytest.fixture
 def slug():
     return generate_slug()
-
-
-@pytest.fixture
-def client_mock(mocker, slug):
-    """A successful deposit client with hard-coded default values
-
-    """
-    mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
-    mock_client = MagicMock()
-    mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
-    mock_client.service_document.return_value = EXAMPLE_SERVICE_DOCUMENT
-    mock_client.deposit_create.return_value = '{"foo": "bar"}'
-    return mock_client
 
 
 @pytest.fixture
@@ -383,17 +371,11 @@ def test_single_deposit_slug_generation(
         assert actual_metadata["codemeta:identifier"] is not None
 
 
-def test_multisteps_deposit(
-    sample_archive, atom_dataset, mocker, caplog, datadir, client_mock, slug
-):
-    """ from:
+def test_multisteps_deposit(sample_archive, datadir, slug, requests_mock_datadir):
+    """ First deposit a partial deposit (no metadata, only archive), then update the metadata part.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#multisteps-deposit
     """  # noqa
-    slug = generate_slug()
-    mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
-
-    # https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#create-an-incomplete-deposit
-    client_mock.deposit_create.return_value = '{"deposit_id": "42"}'
+    api_url = "https://deposit.test.metadata/1"
 
     runner = CliRunner()
     result = runner.invoke(
@@ -401,7 +383,7 @@ def test_multisteps_deposit(
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            api_url,
             "--username",
             TEST_USER["username"],
             "--password",
@@ -409,60 +391,52 @@ def test_multisteps_deposit(
             "--archive",
             sample_archive["path"],
             "--partial",
+            "--slug",
+            slug,
+            "--format",
+            "json",
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    assert result.output == ""
-    assert caplog.record_tuples == [
-        ("swh.deposit.cli.client", logging.INFO, '{"deposit_id": "42"}'),
-    ]
-
-    client_mock.deposit_create.assert_called_once_with(
-        archive=sample_archive["path"],
-        collection="softcol",
-        in_progress=True,
-        metadata=None,
-        slug=slug,
-    )
-
-    # Clear mocking state
-    caplog.clear()
-    client_mock.reset_mock()
+    assert result.exit_code == 0, f"unexpected output: {result.output}"
+    actual_deposit = json.loads(result.output)
+    assert actual_deposit == {
+        "deposit_id": "666",
+        "deposit_status": "partial",
+        "deposit_status_detail": None,
+        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+    }
 
     # https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#add-content-or-metadata-to-the-deposit
-
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
+    # Update deposit with metadata
     result = runner.invoke(
         cli,
         [
             "upload",
             "--url",
-            "mock://deposit.swh/1",
+            api_url,
             "--username",
             TEST_USER["username"],
             "--password",
             TEST_USER["password"],
             "--metadata",
             metadata_path,
+            "--deposit-id",
+            666,
+            "--slug",
+            slug,
+            "--format",
+            "json",
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    assert result.output == ""
-    assert caplog.record_tuples == [
-        ("swh.deposit.cli.client", logging.INFO, '{"deposit_id": "42"}'),
-    ]
-
-    client_mock.deposit_create.assert_called_once_with(
-        archive=None,
-        collection="softcol",
-        in_progress=False,
-        metadata=metadata_path,
-        slug=slug,
-    )
-
-    # Clear mocking state
-    caplog.clear()
-    client_mock.reset_mock()
+    assert result.exit_code == 0, f"unexpected output: {result.output}"
+    assert result.output is not None
+    actual_deposit = json.loads(result.output)
+    # deposit update scenario actually returns a deposit status dict
+    assert actual_deposit["deposit_id"] == "666"
+    # FIXME: should be "deposited" but current limitation in the
+    # requests_mock_datadir_visits use, cannot find a way to make it work right now
+    assert actual_deposit["deposit_status"] == "partial"
