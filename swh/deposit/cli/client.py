@@ -199,25 +199,30 @@ def client_command_parse_input(
         slug = generate_slug()
 
     if not metadata:
+        if metadata_deposit:
+            raise InputError(
+                "Metadata deposit must be provided for metadata "
+                "deposit, either a filepath with --metadata or --name and --author"
+            )
         if name and authors:
             metadata = generate_metadata_file(name, slug, authors, temp_dir)
         elif not archive_deposit and not partial and not deposit_id:
             # If we meet all the following conditions:
-            # * there is not an archive-only deposit
+            # * this is not an archive-only deposit request
             # * it is not part of a multipart deposit (either create/update
             #   or finish)
             # * it misses either name or authors
             raise InputError(
-                "Either a metadata file (--metadata) or both --author and "
-                "--name must be provided, unless this is an archive-only "
-                "deposit."
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided. "
+                "If this is an archive deposit request, none is required."
             )
         elif name or authors:
             # If we are generating metadata, then all mandatory metadata
             # must be present
             raise InputError(
-                "Either a metadata file (--metadata) or both --author and "
-                "--name must be provided."
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided."
             )
         else:
             # TODO: this is a multipart deposit, we might want to check that
@@ -225,8 +230,8 @@ def client_command_parse_input(
             pass
     elif name or authors:
         raise InputError(
-            "Using a metadata file (--metadata) is incompatible with "
-            "--author and --name, which are used to generate one."
+            "Using --metadata flag is incompatible with both "
+            "--author and --name (Those are used to generate one metadata file)."
         )
 
     if metadata_deposit:
@@ -234,12 +239,6 @@ def client_command_parse_input(
 
     if archive_deposit:
         metadata = None
-
-    if metadata_deposit and not metadata:
-        raise InputError(
-            "Metadata deposit must be provided for metadata "
-            "deposit (either a filepath or --name and --author)"
-        )
 
     if not archive and not metadata and partial:
         raise InputError(

@@ -187,9 +187,7 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         )
 
 
-def test_cli_metadata_validation(
-    sample_archive, mocker, caplog, tmp_path, requests_mock_datadir
-):
+def test_cli_validation_metadata(sample_archive, mocker, caplog, tmp_path):
     """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
 
     """
@@ -205,7 +203,129 @@ def test_cli_metadata_validation(
 
     runner = CliRunner()
 
-    # Test missing author
+    for flag_title_or_name, author_or_name in [
+        ("--author", "no one"),
+        ("--name", "test-project"),
+    ]:
+        # Test missing author then missing name
+        result = runner.invoke(
+            cli,
+            [
+                "upload",
+                "--url",
+                "https://deposit.swh.test/1",
+                "--username",
+                TEST_USER["username"],
+                "--password",
+                TEST_USER["password"],
+                "--archive",
+                sample_archive["path"],
+                "--slug",
+                slug,
+                flag_title_or_name,
+                author_or_name,
+            ],
+        )
+
+        assert result.exit_code == 1, f"unexpected result: {result.output}"
+        assert result.output == ""
+        expected_error_log_record = (
+            "swh.deposit.cli.client",
+            logging.ERROR,
+            (
+                "Problem during parsing options: "
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided. "
+                "If this is an archive deposit request, none is required."
+            ),
+        )
+        assert expected_error_log_record in caplog.record_tuples
+
+        # Clear mocking state
+        caplog.clear()
+
+        # incompatible flags: Test both --metadata and --author, then --metadata and
+        # --name
+        result = runner.invoke(
+            cli,
+            [
+                "upload",
+                "--url",
+                "https://deposit.swh.test/1",
+                "--username",
+                TEST_USER["username"],
+                "--password",
+                TEST_USER["password"],
+                "--name",
+                "test-project",
+                "--deposit-id",
+                666,
+                "--archive",
+                sample_archive["path"],
+                "--slug",
+                slug,
+            ],
+        )
+        assert result.exit_code == 1, f"unexpected result: {result.output}"
+        assert result.output == ""
+        expected_error_log_record = (
+            "swh.deposit.cli.client",
+            logging.ERROR,
+            (
+                "Problem during parsing options: "
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided."
+            ),
+        )
+        assert expected_error_log_record in caplog.record_tuples
+
+        # Clear mocking state
+        caplog.clear()
+
+        # incompatible flags check (Test both --metadata and --author,
+        # then --metadata and --name)
+        result = runner.invoke(
+            cli,
+            [
+                "upload",
+                "--url",
+                "https://deposit.swh.test/1",
+                "--username",
+                TEST_USER["username"],
+                "--password",
+                TEST_USER["password"],
+                "--archive",
+                sample_archive["path"],
+                "--metadata",
+                metadata_path,
+                "--author",
+                "Jane Doe",
+                "--slug",
+                slug,
+            ],
+        )
+
+        assert result.exit_code == 1, result.output
+        assert result.output == ""
+        expected_error_log_record = (
+            "swh.deposit.cli.client",
+            logging.ERROR,
+            (
+                "Problem during parsing options: "
+                "Using --metadata flag is incompatible with both "
+                "--author and --name (Those are used to generate one metadata file)."
+            ),
+        )
+        assert expected_error_log_record in caplog.record_tuples
+        caplog.clear()
+
+
+def test_cli_validation_no_actionable_command(caplog):
+    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
+
+    """
+    runner = CliRunner()
+    # no actionable command
     result = runner.invoke(
         cli,
         [
@@ -216,32 +336,29 @@ def test_cli_metadata_validation(
             TEST_USER["username"],
             "--password",
             TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--archive",
-            sample_archive["path"],
-            "--slug",
-            slug,
+            "--partial",
         ],
     )
 
-    assert result.exit_code == 1, f"unexpected result: {result.output}"
+    assert result.exit_code == 1, result.output
     assert result.output == ""
     expected_error_log_record = (
         "swh.deposit.cli.client",
         logging.ERROR,
         (
-            "Problem during parsing options: Either a metadata file"
-            " (--metadata) or both --author and --name must be provided, "
-            "unless this is an archive-only deposit."
+            "Problem during parsing options: "
+            "Please provide an actionable command. See --help for more information"
         ),
     )
     assert expected_error_log_record in caplog.record_tuples
 
-    # Clear mocking state
-    caplog.clear()
 
-    # Test missing name
+def test_cli_validation_missing_metadata_flag(caplog):
+    """--metadata-deposit requires --metadata (or --name and --author) otherwise fails
+
+    """
+    runner = CliRunner()
+    # --metadata-deposit without --metadata flag fails
     result = runner.invoke(
         cli,
         [
@@ -252,56 +369,66 @@ def test_cli_metadata_validation(
             TEST_USER["username"],
             "--password",
             TEST_USER["password"],
-            "--archive",
-            sample_archive["path"],
-            "--author",
-            "Jane Doe",
-            "--slug",
-            slug,
+            "--metadata-deposit",  # should fail because missing --metadata flag
         ],
     )
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
-    assert expected_error_log_record in caplog.record_tuples
-
-    # Clear mocking state
-    caplog.clear()
-
-    # Test both --metadata and --author
-    result = runner.invoke(
-        cli,
-        [
-            "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--archive",
-            sample_archive["path"],
-            "--metadata",
-            metadata_path,
-            "--author",
-            "Jane Doe",
-            "--slug",
-            slug,
-        ],
-    )
-
-    assert result.exit_code == 1, result.output
-    assert result.output == ""
-    expected_error_log_record_2 = (
+    expected_error_log_record = (
         "swh.deposit.cli.client",
         logging.ERROR,
         (
-            "Problem during parsing options: Using a metadata file "
-            "(--metadata) is incompatible with --author and --name, "
-            "which are used to generate one."
+            "Problem during parsing options: "
+            "Metadata deposit must be provided for metadata "
+            "deposit, either a filepath with --metadata or --name and --author"
         ),
     )
-    assert expected_error_log_record_2 in caplog.record_tuples
+    assert expected_error_log_record in caplog.record_tuples
+
+
+def test_cli_validation_replace_with_no_deposit_id_fails(
+    sample_archive, caplog, tmp_path, requests_mock_datadir, datadir
+):
+    """--replace flags require --deposit-id otherwise fails
+
+    """
+    runner = CliRunner()
+    metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
+
+    for flags in [
+        ["--replace"],
+        ["--replace", "--metadata-deposit", "--archive-deposit"],
+    ]:
+        result = runner.invoke(
+            cli,
+            [
+                "upload",
+                "--url",
+                "https://deposit.swh.test/1",
+                "--username",
+                TEST_USER["username"],
+                "--password",
+                TEST_USER["password"],
+                "--metadata",
+                metadata_path,
+                "--archive",
+                sample_archive["path"],
+            ]
+            + flags,
+        )
+
+        assert result.exit_code == 1, result.output
+        assert result.output == ""
+        expected_error_log_record = (
+            "swh.deposit.cli.client",
+            logging.ERROR,
+            (
+                "Problem during parsing options: "
+                "To update an existing deposit, you must provide its id"
+            ),
+        )
+        assert expected_error_log_record in caplog.record_tuples
 
 
 def test_cli_single_deposit_slug_generation(
