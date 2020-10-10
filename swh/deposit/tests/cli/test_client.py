@@ -594,10 +594,10 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
         ),  # not enough though, the caplog fixture is needed
     ],
 )
-def test_cli_deposit_status_json(
+def test_cli_deposit_status_with_output_format(
     output_format, callable_fn, datadir, slug, requests_mock_datadir, caplog
 ):
-    """Check deposit status cli with all possible output formats
+    """Check deposit status cli with all possible output formats (json, yaml, logging).
 
     """
     api_url_basename = "deposit.test.status"
