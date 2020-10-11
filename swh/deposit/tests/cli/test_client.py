@@ -42,11 +42,24 @@ def slug():
 
 
 @pytest.fixture
+def patched_tmp_path(tmp_path, mocker):
+    mocker.patch(
+        "tempfile.TemporaryDirectory",
+        return_value=contextlib.nullcontext(str(tmp_path)),
+    )
+    return tmp_path
+
+
+@pytest.fixture
+def cli_runner():
+    return CliRunner()
+
+
+@pytest.fixture
 def client_mock_api_down(mocker, slug):
     """A mock client whose connection with api fails due to maintenance issue
 
     """
-    mocker.patch("swh.deposit.cli.client.generate_slug", return_value=slug)
     mock_client = MagicMock()
     mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
     mock_client.service_document.side_effect = MaintenanceError(
@@ -89,13 +102,12 @@ def test_cli_collection_ko_because_downtime():
 
 
 def test_cli_deposit_with_server_down_for_maintenance(
-    sample_archive, mocker, caplog, client_mock_api_down, slug, tmp_path
+    sample_archive, caplog, client_mock_api_down, slug, patched_tmp_path, cli_runner
 ):
     """ Deposit failure due to maintenance down time should be explicit
 
     """
-    runner = CliRunner()
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -127,20 +139,14 @@ def test_cli_deposit_with_server_down_for_maintenance(
 
 
 def test_cli_single_minimal_deposit(
-    sample_archive, mocker, slug, tmp_path, requests_mock_datadir
+    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner
 ):
     """ This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
 
-    metadata_path = os.path.join(tmp_path, "metadata.xml")
-    mocker.patch(
-        "tempfile.TemporaryDirectory",
-        return_value=contextlib.nullcontext(str(tmp_path)),
-    )
-
-    runner = CliRunner()
-    result = runner.invoke(
+    metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -187,28 +193,23 @@ xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         )
 
 
-def test_cli_validation_metadata(sample_archive, mocker, caplog, tmp_path):
+def test_cli_validation_metadata(
+    sample_archive, caplog, patched_tmp_path, cli_runner, slug
+):
     """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
 
     """
-    slug = generate_slug()
 
-    metadata_path = os.path.join(tmp_path, "metadata.xml")
-    mocker.patch(
-        "tempfile.TemporaryDirectory",
-        return_value=contextlib.nullcontext(str(tmp_path)),
-    )
+    metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
     with open(metadata_path, "a"):
         pass  # creates the file
-
-    runner = CliRunner()
 
     for flag_title_or_name, author_or_name in [
         ("--author", "no one"),
         ("--name", "test-project"),
     ]:
         # Test missing author then missing name
-        result = runner.invoke(
+        result = cli_runner.invoke(
             cli,
             [
                 "upload",
@@ -246,7 +247,7 @@ def test_cli_validation_metadata(sample_archive, mocker, caplog, tmp_path):
 
         # incompatible flags: Test both --metadata and --author, then --metadata and
         # --name
-        result = runner.invoke(
+        result = cli_runner.invoke(
             cli,
             [
                 "upload",
@@ -284,7 +285,7 @@ def test_cli_validation_metadata(sample_archive, mocker, caplog, tmp_path):
 
         # incompatible flags check (Test both --metadata and --author,
         # then --metadata and --name)
-        result = runner.invoke(
+        result = cli_runner.invoke(
             cli,
             [
                 "upload",
@@ -320,13 +321,12 @@ def test_cli_validation_metadata(sample_archive, mocker, caplog, tmp_path):
         caplog.clear()
 
 
-def test_cli_validation_no_actionable_command(caplog):
+def test_cli_validation_no_actionable_command(caplog, cli_runner):
     """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
 
     """
-    runner = CliRunner()
     # no actionable command
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -353,13 +353,12 @@ def test_cli_validation_no_actionable_command(caplog):
     assert expected_error_log_record in caplog.record_tuples
 
 
-def test_cli_validation_missing_metadata_flag(caplog):
+def test_cli_validation_missing_metadata_flag(caplog, cli_runner):
     """--metadata-deposit requires --metadata (or --name and --author) otherwise fails
 
     """
-    runner = CliRunner()
     # --metadata-deposit without --metadata flag fails
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -388,19 +387,18 @@ def test_cli_validation_missing_metadata_flag(caplog):
 
 
 def test_cli_validation_replace_with_no_deposit_id_fails(
-    sample_archive, caplog, tmp_path, requests_mock_datadir, datadir
+    sample_archive, caplog, patched_tmp_path, requests_mock_datadir, datadir, cli_runner
 ):
     """--replace flags require --deposit-id otherwise fails
 
     """
-    runner = CliRunner()
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
     for flags in [
         ["--replace"],
         ["--replace", "--metadata-deposit", "--archive-deposit"],
     ]:
-        result = runner.invoke(
+        result = cli_runner.invoke(
             cli,
             [
                 "upload",
@@ -432,19 +430,13 @@ def test_cli_validation_replace_with_no_deposit_id_fails(
 
 
 def test_cli_single_deposit_slug_generation(
-    sample_archive, mocker, tmp_path, requests_mock_datadir
+    sample_archive, patched_tmp_path, requests_mock_datadir, cli_runner
 ):
     """Single deposit scenario without providing the slug, the slug is generated nonetheless
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
-    metadata_path = os.path.join(tmp_path, "metadata.xml")
-    mocker.patch(
-        "tempfile.TemporaryDirectory",
-        return_value=contextlib.nullcontext(str(tmp_path)),
-    )
-
-    runner = CliRunner()
-    result = runner.invoke(
+    metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -478,16 +470,17 @@ def test_cli_single_deposit_slug_generation(
         assert actual_metadata["codemeta:identifier"] is not None
 
 
-def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_datadir):
+def test_cli_multisteps_deposit(
+    sample_archive, datadir, slug, requests_mock_datadir, cli_runner
+):
     """ First deposit a partial deposit (no metadata, only archive), then update the metadata part.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#multisteps-deposit
     """  # noqa
     api_url = "https://deposit.test.metadata/1"
     deposit_id = 666
 
-    runner = CliRunner()
     # Create a partial deposit with only 1 archive
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -517,8 +510,7 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     }
 
     # Update the partial deposit with only 1 archive
-    runner = CliRunner()
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -551,7 +543,7 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
     # Update deposit with metadata
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "upload",
@@ -595,7 +587,7 @@ def test_cli_multisteps_deposit(sample_archive, datadir, slug, requests_mock_dat
     ],
 )
 def test_cli_deposit_status_with_output_format(
-    output_format, callable_fn, datadir, slug, requests_mock_datadir, caplog
+    output_format, callable_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
 ):
     """Check deposit status cli with all possible output formats (json, yaml, logging).
 
@@ -609,8 +601,7 @@ def test_cli_deposit_status_with_output_format(
         deposit_status_xml = f.read()
     expected_deposit_dict = dict(parse_xml(deposit_status_xml))
 
-    runner = CliRunner()
-    result = runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "status",
