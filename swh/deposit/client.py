@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 import hashlib
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -20,6 +20,64 @@ import xmltodict
 from swh.core.config import load_from_envvar
 
 logger = logging.getLogger(__name__)
+
+
+def compute_unified_information(
+    collection: str,
+    in_progress: bool,
+    slug: str,
+    *,
+    filepath: Optional[str] = None,
+    swhid: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Given a filepath, compute necessary information on that file.
+
+    Args:
+        collection: Deposit collection
+        in_progress: do we finalize the deposit?
+        slug: external id to use
+        filepath: Path to the file to compute the necessary information out of
+        swhid: Deposit swhid if any
+
+    Returns:
+        dict with keys:
+
+            'slug': external id to use
+            'in_progress': do we finalize the deposit?
+            'content-type': content type associated
+            'md5sum': md5 sum
+            'filename': filename
+            'filepath': filepath
+            'swhid': deposit swhid
+
+    """
+    result: Dict[str, Any] = {
+        "slug": slug,
+        "in_progress": in_progress,
+        "swhid": swhid,
+    }
+    content_type: Optional[str] = None
+    md5sum: Optional[str] = None
+
+    if filepath:
+        filename = os.path.basename(filepath)
+        md5sum = hashlib.md5(open(filepath, "rb").read()).hexdigest()
+        extension = filename.split(".")[-1]
+        if "zip" in extension:
+            content_type = "application/zip"
+        else:
+            content_type = "application/x-tar"
+        result.update(
+            {
+                "content-type": content_type,
+                "md5sum": md5sum,
+                "filename": filename,
+                "filepath": filepath,
+            }
+        )
+
+    return result
 
 
 class MaintenanceError(ValueError):
@@ -243,7 +301,7 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
         """
         pass
 
-    def compute_information(self, *args, **kwargs):
+    def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         """Compute some more information given the inputs (e.g http headers,
            ...)
 
@@ -415,50 +473,7 @@ class BaseCreateDepositClient(BaseDepositClient):
             ],
         )
 
-    def _compute_information(
-        self, collection, filepath, in_progress, slug, is_archive=True
-    ):
-        """Given a filepath, compute necessary information on that file.
-
-        Args:
-            filepath (str): Path to a file
-            is_archive (bool): is it an archive or not?
-
-        Returns:
-            dict with keys:
-                'content-type': content type associated
-                'md5sum': md5 sum
-                'filename': filename
-        """
-        filename = os.path.basename(filepath)
-
-        if is_archive:
-            md5sum = hashlib.md5(open(filepath, "rb").read()).hexdigest()
-            extension = filename.split(".")[-1]
-            if "zip" in extension:
-                content_type = "application/zip"
-            else:
-                content_type = "application/x-tar"
-        else:
-            content_type = None
-            md5sum = None
-
-        return {
-            "slug": slug,
-            "in_progress": in_progress,
-            "content-type": content_type,
-            "md5sum": md5sum,
-            "filename": filename,
-            "filepath": filepath,
-        }
-
-    def compute_information(
-        self, collection, filepath, in_progress, slug, is_archive=True, **kwargs
-    ):
-        info = self._compute_information(
-            collection, filepath, in_progress, slug, is_archive=is_archive
-        )
-        info["headers"] = self.compute_headers(info)
+    def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
         return info
 
     def do_execute(self, method, url, info):
@@ -477,6 +492,13 @@ class CreateArchiveDepositClient(BaseCreateDepositClient):
             "CONTENT-TYPE": info["content-type"],
             "CONTENT-DISPOSITION": "attachment; filename=%s" % (info["filename"],),
         }
+
+    def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
+        info = compute_unified_information(
+            *args, filepath=kwargs["archive_path"], **kwargs
+        )
+        info["headers"] = self.compute_headers(info)
+        return info
 
 
 class UpdateArchiveDepositClient(CreateArchiveDepositClient):
@@ -499,15 +521,35 @@ class CreateMetadataDepositClient(BaseCreateDepositClient):
             "CONTENT-TYPE": "application/atom+xml;type=entry",
         }
 
+    def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
+        info = compute_unified_information(
+            *args, filepath=kwargs["metadata_path"], **kwargs
+        )
+        info["headers"] = self.compute_headers(info)
+        return info
 
-class UpdateMetadataDepositClient(CreateMetadataDepositClient):
-    """Update (add/replace) a metadata deposit client."""
+
+class UpdateMetadataOnPartialDepositClient(CreateMetadataDepositClient):
+    """Update (add/replace) metadata on partial deposit scenario."""
 
     def compute_url(self, collection, *args, deposit_id=None, **kwargs):
-        return "/%s/%s/metadata/" % (collection, deposit_id)
+        return f"/{collection}/{deposit_id}/metadata/"
 
-    def compute_method(self, *args, replace=False, **kwargs):
+    def compute_method(self, *args, replace: bool = False, **kwargs) -> str:
         return "put" if replace else "post"
+
+
+class UpdateMetadataOnDoneDepositClient(UpdateMetadataOnPartialDepositClient):
+    """Update metadata on "done" deposit. This requires the deposit swhid."""
+
+    def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "CONTENT-TYPE": "application/atom+xml;type=entry",
+            "X_CHECK_SWHID": info["swhid"],
+        }
+
+    def compute_method(self, *args, **kwargs) -> str:
+        return "put"
 
 
 class CreateMultipartDepositClient(BaseCreateDepositClient):
@@ -537,12 +579,10 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
 
         return files, headers
 
-    def compute_information(
-        self, collection, archive, metadata, in_progress, slug, **kwargs
-    ):
-        info = self._compute_information(collection, archive, in_progress, slug)
-        info_meta = self._compute_information(
-            collection, metadata, in_progress, slug, is_archive=False
+    def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
+        info = compute_unified_information(*args, filepath=kwargs["archive_path"],)
+        info_meta = compute_unified_information(
+            *args, filepath=kwargs["metadata_path"],
         )
         files, headers = self._multipart_info(info, info_meta)
         return {"files": files, "headers": headers}
@@ -568,36 +608,46 @@ class PublicApiDepositClient(BaseApiDepositClient):
         """Retrieve service document endpoint's information."""
         return ServiceDocumentDepositClient(self.config).execute()
 
-    def deposit_status(self, collection, deposit_id):
+    def deposit_status(self, collection: str, deposit_id: int):
         """Retrieve status information on a deposit."""
         return StatusDepositClient(self.config).execute(collection, deposit_id)
 
     def deposit_create(
-        self, collection, slug, archive=None, metadata=None, in_progress=False
+        self,
+        collection: str,
+        slug: str,
+        archive: Optional[str] = None,
+        metadata: Optional[str] = None,
+        in_progress: bool = False,
     ):
         """Create a new deposit (archive, metadata, both as multipart)."""
         if archive and not metadata:
             return CreateArchiveDepositClient(self.config).execute(
-                collection, archive, in_progress, slug
+                collection, in_progress, slug, archive_path=archive
             )
         elif not archive and metadata:
             return CreateMetadataDepositClient(self.config).execute(
-                collection, metadata, in_progress, slug, is_archive=False
+                collection, in_progress, slug, metadata_path=metadata
             )
         else:
             return CreateMultipartDepositClient(self.config).execute(
-                collection, archive, metadata, in_progress, slug
+                collection,
+                in_progress,
+                slug,
+                archive_path=archive,
+                metadata_path=metadata,
             )
 
     def deposit_update(
         self,
-        collection,
-        deposit_id,
-        slug,
-        archive=None,
-        metadata=None,
-        in_progress=False,
-        replace=False,
+        collection: str,
+        deposit_id: int,
+        slug: str,
+        archive: Optional[str] = None,
+        metadata: Optional[str] = None,
+        in_progress: bool = False,
+        replace: bool = False,
+        swhid: Optional[str] = None,
     ):
         """Update (add/replace) existing deposit (archive, metadata, both)."""
         r = self.deposit_status(collection, deposit_id)
@@ -605,39 +655,55 @@ class PublicApiDepositClient(BaseApiDepositClient):
             return r
 
         status = r["deposit_status"]
-        if status != "partial":
+        if swhid is None and status != "partial":
             return {
                 "error": "You can only act on deposit with status 'partial'",
-                "detail": "The deposit %s has status '%s'" % (deposit_id, status),
+                "detail": f"The deposit {deposit_id} has status '{status}'",
+                "deposit_status": status,
+                "deposit_id": deposit_id,
+            }
+        if swhid is not None and status != "done":
+            return {
+                "error": "You can only update metadata on deposit with status 'done'",
+                "detail": f"The deposit {deposit_id} has status '{status}'",
                 "deposit_status": status,
                 "deposit_id": deposit_id,
             }
         if archive and not metadata:
             r = UpdateArchiveDepositClient(self.config).execute(
                 collection,
-                archive,
                 in_progress,
                 slug,
                 deposit_id=deposit_id,
+                archive_path=archive,
                 replace=replace,
             )
-        elif not archive and metadata:
-            r = UpdateMetadataDepositClient(self.config).execute(
+        elif not archive and metadata and swhid is None:
+            r = UpdateMetadataOnPartialDepositClient(self.config).execute(
                 collection,
-                metadata,
                 in_progress,
                 slug,
                 deposit_id=deposit_id,
+                metadata_path=metadata,
                 replace=replace,
+            )
+        elif not archive and metadata and swhid is not None:
+            r = UpdateMetadataOnDoneDepositClient(self.config).execute(
+                collection,
+                in_progress,
+                slug,
+                deposit_id=deposit_id,
+                metadata_path=metadata,
+                swhid=swhid,
             )
         else:
             r = UpdateMultipartDepositClient(self.config).execute(
                 collection,
-                archive,
-                metadata,
                 in_progress,
                 slug,
                 deposit_id=deposit_id,
+                archive_path=archive,
+                metadata_path=metadata,
                 replace=replace,
             )
 

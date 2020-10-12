@@ -1,0 +1,8 @@
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>321</deposit_id>
+    <deposit_status>partial</deposit_status>
+    <deposit_status_detail>The deposit is in partial state</deposit_status_detail>
+    <deposit_external_id>check-deposit-2020-10-08T13:52:34.509655</deposit_external_id>
+</entry>

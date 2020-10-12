@@ -141,6 +141,7 @@ def client_command_parse_input(
     slug: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
+    swhid: Optional[str],
     replace: bool,
     url: str,
     name: Optional[str],
@@ -188,6 +189,7 @@ def client_command_parse_input(
             'url': deposit's server main entry point
             'deposit_type': deposit's type (binary, multipart, metadata)
             'deposit_id': optional deposit identifier
+            'swhid': optional deposit swhid
 
     """
     if archive_deposit and metadata_deposit:
@@ -264,6 +266,7 @@ def client_command_parse_input(
         "client": client,
         "url": url,
         "deposit_id": deposit_id,
+        "swhid": swhid,
         "replace": replace,
     }
 
@@ -299,6 +302,7 @@ def deposit_update(config: Dict[str, Any]) -> Dict[str, Any]:
         "slug",
         "in_progress",
         "replace",
+        "swhid",
     )
     return client.deposit_update(**_subdict(config, keys))
 
@@ -356,6 +360,11 @@ def deposit_update(config: Dict[str, Any]) -> Dict[str, Any]:
     help="(Optional) Update an existing partial deposit with its identifier",
 )  # noqa
 @click.option(
+    "--swhid",
+    default=None,
+    help="(Optional) Update existing completed deposit (status done) with new metadata",
+)
+@click.option(
     "--replace/--no-replace",
     default=False,
     help="(Optional) Update by replacing existing metadata to a deposit",
@@ -397,6 +406,7 @@ def upload(
     slug: Optional[str] = None,
     partial: bool = False,
     deposit_id: Optional[int] = None,
+    swhid: Optional[str] = None,
     replace: bool = False,
     url: str = "https://deposit.softwareheritage.org",
     verbose: bool = False,
@@ -433,6 +443,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 slug,
                 partial,
                 deposit_id,
+                swhid,
                 replace,
                 url,
                 name,

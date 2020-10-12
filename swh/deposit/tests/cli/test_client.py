@@ -599,7 +599,7 @@ def test_cli_deposit_status_with_output_format(
     )
     with open(deposit_status_xml_path, "r") as f:
         deposit_status_xml = f.read()
-    expected_deposit_dict = dict(parse_xml(deposit_status_xml))
+    expected_deposit_status = dict(parse_xml(deposit_status_xml))
 
     result = cli_runner.invoke(
         cli,
@@ -627,4 +627,97 @@ def test_cli_deposit_status_with_output_format(
         result_output = result.output
 
     actual_deposit = callable_fn(result_output)
-    assert actual_deposit == expected_deposit_dict
+    assert actual_deposit == expected_deposit_status
+
+
+def test_cli_update_metadata_with_swhid_on_completed_deposit(
+    datadir, requests_mock_datadir, cli_runner
+):
+    """Update new metadata on a completed deposit (status done) is ok
+    """
+    api_url_basename = "deposit.test.updateswhid"
+    deposit_id = 123
+    deposit_status_xml_path = os.path.join(
+        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
+    )
+    with open(deposit_status_xml_path, "r") as f:
+        deposit_status_xml = f.read()
+    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+
+    assert expected_deposit_status["deposit_status"] == "done"
+    assert expected_deposit_status["deposit_swh_id"] is not None
+
+    result = cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url",
+            f"https://{api_url_basename}/1",
+            "--username",
+            TEST_USER["username"],
+            "--password",
+            TEST_USER["password"],
+            "--name",
+            "test-project",
+            "--author",
+            "John Doe",
+            "--deposit-id",
+            deposit_id,
+            "--swhid",
+            expected_deposit_status["deposit_swh_id"],
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    actual_deposit_status = json.loads(result.output)
+    assert "error" not in actual_deposit_status
+    assert actual_deposit_status == expected_deposit_status
+
+
+def test_cli_update_metadata_with_swhid_on_other_status_deposit(
+    datadir, requests_mock_datadir, cli_runner
+):
+    """Update new metadata with swhid on other deposit status is not possible
+    """
+    api_url_basename = "deposit.test.updateswhid"
+    deposit_id = 321
+    deposit_status_xml_path = os.path.join(
+        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
+    )
+    with open(deposit_status_xml_path, "r") as f:
+        deposit_status_xml = f.read()
+    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+    assert expected_deposit_status["deposit_status"] != "done"
+
+    result = cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url",
+            f"https://{api_url_basename}/1",
+            "--username",
+            TEST_USER["username"],
+            "--password",
+            TEST_USER["password"],
+            "--name",
+            "test-project",
+            "--author",
+            "John Doe",
+            "--deposit-id",
+            deposit_id,
+            "--swhid",
+            "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    actual_result = json.loads(result.output)
+    assert "error" in actual_result
+    assert actual_result == {
+        "error": "You can only update metadata on deposit with status 'done'",
+        "detail": "The deposit 321 has status 'partial'",
+        "deposit_status": "partial",
+        "deposit_id": 321,
+    }
