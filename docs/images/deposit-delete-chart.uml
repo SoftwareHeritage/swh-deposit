@@ -23,14 +23,14 @@
 
     DEPOSIT ->> DEPOSIT_STORAGE: check inputs()
 
-    alt status is not 'partial'
-      DEPOSIT_STORAGE -->> DEPOSIT: return ko
-      DEPOSIT -->> CLIENT: return 400
-    else status is 'partial'
+    alt status is 'partial'
       DEPOSIT_STORAGE -->> DEPOSIT: return ok
       DEPOSIT ->> DEPOSIT_STORAGE: delete-deposit-or-deposit-archives()
       DEPOSIT_STORAGE -->> DEPOSIT: return ok
       DEPOSIT -->> CLIENT: return 204
+    else status is not 'partial'
+      DEPOSIT_STORAGE -->> DEPOSIT: return ko
+      DEPOSIT -->> CLIENT: return 400
     end
 
   end
