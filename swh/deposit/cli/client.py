@@ -3,18 +3,25 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from __future__ import annotations
+
 import logging
 
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
 import os
 import sys
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import click
 
 from swh.deposit.cli import deposit
 
 logger = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from swh.deposit.client import PublicApiDepositClient
 
 
 class InputError(ValueError):
@@ -25,7 +32,7 @@ class InputError(ValueError):
     pass
 
 
-def generate_slug():
+def generate_slug() -> str:
     """Generate a slug (sample purposes).
 
     """
@@ -34,7 +41,7 @@ def generate_slug():
     return str(uuid.uuid4())
 
 
-def _url(url):
+def _url(url: str) -> str:
     """Force the /1 api version at the end of the url (avoiding confusing
        issues without it).
 
@@ -50,7 +57,9 @@ def _url(url):
     return url
 
 
-def generate_metadata_file(name, external_id, authors, temp_dir):
+def generate_metadata_file(
+    name: str, external_id: str, authors: List[str], temp_dir: str
+) -> str:
     """Generate a temporary metadata file with the minimum required metadata
 
     This generates a xml file in a temporary location and returns the
@@ -60,9 +69,9 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
     temporary file.
 
     Args:
-        name (str): Software's name
-        external_id (str): External identifier (slug) or generated one
-        authors (List[str]): List of author names
+        name: Software's name
+        external_id: External identifier (slug) or generated one
+        authors: List of author names
 
     Returns:
         Filepath to the metadata generated file
@@ -93,7 +102,7 @@ def generate_metadata_file(name, external_id, authors, temp_dir):
     return path
 
 
-def _client(url, username, password):
+def _client(url: str, username: str, password: str) -> PublicApiDepositClient:
     """Instantiate a client to access the deposit api server
 
     Args:
@@ -104,13 +113,12 @@ def _client(url, username, password):
     """
     from swh.deposit.client import PublicApiDepositClient
 
-    client = PublicApiDepositClient(
+    return PublicApiDepositClient(
         {"url": url, "auth": {"username": username, "password": password},}
     )
-    return client
 
 
-def _collection(client):
+def _collection(client: PublicApiDepositClient) -> str:
     """Retrieve the client's collection
 
     """
@@ -123,22 +131,23 @@ def _collection(client):
 
 
 def client_command_parse_input(
-    username,
-    password,
-    archive,
-    metadata,
-    archive_deposit,
-    metadata_deposit,
-    collection,
-    slug,
-    partial,
-    deposit_id,
-    replace,
-    url,
-    name,
-    authors,
-    temp_dir,
-):
+    username: str,
+    password: str,
+    archive: Optional[str],
+    metadata: Optional[str],
+    archive_deposit: bool,
+    metadata_deposit: bool,
+    collection: Optional[str],
+    slug: Optional[str],
+    partial: bool,
+    deposit_id: Optional[int],
+    swhid: Optional[str],
+    replace: bool,
+    url: str,
+    name: Optional[str],
+    authors: List[str],
+    temp_dir: str,
+) -> Dict[str, Any]:
     """Parse the client subcommand options and make sure the combination
        is acceptable*.  If not, an InputError exception is raised
        explaining the issue.
@@ -180,6 +189,7 @@ def client_command_parse_input(
             'url': deposit's server main entry point
             'deposit_type': deposit's type (binary, multipart, metadata)
             'deposit_id': optional deposit identifier
+            'swhid': optional deposit swhid
 
     """
     if archive_deposit and metadata_deposit:
@@ -191,25 +201,30 @@ def client_command_parse_input(
         slug = generate_slug()
 
     if not metadata:
+        if metadata_deposit:
+            raise InputError(
+                "Metadata deposit must be provided for metadata "
+                "deposit, either a filepath with --metadata or --name and --author"
+            )
         if name and authors:
             metadata = generate_metadata_file(name, slug, authors, temp_dir)
         elif not archive_deposit and not partial and not deposit_id:
             # If we meet all the following conditions:
-            # * there is not an archive-only deposit
+            # * this is not an archive-only deposit request
             # * it is not part of a multipart deposit (either create/update
             #   or finish)
             # * it misses either name or authors
             raise InputError(
-                "Either a metadata file (--metadata) or both --author and "
-                "--name must be provided, unless this is an archive-only "
-                "deposit."
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided. "
+                "If this is an archive deposit request, none is required."
             )
         elif name or authors:
             # If we are generating metadata, then all mandatory metadata
             # must be present
             raise InputError(
-                "Either a metadata file (--metadata) or both --author and "
-                "--name must be provided."
+                "For metadata deposit request, either a metadata file with "
+                "--metadata or both --author and --name must be provided."
             )
         else:
             # TODO: this is a multipart deposit, we might want to check that
@@ -217,8 +232,8 @@ def client_command_parse_input(
             pass
     elif name or authors:
         raise InputError(
-            "Using a metadata file (--metadata) is incompatible with "
-            "--author and --name, which are used to generate one."
+            "Using --metadata flag is incompatible with both "
+            "--author and --name (Those are used to generate one metadata file)."
         )
 
     if metadata_deposit:
@@ -226,12 +241,6 @@ def client_command_parse_input(
 
     if archive_deposit:
         metadata = None
-
-    if metadata_deposit and not metadata:
-        raise InputError(
-            "Metadata deposit must be provided for metadata "
-            "deposit (either a filepath or --name and --author)"
-        )
 
     if not archive and not metadata and partial:
         raise InputError(
@@ -257,16 +266,17 @@ def client_command_parse_input(
         "client": client,
         "url": url,
         "deposit_id": deposit_id,
+        "swhid": swhid,
         "replace": replace,
     }
 
 
-def _subdict(d, keys):
+def _subdict(d: Dict[str, Any], keys: Tuple[str, ...]) -> Dict[str, Any]:
     "return a dict from d with only given keys"
     return {k: v for k, v in d.items() if k in keys}
 
 
-def deposit_create(config, logger):
+def deposit_create(config: Dict[str, Any]) -> Dict[str, Any]:
     """Delegate the actual deposit to the deposit client.
 
     """
@@ -277,7 +287,7 @@ def deposit_create(config, logger):
     return client.deposit_create(**_subdict(config, keys))
 
 
-def deposit_update(config, logger):
+def deposit_update(config: Dict[str, Any]) -> Dict[str, Any]:
     """Delegate the actual deposit to the deposit client.
 
     """
@@ -292,6 +302,7 @@ def deposit_update(config, logger):
         "slug",
         "in_progress",
         "replace",
+        "swhid",
     )
     return client.deposit_update(**_subdict(config, keys))
 
@@ -349,6 +360,11 @@ def deposit_update(config, logger):
     help="(Optional) Update an existing partial deposit with its identifier",
 )  # noqa
 @click.option(
+    "--swhid",
+    default=None,
+    help="(Optional) Update existing completed deposit (status done) with new metadata",
+)
+@click.option(
     "--replace/--no-replace",
     default=False,
     help="(Optional) Update by replacing existing metadata to a deposit",
@@ -380,22 +396,23 @@ def deposit_update(config, logger):
 @click.pass_context
 def upload(
     ctx,
-    username,
-    password,
-    archive=None,
-    metadata=None,
-    archive_deposit=False,
-    metadata_deposit=False,
-    collection=None,
-    slug=None,
-    partial=False,
-    deposit_id=None,
-    replace=False,
-    url="https://deposit.softwareheritage.org",
-    verbose=False,
-    name=None,
-    author=None,
-    output_format=None,
+    username: str,
+    password: str,
+    archive: Optional[str] = None,
+    metadata: Optional[str] = None,
+    archive_deposit: bool = False,
+    metadata_deposit: bool = False,
+    collection: Optional[str] = None,
+    slug: Optional[str] = None,
+    partial: bool = False,
+    deposit_id: Optional[int] = None,
+    swhid: Optional[str] = None,
+    replace: bool = False,
+    url: str = "https://deposit.softwareheritage.org",
+    verbose: bool = False,
+    name: Optional[str] = None,
+    author: List[str] = [],
+    output_format: Optional[str] = None,
 ):
     """Software Heritage Public Deposit Client
 
@@ -426,6 +443,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 slug,
                 partial,
                 deposit_id,
+                swhid,
                 replace,
                 url,
                 name,
@@ -440,15 +458,15 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             sys.exit(1)
 
         if verbose:
-            logger.info("Parsed configuration: %s" % (config,))
+            logger.info("Parsed configuration: %s", config)
 
         deposit_id = config["deposit_id"]
 
         if deposit_id:
-            r = deposit_update(config, logger)
+            data = deposit_update(config)
         else:
-            r = deposit_create(config, logger)
-        print_result(r, output_format)
+            data = deposit_create(config)
+        print_result(data, output_format)
 
 
 @deposit.command()
@@ -496,7 +514,10 @@ def status(ctx, url, username, password, deposit_id, output_format):
     )
 
 
-def print_result(data, output_format):
+def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
+    """Display the result data into a dedicated output format.
+
+    """
     import json
 
     import yaml

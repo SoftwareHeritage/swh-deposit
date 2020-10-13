@@ -170,6 +170,7 @@ swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_deposit.py
 swh/deposit/tests/api/test_deposit_atom.py
 swh/deposit/tests/api/test_deposit_binary.py
+swh/deposit/tests/api/test_deposit_content.py
 swh/deposit/tests/api/test_deposit_delete.py
 swh/deposit/tests/api/test_deposit_list.py
 swh/deposit/tests/api/test_deposit_multipart.py
@@ -202,6 +203,19 @@ swh/deposit/tests/data/atom/entry-update-in-place.xml
 swh/deposit/tests/data/atom/error-with-decimal.xml
 swh/deposit/tests/data/atom/metadata.xml
 swh/deposit/tests/data/atom/tei-sample.xml
+swh/deposit/tests/data/https_deposit.swh.test/1_servicedocument
+swh/deposit/tests/data/https_deposit.swh.test/1_test
+swh/deposit/tests/data/https_deposit.test.metadata/1_servicedocument
+swh/deposit/tests/data/https_deposit.test.metadata/1_test
+swh/deposit/tests/data/https_deposit.test.metadata/1_test_666_media
+swh/deposit/tests/data/https_deposit.test.metadata/1_test_666_metadata
+swh/deposit/tests/data/https_deposit.test.metadata/1_test_666_status
+swh/deposit/tests/data/https_deposit.test.status/1_servicedocument
+swh/deposit/tests/data/https_deposit.test.status/1_test_1033_status
+swh/deposit/tests/data/https_deposit.test.updateswhid/1_servicedocument
+swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_123_metadata
+swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_123_status
+swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_321_status
 swh/deposit/tests/loader/__init__.py
 swh/deposit/tests/loader/common.py
 swh/deposit/tests/loader/conftest.py

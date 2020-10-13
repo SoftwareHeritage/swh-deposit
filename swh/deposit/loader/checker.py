@@ -4,7 +4,6 @@
 # See top-level LICENSE file for more information
 
 import logging
-import os
 from typing import Any, Dict
 
 from swh.core import config
@@ -21,10 +20,7 @@ class DepositChecker:
     """
 
     def __init__(self):
-        config_file = os.environ["SWH_CONFIG_FILENAME"]
-        self.config: Dict[str, Any] = config.read_raw_config(
-            config.config_basepath(config_file)
-        )
+        self.config: Dict[str, Any] = config.load_from_envvar()
         self.client = PrivateApiDepositClient(config=self.config["deposit"])
 
     def check(self, collection: str, deposit_id: str) -> Dict[str, str]:
