@@ -1,0 +1,19 @@
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>666</deposit_id>
+    <deposit_date>Oct. 9, 2020, 8:44 p.m.</deposit_date>
+    <deposit_archive>something</deposit_archive>
+    <deposit_status>deposited</deposit_status>
+
+    <!-- Edit-IRI -->
+    <link rel="edit" href="https://deposit.test.metadata/1/test/666/metadata/" />
+    <!-- EM-IRI -->
+    <link rel="edit-media" href="https://deposit.test.metadata/1/test/666/media/"/>
+    <!-- SE-IRI -->
+    <link rel="http://purl.org/net/sword/terms/add" href="https://deposit.test.metadata/1/test/666/metadata/" />
+    <!-- State-IRI -->
+    <link rel="alternate" href="https://deposit.test.metadata/1/test/666/status/" />
+
+    <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
+</entry>
