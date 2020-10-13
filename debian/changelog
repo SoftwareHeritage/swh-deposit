@@ -1,3 +1,18 @@
+swh-deposit (0.3.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.3.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-10-13 15:12:50
+    +0200)
+  * Upstream changes:     - v0.3.0     - deposit_client: Allow deposit
+    metadata update on completed deposit     - deposit.client: Improve
+    cli error messages and add missing coverage     - cli.client: Add
+    coverage     - cli.client: Add types     - cli.client: Add types and
+    refactor tests     - conftest: Declare swh.core pytest_plugin     -
+    deposit: Reuse config.load_from_envvar for configuration loading
+    - test_deposit_content: Add missing coverage
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 13 Oct 2020 13:16:30 +0000
+
 swh-deposit (0.2.0-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.2.0     - (tagged by Antoine R. Dumont
