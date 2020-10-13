@@ -1,4 +1,4 @@
-swh.core[http]
+swh.core[http] >= 0.4
 swh.loader.core >= 0.0.71
 swh.scheduler >= 0.0.39
 swh.model >= 0.3.8

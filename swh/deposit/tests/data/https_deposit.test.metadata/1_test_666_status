@@ -1,0 +1,8 @@
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:sword="http://purl.org/net/sword/"
+       xmlns:dcterms="http://purl.org/dc/terms/">
+    <deposit_id>666</deposit_id>
+    <deposit_status>partial</deposit_status>
+    <deposit_status_detail>Deposit is partially received. To finalize it, In-Progress header should be false</deposit_status_detail>
+    <deposit_external_id>external-id</deposit_external_id>
+</entry>
