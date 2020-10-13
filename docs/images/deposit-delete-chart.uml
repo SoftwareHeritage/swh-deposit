@@ -25,10 +25,11 @@
 
     alt status is not 'partial'
       DEPOSIT_STORAGE -->> DEPOSIT: return ko
-      DEPOSIT -->> CLIENT: return 403
+      DEPOSIT -->> CLIENT: return 400
     else status is 'partial'
+      DEPOSIT_STORAGE -->> DEPOSIT: return ok
       DEPOSIT ->> DEPOSIT_STORAGE: delete-deposit-or-deposit-archives()
-      DEPOSIT_STORAGE -->> DEPOSIT: return ko
+      DEPOSIT_STORAGE -->> DEPOSIT: return ok
       DEPOSIT -->> CLIENT: return 204
     end
 
