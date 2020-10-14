@@ -6,7 +6,13 @@
 import pytest
 
 from swh.deposit.cli.admin import admin as cli
+from swh.deposit.config import (
+    DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_PARTIAL,
+    DEPOSIT_STATUS_VERIFIED,
+)
 from swh.deposit.models import DepositClient, DepositCollection
+from swh.scheduler.utils import create_oneshot_task_dict
 
 
 @pytest.fixture(autouse=True)
@@ -187,3 +193,125 @@ Update user '{user_name}'.
 User '{user_name}' updated.
 """
     )
+
+
+def test_cli_admin_reschedule_unknown_deposit(cli_runner):
+    """Rescheduling unknown deposit should report failure
+
+    """
+    unknown_deposit_id = 666
+
+    from swh.deposit.models import Deposit
+
+    try:
+        Deposit.objects.get(id=unknown_deposit_id)
+    except Deposit.DoesNotExist:
+        pass
+
+    result = cli_runner.invoke(
+        cli, ["deposit", "reschedule", "--deposit-id", unknown_deposit_id]
+    )
+
+    assert result.output == f"Deposit {unknown_deposit_id} does not exist.\n"
+    assert result.exit_code == 1
+
+
+def test_cli_admin_reschedule_verified_deposit(cli_runner, complete_deposit):
+    """Rescheduling verified deposit should do nothing but report
+
+    """
+    deposit = complete_deposit
+    deposit.status = "verified"
+    deposit.save()
+
+    result = cli_runner.invoke(
+        cli, ["deposit", "reschedule", "--deposit-id", deposit.id]
+    )
+
+    assert result.output == f"Deposit {deposit.id} already set for rescheduling.\n"
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    "status_to_check", [DEPOSIT_STATUS_PARTIAL, DEPOSIT_STATUS_DEPOSITED]
+)
+def test_cli_admin_reschedule_unaccepted_deposit_status(
+    status_to_check, cli_runner, complete_deposit
+):
+    """Rescheduling verified deposit should do nothing but report
+
+    """
+    deposit = complete_deposit
+    deposit.status = status_to_check  # not accepted status will fail the check
+    deposit.save()
+
+    result = cli_runner.invoke(
+        cli, ["deposit", "reschedule", "--deposit-id", deposit.id]
+    )
+
+    assert result.output == (
+        f"Deposit {deposit.id} cannot be rescheduled (status: {deposit.status}).\n"
+        "Rescheduling deposit is only accepted for deposit with status: done, failed.\n"
+    )
+    assert result.exit_code == 1
+
+
+def test_cli_admin_reschedule_missing_task_id(cli_runner, complete_deposit):
+    """Rescheduling deposit with no load_task_id cannot work.
+
+    """
+    deposit = complete_deposit
+    deposit.load_task_id = ""  # drop the load-task-id so it fails the check
+    deposit.save()
+
+    result = cli_runner.invoke(
+        cli, ["deposit", "reschedule", "--deposit-id", deposit.id]
+    )
+
+    assert result.output == (
+        f"Deposit {deposit.id} cannot be rescheduled. It misses the "
+        "associated scheduler task id (field load_task_id).\n"
+    )
+    assert result.exit_code == 1
+
+
+def test_cli_admin_reschedule_nominal(cli_runner, complete_deposit, swh_scheduler):
+    """Rescheduling deposit with no load_task_id cannot work.
+
+    """
+    deposit = complete_deposit
+
+    from swh.deposit.models import Deposit
+
+    # create a task to keep a reference on it
+    task = create_oneshot_task_dict(
+        "load-deposit", url=deposit.origin_url, deposit_id=deposit.id, retries_left=3
+    )
+    scheduled_task = swh_scheduler.create_tasks([task])[0]
+    # disable it
+    swh_scheduler.set_status_tasks([scheduled_task["id"]], status="disabled")
+
+    # Now update the deposit state with some swhid and relevant load_task_id
+    deposit = complete_deposit
+    deposit.load_task_id = scheduled_task["id"]
+    deposit.swhid = "swh:1:dir:02ed6084fb0e8384ac58980e07548a547431cf74"
+    deposit.swhid_context = f"{deposit.swhid};origin=https://url/external-id"
+    deposit.save()
+
+    # Reschedule it
+    result = cli_runner.invoke(
+        cli, ["deposit", "reschedule", "--deposit-id", deposit.id]
+    )
+    assert result.exit_code == 0
+
+    # Now, ensure the deposit and the associated task are in the right shape
+    deposit = Deposit.objects.get(id=deposit.id)
+
+    # got reset to a state which allows rescheduling
+    assert deposit.id
+    assert deposit.swhid is None
+    assert deposit.swhid_context is None
+    assert deposit.status == DEPOSIT_STATUS_VERIFIED
+
+    task = swh_scheduler.search_tasks(task_id=deposit.load_task_id)[0]
+    assert task["status"] == "next_run_not_scheduled"

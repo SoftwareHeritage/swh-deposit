@@ -247,27 +247,28 @@ def adm_deposit_reschedule(ctx, deposit_id):
     try:
         deposit = Deposit.objects.get(pk=deposit_id)
     except Deposit.DoesNotExist:
-        click.echo("Deposit %s does not exist." % deposit_id)
+        click.echo(f"Deposit {deposit_id} does not exist.")
         ctx.exit(1)
 
     # Check the deposit is in a reasonable state
     accepted_statuses = [DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE]
     if deposit.status == DEPOSIT_STATUS_VERIFIED:
-        click.echo("Deposit %s's status already set for rescheduling." % (deposit_id))
+        click.echo(f"Deposit {deposit_id} already set for rescheduling.")
         ctx.exit(0)
 
     if deposit.status not in accepted_statuses:
         click.echo(
-            "Deposit %s's status be one of %s."
-            % (deposit_id, ", ".join(accepted_statuses))
+            f"Deposit {deposit_id} cannot be rescheduled (status: {deposit.status}).\n"
+            "Rescheduling deposit is only accepted for deposit with status: "
+            f"{', '.join(accepted_statuses)}."
         )
         ctx.exit(1)
 
     task_id = deposit.load_task_id
     if not task_id:
         click.echo(
-            "Deposit %s cannot be rescheduled. It misses the "
-            "associated task." % deposit_id
+            f"Deposit {deposit_id} cannot be rescheduled. It misses the "
+            "associated scheduler task id (field load_task_id)."
         )
         ctx.exit(1)
 
@@ -277,7 +278,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
     deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
 
-    # Trigger back the deposit
+    # Schedule back the deposit loading task
     scheduler = APIConfig().scheduler
     scheduler.set_status_tasks(
         [task_id], status="next_run_not_scheduled", next_run=datetime.now()
