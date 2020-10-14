@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import ast
+from collections import OrderedDict
 import contextlib
 import json
 import logging
@@ -13,8 +14,16 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 
+from swh.deposit.api.checks import check_metadata
 from swh.deposit.cli import deposit as cli
-from swh.deposit.cli.client import InputError, _client, _collection, _url, generate_slug
+from swh.deposit.cli.client import (
+    InputError,
+    _client,
+    _collection,
+    _url,
+    generate_metadata,
+    generate_slug,
+)
 from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 from swh.deposit.parsers import parse_xml
 
@@ -132,6 +141,31 @@ def test_cli_deposit_with_server_down_for_maintenance(
     client_mock_api_down.service_document.assert_called_once_with()
 
 
+def test_cli_client_generate_metadata_ok(slug):
+    """Generated metadata is well formed and pass service side metadata checks
+
+    """
+    actual_metadata_xml = generate_metadata(
+        "deposit-client", "project-name", "external-id", authors=["some", "authors"]
+    )
+
+    actual_metadata = dict(parse_xml(actual_metadata_xml))
+    assert actual_metadata["author"] == "deposit-client"
+    assert actual_metadata["title"] == "project-name"
+    assert actual_metadata["updated"] is not None
+    assert actual_metadata["codemeta:name"] == "project-name"
+    assert actual_metadata["codemeta:identifier"] == "external-id"
+    assert actual_metadata["codemeta:author"] == [
+        OrderedDict([("codemeta:name", "some")]),
+        OrderedDict([("codemeta:name", "authors")]),
+    ]
+
+    checks_ok, detail = check_metadata(actual_metadata)
+
+    assert checks_ok is True
+    assert detail is None
+
+
 def test_cli_single_minimal_deposit(
     sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner
 ):
@@ -172,18 +206,14 @@ def test_cli_single_minimal_deposit(
     }
 
     with open(metadata_path) as fd:
-        assert (
-            fd.read()
-            == f"""\
-<?xml version="1.0" encoding="utf-8"?>
-<entry xmlns="http://www.w3.org/2005/Atom" \
-xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
-\t<codemeta:name>test-project</codemeta:name>
-\t<codemeta:identifier>{slug}</codemeta:identifier>
-\t<codemeta:author>
-\t\t<codemeta:name>Jane Doe</codemeta:name>
-\t</codemeta:author>
-</entry>"""
+        actual_metadata = dict(parse_xml(fd.read()))
+        assert actual_metadata["author"] == TEST_USER["username"]
+        assert actual_metadata["codemeta:name"] == "test-project"
+        assert actual_metadata["title"] == "test-project"
+        assert actual_metadata["updated"] is not None
+        assert actual_metadata["codemeta:identifier"] == slug
+        assert actual_metadata["codemeta:author"] == OrderedDict(
+            [("codemeta:name", "Jane Doe")]
         )
 
 
@@ -460,7 +490,7 @@ def test_cli_single_deposit_slug_generation(
 
     with open(metadata_path) as fd:
         metadata_xml = fd.read()
-        actual_metadata = parse_xml(metadata_xml)
+        actual_metadata = dict(parse_xml(metadata_xml))
         assert actual_metadata["codemeta:identifier"] is not None
 
 
