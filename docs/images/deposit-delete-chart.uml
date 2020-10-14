@@ -14,25 +14,20 @@
 
   DEPOSIT -->> CLIENT: return 201, <deposit receipt>
 
-  loop while status is 'partial'
+  CLIENT -> DEPOSIT: DELETE /1/<collection-name>/<deposit-id>/media/\nDELETE /1/<collection-name>/<deposit-id>/metadata/
 
-    CLIENT -> DEPOSIT: DELETE /1/<collection-name>/<deposit-id>/media/\nDELETE /1/<collection-name>/<deposit-id>/metadata/
+  DEPOSIT ->> DEPOSIT_STORAGE: check authentication
+  DEPOSIT_STORAGE -->> DEPOSIT: return ok
 
-    DEPOSIT ->> DEPOSIT_STORAGE: check authentication
+  DEPOSIT ->> DEPOSIT_STORAGE: check inputs()
+
+  alt status is 'partial'
     DEPOSIT_STORAGE -->> DEPOSIT: return ok
-
-    DEPOSIT ->> DEPOSIT_STORAGE: check inputs()
-
-    alt status is 'partial'
-      DEPOSIT_STORAGE -->> DEPOSIT: return ok
-      DEPOSIT ->> DEPOSIT_STORAGE: delete-deposit-or-deposit-archives()
-      DEPOSIT_STORAGE -->> DEPOSIT: return ok
-      DEPOSIT -->> CLIENT: return 204
-    else status is not 'partial'
-      DEPOSIT_STORAGE -->> DEPOSIT: return ko
-      DEPOSIT -->> CLIENT: return 400
-    end
-
+    DEPOSIT ->> DEPOSIT_STORAGE: delete-deposit-or-deposit-archives()
+    DEPOSIT_STORAGE -->> DEPOSIT: return ok
+    DEPOSIT -->> CLIENT: return 204
+  else status is not 'partial'
+    DEPOSIT_STORAGE -->> DEPOSIT: return ko
+    DEPOSIT -->> CLIENT: return 400, "You can only act on deposit with status partial"
   end
 @enduml
-
