@@ -52,17 +52,23 @@ Deposit statuses:
    Deposit was there too long and is new deemed ready to be
    garbage-collected
 
-'ready'
-   Deposit is fully received and ready for injection
+'deposited'
+   Deposit passed the checks
 
-'injecting'
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
    Injection is ongoing on SWH's side
 
-'success'
-   Injection successful
+'done'
+   Loading is successful
 
-'failure'
-   Injection failure
+'failed'
+   Loading failed
 
 
 
@@ -109,17 +115,23 @@ Deposit statuses:
    Deposit was there too long and is new deemed ready to be
    garbage-collected
 
-'ready'
-   Deposit is fully received and ready for injection
+'deposited'
+   Deposit passed the checks
 
-'injecting'
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
    Injection is ongoing on SWH's side
 
-'success'
-   Injection successful
+'done'
+   Loading is successful
 
-'failure'
-   Injection failure
+'failed'
+   Loading failed
 
 Deleting deposit (or associated archive, or associated metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,17 +161,23 @@ Deposit statuses:
    Deposit was there too long and is new deemed ready to be
    garbage-collected
 
-'ready'
-   Deposit is fully received and ready for injection
+'deposited'
+   Deposit passed the checks
 
-'injecting'
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
    Injection is ongoing on SWH's side
 
-'success'
-   Injection successful
+'done'
+   Loading is successful
 
-'failure'
-   Injection failure
+'failed'
+   Loading failed
 
 Client asks for operation status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
