@@ -71,7 +71,7 @@ def deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "max_upload_size": 500,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
         "checks": False,
-        "scheduler": {"cls": "local", "args": swh_scheduler_config,},
+        "scheduler": {"cls": "local", **swh_scheduler_config,},
         "storage_metadata": swh_storage_backend_config,
     }
 
