@@ -36,12 +36,40 @@ From client's deposit repository server to SWH's repository server:
 Schema representation
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+Scenario: pushing a deposit via SWORD protocol (nominal scenario)
 
-   <!-- {F2884278} -->
-
-.. figure:: ../images/deposit-create-chart.png
+.. figure:: ../images/deposit-create-chart.svg
    :alt:
+
+
+Deposit statuses:
+
+'partial'
+   The deposit is new or partially received, since it can be done in
+   multiple requests
+
+'expired'
+   Deposit was there too long and is new deemed ready to be
+   garbage-collected
+
+'deposited'
+   Deposit passed the checks
+
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
+   Injection is ongoing on SWH's side
+
+'done'
+   Loading is successful
+
+'failed'
+   Loading failed
+
 
 
 Updating an existing deposit
@@ -71,12 +99,39 @@ the limit size imposed by swh repository deposit).
 Schema representation
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+Scenario: updating a deposit via SWORD protocol
 
-   <!-- {F2884302} -->
-
-.. figure:: ../images/deposit-update-chart.png
+.. figure:: ../images/deposit-update-chart.svg
    :alt:
+
+
+Deposit statuses:
+
+'partial'
+   The deposit is new or partially received, since it can be done in
+   multiple requests
+
+'expired'
+   Deposit was there too long and is new deemed ready to be
+   garbage-collected
+
+'deposited'
+   Deposit passed the checks
+
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
+   Injection is ongoing on SWH's side
+
+'done'
+   Loading is successful
+
+'failed'
+   Loading failed
 
 Deleting deposit (or associated archive, or associated metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,12 +145,39 @@ Deleting deposit (or associated archive, or associated metadata)
 Schema representation
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+Scenario: deleting a deposit via SWORD protocol
 
-   <!-- {F2884311} -->
-
-.. figure:: ../images/deposit-delete-chart.png
+.. figure:: ../images/deposit-delete-chart.svg
    :alt:
+
+
+Deposit statuses:
+
+'partial'
+   The deposit is new or partially received, since it can be done in
+   multiple requests
+
+'expired'
+   Deposit was there too long and is new deemed ready to be
+   garbage-collected
+
+'deposited'
+   Deposit passed the checks
+
+'rejected'
+  Deposit failed the checks
+
+'verified'
+   Deposit passed the checks and is ready for loading
+
+'loading'
+   Injection is ongoing on SWH's side
+
+'done'
+   Loading is successful
+
+'failed'
+   Loading failed
 
 Client asks for operation status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

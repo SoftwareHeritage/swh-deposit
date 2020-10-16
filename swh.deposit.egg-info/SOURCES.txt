@@ -50,9 +50,11 @@ docs/endpoints/service-document.rst
 docs/endpoints/status.rst
 docs/endpoints/update-media.rst
 docs/endpoints/update-metadata.rst
-docs/images/deposit-create-chart.png
-docs/images/deposit-delete-chart.png
-docs/images/deposit-update-chart.png
+docs/images/.gitignore
+docs/images/Makefile
+docs/images/deposit-create-chart.uml
+docs/images/deposit-delete-chart.uml
+docs/images/deposit-update-chart.uml
 docs/images/status.png
 docs/specs/blueprint.rst
 docs/specs/metadata_example.xml
@@ -185,6 +187,8 @@ swh/deposit/tests/api/test_exception.py
 swh/deposit/tests/api/test_parser.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/cli/__init__.py
+swh/deposit/tests/cli/conftest.py
+swh/deposit/tests/cli/test_admin.py
 swh/deposit/tests/cli/test_client.py
 swh/deposit/tests/data/atom/codemeta-sample.xml
 swh/deposit/tests/data/atom/entry-data-badly-formatted.xml

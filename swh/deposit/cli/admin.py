@@ -5,9 +5,16 @@
 
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import click
 
 from swh.deposit.cli import deposit
+
+if TYPE_CHECKING:
+    from swh.deposit.models import DepositCollection
 
 
 @deposit.group("admin")
@@ -25,7 +32,7 @@ from swh.deposit.cli import deposit
     help="development or production platform",
 )
 @click.pass_context
-def admin(ctx, config_file, platform):
+def admin(ctx, config_file: str, platform: str):
     """Server administration tasks (manipulate user or collections)"""
     from swh.deposit.config import setup_django_for
 
@@ -41,15 +48,14 @@ def user(ctx):
     pass
 
 
-def _create_collection(name):
+def _create_collection(name: str) -> DepositCollection:
     """Create the collection with name if it does not exist.
 
     Args:
-        name (str): collection's name
+        name: collection name
 
     Returns:
-        collection (DepositCollection): the existing collection object
-                                        (created or not)
+        collection: the existing collection object
 
     """
     # to avoid loading too early django namespaces
@@ -57,11 +63,11 @@ def _create_collection(name):
 
     try:
         collection = DepositCollection.objects.get(name=name)
-        click.echo("Collection %s exists, nothing to do." % name)
+        click.echo(f"Collection '{name}' exists, skipping.")
     except DepositCollection.DoesNotExist:
-        click.echo("Create new collection %s" % name)
+        click.echo(f"Create collection '{name}'.")
         collection = DepositCollection.objects.create(name=name)
-        click.echo("Collection %s created" % name)
+        click.echo(f"Collection '{name}' created.")
     return collection
 
 
@@ -77,14 +83,14 @@ def _create_collection(name):
 @click.pass_context
 def user_create(
     ctx,
-    username,
-    password,
-    firstname,
-    lastname,
-    email,
-    collection,
-    provider_url,
-    domain,
+    username: str,
+    password: str,
+    firstname: str,
+    lastname: str,
+    email: str,
+    collection: str,
+    provider_url: str,
+    domain: str,
 ):
     """Create a user with some needed information (password, collection)
 
@@ -100,20 +106,23 @@ def user_create(
     # If collection is not provided, fallback to username
     if not collection:
         collection = username
-    click.echo("collection: %s" % collection)
     # create the collection if it does not exist
-    collection = _create_collection(collection)
+    collection_ = _create_collection(collection)
 
     # user create/update
     try:
-        user = DepositClient.objects.get(username=username)
-        click.echo("User %s exists, updating information." % user)
+        user = DepositClient.objects.get(username=username)  # type: ignore
+        click.echo(f"Update user '{username}'.")
         user.set_password(password)
+        action_done = "updated"
     except DepositClient.DoesNotExist:
-        click.echo("Create new user %s" % username)
-        user = DepositClient.objects.create_user(username=username, password=password)
+        click.echo(f"Create user '{username}'.")
+        user = DepositClient.objects.create_user(  # type: ignore
+            username=username, password=password
+        )
+        action_done = "created"
 
-    user.collections = [collection.id]
+    user.collections = [collection_.id]
     user.first_name = firstname
     user.last_name = lastname
     user.email = email
@@ -122,7 +131,7 @@ def user_create(
     user.domain = domain
     user.save()
 
-    click.echo("Information registered for user %s" % user)
+    click.echo(f"User '{username}' {action_done}.")
 
 
 @user.command("list")
@@ -148,18 +157,18 @@ def user_list(ctx):
 @user.command("exists")
 @click.argument("username", required=True)
 @click.pass_context
-def user_exists(ctx, username):
+def user_exists(ctx, username: str):
     """Check if user exists.
     """
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositClient
 
     try:
-        DepositClient.objects.get(username=username)
-        click.echo("User %s exists." % username)
+        DepositClient.objects.get(username=username)  # type: ignore
+        click.echo(f"User {username} exists.")
         ctx.exit(0)
     except DepositClient.DoesNotExist:
-        click.echo("User %s does not exist." % username)
+        click.echo(f"User {username} does not exist.")
         ctx.exit(1)
 
 
@@ -238,27 +247,28 @@ def adm_deposit_reschedule(ctx, deposit_id):
     try:
         deposit = Deposit.objects.get(pk=deposit_id)
     except Deposit.DoesNotExist:
-        click.echo("Deposit %s does not exist." % deposit_id)
+        click.echo(f"Deposit {deposit_id} does not exist.")
         ctx.exit(1)
 
     # Check the deposit is in a reasonable state
     accepted_statuses = [DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_LOAD_FAILURE]
     if deposit.status == DEPOSIT_STATUS_VERIFIED:
-        click.echo("Deposit %s's status already set for rescheduling." % (deposit_id))
+        click.echo(f"Deposit {deposit_id} already set for rescheduling.")
         ctx.exit(0)
 
     if deposit.status not in accepted_statuses:
         click.echo(
-            "Deposit %s's status be one of %s."
-            % (deposit_id, ", ".join(accepted_statuses))
+            f"Deposit {deposit_id} cannot be rescheduled (status: {deposit.status}).\n"
+            "Rescheduling deposit is only accepted for deposit with status: "
+            f"{', '.join(accepted_statuses)}."
         )
         ctx.exit(1)
 
     task_id = deposit.load_task_id
     if not task_id:
         click.echo(
-            "Deposit %s cannot be rescheduled. It misses the "
-            "associated task." % deposit_id
+            f"Deposit {deposit_id} cannot be rescheduled. It misses the "
+            "associated scheduler task id (field load_task_id)."
         )
         ctx.exit(1)
 
@@ -268,7 +278,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
     deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
 
-    # Trigger back the deposit
+    # Schedule back the deposit loading task
     scheduler = APIConfig().scheduler
     scheduler.set_status_tasks(
         [task_id], status="next_run_not_scheduled", next_run=datetime.now()

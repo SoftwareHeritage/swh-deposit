@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import logging
 
 # WARNING: do not import unnecessary things here to keep cli startup time under
@@ -57,49 +58,57 @@ def _url(url: str) -> str:
     return url
 
 
-def generate_metadata_file(
-    name: str, external_id: str, authors: List[str], temp_dir: str
+def generate_metadata(
+    deposit_client: str, name: str, external_id: str, authors: List[str]
 ) -> str:
-    """Generate a temporary metadata file with the minimum required metadata
+    """Generate sword compliant xml metadata with the minimum required metadata.
 
-    This generates a xml file in a temporary location and returns the
-    path to that file.
+    The Atom spec, https://tools.ietf.org/html/rfc4287, says that:
 
-    This is up to the client of that function to clean up the
-    temporary file.
+    - atom:entry elements MUST contain one or more atom:author elements
+    - atom:entry elements MUST contain exactly one atom:title element.
+    - atom:entry elements MUST contain exactly one atom:updated element.
+
+    However, we are also using CodeMeta, so we want some basic information to be
+    mandatory.
+
+    Therefore, we generate the following mandatory fields:
+    - http://www.w3.org/2005/Atom#updated
+    - http://www.w3.org/2005/Atom#author
+    - http://www.w3.org/2005/Atom#title
+    - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#name (yes, in addition to
+      http://www.w3.org/2005/Atom#title, even if they have somewhat the same meaning)
+    - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#author
 
     Args:
-        name: Software's name
+        deposit_client: Deposit client username,
+        name: Software name
         external_id: External identifier (slug) or generated one
         authors: List of author names
 
     Returns:
-        Filepath to the metadata generated file
+        metadata xml string
 
     """
     import xmltodict
 
-    path = os.path.join(temp_dir, "metadata.xml")
     # generate a metadata file with the minimum required metadata
     codemetadata = {
         "entry": {
-            "@xmlns": "http://www.w3.org/2005/Atom",
+            "@xmlns:atom": "http://www.w3.org/2005/Atom",
             "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-            "codemeta:name": name,
             "codemeta:identifier": external_id,
-            "codemeta:author": [
+            "atom:updated": datetime.now(tz=timezone.utc),  # mandatory, cf. docstring
+            "atom:author": deposit_client,  # mandatory, cf. docstring
+            "atom:title": name,  # mandatory, cf. docstring
+            "codemeta:name": name,  # mandatory, cf. docstring
+            "codemeta:author": [  # mandatory, cf. docstring
                 {"codemeta:name": author_name} for author_name in authors
             ],
         },
     }
-
-    logging.debug("Temporary file: %s", path)
     logging.debug("Metadata dict to generate as xml: %s", codemetadata)
-    s = xmltodict.unparse(codemetadata, pretty=True)
-    logging.debug("Metadata dict as xml generated: %s", s)
-    with open(path, "w") as fp:
-        fp.write(s)
-    return path
+    return xmltodict.unparse(codemetadata, pretty=True)
 
 
 def _client(url: str, username: str, password: str) -> PublicApiDepositClient:
@@ -207,7 +216,13 @@ def client_command_parse_input(
                 "deposit, either a filepath with --metadata or --name and --author"
             )
         if name and authors:
-            metadata = generate_metadata_file(name, slug, authors, temp_dir)
+            metadata_path = os.path.join(temp_dir, "metadata.xml")
+            logging.debug("Temporary file: %s", metadata_path)
+            metadata_xml = generate_metadata(username, name, slug, authors)
+            logging.debug("Metadata xml generated: %s", metadata_xml)
+            with open(metadata_path, "w") as f:
+                f.write(metadata_xml)
+            metadata = metadata_path
         elif not archive_deposit and not partial and not deposit_id:
             # If we meet all the following conditions:
             # * this is not an archive-only deposit request
