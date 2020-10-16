@@ -92,9 +92,5 @@ Deposit reception schema
       finalized (when the status is changed to ``deposited``)
     - ``swh-id`` is populated once we have the loading result
 
-.. raw:: html
-
-       <!-- {F2884302} -->
-
-.. figure:: ../images/status.png
+.. figure:: ../images/status.svg
    :alt:

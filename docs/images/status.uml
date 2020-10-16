@@ -1,0 +1,17 @@
+@startuml
+  [*] --> partial
+  partial --> deposited
+
+  state validation <<choice>>
+
+  deposited --> validation
+
+  validation --> rejected
+  validation --> verified
+
+  verified --> loading
+
+  loading --> done
+
+  loading --> failed
+@enduml
