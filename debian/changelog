@@ -1,8 +1,15 @@
-swh-deposit (0.3.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.4.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.4.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-10-16 08:57:58
+    +0200)
+  * Upstream changes:     - v0.4.0     - cli.client: Adapt metadata
+    generation so server side checks pass     - Update blueprints with
+    correct status names and definitions     - Rewrite blueprint
+    flowcharts using Plantuml instead of .png files.     -
+    deposit.cli.admin: Add coverage on `swh deposit reschedule` cli
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 13 Oct 2020 13:18:26 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 16 Oct 2020 07:02:23 +0000
 
 swh-deposit (0.3.0-1~swh1) unstable-swh; urgency=medium
 

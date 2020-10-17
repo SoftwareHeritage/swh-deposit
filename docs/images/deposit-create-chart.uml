@@ -1,0 +1,26 @@
+@startuml
+  participant CLIENT as "SWORD client\n(eg. HAL)"
+  participant DEPOSIT as "swh-deposit"
+  participant DEPOSIT_STORAGE as "deposit storage"
+
+  activate CLIENT
+  activate DEPOSIT
+  activate DEPOSIT_STORAGE
+
+  CLIENT ->> DEPOSIT: GET /1/<service-document>/
+
+  DEPOSIT ->> DEPOSIT_STORAGE: check authentication
+  DEPOSIT_STORAGE -->> DEPOSIT: return ok (if client exists and credentials ok)
+
+  DEPOSIT -->> CLIENT: return 200, <service-document>
+
+  CLIENT ->> DEPOSIT: POST /1/<collection-name>/
+
+  DEPOSIT ->> DEPOSIT_STORAGE: check authentication
+  DEPOSIT_STORAGE -->> DEPOSIT: return ok (if client exists and credentials ok)
+
+  DEPOSIT ->> DEPOSIT_STORAGE: create new deposit
+  DEPOSIT_STORAGE -->> DEPOSIT: return deposit_id
+
+  DEPOSIT -->> CLIENT: return 201, <deposit receipt>
+@enduml
