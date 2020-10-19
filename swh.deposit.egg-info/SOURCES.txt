@@ -55,7 +55,7 @@ docs/images/Makefile
 docs/images/deposit-create-chart.uml
 docs/images/deposit-delete-chart.uml
 docs/images/deposit-update-chart.uml
-docs/images/status.png
+docs/images/status.uml
 docs/specs/blueprint.rst
 docs/specs/metadata_example.xml
 docs/specs/spec-loading.rst

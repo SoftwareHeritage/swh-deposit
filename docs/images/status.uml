@@ -1,0 +1,27 @@
+@startuml
+  hide empty description
+
+  state request <<choice>>
+
+  [*] --> request : POST Col-IRI
+
+  request --> deposited : [ without In-Progress: true ]
+  request --> partial : [ with In-Progress: true ]
+
+  partial --> request : PUT EM-IRI
+
+  partial --> expired : [ if no further requests are sent]
+
+  state validation <<choice>>
+
+  deposited --> validation : checker runs
+
+  validation --> verified
+  validation --> rejected : [ validation failed ]
+
+  verified --> loading : loader starts
+
+  loading --> done
+
+  loading --> failed
+@enduml
