@@ -1,8 +1,14 @@
-swh-deposit (0.4.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.5.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.5.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-10-19 09:53:36
+    +0200)
+  * Upstream changes:     - v0.5.0     - tests: Migrate configuration to
+    the latest schema change     - spec-technical: Add 'partial' self-
+    loop + annotate transitions in the status diagram     - spec-
+    technical: Rewrite state diagram using Plantuml.
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Sat, 17 Oct 2020 10:17:20 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 19 Oct 2020 07:58:12 +0000
 
 swh-deposit (0.4.0-1~swh1) unstable-swh; urgency=medium
 
