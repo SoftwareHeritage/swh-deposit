@@ -91,15 +91,24 @@ def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
     cfg = read(deposit_config_path)
 
     if "scheduler" in cfg:
-        # scheduler setup: require the load-deposit tasks (already existing in
-        # production)
+        # scheduler setup: require the check-deposit and load-deposit tasks
         scheduler = get_scheduler(**cfg["scheduler"])
-        task_type = {
-            "type": "load-deposit",
-            "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
-            "description": "Load deposit task",
-        }
-        scheduler.create_task_type(task_type)
+        task_types = [
+            {
+                "type": "check-deposit",
+                "backend_name": "swh.deposit.loader.tasks.ChecksDepositTsk",
+                "description": "Check deposit metadata/archive before loading",
+                "num_retries": 3,
+            },
+            {
+                "type": "load-deposit",
+                "backend_name": "swh.loader.package.deposit.tasks.LoadDeposit",
+                "description": "Loading deposit archive into swh archive",
+                "num_retries": 3,
+            },
+        ]
+        for task_type in task_types:
+            scheduler.create_task_type(task_type)
 
 
 @pytest.fixture(scope="session")
