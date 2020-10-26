@@ -211,6 +211,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     "check-deposit",
                     collection=deposit.collection.name,
                     deposit_id=deposit.id,
+                    retries_left=3,
                 )
                 check_task_id = scheduler.create_tasks([task])[0]["id"]
                 deposit.check_task_id = check_task_id
