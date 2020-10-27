@@ -263,7 +263,7 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
         # store that metadata to the metadata storage
         metadata_object = RawExtrinsicMetadata(
             type=MetadataTargetType.DIRECTORY,
-            id=deposit_swhid,
+            target=deposit_swhid,
             discovery_date=deposit_request.date,
             authority=metadata_authority,
             fetcher=metadata_fetcher,
