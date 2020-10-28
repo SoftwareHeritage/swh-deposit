@@ -188,6 +188,7 @@ To only add metadata to the deposit:
                        --partial
 
 or:
+
 .. code:: shell
 
   $ swh deposit upload --username name --password secret \
