@@ -52,7 +52,8 @@ simply asking SWH to archive a repository using the `save code now
 - the deposit API uses the `SWORD v2`_ API, thus requires some tooling to send
   deposits to SWH. These tools are provided with this repository.
 
-See the :ref:`getting-started` page for more details on how to use the deposit
+
+See the :ref:`user-manual` page for more details on how to use the deposit
 client tools to push a deposit in the SWH Archive.
 
 .. _codemeta: https://codemeta.github.io/
@@ -62,7 +63,7 @@ client tools to push a deposit in the SWH Archive.
    :maxdepth: 2
    :caption: Contents:
 
-   getting-started
+   user-manual
    spec-api
    metadata
    dev-info

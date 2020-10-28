@@ -1,31 +1,26 @@
-Getting Started
-===============
+User Manual
+===========
 
 This is a guide for how to prepare and push a software deposit with
 the `swh deposit` commands.
 
-The API is rooted at https://deposit.softwareheritage.org/1.
-
-For more details, see the `main documentation <./index.html>`__.
 
 Requirements
 ------------
 
-You need to be referenced on SWH's client list to have:
+You need to have an account on the Software Heritage deposit application to be
+able to use the service.
 
-* credentials (needed for the basic authentication step)
+Please `contact the Software Heritage team <deposit@softwareheritage.org>`_ for
+more information on how to get access to this service.
 
-  - in this document we reference ``<name>`` as the client's name and
-    ``<pass>`` as its associated authentication password.
+For testing purpose, a test instance `is available
+<https://deposit.staging.swh.network>`_ [#f1]_ and will be used in the examples below.
 
-* an associated collection_.
+Once you have an account, you should get a set of access credentials as a
+`login` and a `password` (identified as ``<name>`` and ``<pass>`` in the
+remaining of this document.)
 
-
-.. _collection: https://bitworking.org/projects/atom/rfc5023#rfc.section.8.3.3
-
-
-`Contact us for more information.
-<https://www.softwareheritage.org/contact/>`__
 
 Prepare a deposit
 -----------------
@@ -283,3 +278,10 @@ marked ``done``. In the response, will also be available the
   'deposit_status_detail': 'The deposit has been successfully \
                             loaded into the Software Heritage archive'
  }
+
+
+
+.. rubric:: Footnotes
+
+.. [#f1] the test instance of the deposit is not yet available external users,
+         but it should be available soon.
