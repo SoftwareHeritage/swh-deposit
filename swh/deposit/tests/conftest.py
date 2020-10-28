@@ -86,7 +86,7 @@ def deposit_config_path(tmp_path, monkeypatch, deposit_config):
 
 
 @pytest.fixture(autouse=True)
-def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
+def deposit_autoconfig(deposit_config_path):
     """Enforce config for deposit classes inherited from APIConfig."""
     cfg = read(deposit_config_path)
 
