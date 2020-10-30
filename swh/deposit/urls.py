@@ -28,4 +28,4 @@ urlpatterns = [
     url(r"^$", default_view, name="home"),
 ]
 
-urlpatterns = format_suffix_patterns(urlpatterns)
+urlpatterns = format_suffix_patterns(urlpatterns)  # type: ignore
