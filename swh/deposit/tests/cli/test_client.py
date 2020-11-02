@@ -18,7 +18,6 @@ from swh.deposit.api.checks import check_metadata
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import (
     InputError,
-    _client,
     _collection,
     _url,
     generate_metadata,
@@ -28,14 +27,6 @@ from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 from swh.deposit.parsers import parse_xml
 
 from ..conftest import TEST_USER
-
-
-@pytest.fixture
-def deposit_config():
-    return {
-        "url": "https://deposit.swh.test/1",
-        "auth": {"username": "test", "password": "test",},
-    }
 
 
 @pytest.fixture
@@ -64,7 +55,7 @@ def client_mock_api_down(mocker, slug):
 
     """
     mock_client = MagicMock()
-    mocker.patch("swh.deposit.cli.client._client", return_value=mock_client)
+    mocker.patch("swh.deposit.client.PublicApiDepositClient", return_value=mock_client)
     mock_client.service_document.side_effect = MaintenanceError(
         "Database backend maintenance: Temporarily unavailable, try again later."
     )
@@ -74,11 +65,6 @@ def client_mock_api_down(mocker, slug):
 def test_cli_url():
     assert _url("http://deposit") == "http://deposit/1"
     assert _url("https://other/1") == "https://other/1"
-
-
-def test_cli_client():
-    client = _client("http://deposit", "user", "pass")
-    assert isinstance(client, PublicApiDepositClient)
 
 
 def test_cli_collection_error():
@@ -91,8 +77,10 @@ def test_cli_collection_error():
     assert "Service document retrieval: something went wrong" == str(e.value)
 
 
-def test_cli_collection_ok(deposit_config, requests_mock_datadir):
-    client = PublicApiDepositClient(deposit_config)
+def test_cli_collection_ok(requests_mock_datadir):
+    client = PublicApiDepositClient(
+        url="https://deposit.swh.test/1", auth=("test", "test")
+    )
     collection_name = _collection(client)
     assert collection_name == "test"
 

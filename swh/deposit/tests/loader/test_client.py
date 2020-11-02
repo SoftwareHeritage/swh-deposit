@@ -6,14 +6,12 @@
 import json
 import os
 from typing import Any, Callable, Optional
-import unittest
 from urllib.parse import urlparse
 
 import pytest
 
 from swh.deposit.client import PrivateApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_SUCCESS
-
 
 CLIENT_TEST_CONFIG = {
     "url": "https://nowhere.org/",
@@ -28,12 +26,13 @@ def deposit_config():
 
 def test_client_config(deposit_config_path):
     for client in [
-            # config passed as constructor parameter
-            PrivateApiDepositClient(config=CLIENT_TEST_CONFIG),
-            # config loaded from environment
-            PrivateApiDepositClient()
+        # config passed as constructor parameter
+        PrivateApiDepositClient(config=CLIENT_TEST_CONFIG),
+        # config loaded from environment
+        PrivateApiDepositClient(),
     ]:
-        assert client.config == CLIENT_TEST_CONFIG
+        assert client.base_url == CLIENT_TEST_CONFIG["url"]
+        assert client.auth is None
 
 
 def build_expected_path(datadir, base_url: str, api_url: str) -> str:
@@ -205,58 +204,36 @@ def test_check_fails(requests_mock_datadir):
 # private api update status
 
 
-class FakeRequestClientPut:
-    """Fake Request client dedicated to put request method calls.
+def test_status_update(mocker):
+    """Update status
 
     """
+    mocked_put = mocker.patch("swh.deposit.client.requests.put")
 
-    args = None
-    kwargs = None
+    deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+    deposit_client.status_update(
+        "/update/status", DEPOSIT_STATUS_LOAD_SUCCESS, revision_id="some-revision-id",
+    )
 
-    def put(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
+    mocked_put.assert_called_once_with(
+        "https://nowhere.org/update/status",
+        json={
+            "status": DEPOSIT_STATUS_LOAD_SUCCESS,
+            "revision_id": "some-revision-id",
+        },
+    )
 
 
-class PrivateApiDepositClientStatusUpdateTest(unittest.TestCase):
-    def test_status_update(self):
-        """Update status
+def test_status_update_with_no_revision_id(mocker):
+    """Reading metadata can fail for some reasons
 
-        """
-        _client = FakeRequestClientPut()
-        deposit_client = PrivateApiDepositClient(
-            config=CLIENT_TEST_CONFIG, _client=_client
-        )
+    """
+    mocked_put = mocker.patch("swh.deposit.client.requests.put")
 
-        deposit_client.status_update(
-            "/update/status",
-            DEPOSIT_STATUS_LOAD_SUCCESS,
-            revision_id="some-revision-id",
-        )
+    deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
+    deposit_client.status_update("/update/status/fail", DEPOSIT_STATUS_LOAD_FAILURE)
 
-        self.assertEqual(_client.args, ("https://nowhere.org/update/status",))
-        self.assertEqual(
-            _client.kwargs,
-            {
-                "json": {
-                    "status": DEPOSIT_STATUS_LOAD_SUCCESS,
-                    "revision_id": "some-revision-id",
-                }
-            },
-        )
-
-    def test_status_update_with_no_revision_id(self):
-        """Reading metadata can fail for some reasons
-
-        """
-        _client = FakeRequestClientPut()
-        deposit_client = PrivateApiDepositClient(
-            config=CLIENT_TEST_CONFIG, _client=_client
-        )
-
-        deposit_client.status_update("/update/status/fail", DEPOSIT_STATUS_LOAD_FAILURE)
-
-        self.assertEqual(_client.args, ("https://nowhere.org/update/status/fail",))
-        self.assertEqual(
-            _client.kwargs, {"json": {"status": DEPOSIT_STATUS_LOAD_FAILURE,}}
-        )
+    mocked_put.assert_called_once_with(
+        "https://nowhere.org/update/status/fail",
+        json={"status": DEPOSIT_STATUS_LOAD_FAILURE,},
+    )

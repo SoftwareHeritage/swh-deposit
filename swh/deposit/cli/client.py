@@ -12,7 +12,7 @@ import logging
 # control
 import os
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Collection, Dict, List, Optional
 
 import click
 
@@ -111,22 +111,6 @@ def generate_metadata(
     return xmltodict.unparse(codemetadata, pretty=True)
 
 
-def _client(url: str, username: str, password: str) -> PublicApiDepositClient:
-    """Instantiate a client to access the deposit api server
-
-    Args:
-        url (str): Deposit api server
-        username (str): User
-        password (str): User's password
-
-    """
-    from swh.deposit.client import PublicApiDepositClient
-
-    return PublicApiDepositClient(
-        {"url": url, "auth": {"username": username, "password": password},}
-    )
-
-
 def _collection(client: PublicApiDepositClient) -> str:
     """Retrieve the client's collection
 
@@ -140,13 +124,13 @@ def _collection(client: PublicApiDepositClient) -> str:
 
 
 def client_command_parse_input(
+    client,
     username: str,
-    password: str,
     archive: Optional[str],
     metadata: Optional[str],
+    collection: Optional[str],
     archive_deposit: bool,
     metadata_deposit: bool,
-    collection: Optional[str],
     slug: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
@@ -189,9 +173,8 @@ def client_command_parse_input(
 
             'archive': the software archive to deposit
             'username': username
-            'password': associated password
             'metadata': the metadata file to deposit
-            'collection': the username's associated client
+            'collection: the user's collection under which to put the deposit
             'slug': the slug or external id identifying the deposit to make
             'partial': if the deposit is partial or not
             'client': instantiated class
@@ -265,20 +248,16 @@ def client_command_parse_input(
     if replace and not deposit_id:
         raise InputError("To update an existing deposit, you must provide its id")
 
-    client = _client(url, username, password)
-
     if not collection:
         collection = _collection(client)
 
     return {
         "archive": archive,
         "username": username,
-        "password": password,
         "metadata": metadata,
         "collection": collection,
         "slug": slug,
         "in_progress": partial,
-        "client": client,
         "url": url,
         "deposit_id": deposit_id,
         "swhid": swhid,
@@ -286,40 +265,9 @@ def client_command_parse_input(
     }
 
 
-def _subdict(d: Dict[str, Any], keys: Tuple[str, ...]) -> Dict[str, Any]:
+def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
     "return a dict from d with only given keys"
     return {k: v for k, v in d.items() if k in keys}
-
-
-def deposit_create(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Delegate the actual deposit to the deposit client.
-
-    """
-    logger.debug("Create deposit")
-
-    client = config["client"]
-    keys = ("collection", "archive", "metadata", "slug", "in_progress")
-    return client.deposit_create(**_subdict(config, keys))
-
-
-def deposit_update(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Delegate the actual deposit to the deposit client.
-
-    """
-    logger.debug("Update deposit")
-
-    client = config["client"]
-    keys = (
-        "collection",
-        "deposit_id",
-        "archive",
-        "metadata",
-        "slug",
-        "in_progress",
-        "replace",
-        "swhid",
-    )
-    return client.deposit_update(**_subdict(config, keys))
 
 
 @deposit.command()
@@ -439,22 +387,22 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     """
     import tempfile
 
-    from swh.deposit.client import MaintenanceError
+    from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 
     url = _url(url)
-    config = {}
 
+    client = PublicApiDepositClient(url=url, auth=(username, password))
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             logger.debug("Parsing cli options")
             config = client_command_parse_input(
+                client,
                 username,
-                password,
                 archive,
                 metadata,
+                collection,
                 archive_deposit,
                 metadata_deposit,
-                collection,
                 slug,
                 partial,
                 deposit_id,
@@ -475,12 +423,13 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         if verbose:
             logger.info("Parsed configuration: %s", config)
 
-        deposit_id = config["deposit_id"]
-
-        if deposit_id:
-            data = deposit_update(config)
+        keys = ["archive", "collection", "in_progress", "metadata", "slug"]
+        if config["deposit_id"]:
+            keys += ["deposit_id", "replace", "swhid"]
+            data = client.deposit_update(**_subdict(config, keys))
         else:
-            data = deposit_create(config)
+            data = client.deposit_create(**_subdict(config, keys))
+
         print_result(data, output_format)
 
 
@@ -509,12 +458,12 @@ def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
 
     """
-    from swh.deposit.client import MaintenanceError
+    from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 
     url = _url(url)
     logger.debug("Status deposit")
     try:
-        client = _client(url, username, password)
+        client = PublicApiDepositClient(url=url, auth=(username, password))
         collection = _collection(client)
     except InputError as e:
         logger.error("Problem during parsing options: %s", e)
