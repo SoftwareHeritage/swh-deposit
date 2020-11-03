@@ -249,7 +249,6 @@ def test_cli_validation_metadata(
                 "Problem during parsing options: "
                 "For metadata deposit request, either a metadata file with "
                 "--metadata or both --author and --name must be provided. "
-                "If this is an archive deposit request, none is required."
             ),
         )
         assert expected_error_log_record in caplog.record_tuples
@@ -365,11 +364,14 @@ def test_cli_validation_no_actionable_command(caplog, cli_runner):
     assert expected_error_log_record in caplog.record_tuples
 
 
-def test_cli_validation_missing_metadata_flag(caplog, cli_runner):
-    """--metadata-deposit requires --metadata (or --name and --author) otherwise fails
+def test_cli_validation_replace_with_no_deposit_id_fails(
+    sample_archive, caplog, patched_tmp_path, requests_mock_datadir, datadir, cli_runner
+):
+    """--replace flags require --deposit-id otherwise fails
 
     """
-    # --metadata-deposit without --metadata flag fails
+    metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
+
     result = cli_runner.invoke(
         cli,
         [
@@ -380,7 +382,11 @@ def test_cli_validation_missing_metadata_flag(caplog, cli_runner):
             TEST_USER["username"],
             "--password",
             TEST_USER["password"],
-            "--metadata-deposit",  # should fail because missing --metadata flag
+            "--metadata",
+            metadata_path,
+            "--archive",
+            sample_archive["path"],
+            "--replace",
         ],
     )
 
@@ -391,54 +397,10 @@ def test_cli_validation_missing_metadata_flag(caplog, cli_runner):
         logging.ERROR,
         (
             "Problem during parsing options: "
-            "Metadata deposit must be provided for metadata "
-            "deposit, either a filepath with --metadata or --name and --author"
+            "To update an existing deposit, you must provide its id"
         ),
     )
     assert expected_error_log_record in caplog.record_tuples
-
-
-def test_cli_validation_replace_with_no_deposit_id_fails(
-    sample_archive, caplog, patched_tmp_path, requests_mock_datadir, datadir, cli_runner
-):
-    """--replace flags require --deposit-id otherwise fails
-
-    """
-    metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
-
-    for flags in [
-        ["--replace"],
-        ["--replace", "--metadata-deposit", "--archive-deposit"],
-    ]:
-        result = cli_runner.invoke(
-            cli,
-            [
-                "upload",
-                "--url",
-                "https://deposit.swh.test/1",
-                "--username",
-                TEST_USER["username"],
-                "--password",
-                TEST_USER["password"],
-                "--metadata",
-                metadata_path,
-                "--archive",
-                sample_archive["path"],
-            ]
-            + flags,
-        )
-
-        assert result.exit_code == 1, result.output
-        assert result.output == ""
-        expected_error_log_record = (
-            "swh.deposit.cli.client",
-            logging.ERROR,
-            (
-                "Problem during parsing options: "
-                "To update an existing deposit, you must provide its id"
-            ),
-        )
-        assert expected_error_log_record in caplog.record_tuples
 
 
 def test_cli_single_deposit_slug_generation(

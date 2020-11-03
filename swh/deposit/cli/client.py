@@ -13,6 +13,7 @@ import logging
 import os
 import sys
 from typing import TYPE_CHECKING, Any, Collection, Dict, List, Optional
+import warnings
 
 import click
 
@@ -129,8 +130,6 @@ def client_command_parse_input(
     archive: Optional[str],
     metadata: Optional[str],
     collection: Optional[str],
-    archive_deposit: bool,
-    metadata_deposit: bool,
     slug: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
@@ -171,33 +170,22 @@ def client_command_parse_input(
     Returns:
         dict with the following keys:
 
-            'archive': the software archive to deposit
-            'username': username
-            'metadata': the metadata file to deposit
-            'collection: the user's collection under which to put the deposit
-            'slug': the slug or external id identifying the deposit to make
-            'partial': if the deposit is partial or not
-            'client': instantiated class
-            'url': deposit's server main entry point
-            'deposit_type': deposit's type (binary, multipart, metadata)
-            'deposit_id': optional deposit identifier
-            'swhid': optional deposit swhid
-
+            "archive": the software archive to deposit
+            "username": username
+            "metadata": the metadata file to deposit
+            "collection": the user's collection under which to put the deposit
+            "slug": the slug or external id identifying the deposit to make
+            "in_progress": if the deposit is partial or not
+            "url": deposit's server main entry point
+            "deposit_id": optional deposit identifier
+            "swhid": optional deposit swhid
+            "replace": whether the given deposit is to be replaced or not
     """
-    if archive_deposit and metadata_deposit:
-        # too many flags use, remove redundant ones (-> multipart deposit)
-        archive_deposit = False
-        metadata_deposit = False
 
     if not slug:  # generate one as this is mandatory
         slug = generate_slug()
 
     if not metadata:
-        if metadata_deposit:
-            raise InputError(
-                "Metadata deposit must be provided for metadata "
-                "deposit, either a filepath with --metadata or --name and --author"
-            )
         if name and authors:
             metadata_path = os.path.join(temp_dir, "metadata.xml")
             logging.debug("Temporary file: %s", metadata_path)
@@ -206,7 +194,7 @@ def client_command_parse_input(
             with open(metadata_path, "w") as f:
                 f.write(metadata_xml)
             metadata = metadata_path
-        elif not archive_deposit and not partial and not deposit_id:
+        elif archive is not None and not partial and not deposit_id:
             # If we meet all the following conditions:
             # * this is not an archive-only deposit request
             # * it is not part of a multipart deposit (either create/update
@@ -215,7 +203,6 @@ def client_command_parse_input(
             raise InputError(
                 "For metadata deposit request, either a metadata file with "
                 "--metadata or both --author and --name must be provided. "
-                "If this is an archive deposit request, none is required."
             )
         elif name or authors:
             # If we are generating metadata, then all mandatory metadata
@@ -234,13 +221,7 @@ def client_command_parse_input(
             "--author and --name (Those are used to generate one metadata file)."
         )
 
-    if metadata_deposit:
-        archive = None
-
-    if archive_deposit:
-        metadata = None
-
-    if not archive and not metadata and partial:
+    if not archive and not metadata:
         raise InputError(
             "Please provide an actionable command. See --help for more information"
         )
@@ -291,12 +272,12 @@ def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
 @click.option(
     "--archive-deposit/--no-archive-deposit",
     default=False,
-    help="(Optional) Software archive only deposit",
+    help="Deprecated (ignored)",
 )
 @click.option(
     "--metadata-deposit/--no-metadata-deposit",
     default=False,
-    help="(Optional) Metadata only deposit",
+    help="Deprecated (ignored)",
 )
 @click.option(
     "--collection",
@@ -361,21 +342,21 @@ def upload(
     ctx,
     username: str,
     password: str,
-    archive: Optional[str] = None,
-    metadata: Optional[str] = None,
-    archive_deposit: bool = False,
-    metadata_deposit: bool = False,
-    collection: Optional[str] = None,
-    slug: Optional[str] = None,
-    partial: bool = False,
-    deposit_id: Optional[int] = None,
-    swhid: Optional[str] = None,
-    replace: bool = False,
-    url: str = "https://deposit.softwareheritage.org",
-    verbose: bool = False,
-    name: Optional[str] = None,
-    author: List[str] = [],
-    output_format: Optional[str] = None,
+    archive: Optional[str],
+    metadata: Optional[str],
+    archive_deposit: bool,
+    metadata_deposit: bool,
+    collection: Optional[str],
+    slug: Optional[str],
+    partial: bool,
+    deposit_id: Optional[int],
+    swhid: Optional[str],
+    replace: bool,
+    url: str,
+    verbose: bool,
+    name: Optional[str],
+    author: List[str],
+    output_format: Optional[str],
 ):
     """Software Heritage Public Deposit Client
 
@@ -389,6 +370,15 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 
+    if archive_deposit or metadata_deposit:
+        warnings.warn(
+            '"archive_deposit" and "metadata_deposit" option arguments are '
+            "deprecated and have no effect; simply do not provide the archive "
+            "for a metadata-only deposit, and do not provide a metadata for a"
+            "archive-only deposit.",
+            DeprecationWarning,
+        )
+
     url = _url(url)
 
     client = PublicApiDepositClient(url=url, auth=(username, password))
@@ -401,8 +391,6 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 archive,
                 metadata,
                 collection,
-                archive_deposit,
-                metadata_deposit,
                 slug,
                 partial,
                 deposit_id,
