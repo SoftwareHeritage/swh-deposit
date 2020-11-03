@@ -30,8 +30,6 @@ A complete metadata example
 The reference element is included in the metadata xml atomEntry under the
 swh namespace:
 
-TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
-
 .. code:: xml
 
   <?xml version="1.0"?>
