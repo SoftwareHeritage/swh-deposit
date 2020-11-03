@@ -12,18 +12,24 @@ the metadata about an object in the archive.
 
 Requirements
 ------------
-The scope of the metadata-deposit is different than the
-sparse-deposit. While a sparse-deposit creates a revision with referenced
-directories and content files, the metadata-deposit references any of the
-following:
 
-- origin
-- snapshot
-- release
-- revision
-- directory
-- content
+1. :ref:`Create a metadata-only deposit through a POST request<Create deposit>`
+2. It is composed of ONLY one xml metadata file
+3. It MUST comply with :ref:`the metadata requirements<Metadata Requirements>`
+4. It MUST reference an **object** or an **origin** in a deposit tag
+5. The reference SHOULD exist in the SWH archive
+6. The **object** reference MUST be a SWHID on one of the following artifact types:
+ - origin
+ - snapshot
+ - release
+ - revision
+ - directory
+ - content
+7. The SWHID MAY be a `core identifier`_ with or without `qualifiers`_
+8. The SWHID MUST NOT reference a fragment of code with the classifier `lines`
 
+.. _core identifier: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#core-identifiers
+.. _qualifiers: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#qualifiers
 
 A complete metadata example
 ---------------------------
