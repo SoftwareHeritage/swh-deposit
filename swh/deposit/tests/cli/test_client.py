@@ -98,24 +98,20 @@ def test_cli_deposit_with_server_down_for_maintenance(
     """ Deposit failure due to maintenance down time should be explicit
 
     """
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--archive",
-            sample_archive["path"],
-            "--author",
-            "Jane Doe",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--archive", sample_archive["path"],
+            "--author", "Jane Doe",
         ],
     )
+    # fmt: on
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
@@ -162,28 +158,22 @@ def test_cli_single_minimal_deposit(
     """  # noqa
 
     metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--archive",
-            sample_archive["path"],
-            "--author",
-            "Jane Doe",
-            "--slug",
-            slug,
-            "--format",
-            "json",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--archive", sample_archive["path"],
+            "--author", "Jane Doe",
+            "--slug", slug,
+            "--format", "json",
         ],
     )
+    # fmt: on
 
     assert result.exit_code == 0, result.output
     assert json.loads(result.output) == {
@@ -221,24 +211,21 @@ def test_cli_validation_metadata(
         ("--name", "test-project"),
     ]:
         # Test missing author then missing name
+        # fmt: off
         result = cli_runner.invoke(
             cli,
             [
                 "upload",
-                "--url",
-                "https://deposit.swh.test/1",
-                "--username",
-                TEST_USER["username"],
-                "--password",
-                TEST_USER["password"],
-                "--archive",
-                sample_archive["path"],
-                "--slug",
-                slug,
+                "--url", "https://deposit.swh.test/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--archive", sample_archive["path"],
+                "--slug", slug,
                 flag_title_or_name,
                 author_or_name,
             ],
         )
+        # fmt: on
 
         assert result.exit_code == 1, f"unexpected result: {result.output}"
         assert result.output == ""
@@ -258,26 +245,21 @@ def test_cli_validation_metadata(
 
         # incompatible flags: Test both --metadata and --author, then --metadata and
         # --name
+        # fmt: off
         result = cli_runner.invoke(
             cli,
             [
                 "upload",
-                "--url",
-                "https://deposit.swh.test/1",
-                "--username",
-                TEST_USER["username"],
-                "--password",
-                TEST_USER["password"],
-                "--name",
-                "test-project",
-                "--deposit-id",
-                666,
-                "--archive",
-                sample_archive["path"],
-                "--slug",
-                slug,
+                "--url", "https://deposit.swh.test/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--name", "test-project",
+                "--deposit-id", 666,
+                "--archive", sample_archive["path"],
+                "--slug", slug,
             ],
         )
+        # fmt: on
         assert result.exit_code == 1, f"unexpected result: {result.output}"
         assert result.output == ""
         expected_error_log_record = (
@@ -296,26 +278,21 @@ def test_cli_validation_metadata(
 
         # incompatible flags check (Test both --metadata and --author,
         # then --metadata and --name)
+        # fmt: off
         result = cli_runner.invoke(
             cli,
             [
                 "upload",
-                "--url",
-                "https://deposit.swh.test/1",
-                "--username",
-                TEST_USER["username"],
-                "--password",
-                TEST_USER["password"],
-                "--archive",
-                sample_archive["path"],
-                "--metadata",
-                metadata_path,
-                "--author",
-                "Jane Doe",
-                "--slug",
-                slug,
+                "--url", "https://deposit.swh.test/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--archive", sample_archive["path"],
+                "--metadata", metadata_path,
+                "--author", "Jane Doe",
+                "--slug", slug,
             ],
         )
+        # fmt: on
 
         assert result.exit_code == 1, result.output
         assert result.output == ""
@@ -337,19 +314,18 @@ def test_cli_validation_no_actionable_command(caplog, cli_runner):
 
     """
     # no actionable command
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
             "--partial",
         ],
     )
+    # fmt: on
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
@@ -372,23 +348,20 @@ def test_cli_validation_replace_with_no_deposit_id_fails(
     """
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--metadata",
-            metadata_path,
-            "--archive",
-            sample_archive["path"],
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+            "--archive", sample_archive["path"],
             "--replace",
         ],
     )
+    # fmt: on
 
     assert result.exit_code == 1, result.output
     assert result.output == ""
@@ -410,26 +383,21 @@ def test_cli_single_deposit_slug_generation(
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
     metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            "https://deposit.swh.test/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--archive",
-            sample_archive["path"],
-            "--author",
-            "Jane Doe",
-            "--format",
-            "json",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--archive", sample_archive["path"],
+            "--author", "Jane Doe",
+            "--format", "json",
         ],
     )
+    # fmt: on
     assert result.exit_code == 0, result.output
     assert json.loads(result.output) == {
         "deposit_id": "615",
@@ -454,25 +422,21 @@ def test_cli_multisteps_deposit(
     deposit_id = 666
 
     # Create a partial deposit with only 1 archive
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            api_url,
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--archive",
-            sample_archive["path"],
+            "--url", api_url,
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--archive", sample_archive["path"],
+            "--slug", slug,
+            "--format", "json",
             "--partial",
-            "--slug",
-            slug,
-            "--format",
-            "json",
         ],
     )
+    # fmt: on
 
     assert result.exit_code == 0, f"unexpected output: {result.output}"
     actual_deposit = json.loads(result.output)
@@ -484,27 +448,22 @@ def test_cli_multisteps_deposit(
     }
 
     # Update the partial deposit with only 1 archive
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            api_url,
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--archive",
-            sample_archive["path"],
-            "--deposit-id",
-            deposit_id,
+            "--url", api_url,
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--archive", sample_archive["path"],
+            "--deposit-id", deposit_id,
+            "--slug", slug,
+            "--format", "json",
             "--partial",  # in-progress: True, because remains the metadata to upload
-            "--slug",
-            slug,
-            "--format",
-            "json",
         ],
     )
+    # fmt: on
     assert result.exit_code == 0, f"unexpected output: {result.output}"
     assert result.output is not None
     actual_deposit = json.loads(result.output)
@@ -517,28 +476,23 @@ def test_cli_multisteps_deposit(
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
     # Update deposit with metadata
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            api_url,
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--metadata",
-            metadata_path,
-            "--deposit-id",
-            deposit_id,
-            "--slug",
-            slug,
-            "--format",
-            "json",
-        ],  # this time, ^ we no longer flag it to partial, so the status changes to
+            "--url", api_url,
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+            "--deposit-id", deposit_id,
+            "--slug", slug,
+            "--format", "json",
+        ],
+        # this time, ^ we no longer flag it to partial, so the status changes to
         # in-progress false
     )
-
+    # fmt: on
     assert result.exit_code == 0, f"unexpected output: {result.output}"
     assert result.output is not None
     actual_deposit = json.loads(result.output)
@@ -575,22 +529,19 @@ def test_cli_deposit_status_with_output_format(
         deposit_status_xml = f.read()
     expected_deposit_status = dict(parse_xml(deposit_status_xml))
 
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "status",
-            "--url",
-            f"https://{api_url_basename}/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--deposit-id",
-            deposit_id,
-            "--format",
-            output_format,
+            "--url", f"https://{api_url_basename}/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--deposit-id", deposit_id,
+            "--format", output_format,
         ],
     )
+    # fmt: on
     assert result.exit_code == 0, f"unexpected output: {result.output}"
 
     if output_format == "logging":
@@ -621,28 +572,22 @@ def test_cli_update_metadata_with_swhid_on_completed_deposit(
     assert expected_deposit_status["deposit_status"] == "done"
     assert expected_deposit_status["deposit_swh_id"] is not None
 
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            f"https://{api_url_basename}/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--author",
-            "John Doe",
-            "--deposit-id",
-            deposit_id,
-            "--swhid",
-            expected_deposit_status["deposit_swh_id"],
-            "--format",
-            "json",
+            "--url", f"https://{api_url_basename}/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--author", "John Doe",
+            "--deposit-id", deposit_id,
+            "--swhid", expected_deposit_status["deposit_swh_id"],
+            "--format", "json",
         ],
     )
+    # fmt: on
     assert result.exit_code == 0, result.output
     actual_deposit_status = json.loads(result.output)
     assert "error" not in actual_deposit_status
@@ -664,28 +609,22 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     expected_deposit_status = dict(parse_xml(deposit_status_xml))
     assert expected_deposit_status["deposit_status"] != "done"
 
+    # fmt: off
     result = cli_runner.invoke(
         cli,
         [
             "upload",
-            "--url",
-            f"https://{api_url_basename}/1",
-            "--username",
-            TEST_USER["username"],
-            "--password",
-            TEST_USER["password"],
-            "--name",
-            "test-project",
-            "--author",
-            "John Doe",
-            "--deposit-id",
-            deposit_id,
-            "--swhid",
-            "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
-            "--format",
-            "json",
+            "--url", f"https://{api_url_basename}/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--author", "John Doe",
+            "--deposit-id", deposit_id,
+            "--swhid", "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+            "--format", "json",
         ],
     )
+    # fmt: on
     assert result.exit_code == 0, result.output
     actual_result = json.loads(result.output)
     assert "error" in actual_result
