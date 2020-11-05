@@ -67,7 +67,7 @@ client tools to push a deposit in the SWH Archive.
    metadata
    dev-info
    sys-info
-   specs/specs
+   specs/index
    tests/tests_HAL.rst
 
 
