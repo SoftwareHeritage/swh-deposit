@@ -6,5 +6,3 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swh.deposit.settings.developmen
 django.setup()
 
 from swh.docs.sphinx.conf import *  # NoQA
-
-extensions = ["sphinx.ext.autosectionlabel"]

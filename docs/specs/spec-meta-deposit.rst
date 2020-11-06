@@ -3,8 +3,9 @@ The metadata-deposit
 
 Goal
 ----
-A client wishes to deposit only metadata about an origin or object in the
-Software Heritage archive.
+
+A client wishes to deposit only metadata about an origin or object already
+present in the Software Heritage archive.
 
 The metadata-deposit is a special deposit where no content is
 provided and the data transferred to Software Heritage is only
@@ -13,18 +14,18 @@ the metadata about an object in the archive.
 Requirements
 ------------
 
-1. :ref:`Create a metadata-only deposit through a POST request<Create deposit>`
+1. Create a metadata-only deposit through a :ref:`POST request<API-create-deposit>`
 2. It is composed of ONLY one xml metadata file
-3. It MUST comply with :ref:`the metadata requirements<Metadata Requirements>`
+3. It MUST comply with :ref:`the metadata requirements<metadata-requirements>`
 4. It MUST reference an **object** or an **origin** in a deposit tag
 5. The reference SHOULD exist in the SWH archive
 6. The **object** reference MUST be a SWHID on one of the following artifact types:
- - origin
- - snapshot
- - release
- - revision
- - directory
- - content
+   - origin
+   - snapshot
+   - release
+   - revision
+   - directory
+   - content
 7. The SWHID MAY be a `core identifier`_ with or without `qualifiers`_
 8. The SWHID MUST NOT reference a fragment of code with the classifier `lines`
 
