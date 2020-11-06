@@ -898,7 +898,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
 
 class APIPost(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support DELETE method.
+    """Mixin for class to support POST method.
 
     """
 
