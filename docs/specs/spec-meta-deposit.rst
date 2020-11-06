@@ -109,12 +109,7 @@ directories, revisions, releases, and snapshots:
 
   <swh:deposit>
     <swh:reference>
-      <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;
-                         origin=https://hal.archives-ouvertes.fr/hal-01243573;
-                         visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;
-                         anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;
-                         path=/moranegg-AffectationRO-df7f68b/"
-      />
+      <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=https://hal.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;path=/moranegg-AffectationRO-df7f68b/" />
     </swh:reference>
   </swh:deposit>
 

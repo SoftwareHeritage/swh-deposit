@@ -8,6 +8,7 @@
 
 """
 
+from typing import Dict, Optional, Union
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
@@ -15,6 +16,7 @@ from rest_framework.parsers import BaseParser, FileUploadParser, MultiPartParser
 import xmltodict
 
 from swh.deposit.errors import ParserError
+from swh.model.identifiers import SWHID, parse_swhid
 
 
 class SWHFileUploadZipParser(FileUploadParser):
@@ -51,6 +53,7 @@ class SWHXMLParser(BaseParser):
             "http://purl.org/dc/terms/": None,
             "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
             "http://purl.org/net/sword/": "sword",
+            "https://www.softwareheritage.org/schema/2018/deposit": "swh",
         }
 
         data = xmltodict.parse(
@@ -101,3 +104,52 @@ def parse_xml(raw_content):
         return SWHXMLParser().parse(raw_content)
     except ExpatError as e:
         raise ParserError(str(e))
+
+
+def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
+    """Parse swh reference within the metadata dict (or origin) reference if found, None
+    otherwise.
+
+    <swh:deposit>
+      <swh:reference>
+        <swh:origin url='https://github.com/user/repo'/>
+      </swh:reference>
+    </swh:deposit>
+
+    or:
+
+    <swh:deposit>
+      <swh:reference>
+        <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=https://hal.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;path=/moranegg-AffectationRO-df7f68b/"
+      />
+    </swh:deposit>
+
+    Raises:
+        ValidationError in case the swhid referenced (if any) is invalid
+
+    Returns:
+        Either swhid or origin reference if any. None otherwise.
+
+    """  # noqa
+    swh_deposit = metadata.get("swh:deposit")
+    if not swh_deposit:
+        return None
+
+    swh_reference = swh_deposit.get("swh:reference")
+    if not swh_reference:
+        return None
+
+    swh_origin = swh_reference.get("swh:origin")
+    if swh_origin:
+        url = swh_origin.get("@url")
+        if url:
+            return url
+
+    swh_object = swh_reference.get("swh:object")
+    if not swh_object:
+        return None
+
+    swhid = swh_object.get("@swhid")
+    if not swhid:
+        return None
+    return parse_swhid(swhid)
