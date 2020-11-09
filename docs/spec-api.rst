@@ -1,4 +1,6 @@
-API Specification
+.. _swh-api-specifications:
+
+API Documentation
 =================
 
 This is `Software Heritage <https://www.softwareheritage.org>`__'s

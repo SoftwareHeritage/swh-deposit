@@ -3,7 +3,7 @@
 Software Heritage - Deposit
 ===========================
 
-Push-based deposit of software source code artifacts and metadata to the
+`SWORD v2`_ based deposit of software source code artifacts and metadata to the
 Software Heritage (SWH) Archive.
 
 Description
@@ -54,7 +54,21 @@ simply asking SWH to archive a repository using the `save code now
 
 
 See the :ref:`user-manual` page for more details on how to use the deposit
-client tools to push a deposit in the SWH Archive.
+client command line tools to push a deposit in the SWH Archive.
+
+See the :ref:`swh-api-specifications` reference pages of the SWORDv2 API
+implementation in `swh.deposit` if you want to do upload deposits using HTTP
+requests.
+
+Read the :ref:`metadata` chapter to get more details on what metadata are
+supported when doing a deposit.
+
+See :ref:`swh-deposit-dev` if you want to hack the code of the `swh.deposit`
+module.
+
+See :ref:`swh-deposit-deployment` if you want to deploy your own copy of the
+`swh.deposit` stack.
+
 
 .. _codemeta: https://codemeta.github.io/
 .. _`SWORD v2`: http://swordapp.org/sword-v2/
@@ -64,8 +78,8 @@ client tools to push a deposit in the SWH Archive.
    :caption: Contents:
 
    user-manual
-   spec-api
    metadata
+   spec-api
    dev-info
    sys-info
    specs/index
