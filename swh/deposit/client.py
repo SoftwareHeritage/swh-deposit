@@ -169,6 +169,9 @@ class BaseApiDepositClient:
 
         self.base_url = url.strip("/") + "/"
         self.auth = auth
+        self.session = requests.Session()
+        if auth:
+            self.session.auth = auth
 
     def do(self, method, url, *args, **kwargs):
         """Internal method to deal with requests, possibly with basic http
@@ -181,13 +184,8 @@ class BaseApiDepositClient:
             The request's execution
 
         """
-        method_fn = getattr(requests, method)
-
-        if self.auth:
-            kwargs["auth"] = self.auth
-
         full_url = urljoin(self.base_url, url.lstrip("/"))
-        return method_fn(full_url, *args, **kwargs)
+        return self.session.request(method, full_url, *args, **kwargs)
 
 
 class PrivateApiDepositClient(BaseApiDepositClient):

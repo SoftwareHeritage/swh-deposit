@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional
 from urllib.parse import urlparse
 
 import pytest
+from requests import Session
 
 from swh.deposit.client import PrivateApiDepositClient
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_FAILURE, DEPOSIT_STATUS_LOAD_SUCCESS
@@ -208,7 +209,7 @@ def test_status_update(mocker):
     """Update status
 
     """
-    mocked_put = mocker.patch("swh.deposit.client.requests.put")
+    mocked_put = mocker.patch.object(Session, "request")
 
     deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
     deposit_client.status_update(
@@ -216,6 +217,7 @@ def test_status_update(mocker):
     )
 
     mocked_put.assert_called_once_with(
+        "put",
         "https://nowhere.org/update/status",
         json={
             "status": DEPOSIT_STATUS_LOAD_SUCCESS,
@@ -228,12 +230,13 @@ def test_status_update_with_no_revision_id(mocker):
     """Reading metadata can fail for some reasons
 
     """
-    mocked_put = mocker.patch("swh.deposit.client.requests.put")
+    mocked_put = mocker.patch.object(Session, "request")
 
     deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
     deposit_client.status_update("/update/status/fail", DEPOSIT_STATUS_LOAD_FAILURE)
 
     mocked_put.assert_called_once_with(
+        "put",
         "https://nowhere.org/update/status/fail",
         json={"status": DEPOSIT_STATUS_LOAD_FAILURE,},
     )
