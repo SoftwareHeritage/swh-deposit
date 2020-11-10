@@ -19,6 +19,7 @@ import requests
 import xmltodict
 
 from swh.core.config import load_from_envvar
+from swh.deposit import __version__ as swh_deposit_version
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +173,9 @@ class BaseApiDepositClient:
         self.session = requests.Session()
         if auth:
             self.session.auth = auth
+        self.session.headers.update(
+            {"user-agent": f"swh-deposit/{swh_deposit_version}"}
+        )
 
     def do(self, method, url, *args, **kwargs):
         """Internal method to deal with requests, possibly with basic http
