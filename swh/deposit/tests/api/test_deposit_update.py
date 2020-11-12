@@ -111,7 +111,7 @@ def test_replace_metadata_to_deposit_is_possible(
     """
     # given
     deposit = partial_deposit_with_metadata
-    raw_metadata0 = atom_dataset["entry-data0"] % deposit.external_id.encode("utf-8")
+    raw_metadata0 = atom_dataset["entry-data0"]
 
     requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
     assert len(requests_meta) == 1
@@ -236,9 +236,7 @@ def test_add_metadata_to_deposit_is_possible(
     )
 
     assert len(requests) == 2
-    expected_raw_meta0 = atom_dataset["entry-data0"] % (
-        deposit.external_id.encode("utf-8")
-    )
+    expected_raw_meta0 = atom_dataset["entry-data0"]
     # a new one was added
     assert requests[0].raw_metadata == expected_raw_meta0
     assert requests[1].raw_metadata == atom_entry
@@ -301,9 +299,7 @@ def test_add_both_archive_and_metadata_to_deposit(
     )
 
     assert len(requests) == 1 + 1, "New deposit request archive got added"
-    expected_raw_meta0 = atom_dataset["entry-data0"] % (
-        deposit.external_id.encode("utf-8")
-    )
+    expected_raw_meta0 = atom_dataset["entry-data0"]
     # a new one was added
     assert requests[0].raw_metadata == expected_raw_meta0
     assert requests[1].raw_metadata == data_atom_entry
@@ -518,7 +514,7 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
     """
     # given
     deposit = partial_deposit_with_metadata
-    raw_metadata0 = atom_dataset["entry-data0"] % deposit.external_id.encode("utf-8")
+    raw_metadata0 = atom_dataset["entry-data0"]
 
     requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
     assert len(requests_meta) == 1

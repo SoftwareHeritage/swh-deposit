@@ -773,6 +773,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "If the body is empty, there is no metadata.",
             )
 
+        if (
+            "atom:external_identifier" in metadata
+            and metadata["atom:external_identifier"] != headers.slug
+        ):
+            # TODO: When clients stopped using it, raise this error
+            # even when they are equal.
+            raise DepositError(
+                BAD_REQUEST,
+                "The 'external_identifier' tag is deprecated, "
+                "the Slug header should be used instead.",
+            )
+
         # Determine if we are in the metadata-only deposit case
         try:
             swhid = parse_swh_reference(metadata)
@@ -781,20 +793,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 PARSING_ERROR, "Invalid SWHID reference", str(e),
             )
 
-        if swhid is not None:
-            external_id = metadata.get("external_identifier", headers.slug)
-        else:
-            slug = headers.slug
-            if check_slug_is_present and not slug:
-                raise_missing_slug_error()
-
-            external_id = metadata.get("external_identifier", slug)
+        if swhid is None and check_slug_is_present and not headers.slug:
+            raise_missing_slug_error()
 
         deposit = self._deposit_put(
             request,
             deposit_id=deposit_id,
             in_progress=headers.in_progress,
-            external_id=external_id,
+            external_id=headers.slug,
         )
 
         if swhid is not None:

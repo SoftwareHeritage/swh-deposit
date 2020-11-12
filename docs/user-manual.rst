@@ -102,7 +102,6 @@ file could be:
      <title>Verifiable online voting system</title>
      <client>belenios</client>
      <id>belenios-01243065</id>
-     <external_identifier>test-01243065</external_identifier>
      <codemeta:url>https://gitlab.inria.fr/belenios/belenios</codemeta:url>
      <codemeta:applicationCategory>test</codemeta:applicationCategory>
      <codemeta:keywords>Online voting</codemeta:keywords>

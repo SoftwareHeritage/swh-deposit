@@ -116,6 +116,29 @@ def test_post_deposit_atom_no_slug_header(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_post_deposit_atom_with_external_identifier(
+    authenticated_client, deposit_collection, atom_dataset
+):
+    """Posting an atom entry without a slug header should return a 400
+
+    """
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["error-with-external-identifier"],
+        # + headers
+        HTTP_IN_PROGRESS="false",
+        HTTP_SLUG="something",
+    )
+
+    print(response.content)
+    assert b"The &#39;external_identifier&#39; tag is deprecated" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset):
     """Posting an atom entry to an unknown collection should return a 404
 
@@ -146,7 +169,7 @@ def test_post_deposit_atom_entry_initial(
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
-    atom_entry_data = atom_dataset["entry-data0"] % external_id
+    atom_entry_data = atom_dataset["entry-data0"]
 
     # when
     response = authenticated_client.post(
@@ -187,7 +210,7 @@ def test_post_deposit_atom_entry_with_codemeta(
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
 
-    atom_entry_data = atom_dataset["codemeta-sample"] % external_id
+    atom_entry_data = atom_dataset["codemeta-sample"]
     # when
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -292,9 +315,7 @@ def test_post_deposit_atom_entry_multiple_steps(
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
     assert len(deposit_requests) == 1
 
-    atom_entry_data = atom_dataset["entry-data-minimal"] % external_id.encode(
-        "utf-8"
-    )  # noqa
+    atom_entry_data = atom_dataset["entry-data-minimal"]
 
     for link in response_content["atom:link"]:
         if link["@rel"] == "http://purl.org/net/sword/terms/add":
@@ -312,7 +333,7 @@ def test_post_deposit_atom_entry_multiple_steps(
     )
 
     # then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content
 
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = int(response_content["swh:deposit_id"])

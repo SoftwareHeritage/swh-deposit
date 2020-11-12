@@ -3,7 +3,6 @@
     <title>Awesome Compiler</title>
     <client>hal</client>
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-    <external_identifier>%s</external_identifier>
     <updated>2017-10-07T15:17:08Z</updated>
     <author>some awesome author</author>
     <applicationCategory>something</applicationCategory>

@@ -317,7 +317,7 @@ def create_binary_deposit(
     response = authenticated_client.post(
         reverse(SE_IRI, args=[collection_name, deposit.id]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"] % deposit.external_id.encode("utf-8"),
+        data=atom_dataset["entry-data0"],
         HTTP_SLUG=deposit.external_id,
         HTTP_IN_PROGRESS="true",
     )

@@ -44,7 +44,6 @@ TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
           <email>hal@ccsd.cnrs.fr</email>
         </author>
         <client>hal</client>
-        <external_identifier>hal-01243573</external_identifier>
         <codemeta:name>The assignment problem</codemeta:name>
         <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
         <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>

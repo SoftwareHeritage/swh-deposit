@@ -38,11 +38,6 @@ Metadata requirements
 
       <codemeta:url>www.url-example.com</codemeta:url>
 
-- **the external\_identifier** *MAY* be provided as an identifier
-
-- **the external\_identifier** *SHOULD* match the Slug external-identifier in
-  the header
-
 - **the description** of the software deposit *SHOULD* be provided
   [codemeta:description]: short or long description of the software
 
@@ -63,7 +58,6 @@ Using only Atom
         <entry xmlns="http://www.w3.org/2005/Atom">
             <title>Awesome Compiler</title>
             <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-            <external_identifier>1785io25c695</external_identifier>
             <updated>2017-10-07T15:17:08Z</updated>
             <author>some awesome author</author>
     </entry>
@@ -78,7 +72,6 @@ Using Atom with CodeMeta
                  xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
             <title>Awesome Compiler</title>
             <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-            <external_identifier>1785io25c695</external_identifier>
             <codemeta:id>1785io25c695</codemeta:id>
             <codemeta:url>origin url</codemeta:url>
             <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
@@ -140,7 +133,6 @@ Using Atom with DublinCore and CodeMeta (multi-schema entry)
         <title>Awesome Compiler</title>
         <client>hal</client>
         <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-        <external_identifier>%s</external_identifier>
         <dcterms:identifier>hal-01587361</dcterms:identifier>
         <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>
         <dcterms:title xml:lang="en">The assignment problem</dcterms:title>

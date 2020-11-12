@@ -115,7 +115,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"] % deposit.external_id,
+        data=atom_dataset["entry-data0"],
         HTTP_SLUG=deposit.external_id,
     )
 
@@ -145,7 +145,7 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"] % deposit.external_id,
+        data=atom_dataset["entry-data0"],
         HTTP_SLUG=deposit.external_id,
     )
 
@@ -176,7 +176,7 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"] % deposit.external_id,
+        data=atom_dataset["entry-data0"],
         HTTP_SLUG=deposit.external_id,
     )
 
