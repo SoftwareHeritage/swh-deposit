@@ -131,7 +131,6 @@ Using Atom with DublinCore and CodeMeta (multi-schema entry)
            xmlns:dcterms="http://purl.org/dc/terms/"
            xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
         <title>Awesome Compiler</title>
-        <client>hal</client>
         <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
         <dcterms:identifier>hal-01587361</dcterms:identifier>
         <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>

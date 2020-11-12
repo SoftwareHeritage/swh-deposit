@@ -100,7 +100,6 @@ file could be:
    <entry xmlns="http://www.w3.org/2005/Atom"
    xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
      <title>Verifiable online voting system</title>
-     <client>belenios</client>
      <id>belenios-01243065</id>
      <codemeta:url>https://gitlab.inria.fr/belenios/belenios</codemeta:url>
      <codemeta:applicationCategory>test</codemeta:applicationCategory>

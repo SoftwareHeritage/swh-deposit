@@ -177,7 +177,7 @@ If present, a release artifact will be created with the mapping below:
 +-------------------+-----------------------------------+-----------------+----------------+
 | date              | release date = publication date   | datePublished   | deposit_date   |
 +-------------------+-----------------------------------+-----------------+----------------+
-| author            | deposit client                    | author          | client         |
+| author            | deposit client                    | author          | X              |
 +-------------------+-----------------------------------+-----------------+----------------+
 
 
@@ -308,7 +308,6 @@ A release contains one date:
                     "email": "hal@ccsd.cnrs.fr",
                     "name": "HAL"
                 },
-                "client": "hal",
                 "codemeta:applicationCategory": "info",
                 "codemeta:author": {
                     "codemeta:name": "Morane Gruenpeter"
