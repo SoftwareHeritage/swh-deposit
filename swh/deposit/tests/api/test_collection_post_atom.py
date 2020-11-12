@@ -239,46 +239,6 @@ def test_post_deposit_atom_entry_with_codemeta(
     assert bool(deposit_request.archive) is False
 
 
-def test_post_deposit_atom_entry_tei(
-    authenticated_client, deposit_collection, atom_dataset
-):
-    """Posting initial atom entry as TEI should return 201 with receipt
-
-    """
-    # given
-    external_id = "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
-    with pytest.raises(Deposit.DoesNotExist):
-        Deposit.objects.get(external_id=external_id)
-
-    atom_entry_data = atom_dataset["tei-sample"]
-
-    # when
-    response = authenticated_client.post(
-        reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
-        data=atom_entry_data,
-        HTTP_SLUG=external_id,
-        HTTP_IN_PROGRESS="false",
-    )
-
-    # then
-    assert response.status_code == status.HTTP_201_CREATED
-
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
-
-    deposit = Deposit.objects.get(pk=deposit_id)
-    assert deposit.collection == deposit_collection
-    assert deposit.external_id == external_id
-    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
-
-    # one associated request to a deposit
-    deposit_request = DepositRequest.objects.get(deposit=deposit)
-    assert deposit_request.metadata is not None
-    assert deposit_request.raw_metadata == atom_entry_data
-    assert bool(deposit_request.archive) is False
-
-
 def test_post_deposit_atom_entry_multiple_steps(
     authenticated_client, deposit_collection, atom_dataset
 ):
