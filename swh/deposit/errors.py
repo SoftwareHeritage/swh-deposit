@@ -148,3 +148,17 @@ def make_error_response(req, key, summary=None, verbose_description=None):
     """
     error = make_error_dict(key, summary, verbose_description)
     return make_error_response_from_dict(req, error["error"])
+
+
+class BadRequestError(ValueError):
+    """Represents a bad input from the deposit client
+
+    """
+
+    def __init__(self, summary, verbose_description):
+        self.key = BAD_REQUEST
+        self.summary = summary
+        self.verbose_description = verbose_description
+
+    def to_dict(self):
+        return make_error_dict(self.key, self.summary, self.verbose_description)

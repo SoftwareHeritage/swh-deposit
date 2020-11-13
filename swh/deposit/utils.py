@@ -1,13 +1,15 @@
-# Copyright (C) 2018-2019 The Software Heritage developers
+# Copyright (C) 2018-2020 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from types import GeneratorType
+from typing import Any, Dict, Tuple, Union
 
 import iso8601
 
-from swh.model.identifiers import normalize_timestamp
+from swh.model.identifiers import SWHID, normalize_timestamp, parse_swhid
+from swh.model.model import MetadataTargetType
 
 
 def merge(*dicts):
@@ -81,3 +83,37 @@ def normalize_date(date):
         date = iso8601.parse_date(date)
 
     return normalize_timestamp(date)
+
+
+def compute_metadata_context(
+    swhid_reference: Union[SWHID, str]
+) -> Tuple[MetadataTargetType, Dict[str, Any]]:
+    """Given a SWHID object, determine the context as a dict.
+
+    The parse_swhid calls within are not expected to raise (because they should have
+    been caught early on).
+
+    """
+    metadata_context: Dict[str, Any] = {"origin": None}
+    if isinstance(swhid_reference, SWHID):
+        object_type = MetadataTargetType(swhid_reference.object_type)
+        assert object_type != MetadataTargetType.ORIGIN
+
+        if swhid_reference.metadata:
+            path = swhid_reference.metadata.get("path")
+            metadata_context = {
+                "origin": swhid_reference.metadata.get("origin"),
+                "path": path.encode() if path else None,
+            }
+            snapshot = swhid_reference.metadata.get("visit")
+            if snapshot:
+                metadata_context["snapshot"] = parse_swhid(snapshot)
+
+            anchor = swhid_reference.metadata.get("anchor")
+            if anchor:
+                anchor_swhid = parse_swhid(anchor)
+                metadata_context[anchor_swhid.object_type] = anchor_swhid
+    else:
+        object_type = MetadataTargetType.ORIGIN
+
+    return object_type, metadata_context

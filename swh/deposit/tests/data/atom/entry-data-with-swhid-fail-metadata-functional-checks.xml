@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+    <!-- no author nor title nor name -->
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2017-10-07T15:17:08Z</updated>
+    <swh:deposit>
+      <swh:reference>
+        <swh:object swhid="{swhid}" />
+      </swh:reference>
+    </swh:deposit>
+</entry>

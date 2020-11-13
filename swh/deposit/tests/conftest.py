@@ -204,15 +204,19 @@ def client():
     return APIClient()  # <- drf's client
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def authenticated_client(client, deposit_user):
     """Returned a logged client
+
+    This also patched the client instance to keep a reference on the associated
+    deposit_user.
 
     """
     _token = "%s:%s" % (deposit_user.username, TEST_USER["password"])
     token = base64.b64encode(_token.encode("utf-8"))
     authorization = "Basic %s" % token.decode("utf-8")
     client.credentials(HTTP_AUTHORIZATION=authorization)
+    client.deposit_client = deposit_user
     yield client
     client.logout()
 

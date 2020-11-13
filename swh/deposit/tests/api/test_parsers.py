@@ -187,19 +187,8 @@ def test_parse_swh_reference_empty(xml_with_empty_reference, xml_ref):
 
 
 @pytest.fixture
-def xml_with_swhid():
-    xml_data = """<?xml version="1.0"?>
-  <entry xmlns="http://www.w3.org/2005/Atom"
-           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
-      <swh:deposit>
-        <swh:reference>
-          <swh:object swhid="{swhid}" />
-        </swh:reference>
-      </swh:deposit>
-  </entry>
-    """
-    return xml_data.strip()
+def xml_with_swhid(atom_dataset):
+    return atom_dataset["entry-data-with-swhid"]
 
 
 @pytest.mark.parametrize(
