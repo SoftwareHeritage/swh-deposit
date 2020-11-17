@@ -224,7 +224,11 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
         (
             "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;anchor=swh:1:cnt:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
             "anchor qualifier should be a core SWHID with type one of",
-        ),  # noqa
+        ),
+        (
+            "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:snp:b5f505b005435fa5c4fa4c279792bd7b17167c04",  # noqa
+            "anchor=swh:1:snp",
+        ),
     ],
 )
 def test_parse_swh_reference_invalid_swhid(invalid_swhid, error_msg, xml_with_swhid):

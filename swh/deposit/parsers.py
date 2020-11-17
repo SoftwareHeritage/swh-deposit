@@ -8,6 +8,7 @@
 
 """
 
+import logging
 from typing import Dict, Optional, Union
 from xml.parsers.expat import ExpatError
 
@@ -25,6 +26,8 @@ from swh.model.identifiers import (
     SWHID,
     parse_swhid,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SWHFileUploadZipParser(FileUploadParser):
@@ -142,6 +145,9 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
         Either swhid or origin reference if any. None otherwise.
 
     """  # noqa
+    visit_swhid = None
+    anchor_swhid = None
+
     swh_deposit = metadata.get("swh:deposit")
     if not swh_deposit:
         return None
@@ -183,5 +189,19 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
                 raise ValidationError(
                     f"visit qualifier should be a core SWHID with type {SNAPSHOT}"
                 )
+
+        if (
+            visit_swhid
+            and anchor_swhid
+            and visit_swhid.object_type == SNAPSHOT
+            and anchor_swhid.object_type == SNAPSHOT
+        ):
+            logger.warn(
+                "SWHID use of both anchor and visit targeting "
+                f"a snapshot: {swhid_reference}"
+            )
+            raise ValidationError(
+                "'anchor=swh:1:snp:' is not supported when 'visit' is also provided."
+            )
 
     return swhid_reference
