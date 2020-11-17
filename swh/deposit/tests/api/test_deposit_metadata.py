@@ -38,7 +38,6 @@ def test_deposit_metadata_invalid(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=xml_data,
-        HTTP_SLUG="external-id",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Invalid SWHID reference" in response.content
@@ -59,7 +58,6 @@ def test_deposit_metadata_fails_functional_checks(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=invalid_xml_data,
-        HTTP_SLUG="external-id",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Functional metadata checks failure" in response.content
@@ -131,7 +129,6 @@ def test_deposit_metadata_swhid(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=xml_data,
-        HTTP_SLUG="external-id",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -213,7 +210,6 @@ def test_deposit_metadata_origin(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=xml_data,
-        HTTP_SLUG="external-id",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
