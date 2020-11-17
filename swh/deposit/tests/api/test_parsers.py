@@ -205,7 +205,11 @@ def xml_with_swhid():
 @pytest.mark.parametrize(
     "swhid",
     [
-        "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=https://hal.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;path=/moranegg-AffectationRO-df7f68b/",  # noqa
+        "swh:1:cnt:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=https://hal.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;path=/moranegg-AffectationRO-df7f68b/",  # noqa
+        "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:dir:9c5de20cfb54682370a398fcc733e829903c8cba",  # noqa
+        "swh:1:rev:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba",  # noqa
+        "swh:1:rel:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:rel:9c5de20cfb54682370a398fcc733e829903c8cba",  # noqa
+        "swh:1:snp:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:snp:9c5de20cfb54682370a398fcc733e829903c8cba",  # noqa
         "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49",
     ],
 )
@@ -220,13 +224,26 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
     assert actual_swhid == expected_swhid
 
 
-def test_parse_swh_reference_invalid_swhid(xml_with_swhid):
+@pytest.mark.parametrize(
+    "invalid_swhid,error_msg",
+    [
+        ("swh:1:cnt:31b5c8cc985d190b5a7ef4878128ebfdc235", "Unexpected length"),
+        (
+            "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:rev:0175049fc45055a3824a1675ac06e3711619a55a",  # noqa
+            "visit qualifier should be a core SWHID with type",
+        ),
+        (
+            "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;anchor=swh:1:cnt:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
+            "anchor qualifier should be a core SWHID with type one of",
+        ),  # noqa
+    ],
+)
+def test_parse_swh_reference_invalid_swhid(invalid_swhid, error_msg, xml_with_swhid):
     """Unparsable swhid should raise
 
     """
-    invalid_swhid = "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc235"
     xml_invalid_swhid = xml_with_swhid.format(swhid=invalid_swhid)
     metadata = parse_xml(xml_invalid_swhid)
 
-    with pytest.raises(ValidationError, match="Unexpected length"):
+    with pytest.raises(ValidationError, match=error_msg):
         parse_swh_reference(metadata)

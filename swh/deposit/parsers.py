@@ -16,7 +16,15 @@ from rest_framework.parsers import BaseParser, FileUploadParser, MultiPartParser
 import xmltodict
 
 from swh.deposit.errors import ParserError
-from swh.model.identifiers import SWHID, parse_swhid
+from swh.model.exceptions import ValidationError
+from swh.model.identifiers import (
+    DIRECTORY,
+    RELEASE,
+    REVISION,
+    SNAPSHOT,
+    SWHID,
+    parse_swhid,
+)
 
 
 class SWHFileUploadZipParser(FileUploadParser):
@@ -106,6 +114,9 @@ def parse_xml(raw_content):
         raise ParserError(str(e))
 
 
+ALLOWED_QUALIFIERS_NODE_TYPE = (SNAPSHOT, REVISION, RELEASE, DIRECTORY)
+
+
 def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
     """Parse swh reference within the metadata dict (or origin) reference if found, None
     otherwise.
@@ -152,4 +163,25 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
     swhid = swh_object.get("@swhid")
     if not swhid:
         return None
-    return parse_swhid(swhid)
+    swhid_reference = parse_swhid(swhid)
+
+    if swhid_reference.metadata:
+        anchor = swhid_reference.metadata.get("anchor")
+        if anchor:
+            anchor_swhid = parse_swhid(anchor)
+            if anchor_swhid.object_type not in ALLOWED_QUALIFIERS_NODE_TYPE:
+                error_msg = (
+                    "anchor qualifier should be a core SWHID with type one of "
+                    f" {', '.join(ALLOWED_QUALIFIERS_NODE_TYPE)}"
+                )
+                raise ValidationError(error_msg)
+
+        visit = swhid_reference.metadata.get("visit")
+        if visit:
+            visit_swhid = parse_swhid(visit)
+            if visit_swhid.object_type != SNAPSHOT:
+                raise ValidationError(
+                    f"visit qualifier should be a core SWHID with type {SNAPSHOT}"
+                )
+
+    return swhid_reference
