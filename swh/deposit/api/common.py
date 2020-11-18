@@ -869,7 +869,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     def checks(
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> ParsedRequestHeaders:
         try:
             self._collection = DepositCollection.objects.get(name=collection_name)
         except DepositCollection.DoesNotExist:
@@ -912,7 +912,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         self.additional_checks(request, headers, collection_name, deposit_id)
 
-        return {"headers": headers}
+        return headers
 
     def restrict_access(
         self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
@@ -1016,9 +1016,8 @@ class APIPost(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
+        headers = self.checks(request, collection_name, deposit_id)
 
-        headers = checks["headers"]
         status, iri_key, data = self.process_post(
             request, headers, collection_name, deposit_id
         )
@@ -1093,8 +1092,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        headers = checks["headers"]
+        headers = self.checks(request, collection_name, deposit_id)
         self.process_put(request, headers, collection_name, deposit_id)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
