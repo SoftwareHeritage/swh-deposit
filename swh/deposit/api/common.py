@@ -10,6 +10,7 @@ import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
 
 import attr
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -88,6 +89,13 @@ class ParsedRequestHeaders:
     swhid = attr.ib(type=Optional[str])
 
 
+def _compute_md5(filehandler: InMemoryUploadedFile) -> bytes:
+    h = hashlib.md5()
+    for chunk in filehandler:
+        h.update(chunk)  # type: ignore
+    return h.digest()
+
+
 class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
@@ -149,22 +157,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             metadata_relevant=meta.get("HTTP_METADATA_RELEVANT"),
             swhid=meta.get("HTTP_X_CHECK_SWHID"),
         )
-
-    def _compute_md5(self, filehandler) -> bytes:
-        """Compute uploaded file's md5 sum.
-
-        Args:
-            filehandler (InMemoryUploadedFile): the file to compute the md5
-                hash
-
-        Returns:
-            the md5 checksum (str)
-
-        """
-        h = hashlib.md5()
-        for chunk in filehandler:
-            h.update(chunk)
-        return h.digest()
 
     def _deposit_put(
         self,
@@ -371,7 +363,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 )
 
         if md5sum:
-            _md5sum = self._compute_md5(filehandler)
+            _md5sum = _compute_md5(filehandler)
             if _md5sum != md5sum:
                 return make_error_dict(
                     CHECKSUM_MISMATCH,
