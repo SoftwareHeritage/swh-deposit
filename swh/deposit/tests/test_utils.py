@@ -1,13 +1,16 @@
-# Copyright (C) 2018-2019  The Software Heritage developers
+# Copyright (C) 2018-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Union
 from unittest.mock import patch
 
 import pytest
 
 from swh.deposit import utils
+from swh.model.identifiers import SWHID, parse_swhid
+from swh.model.model import MetadataTargetType
 
 
 def test_merge():
@@ -139,3 +142,59 @@ def test_normalize_date_doing_irrelevant_stuff(mock_normalize):
     expected_date = "2017-01-01 00:00:00+00:00"
 
     assert str(actual_date) == expected_date
+
+
+@pytest.mark.parametrize(
+    "swhid_or_origin,expected_type,expected_metadata_context",
+    [
+        ("https://something", MetadataTargetType.ORIGIN, {"origin": None}),
+        (
+            "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+            MetadataTargetType.CONTENT,
+            {"origin": None},
+        ),
+        (
+            "swh:1:snp:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=http://blah",
+            MetadataTargetType.SNAPSHOT,
+            {"origin": "http://blah", "path": None},
+        ),
+        (
+            "swh:1:dir:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;path=/path",
+            MetadataTargetType.DIRECTORY,
+            {"origin": None, "path": b"/path"},
+        ),
+        (
+            "swh:1:rev:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;visit=swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",  # noqa
+            MetadataTargetType.REVISION,
+            {
+                "origin": None,
+                "path": None,
+                "snapshot": parse_swhid(
+                    "swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49"
+                ),
+            },
+        ),
+        (
+            "swh:1:rel:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:dir:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",  # noqa
+            MetadataTargetType.RELEASE,
+            {
+                "origin": None,
+                "path": None,
+                "directory": parse_swhid(
+                    "swh:1:dir:41b5c8cc985d190b5a7ef4878128ebfdc2358f49"
+                ),
+            },
+        ),
+    ],
+)
+def test_compute_metadata_context(
+    swhid_or_origin: Union[str, SWHID], expected_type, expected_metadata_context
+):
+    if expected_type != MetadataTargetType.ORIGIN:
+        assert isinstance(swhid_or_origin, str)
+        swhid_or_origin = parse_swhid(swhid_or_origin)
+
+    object_type, metadata_context = utils.compute_metadata_context(swhid_or_origin)
+
+    assert object_type == expected_type
+    assert metadata_context == expected_metadata_context

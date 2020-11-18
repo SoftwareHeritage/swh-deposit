@@ -10,6 +10,8 @@ from swh.core import config
 from swh.deposit import __version__
 from swh.scheduler import get_scheduler
 from swh.scheduler.interface import SchedulerInterface
+from swh.storage import get_storage
+from swh.storage.interface import StorageInterface
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
 EDIT_SE_IRI = "edit_se_iri"
@@ -101,3 +103,6 @@ class APIConfig:
             "version": __version__,
             "configuration": {"sword_version": "2"},
         }
+        self.storage_metadata: StorageInterface = get_storage(
+            **self.config["storage_metadata"]
+        )

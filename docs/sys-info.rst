@@ -1,3 +1,5 @@
+.. _swh-deposit-deployment:
+
 Deployment of the swh-deposit
 =============================
 
@@ -90,6 +92,3 @@ This will:
   checks which are fine) and removes the different archives' identifiers
   (swh-id, ...)
 - trigger back the loading task through the scheduler
-
-
-

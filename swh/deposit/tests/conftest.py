@@ -86,20 +86,29 @@ def deposit_config_path(tmp_path, monkeypatch, deposit_config):
 
 
 @pytest.fixture(autouse=True)
-def deposit_autoconfig(deposit_config_path, swh_scheduler_config):
+def deposit_autoconfig(deposit_config_path):
     """Enforce config for deposit classes inherited from APIConfig."""
     cfg = read(deposit_config_path)
 
     if "scheduler" in cfg:
-        # scheduler setup: require the load-deposit tasks (already existing in
-        # production)
+        # scheduler setup: require the check-deposit and load-deposit tasks
         scheduler = get_scheduler(**cfg["scheduler"])
-        task_type = {
-            "type": "load-deposit",
-            "backend_name": "swh.loader.packages.deposit.tasks.LoadDeposit",
-            "description": "Load deposit task",
-        }
-        scheduler.create_task_type(task_type)
+        task_types = [
+            {
+                "type": "check-deposit",
+                "backend_name": "swh.deposit.loader.tasks.ChecksDepositTsk",
+                "description": "Check deposit metadata/archive before loading",
+                "num_retries": 3,
+            },
+            {
+                "type": "load-deposit",
+                "backend_name": "swh.loader.package.deposit.tasks.LoadDeposit",
+                "description": "Loading deposit archive into swh archive",
+                "num_retries": 3,
+            },
+        ]
+        for task_type in task_types:
+            scheduler.create_task_type(task_type)
 
 
 @pytest.fixture(scope="session")
@@ -195,15 +204,19 @@ def client():
     return APIClient()  # <- drf's client
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def authenticated_client(client, deposit_user):
     """Returned a logged client
+
+    This also patched the client instance to keep a reference on the associated
+    deposit_user.
 
     """
     _token = "%s:%s" % (deposit_user.username, TEST_USER["password"])
     token = base64.b64encode(_token.encode("utf-8"))
     authorization = "Basic %s" % token.decode("utf-8")
     client.credentials(HTTP_AUTHORIZATION=authorization)
+    client.deposit_client = deposit_user
     yield client
     client.logout()
 

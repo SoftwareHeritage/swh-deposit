@@ -7,6 +7,8 @@ When making a software deposit into the SWH archive, one can add
 information describing the software artifact and the software project.
 
 
+.. _metadata-requirements:
+
 Metadata requirements
 ---------------------
 

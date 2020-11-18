@@ -1,4 +1,6 @@
-API Specification
+.. _swh-api-specifications:
+
+API Documentation
 =================
 
 This is `Software Heritage <https://www.softwareheritage.org>`__'s
@@ -24,6 +26,8 @@ with associated metadata.
   * tar: tar archive without compression or optionally any of the following
     compression algorithm gzip (.tar.gz, .tgz), bzip2 (.tar.bz2) , or lzma
     (.tar.lzma)
+
+.. _swh-deposit-collection:
 
 Collection
 ----------
@@ -72,31 +76,30 @@ Possible errors:
 
 * common errors:
 
-  * 401 (unauthenticated) if a client does not provide credential or provide
+  * :http:statuscode:`401`:if a client does not provide credential or provide
     wrong ones
-  * 403 (forbidden) if a client tries access to a collection it does not own
-  * 404 (not found) if a client tries access to an unknown collection
-  * 404 (not found) if a client tries access to an unknown deposit
-  * 415 (unsupported media type) if a wrong media type is provided to the
-    endpoint
+  * :http:statuscode:`403` a client tries access to a collection it does not own
+  * :http:statuscode:`404` if a client tries access to an unknown collection
+  * :http:statuscode:`404` if a client tries access to an unknown deposit
+  * :http:statuscode:`415` if a wrong media type is provided to the endpoint
 
 * archive/binary deposit:
 
-  * 403 (forbidden) if the length of the archive exceeds the max size
+  * :http:statuscode:`403` the length of the archive exceeds the max size
     configured
-  * 412 (precondition failed) if the length or hash provided mismatch the
-    reality of the archive.
-  * 415 (unsupported media type) if a wrong media type is provided
+  * :http:statuscode:`412` the length or hash provided mismatch the reality of
+    the archive.
+  * :http:statuscode:`415` if a wrong media type is provided
 
 * multipart deposit:
 
-  * 412 (precondition failed) if the md5 hash provided mismatch the reality of
-    the archive
-  * 415 (unsupported media type) if a wrong media type is provided
+  * :http:statuscode:`412` the md5 hash provided mismatch the reality of the
+    archive
+  * :http:statuscode:`415` if a wrong media type is provided
 
 * Atom entry deposit:
 
-  * 400 (bad request) if the request's body is empty (for creation only)
+  * :http:statuscode:`400` if the request's body is empty (for creation only)
 
 
 
