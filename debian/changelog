@@ -1,3 +1,23 @@
+swh-deposit (0.6.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.6.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-11-18 15:58:34
+    +0100)
+  * Upstream changes:     - v0.6.0     - Adapt existing POST to a
+    collection to allow metadata-only deposit     -
+    deposit.settings.production: Remove the logging django configuration
+    - Customize the user-agent header in deposit client classes     -
+    Simplify `swh deposit upload` cli options     - doc: improve the
+    user manual documentation     - doc: rename Getting Started as User
+    Manual and update the content     - doc: add an introduction
+    paragraph in blueprint.rst     - doc: improve the spec-loading doc
+    - doc: improve the doc of API endpoints     - doc: rename
+    docs/specs/specs.rst as docs/specs/index.rst     - doc: Add a
+    description of the deposit in the docs' index page     - doc: spec-
+    meta-deposit: Update metadata-only deposit samples and requirements
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 18 Nov 2020 15:01:09 +0000
+
 swh-deposit (0.5.0-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.5.0     - (tagged by Antoine R. Dumont
