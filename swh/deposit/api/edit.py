@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict
-
 from rest_framework.request import Request
 
 from swh.deposit.models import Deposit
@@ -50,7 +48,7 @@ class EditAPI(APIPut, APIDelete):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: int,
-    ) -> Dict[str, Any]:
+    ) -> None:
         """This allows the following scenarios:
 
         - multipart: replace all the deposit (status partial) metadata and archive
@@ -71,14 +69,11 @@ class EditAPI(APIPut, APIDelete):
             - the provided xml atom entry is empty
             - the provided swhid does not exist in the archive
 
-        Returns:
-            204 No content
-
         """  # noqa
         swhid = headers.swhid
         if swhid is None:
             if request.content_type.startswith("multipart/"):
-                return self._multipart_upload(
+                self._multipart_upload(
                     request,
                     headers,
                     collection_name,
@@ -86,15 +81,17 @@ class EditAPI(APIPut, APIDelete):
                     replace_archives=True,
                     replace_metadata=True,
                 )
-            # standard metadata update (replace all metadata already provided to the
-            # deposit by the new ones)
-            return self._atom_entry(
-                request,
-                headers,
-                collection_name,
-                deposit_id=deposit_id,
-                replace_metadata=True,
-            )
+            else:
+                # standard metadata update (replace all metadata already provided to the
+                # deposit by the new ones)
+                self._atom_entry(
+                    request,
+                    headers,
+                    collection_name,
+                    deposit_id=deposit_id,
+                    replace_metadata=True,
+                )
+            return
 
         # Update metadata on a deposit already ingested
         # Write to the metadata storage (and the deposit backend)
@@ -133,17 +130,10 @@ class EditAPI(APIPut, APIDelete):
             deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
         )
 
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit_request.date,
-            "status": deposit.status,
-            "archive": None,
-        }
-
-    def process_delete(self, req, collection_name: str, deposit_id: int) -> Dict:
+    def process_delete(self, req, collection_name: str, deposit_id: int) -> None:
         """Delete the container (deposit).
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deleteconteiner  # noqa
 
         """
-        return self._delete_deposit(collection_name, deposit_id)
+        self._delete_deposit(collection_name, deposit_id)

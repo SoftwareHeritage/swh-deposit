@@ -1117,7 +1117,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: int,
-    ) -> Dict[str, Any]:
+    ) -> None:
         """Routine to deal with updating a deposit in some way.
 
         Returns
@@ -1152,11 +1152,11 @@ class APIDelete(APIBase, metaclass=ABCMeta):
     @abstractmethod
     def process_delete(
         self, request: Request, collection_name: str, deposit_id: int
-    ) -> Dict:
+    ) -> None:
         """Routine to delete a resource.
 
         This is mostly not allowed except for the
         EM_IRI (cf. .api.deposit_update.APIUpdateArchive)
 
         """
-        return {}
+        pass

@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from rest_framework import status
 
@@ -35,7 +35,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
 
     def process_put(
         self, req, headers: ParsedRequestHeaders, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
+    ) -> None:
         """Replace existing content for the existing deposit.
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_binary  # noqa
@@ -50,7 +50,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             )
             raise DepositError(BAD_REQUEST, msg)
 
-        return self._binary_upload(
+        self._binary_upload(
             req, headers, collection_name, deposit_id=deposit_id, replace_archives=True
         )
 
@@ -84,7 +84,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             self._binary_upload(req, headers, collection_name, deposit_id),
         )
 
-    def process_delete(self, req, collection_name: str, deposit_id: int) -> Dict:
+    def process_delete(self, req, collection_name: str, deposit_id: int) -> None:
         """Delete content (archives) from existing deposit.
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deletingcontent  # noqa
@@ -93,4 +93,4 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             204 Created
 
         """
-        return self._delete_archives(collection_name, deposit_id)
+        self._delete_archives(collection_name, deposit_id)
