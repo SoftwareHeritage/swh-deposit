@@ -879,26 +879,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             "archive": None,
         }
 
-    def _make_iris(
-        self, request: Request, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
-        """Define the IRI endpoints
-
-        Args:
-            request (Request): The initial request
-            collection_name (str): client/collection's name
-            deposit_id (id): Deposit identifier
-
-        Returns:
-            Dictionary of keys with the iris' urls.
-
-        """
-        args = [collection_name, deposit_id]
-        return {
-            iri: request.build_absolute_uri(reverse(iri, args=args))
-            for iri in [EM_IRI, EDIT_IRI, CONT_FILE_IRI, SE_IRI, STATE_IRI]
-        }
-
     def additional_checks(
         self,
         request: Request,
@@ -1079,7 +1059,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
             return make_error_response_from_dict(request, checks["error"])
 
         headers = checks["headers"]
-        _status, _iri_key, data = self.process_post(
+        status, iri_key, data = self.process_post(
             request, headers, collection_name, deposit_id
         )
 
@@ -1087,17 +1067,38 @@ class APIPost(APIBase, metaclass=ABCMeta):
         if error:
             return make_error_response_from_dict(request, error)
 
+        return self._make_deposit_receipt(
+            request, collection_name, status, iri_key, data,
+        )
+
+    def _make_deposit_receipt(
+        self,
+        request,
+        collection_name: str,
+        status: int,
+        iri_key: str,
+        data: Dict[str, Any],
+    ) -> HttpResponse:
+        """Returns an HttpResponse with a SWORD Deposit receipt as content."""
+
+        # Build the IRIs in the receipt
+        args = [collection_name, data["deposit_id"]]
+        iris = {
+            iri: request.build_absolute_uri(reverse(iri, args=args))
+            for iri in [EM_IRI, EDIT_IRI, CONT_FILE_IRI, SE_IRI, STATE_IRI]
+        }
+
         data["packagings"] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(request, collection_name, data["deposit_id"])
         data.update(iris)
+
         response = render(
             request,
             "deposit/deposit_receipt.xml",
             context=data,
             content_type="application/xml",
-            status=_status,
+            status=status,
         )
-        response._headers["location"] = "Location", data[_iri_key]  # type: ignore
+        response._headers["location"] = "Location", data[iri_key]  # type: ignore
         return response
 
     @abstractmethod
