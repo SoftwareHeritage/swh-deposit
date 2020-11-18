@@ -326,7 +326,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     def _check_preconditions_on(
         self, filehandler, md5sum: Optional[bytes], content_length: Optional[int] = None
-    ) -> Optional[Dict]:
+    ) -> None:
         """Check preconditions on provided file are respected. That is the
            length and/or the md5sum hash match the file's content.
 
@@ -362,8 +362,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     f"The checksum sent {hashutil.hash_to_hex(md5sum)} and the actual "
                     f"checksum {hashutil.hash_to_hex(_md5sum)} does not match.",
                 )
-
-        return None
 
     def _binary_upload(
         self,
@@ -439,12 +437,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         filehandler = request.FILES["file"]
 
-        precondition_status_response = self._check_preconditions_on(
+        self._check_preconditions_on(
             filehandler, headers.content_md5sum, content_length
         )
-
-        if precondition_status_response:
-            return precondition_status_response
 
         slug = headers.slug
         if check_slug_is_present and not slug:
@@ -575,12 +570,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if not filehandler:
             filehandler = data["application/x-tar"]
 
-        precondition_status_response = self._check_preconditions_on(
-            filehandler, headers.content_md5sum
-        )
-
-        if precondition_status_response:
-            return precondition_status_response
+        self._check_preconditions_on(filehandler, headers.content_md5sum)
 
         try:
             raw_metadata, metadata = self._read_metadata(data["application/atom+xml"])
@@ -941,8 +931,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     def _basic_not_allowed_method(self, request: Request, method: str):
         raise DepositError(
-            METHOD_NOT_ALLOWED,
-            f"{method} method is not supported on this endpoint",
+            METHOD_NOT_ALLOWED, f"{method} method is not supported on this endpoint",
         )
 
     def get(
