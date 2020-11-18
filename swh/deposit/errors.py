@@ -7,7 +7,7 @@
 
 """
 
-from typing import Any, Dict
+from typing import NoReturn
 
 from django.shortcuts import render
 from rest_framework import status
@@ -152,11 +152,11 @@ def make_error_response(req, key, summary=None, verbose_description=None):
     return make_error_response_from_dict(req, error["error"])
 
 
-def make_missing_slug_error() -> Dict[str, Any]:
+def raise_missing_slug_error() -> NoReturn:
     """Returns a missing slug header error dict
 
     """
-    return make_error_dict(
+    raise DepositError(
         BAD_REQUEST,
         "Missing SLUG header",
         verbose_description=(
@@ -171,10 +171,31 @@ class DepositError(ValueError):
 
     """
 
-    def __init__(self, key, summary, verbose_description):
+    def __init__(self, key, summary, verbose_description=None):
         self.key = key
         self.summary = summary
         self.verbose_description = verbose_description
 
     def to_dict(self):
         return make_error_dict(self.key, self.summary, self.verbose_description)
+
+
+class DepositErrorMiddleware:
+    """A Django middleware that catches DepositError and returns a proper
+    error response."""
+
+    # __init__ and __call__ are boilerplate to make a pass-through Django
+    # middleware
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        return response
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, DepositError):
+            return make_error_response_from_dict(request, exception.to_dict()["error"])
+        else:
+            return None

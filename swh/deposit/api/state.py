@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 
-from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
+from ..errors import NOT_FOUND, make_error_response
 from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 from .common import APIBase
 from .converters import convert_status_detail
@@ -23,9 +23,7 @@ class StateAPI(APIBase):
     """
 
     def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
-        checks = self.checks(req, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(req, checks["error"])
+        self.checks(req, collection_name, deposit_id)
 
         try:
             deposit = Deposit.objects.get(pk=deposit_id)

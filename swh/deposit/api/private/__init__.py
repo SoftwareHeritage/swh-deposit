@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 
 from swh.deposit import utils
 from swh.deposit.api.common import AuthenticatedAPIView
-from swh.deposit.errors import NOT_FOUND, make_error_dict
+from swh.deposit.errors import NOT_FOUND, DepositError
 
 from ...config import METADATA_TYPE, APIConfig
 from ...models import Deposit, DepositRequest
@@ -81,14 +81,12 @@ class APIPrivateView(APIConfig, AuthenticatedAPIView):
             try:
                 Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
-                return make_error_dict(
+                raise DepositError(
                     NOT_FOUND, "Deposit with id %s does not exist" % deposit_id
                 )
 
         headers = self._read_headers(req)
-        checks = self.additional_checks(req, headers, collection_name, deposit_id)
-        if "error" in checks:
-            return checks
+        self.additional_checks(req, headers, collection_name, deposit_id)
 
         return {"headers": headers}
 

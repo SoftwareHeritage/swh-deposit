@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 from rest_framework import status
 
 from ..config import CONT_FILE_IRI
-from ..errors import BAD_REQUEST, make_error_dict
+from ..errors import BAD_REQUEST, DepositError
 from ..parsers import SWHFileUploadTarParser, SWHFileUploadZipParser
 from .common import (
     ACCEPT_ARCHIVE_CONTENT_TYPES,
@@ -48,7 +48,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             msg = "Packaging format supported is restricted to %s" % (
                 ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
             )
-            return make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         return self._binary_upload(
             req, headers, collection_name, deposit_id=deposit_id, replace_archives=True
@@ -76,8 +76,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             msg = "Packaging format supported is restricted to %s" % (
                 ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
             )
-            unused = 0
-            return unused, "unused", make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         return (
             status.HTTP_201_CREATED,

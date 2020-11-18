@@ -10,7 +10,7 @@ from rest_framework.parsers import JSONParser
 from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 from . import APIPrivateView
-from ...errors import BAD_REQUEST, make_error_dict
+from ...errors import BAD_REQUEST, DepositError
 from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
 from ..common import APIPut, ParsedRequestHeaders
 
@@ -43,11 +43,11 @@ class APIUpdateStatus(APIPrivateView, APIPut):
             msg = "The status key is mandatory with possible values %s" % list(
                 DEPOSIT_STATUS_DETAIL.keys()
             )
-            return make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         if status not in DEPOSIT_STATUS_DETAIL:
             msg = "Possible status in %s" % list(DEPOSIT_STATUS_DETAIL.keys())
-            return make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         if status == DEPOSIT_STATUS_LOAD_SUCCESS:
             missing_keys = []
@@ -61,7 +61,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                     f"Updating deposit status to {status}"
                     f" requires information {','.join(missing_keys)}"
                 )
-                return make_error_dict(BAD_REQUEST, msg)
+                raise DepositError(BAD_REQUEST, msg)
 
         return {}
 

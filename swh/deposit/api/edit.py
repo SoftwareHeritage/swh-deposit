@@ -11,7 +11,7 @@ from swh.deposit.models import Deposit
 from swh.model.identifiers import parse_swhid
 
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..errors import BAD_REQUEST, DepositError, ParserError, make_error_dict
+from ..errors import BAD_REQUEST, DepositError, ParserError
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
 from .common import APIDelete, APIPut, ParsedRequestHeaders
 
@@ -29,7 +29,7 @@ class EditAPI(APIPut, APIDelete):
 
     def restrict_access(
         self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
-    ) -> Dict[str, Any]:
+    ) -> None:
         """Relax restriction access to allow metadata update on deposit with status "done" when
         a swhid is provided.
 
@@ -40,9 +40,9 @@ class EditAPI(APIPut, APIDelete):
             and deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
         ):
             # Allow metadata update on deposit with status "done" when swhid provided
-            return {}
+            return
         # otherwise, let the standard access restriction check occur
-        return super().restrict_access(request, headers, deposit)
+        super().restrict_access(request, headers, deposit)
 
     def process_put(
         self,
@@ -104,7 +104,7 @@ class EditAPI(APIPut, APIDelete):
         assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
 
         if swhid != deposit.swhid:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 f"Mismatched provided SWHID {swhid} with deposit's {deposit.swhid}.",
                 "The provided SWHID does not match the deposit to update. "
@@ -114,7 +114,7 @@ class EditAPI(APIPut, APIDelete):
         try:
             raw_metadata, metadata = self._read_metadata(request.data)
         except ParserError:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "Malformed xml metadata",
                 "The xml received is malformed. "
@@ -122,19 +122,16 @@ class EditAPI(APIPut, APIDelete):
             )
 
         if not metadata:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "Empty body request is not supported",
                 "Atom entry deposit is supposed to send for metadata. "
                 "If the body is empty, there is no metadata.",
             )
 
-        try:
-            _, _, deposit, deposit_request = self._store_metadata_deposit(
-                deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
-            )
-        except DepositError as deposit_error:
-            return deposit_error.to_dict()
+        _, _, deposit, deposit_request = self._store_metadata_deposit(
+            deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
+        )
 
         return {
             "deposit_id": deposit.id,

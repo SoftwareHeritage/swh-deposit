@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "swh.deposit.auth.WrapBasicAuthenticationResponseMiddleware",
+    "swh.deposit.errors.DepositErrorMiddleware",
 ]
 
 ROOT_URLCONF = "swh.deposit.urls"

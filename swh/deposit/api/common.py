@@ -63,10 +63,7 @@ from ..errors import (
     PARSING_ERROR,
     DepositError,
     ParserError,
-    make_error_dict,
-    make_error_response,
-    make_error_response_from_dict,
-    make_missing_slug_error,
+    raise_missing_slug_error,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_swh_reference, parse_xml
@@ -290,9 +287,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
         except Deposit.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"The deposit {deposit_id} does not exist"
-            )
+            raise DepositError(NOT_FOUND, f"The deposit {deposit_id} does not exist")
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
         return {}
@@ -312,9 +307,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             deposit = Deposit.objects.get(pk=deposit_id)
         except Deposit.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"The deposit {deposit_id} does not exist"
-            )
+            raise DepositError(NOT_FOUND, f"The deposit {deposit_id} does not exist")
 
         if deposit.collection.name != collection_name:
             summary = "Cannot delete a deposit from another collection"
@@ -322,7 +315,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 deposit_id,
                 collection_name,
             )
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST, summary=summary, verbose_description=description
             )
 
@@ -350,7 +343,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         max_upload_size = self.config["max_upload_size"]
         if content_length:
             if content_length > max_upload_size:
-                return make_error_dict(
+                raise DepositError(
                     MAX_UPLOAD_SIZE_EXCEEDED,
                     f"Upload size limit exceeded (max {max_upload_size} bytes)."
                     "Please consider sending the archive in multiple steps.",
@@ -358,14 +351,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
             length = filehandler.size
             if length != content_length:
-                return make_error_dict(
-                    status.HTTP_412_PRECONDITION_FAILED, "Wrong length"
-                )
+                raise DepositError(status.HTTP_412_PRECONDITION_FAILED, "Wrong length")
 
         if md5sum:
             _md5sum = _compute_md5(filehandler)
             if _md5sum != md5sum:
-                return make_error_dict(
+                raise DepositError(
                     CHECKSUM_MISMATCH,
                     "Wrong md5 hash",
                     f"The checksum sent {hashutil.hash_to_hex(md5sum)} and the actual "
@@ -424,7 +415,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         content_length = headers.content_length
         if not content_length:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "CONTENT_LENGTH header is mandatory",
                 "For archive deposit, the CONTENT_LENGTH header must be sent.",
@@ -432,7 +423,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         content_disposition = headers.content_disposition
         if not content_disposition:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "CONTENT_DISPOSITION header is mandatory",
                 "For archive deposit, the CONTENT_DISPOSITION header must be sent.",
@@ -440,7 +431,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         packaging = headers.packaging
         if packaging and packaging not in ACCEPT_PACKAGINGS:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 f"Only packaging {ACCEPT_PACKAGINGS} is supported",
                 f"The packaging provided {packaging} is not supported",
@@ -457,7 +448,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         slug = headers.slug
         if check_slug_is_present and not slug:
-            return make_missing_slug_error()
+            raise_missing_slug_error()
 
         # actual storage of data
         archive_metadata = filehandler
@@ -542,7 +533,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         slug = headers.slug
         if check_slug_is_present and not slug:
-            return make_missing_slug_error()
+            raise_missing_slug_error()
 
         content_types_present = set()
 
@@ -555,7 +546,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             fh = value
             content_type = fh.content_type
             if content_type in content_types_present:
-                return make_error_dict(
+                raise DepositError(
                     ERROR_CONTENT,
                     "Only 1 application/zip (or application/x-tar) archive "
                     "and 1 atom+xml entry is supported (as per sword2.0 "
@@ -570,7 +561,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             data[content_type] = fh
 
         if len(content_types_present) != 2:
-            return make_error_dict(
+            raise DepositError(
                 ERROR_CONTENT,
                 "You must provide both 1 application/zip (or "
                 "application/x-tar) and 1 atom+xml entry for multipart "
@@ -594,7 +585,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             raw_metadata, metadata = self._read_metadata(data["application/atom+xml"])
         except ParserError:
-            return make_error_dict(
+            raise DepositError(
                 PARSING_ERROR,
                 "Malformed xml metadata",
                 "The xml received is malformed. "
@@ -765,7 +756,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             raw_metadata, metadata = self._read_metadata(request.data)
         except ParserError:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "Malformed xml metadata",
                 "The xml received is malformed. "
@@ -773,7 +764,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             )
 
         if not metadata:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "Empty body request is not supported",
                 "Atom entry deposit is supposed to send for metadata. "
@@ -784,14 +775,16 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             swhid = parse_swh_reference(metadata)
         except ValidationError as e:
-            return make_error_dict(PARSING_ERROR, "Invalid SWHID reference", str(e),)
+            raise DepositError(
+                PARSING_ERROR, "Invalid SWHID reference", str(e),
+            )
 
         if swhid is not None:
             external_id = metadata.get("external_identifier", headers.slug)
         else:
             slug = headers.slug
             if check_slug_is_present and not slug:
-                return make_missing_slug_error()
+                raise_missing_slug_error()
 
             external_id = metadata.get("external_identifier", slug)
 
@@ -803,12 +796,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         )
 
         if swhid is not None:
-            try:
-                swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
-                    deposit, swhid, metadata, raw_metadata
-                )
-            except DepositError as deposit_error:
-                return deposit_error.to_dict()
+            swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
+                deposit, swhid, metadata, raw_metadata
+            )
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
             if isinstance(swhid_ref, SWHID):
@@ -893,9 +883,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             self._collection = DepositCollection.objects.get(name=collection_name)
         except DepositCollection.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"Unknown collection name {collection_name}"
-            )
+            raise DepositError(NOT_FOUND, f"Unknown collection name {collection_name}")
         assert self._collection is not None
 
         username = request.user.username
@@ -905,13 +893,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     username=username
                 )
             except DepositClient.DoesNotExist:
-                return make_error_dict(NOT_FOUND, f"Unknown client name {username}")
+                raise DepositError(NOT_FOUND, f"Unknown client name {username}")
 
             collection_id = self._collection.id
             collections = self._client.collections
             assert collections is not None
             if collection_id not in collections:
-                return make_error_dict(
+                raise DepositError(
                     FORBIDDEN,
                     f"Client {username} cannot access collection {collection_name}",
                 )
@@ -922,27 +910,23 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             try:
                 deposit = Deposit.objects.get(pk=deposit_id)
             except Deposit.DoesNotExist:
-                return make_error_dict(
+                raise DepositError(
                     NOT_FOUND, f"Deposit with id {deposit_id} does not exist"
                 )
 
             assert deposit is not None
-            checks = self.restrict_access(request, headers, deposit)
-            if checks:
-                return checks
+            self.restrict_access(request, headers, deposit)
 
         if headers.on_behalf_of:
-            return make_error_dict(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
+            raise DepositError(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
 
-        checks = self.additional_checks(request, headers, collection_name, deposit_id)
-        if "error" in checks:
-            return checks
+        self.additional_checks(request, headers, collection_name, deposit_id)
 
         return {"headers": headers}
 
     def restrict_access(
         self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
-    ) -> Dict[str, Any]:
+    ) -> None:
         """Allow modifications on deposit with status 'partial' only, reject the rest.
 
         """
@@ -951,14 +935,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 DEPOSIT_STATUS_PARTIAL,
             )
             description = f"This deposit has status '{deposit.status}'"
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST, summary=summary, verbose_description=description
             )
-        return {}
 
     def _basic_not_allowed_method(self, request: Request, method: str):
-        return make_error_response(
-            request,
+        raise DepositError(
             METHOD_NOT_ALLOWED,
             f"{method} method is not supported on this endpoint",
         )
@@ -1000,9 +982,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
+        self.checks(request, collection_name, deposit_id)
 
         r = self.process_get(request, collection_name, deposit_id)
 
@@ -1048,17 +1028,11 @@ class APIPost(APIBase, metaclass=ABCMeta):
 
         """
         checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
 
         headers = checks["headers"]
         status, iri_key, data = self.process_post(
             request, headers, collection_name, deposit_id
         )
-
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
 
         return self._make_deposit_receipt(
             request, collection_name, status, iri_key, data,
@@ -1131,15 +1105,8 @@ class APIPut(APIBase, metaclass=ABCMeta):
 
         """
         checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
-
         headers = checks["headers"]
-        data = self.process_put(request, headers, collection_name, deposit_id)
-
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
+        self.process_put(request, headers, collection_name, deposit_id)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
@@ -1176,15 +1143,9 @@ class APIDelete(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
-
+        self.checks(request, collection_name, deposit_id)
         assert deposit_id is not None
-        data = self.process_delete(request, collection_name, deposit_id)
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
+        self.process_delete(request, collection_name, deposit_id)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
