@@ -10,7 +10,13 @@ from rest_framework import status
 from ..config import CONT_FILE_IRI
 from ..errors import BAD_REQUEST, make_error_dict
 from ..parsers import SWHFileUploadTarParser, SWHFileUploadZipParser
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIDelete, APIPost, APIPut
+from .common import (
+    ACCEPT_ARCHIVE_CONTENT_TYPES,
+    APIDelete,
+    APIPost,
+    APIPut,
+    ParsedRequestHeaders,
+)
 
 
 class EditMediaAPI(APIPost, APIPut, APIDelete):
@@ -28,7 +34,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
     )
 
     def process_put(
-        self, req, headers, collection_name: str, deposit_id: int
+        self, req, headers: ParsedRequestHeaders, collection_name: str, deposit_id: int
     ) -> Dict[str, Any]:
         """Replace existing content for the existing deposit.
 
@@ -49,7 +55,11 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
         )
 
     def process_post(
-        self, req, headers: Dict, collection_name: str, deposit_id: Optional[int] = None
+        self,
+        req,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit_id: Optional[int] = None,
     ) -> Tuple[int, str, Dict]:
         """Add new content to the existing deposit.
 

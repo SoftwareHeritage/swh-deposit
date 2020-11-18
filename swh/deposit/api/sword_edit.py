@@ -12,7 +12,7 @@ from swh.storage.interface import StorageInterface
 
 from ..config import EDIT_IRI, EM_IRI
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIPost
+from .common import APIPost, ParsedRequestHeaders
 
 
 class SwordEditAPI(APIPost):
@@ -35,7 +35,7 @@ class SwordEditAPI(APIPost):
     def process_post(
         self,
         request,
-        headers: Dict,
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
     ) -> Tuple[int, str, Dict]:
@@ -70,8 +70,8 @@ class SwordEditAPI(APIPost):
             )
             return (status.HTTP_201_CREATED, EM_IRI, data)
 
-        content_length = headers["content-length"] or 0
-        if content_length == 0 and headers["in-progress"] is False:
+        content_length = headers.content_length or 0
+        if content_length == 0 and headers.in_progress is False:
             # check for final empty post
             data = self._empty_post(request, headers, collection_name, deposit_id)
             return (status.HTTP_200_OK, EDIT_IRI, data)

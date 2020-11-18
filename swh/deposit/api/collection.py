@@ -14,7 +14,7 @@ from ..parsers import (
     SWHFileUploadZipParser,
     SWHMultiPartParser,
 )
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost, ParsedRequestHeaders
 
 
 class CollectionAPI(APIPost):
@@ -36,7 +36,7 @@ class CollectionAPI(APIPost):
     def process_post(
         self,
         req,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
     ) -> Tuple[int, str, Dict[str, Any]]:

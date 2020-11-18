@@ -74,6 +74,20 @@ ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
 
 
+@attr.s
+class ParsedRequestHeaders:
+    content_type = attr.ib(type=str)
+    content_length = attr.ib(type=Optional[int])
+    in_progress = attr.ib(type=bool)
+    content_disposition = attr.ib(type=Optional[str])
+    content_md5sum = attr.ib(type=Optional[bytes])
+    packaging = attr.ib(type=Optional[str])
+    slug = attr.ib(type=Optional[str])
+    on_behalf_of = attr.ib(type=Optional[str])
+    metadata_relevant = attr.ib(type=Optional[str])
+    swhid = attr.ib(type=Optional[str])
+
+
 class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
@@ -89,7 +103,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     """
 
-    def _read_headers(self, request: Request) -> Dict[str, Any]:
+    def _read_headers(self, request: Request) -> ParsedRequestHeaders:
         """Read and unify the necessary headers from the request (those are
            not stored in the same location or not properly formatted).
 
@@ -109,14 +123,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         """
         meta = request._request.META
-        content_type = request.content_type
+
         content_length = meta.get("CONTENT_LENGTH")
         if content_length and isinstance(content_length, str):
             content_length = int(content_length)
 
         # final deposit if not provided
         in_progress = meta.get("HTTP_IN_PROGRESS", False)
-        content_disposition = meta.get("HTTP_CONTENT_DISPOSITION")
         if isinstance(in_progress, str):
             in_progress = in_progress.lower() == "true"
 
@@ -124,25 +137,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if content_md5sum:
             content_md5sum = bytes.fromhex(content_md5sum)
 
-        packaging = meta.get("HTTP_PACKAGING")
-        slug = meta.get("HTTP_SLUG")
-        on_behalf_of = meta.get("HTTP_ON_BEHALF_OF")
-        metadata_relevant = meta.get("HTTP_METADATA_RELEVANT")
-
-        swhid = meta.get("HTTP_X_CHECK_SWHID")
-
-        return {
-            "content-type": content_type,
-            "content-length": content_length,
-            "in-progress": in_progress,
-            "content-disposition": content_disposition,
-            "content-md5sum": content_md5sum,
-            "packaging": packaging,
-            "slug": slug,
-            "on-behalf-of": on_behalf_of,
-            "metadata-relevant": metadata_relevant,
-            "swhid": swhid,
-        }
+        return ParsedRequestHeaders(
+            content_type=request.content_type,
+            content_length=content_length,
+            in_progress=in_progress,
+            content_disposition=meta.get("HTTP_CONTENT_DISPOSITION"),
+            content_md5sum=content_md5sum,
+            packaging=meta.get("HTTP_PACKAGING"),
+            slug=meta.get("HTTP_SLUG"),
+            on_behalf_of=meta.get("HTTP_ON_BEHALF_OF"),
+            metadata_relevant=meta.get("HTTP_METADATA_RELEVANT"),
+            swhid=meta.get("HTTP_X_CHECK_SWHID"),
+        )
 
     def _compute_md5(self, filehandler) -> bytes:
         """Compute uploaded file's md5 sum.
@@ -334,7 +340,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return {}
 
     def _check_preconditions_on(
-        self, filehandler, md5sum: str, content_length: Optional[int] = None
+        self, filehandler, md5sum: Optional[bytes], content_length: Optional[int] = None
     ) -> Optional[Dict]:
         """Check preconditions on provided file are respected. That is the
            length and/or the md5sum hash match the file's content.
@@ -379,7 +385,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _binary_upload(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
@@ -393,7 +399,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Args:
             request (Request): the request holding information to parse
                 and inject in db
-            headers (dict): request headers formatted
+            headers (ParsedRequestHeaders): parsed request headers
             collection_name (str): the associated client
             deposit_id (id): deposit identifier if provided
             replace_metadata (bool): 'Update or add' request to existing
@@ -424,7 +430,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        content_length = headers["content-length"]
+        content_length = headers.content_length
         if not content_length:
             return make_error_dict(
                 BAD_REQUEST,
@@ -432,7 +438,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "For archive deposit, the CONTENT_LENGTH header must be sent.",
             )
 
-        content_disposition = headers["content-disposition"]
+        content_disposition = headers.content_disposition
         if not content_disposition:
             return make_error_dict(
                 BAD_REQUEST,
@@ -440,7 +446,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "For archive deposit, the CONTENT_DISPOSITION header must be sent.",
             )
 
-        packaging = headers["packaging"]
+        packaging = headers.packaging
         if packaging and packaging not in ACCEPT_PACKAGINGS:
             return make_error_dict(
                 BAD_REQUEST,
@@ -451,13 +457,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         filehandler = request.FILES["file"]
 
         precondition_status_response = self._check_preconditions_on(
-            filehandler, headers["content-md5sum"], content_length
+            filehandler, headers.content_md5sum, content_length
         )
 
         if precondition_status_response:
             return precondition_status_response
 
-        slug = headers.get("slug")
+        slug = headers.slug
         if check_slug_is_present and not slug:
             return make_missing_slug_error()
 
@@ -466,7 +472,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit = self._deposit_put(
             request,
             deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
+            in_progress=headers.in_progress,
             external_id=slug,
         )
         self._deposit_request_put(
@@ -495,7 +501,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _multipart_upload(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
@@ -511,7 +517,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Args:
             request (Request): the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
             deposit_id: deposit identifier if provided
             replace_metadata: 'Update or add' request to existing
@@ -542,7 +548,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        slug = headers.get("slug")
+        slug = headers.slug
         if check_slug_is_present and not slug:
             return make_missing_slug_error()
 
@@ -587,7 +593,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             filehandler = data["application/x-tar"]
 
         precondition_status_response = self._check_preconditions_on(
-            filehandler, headers["content-md5sum"]
+            filehandler, headers.content_md5sum
         )
 
         if precondition_status_response:
@@ -607,7 +613,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit = self._deposit_put(
             request,
             deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
+            in_progress=headers.in_progress,
             external_id=slug,
         )
         deposit_request_data = {
@@ -722,7 +728,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _atom_entry(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
@@ -734,7 +740,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Args:
             request: the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
             deposit_id: deposit identifier if provided
             replace_metadata: 'Update or add' request to existing
@@ -788,9 +794,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             return make_error_dict(PARSING_ERROR, "Invalid SWHID reference", str(e),)
 
         if swhid is not None:
-            external_id = metadata.get("external_identifier", headers.get("slug"))
+            external_id = metadata.get("external_identifier", headers.slug)
         else:
-            slug = headers.get("slug")
+            slug = headers.slug
             if check_slug_is_present and not slug:
                 return make_missing_slug_error()
 
@@ -799,7 +805,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit = self._deposit_put(
             request,
             deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
+            in_progress=headers.in_progress,
             external_id=external_id,
         )
 
@@ -841,14 +847,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         }
 
     def _empty_post(
-        self, request: Request, headers: Dict, collection_name: str, deposit_id: int
+        self,
+        request: Request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit_id: int,
     ) -> Dict[str, Any]:
         """Empty post to finalize an empty deposit.
 
         Args:
             request: the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
             deposit_id: deposit identifier
 
@@ -892,7 +902,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def additional_checks(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
     ) -> Dict[str, Any]:
@@ -948,7 +958,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             if checks:
                 return checks
 
-        if headers["on-behalf-of"]:
+        if headers.on_behalf_of:
             return make_error_dict(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
 
         checks = self.additional_checks(request, headers, collection_name, deposit_id)
@@ -958,7 +968,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return {"headers": headers}
 
     def restrict_access(
-        self, request: Request, headers: Dict, deposit: Deposit
+        self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
     ) -> Dict[str, Any]:
         """Allow modifications on deposit with status 'partial' only, reject the rest.
 
@@ -1094,7 +1104,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
     def process_post(
         self,
         request,
-        headers: Dict,
+        headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
     ) -> Tuple[int, str, Dict]:
@@ -1141,7 +1151,11 @@ class APIPut(APIBase, metaclass=ABCMeta):
 
     @abstractmethod
     def process_put(
-        self, request: Request, headers: Dict, collection_name: str, deposit_id: int
+        self,
+        request: Request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit_id: int,
     ) -> Dict[str, Any]:
         """Routine to deal with updating a deposit in some way.
 

@@ -13,7 +13,7 @@ from swh.model.identifiers import parse_swhid
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import BAD_REQUEST, BadRequestError, ParserError, make_error_dict
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIDelete, APIPut
+from .common import APIDelete, APIPut, ParsedRequestHeaders
 
 
 class EditAPI(APIPut, APIDelete):
@@ -28,7 +28,7 @@ class EditAPI(APIPut, APIDelete):
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
 
     def restrict_access(
-        self, request: Request, headers: Dict, deposit: Deposit
+        self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
     ) -> Dict[str, Any]:
         """Relax restriction access to allow metadata update on deposit with status "done" when
         a swhid is provided.
@@ -36,7 +36,7 @@ class EditAPI(APIPut, APIDelete):
         """
         if (
             request.method == "PUT"
-            and headers["swhid"] is not None
+            and headers.swhid is not None
             and deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
         ):
             # Allow metadata update on deposit with status "done" when swhid provided
@@ -45,7 +45,11 @@ class EditAPI(APIPut, APIDelete):
         return super().restrict_access(request, headers, deposit)
 
     def process_put(
-        self, request, headers: Dict, collection_name: str, deposit_id: int
+        self,
+        request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit_id: int,
     ) -> Dict[str, Any]:
         """This allows the following scenarios:
 
@@ -71,7 +75,7 @@ class EditAPI(APIPut, APIDelete):
             204 No content
 
         """  # noqa
-        swhid = headers.get("swhid")
+        swhid = headers.swhid
         if swhid is None:
             if request.content_type.startswith("multipart/"):
                 return self._multipart_upload(
