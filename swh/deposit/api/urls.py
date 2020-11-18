@@ -11,11 +11,12 @@ from django.conf.urls import url
 from django.shortcuts import render
 
 from ..config import COL_IRI, CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI, SD_IRI, STATE_IRI
-from .deposit import APIPostDeposit
-from .deposit_content import APIContent
-from .deposit_status import APIStatus
-from .deposit_update import APIUpdateArchive, APIUpdateMetadata
-from .service_document import APIServiceDocument
+from .collection import CollectionAPI
+from .content import ContentAPI
+from .edit import EditAPI
+from .edit_media import EditMediaAPI
+from .service_document import ServiceDocumentAPI
+from .state import StateAPI
 
 
 def api_view(req):
@@ -28,16 +29,16 @@ urlpatterns = [
     url(r"^$", api_view, name="api"),
     # SD IRI - Service Document IRI
     # -> GET
-    url(r"^servicedocument/", APIServiceDocument.as_view(), name=SD_IRI),
-    # Col IRI - Collection IRI
+    url(r"^servicedocument/", ServiceDocumentAPI.as_view(), name=SD_IRI),
+    # Col-IRI - Collection IRI
     # -> POST
-    url(r"^(?P<collection_name>[^/]+)/$", APIPostDeposit.as_view(), name=COL_IRI),
+    url(r"^(?P<collection_name>[^/]+)/$", CollectionAPI.as_view(), name=COL_IRI),
     # EM IRI - Atom Edit Media IRI (update archive IRI)
     # -> PUT (update-in-place existing archive)
     # -> POST (add new archive)
     url(
         r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/media/$",
-        APIUpdateArchive.as_view(),
+        EditMediaAPI.as_view(),
         name=EM_IRI,
     ),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
@@ -46,23 +47,23 @@ urlpatterns = [
     # -> POST (add new metadata)
     url(
         r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$",
-        APIUpdateMetadata.as_view(),
+        EditAPI.as_view(),
         name=EDIT_SE_IRI,
     ),
     # State IRI
     # -> GET
     url(
         r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/status/$",
-        APIStatus.as_view(),
+        StateAPI.as_view(),
         name=STATE_IRI,
     ),
-    # Cont/File IRI
+    # Cont-IRI
     # -> GET
     url(
         r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/content/$",
-        APIContent.as_view(),
+        ContentAPI.as_view(),
         name=CONT_FILE_IRI,
     ),  # specification is not clear about
-    # FILE-IRI, we assume it's the same as
-    # the CONT-IRI one
+    # File-IRI, we assume it's the same as
+    # the Cont-IRI one
 ]

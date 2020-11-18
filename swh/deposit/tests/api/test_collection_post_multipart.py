@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests handling of multipart requests to POST Col-IRI."""
+
 from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile

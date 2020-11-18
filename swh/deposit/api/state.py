@@ -8,11 +8,20 @@ from django.shortcuts import render
 from rest_framework import status
 
 from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
-from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
+from ..models import DEPOSIT_STATUS_DETAIL, Deposit
 from .common import APIBase
+from .converters import convert_status_detail
 
 
-class APIContent(APIBase):
+class StateAPI(APIBase):
+    """Deposit status.
+
+    What's known as 'State-IRI' in the sword specification.
+
+    HTTP verbs supported: GET
+
+    """
+
     def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
         checks = self.checks(req, collection_name, deposit_id)
         if "error" in checks:
@@ -30,17 +39,26 @@ class APIContent(APIBase):
                 % (deposit_id, collection_name),
             )
 
-        requests = DepositRequest.objects.filter(deposit=deposit)
+        status_detail = convert_status_detail(deposit.status_detail)
+        if not status_detail:
+            status_detail = DEPOSIT_STATUS_DETAIL[deposit.status]
+
         context = {
             "deposit_id": deposit.id,
-            "status": deposit.status,
-            "status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
-            "requests": requests,
+            "status_detail": status_detail,
         }
+        keys = (
+            "status",
+            "swhid",
+            "swhid_context",
+            "external_id",
+        )
+        for k in keys:
+            context[k] = getattr(deposit, k, None)
 
         return render(
             req,
-            "deposit/content.xml",
+            "deposit/status.xml",
             context=context,
             content_type="application/xml",
             status=status.HTTP_200_OK,

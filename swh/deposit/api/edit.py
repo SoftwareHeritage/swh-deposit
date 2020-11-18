@@ -11,95 +11,20 @@ from rest_framework.request import Request
 from swh.deposit.models import Deposit
 from swh.model.identifiers import parse_swhid
 
-from ..config import CONT_FILE_IRI, DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_SE_IRI, EM_IRI
-from ..errors import BAD_REQUEST, BadRequestError, ParserError, make_error_dict
-from ..parsers import (
-    SWHAtomEntryParser,
-    SWHFileUploadTarParser,
-    SWHFileUploadZipParser,
-    SWHMultiPartParser,
+from ..config import (
+    DEPOSIT_STATUS_LOAD_SUCCESS,
+    EDIT_SE_IRI,
+    EM_IRI,
 )
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIDelete, APIPost, APIPut
+from ..errors import BAD_REQUEST, BadRequestError, ParserError, make_error_dict
+from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
+from .common import APIDelete, APIPost, APIPut
 
 
-class APIUpdateArchive(APIPost, APIPut, APIDelete):
+class EditAPI(APIPost, APIPut, APIDelete):
     """Deposit request class defining api endpoints for sword deposit.
 
-       What's known as 'EM IRI' in the sword specification.
-
-       HTTP verbs supported: PUT, POST, DELETE
-
-    """
-
-    parser_classes = (
-        SWHFileUploadZipParser,
-        SWHFileUploadTarParser,
-    )
-
-    def process_put(
-        self, req, headers, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
-        """Replace existing content for the existing deposit.
-
-           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_editingcontent_binary  # noqa
-
-        Returns:
-            204 No content
-
-        """
-        if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            msg = "Packaging format supported is restricted to %s" % (
-                ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
-            )
-            return make_error_dict(BAD_REQUEST, msg)
-
-        return self._binary_upload(
-            req, headers, collection_name, deposit_id=deposit_id, replace_archives=True
-        )
-
-    def process_post(
-        self, req, headers: Dict, collection_name: str, deposit_id: Optional[int] = None
-    ) -> Tuple[int, str, Dict]:
-        """Add new content to the existing deposit.
-
-           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_mediaresource  # noqa
-
-        Returns:
-            201 Created
-            Headers: Location: [Cont-File-IRI]
-
-            Body: [optional Deposit Receipt]
-
-        """
-        if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            msg = "Packaging format supported is restricted to %s" % (
-                ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
-            )
-            unused = 0
-            return unused, "unused", make_error_dict(BAD_REQUEST, msg)
-
-        return (
-            status.HTTP_201_CREATED,
-            CONT_FILE_IRI,
-            self._binary_upload(req, headers, collection_name, deposit_id),
-        )
-
-    def process_delete(self, req, collection_name: str, deposit_id: int) -> Dict:
-        """Delete content (archives) from existing deposit.
-
-           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deletingcontent  # noqa
-
-        Returns:
-            204 Created
-
-        """
-        return self._delete_archives(collection_name, deposit_id)
-
-
-class APIUpdateMetadata(APIPost, APIPut, APIDelete):
-    """Deposit request class defining api endpoints for sword deposit.
-
-       What's known as 'Edit IRI' (and SE IRI) in the sword specification.
+       What's known as 'Edit-IRI' and 'SE-IRI' in the sword specification.
 
        HTTP verbs supported: POST (SE IRI), PUT (Edit IRI), DELETE
 

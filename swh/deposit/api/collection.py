@@ -17,10 +17,10 @@ from ..parsers import (
 from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost
 
 
-class APIPostDeposit(APIPost):
+class CollectionAPI(APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
-    What's known as 'Col IRI' in the sword specification.
+    What's known as 'Col-IRI' in the sword specification.
 
     HTTP verbs supported: POST
 

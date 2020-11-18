@@ -8,15 +8,14 @@ from django.shortcuts import render
 from rest_framework import status
 
 from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
-from ..models import DEPOSIT_STATUS_DETAIL, Deposit
+from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
 from .common import APIBase
-from .converters import convert_status_detail
 
 
-class APIStatus(APIBase):
-    """Deposit status.
+class ContentAPI(APIBase):
+    """Deposit request class defining api endpoints for sword deposit.
 
-    What's known as 'State IRI' in the sword specification.
+    What's known as 'Cont-IRI' and 'File-IRI' in the sword specification.
 
     HTTP verbs supported: GET
 
@@ -39,26 +38,17 @@ class APIStatus(APIBase):
                 % (deposit_id, collection_name),
             )
 
-        status_detail = convert_status_detail(deposit.status_detail)
-        if not status_detail:
-            status_detail = DEPOSIT_STATUS_DETAIL[deposit.status]
-
+        requests = DepositRequest.objects.filter(deposit=deposit)
         context = {
             "deposit_id": deposit.id,
-            "status_detail": status_detail,
+            "status": deposit.status,
+            "status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
+            "requests": requests,
         }
-        keys = (
-            "status",
-            "swhid",
-            "swhid_context",
-            "external_id",
-        )
-        for k in keys:
-            context[k] = getattr(deposit, k, None)
 
         return render(
             req,
-            "deposit/status.xml",
+            "deposit/content.xml",
             context=context,
             content_type="application/xml",
             status=status.HTTP_200_OK,

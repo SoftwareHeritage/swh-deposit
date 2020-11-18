@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests 'GET File-IRI'."""
+
 from django.urls import reverse
 from rest_framework import status
 
