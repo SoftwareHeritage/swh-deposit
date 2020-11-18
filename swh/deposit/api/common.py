@@ -86,6 +86,17 @@ class ParsedRequestHeaders:
     swhid = attr.ib(type=Optional[str])
 
 
+@attr.s
+class Receipt:
+    """Data computed while handling the request body that will be served in the
+    Deposit Receipt."""
+
+    deposit_id = attr.ib(type=int)
+    deposit_date = attr.ib(type=datetime.datetime)
+    status = attr.ib(type=str)
+    archive = attr.ib(type=Optional[str])
+
+
 def _compute_md5(filehandler: InMemoryUploadedFile) -> bytes:
     h = hashlib.md5()
     for chunk in filehandler:
@@ -372,7 +383,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Receipt:
         """Binary upload routine.
 
         Other than such a request, a 415 response is returned.
@@ -393,15 +404,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             check_slug_is_present: Check for the slug header if True and raise
               if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-                - deposit_id (int): Deposit identifier
-                - deposit_date (date): Deposit date
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 413 (request entity too large) if the length of the
@@ -460,12 +463,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             replace_archives=replace_archives,
         )
 
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "status": deposit.status,
-            "archive": filehandler.name,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            status=deposit.status,
+            archive=filehandler.name,
+        )
 
     def _read_metadata(self, metadata_stream) -> Tuple[bytes, Dict[str, Any]]:
         """Given a metadata stream, reads the metadata and returns both the
@@ -485,7 +488,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
-    ) -> Dict:
+    ) -> Receipt:
         """Multipart upload supported with exactly:
         - 1 archive (zip)
         - 1 atom entry
@@ -508,15 +511,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             check_slug_is_present: Check for the slug header if True and raise
               if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-                - deposit_id (int): Deposit identifier
-                - deposit_date (date): Deposit date
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 412 (precondition failed) if the potentially md5 hash provided
@@ -599,12 +594,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         )
 
         assert filehandler is not None
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "archive": filehandler.name,
-            "status": deposit.status,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            archive=filehandler.name,
+            status=deposit.status,
+        )
 
     def _store_metadata_deposit(
         self,
@@ -708,7 +703,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Receipt:
         """Atom entry deposit.
 
         Args:
@@ -727,16 +722,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             check_slug_is_present: Check for the slug header if True and raise
               if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-
-                - deposit_id: deposit id associated to the deposit
-                - deposit_date: date of the deposit
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 400 (bad request) if the request's body is empty
@@ -798,12 +784,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             deposit.reception_date = depo_request.date
             deposit.save()
 
-            return {
-                "deposit_id": deposit.id,
-                "deposit_date": depo_request.date,
-                "status": deposit.status,
-                "archive": None,
-            }
+            return Receipt(
+                deposit_id=deposit.id,
+                deposit_date=depo_request.date,
+                status=deposit.status,
+                archive=None,
+            )
 
         self._deposit_request_put(
             deposit,
@@ -812,12 +798,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             replace_archives,
         )
 
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "archive": None,
-            "status": deposit.status,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            status=deposit.status,
+            archive=None,
+        )
 
     def _empty_post(
         self,
@@ -825,7 +811,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: int,
-    ) -> Dict[str, Any]:
+    ) -> Receipt:
         """Empty post to finalize an empty deposit.
 
         Args:
@@ -834,23 +820,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             headers: parsed request headers
             collection_name: the associated client
             deposit_id: deposit identifier
-
-        Returns:
-            Dictionary of result with the deposit's id, the date
-            it was completed and no archive.
-
         """
         deposit = Deposit.objects.get(pk=deposit_id)
         deposit.complete_date = timezone.now()
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
-        return {
-            "deposit_id": deposit_id,
-            "deposit_date": deposit.complete_date,
-            "status": deposit.status,
-            "archive": None,
-        }
+        return Receipt(
+            deposit_id=deposit_id,
+            deposit_date=deposit.complete_date,
+            status=deposit.status,
+            archive=None,
+        )
 
     def additional_checks(
         self,
@@ -1018,12 +999,12 @@ class APIPost(APIBase, metaclass=ABCMeta):
         """
         headers = self.checks(request, collection_name, deposit_id)
 
-        status, iri_key, data = self.process_post(
+        status, iri_key, receipt = self.process_post(
             request, headers, collection_name, deposit_id
         )
 
         return self._make_deposit_receipt(
-            request, collection_name, status, iri_key, data,
+            request, collection_name, status, iri_key, receipt,
         )
 
     def _make_deposit_receipt(
@@ -1032,28 +1013,31 @@ class APIPost(APIBase, metaclass=ABCMeta):
         collection_name: str,
         status: int,
         iri_key: str,
-        data: Dict[str, Any],
+        receipt: Receipt,
     ) -> HttpResponse:
         """Returns an HttpResponse with a SWORD Deposit receipt as content."""
 
         # Build the IRIs in the receipt
-        args = [collection_name, data["deposit_id"]]
+        args = [collection_name, receipt.deposit_id]
         iris = {
             iri: request.build_absolute_uri(reverse(iri, args=args))
             for iri in [EM_IRI, EDIT_IRI, CONT_FILE_IRI, SE_IRI, STATE_IRI]
         }
 
-        data["packagings"] = ACCEPT_PACKAGINGS
-        data.update(iris)
+        context = {
+            **attr.asdict(receipt),
+            **iris,
+            "packagings": ACCEPT_PACKAGINGS,
+        }
 
         response = render(
             request,
             "deposit/deposit_receipt.xml",
-            context=data,
+            context=context,
             content_type="application/xml",
             status=status,
         )
-        response._headers["location"] = "Location", data[iri_key]  # type: ignore
+        response._headers["location"] = "Location", iris[iri_key]  # type: ignore
         return response
 
     @abstractmethod
@@ -1063,14 +1047,14 @@ class APIPost(APIBase, metaclass=ABCMeta):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
-    ) -> Tuple[int, str, Dict]:
+    ) -> Tuple[int, str, Receipt]:
         """Routine to deal with the deposit's processing.
 
         Returns
             Tuple of:
             - response status code (200, 201, etc...)
             - key iri (EM_IRI, EDIT_IRI, etc...)
-            - dictionary of the processing result
+            - Receipt
 
         """
         pass

@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 from rest_framework import status
 
@@ -16,6 +16,7 @@ from .common import (
     APIPost,
     APIPut,
     ParsedRequestHeaders,
+    Receipt,
 )
 
 
@@ -60,7 +61,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
-    ) -> Tuple[int, str, Dict]:
+    ) -> Tuple[int, str, Receipt]:
         """Add new content to the existing deposit.
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_addingcontent_mediaresource  # noqa

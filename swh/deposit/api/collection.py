@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 from rest_framework import status
 
@@ -14,7 +14,7 @@ from ..parsers import (
     SWHFileUploadZipParser,
     SWHMultiPartParser,
 )
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost, ParsedRequestHeaders
+from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost, ParsedRequestHeaders, Receipt
 
 
 class CollectionAPI(APIPost):
@@ -39,7 +39,7 @@ class CollectionAPI(APIPost):
         headers: ParsedRequestHeaders,
         collection_name: str,
         deposit_id: Optional[int] = None,
-    ) -> Tuple[int, str, Dict[str, Any]]:
+    ) -> Tuple[int, str, Receipt]:
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
@@ -56,9 +56,7 @@ class CollectionAPI(APIPost):
             If everything is ok, a 201 response (created) with a
             deposit receipt.
 
-            Otherwise, depending on the upload, the following errors
-            can be returned:
-
+        Raises:
             - archive deposit:
                 - 400 (bad request) if the request is not providing an external
                   identifier
@@ -87,16 +85,16 @@ class CollectionAPI(APIPost):
         """
         assert deposit_id is None
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            data = self._binary_upload(
+            receipt = self._binary_upload(
                 req, headers, collection_name, check_slug_is_present=True
             )
         elif req.content_type.startswith("multipart/"):
-            data = self._multipart_upload(
+            receipt = self._multipart_upload(
                 req, headers, collection_name, check_slug_is_present=True
             )
         else:
-            data = self._atom_entry(
+            receipt = self._atom_entry(
                 req, headers, collection_name, check_slug_is_present=True
             )
 
-        return status.HTTP_201_CREATED, EDIT_IRI, data
+        return status.HTTP_201_CREATED, EDIT_IRI, receipt
