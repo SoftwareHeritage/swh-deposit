@@ -3,8 +3,9 @@ The metadata-deposit
 
 Goal
 ----
-A client wishes to deposit only metadata about an origin or object in the
-Software Heritage archive.
+
+A client wishes to deposit only metadata about an origin or object already
+present in the Software Heritage archive.
 
 The metadata-deposit is a special deposit where no content is
 provided and the data transferred to Software Heritage is only
@@ -12,25 +13,29 @@ the metadata about an object in the archive.
 
 Requirements
 ------------
-The scope of the metadata-deposit is different than the
-sparse-deposit. While a sparse-deposit creates a revision with referenced
-directories and content files, the metadata-deposit references any of the
-following:
 
-- origin
-- snapshot
-- release
-- revision
-- directory
-- content
+1. Create a metadata-only deposit through a :ref:`POST request<API-create-deposit>`
+2. It is composed of ONLY one xml metadata file
+3. It MUST comply with :ref:`the metadata requirements<metadata-requirements>`
+4. It MUST reference an **object** or an **origin** in a deposit tag
+5. The reference SHOULD exist in the SWH archive
+6. The **object** reference MUST be a SWHID on one of the following artifact types:
+   - origin
+   - snapshot
+   - release
+   - revision
+   - directory
+   - content
+7. The SWHID MAY be a `core identifier`_ with or without `qualifiers`_
+8. The SWHID MUST NOT reference a fragment of code with the classifier `lines`
 
+.. _core identifier: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#core-identifiers
+.. _qualifiers: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#qualifiers
 
 A complete metadata example
 ---------------------------
 The reference element is included in the metadata xml atomEntry under the
 swh namespace:
-
-TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
 
 .. code:: xml
 
@@ -69,6 +74,10 @@ TODO: publish schema at https://www.softwareheritage.org/schema/2018/deposit
 References
 ^^^^^^^^^^
 
+The metadata reference can be either on:
+- an origin
+- a graph object (core SWHID with or without qualifiers)
+
 Origins
 =======
 
@@ -92,9 +101,18 @@ directories, revisions, releases, and snapshots:
 
   <swh:deposit>
     <swh:reference>
-      <swh:object swhid="swh:1:xxx:aaaaaaaaaaaaaa..." />
+      <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49" />
     </swh:reference>
   </swh:deposit>
+
+.. code:: xml
+
+  <swh:deposit>
+    <swh:reference>
+      <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=https://hal.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:4fc1e36fca86b2070204bedd51106014a614f321;anchor=swh:1:rev:9c5de20cfb54682370a398fcc733e829903c8cba;path=/moranegg-AffectationRO-df7f68b/" />
+    </swh:reference>
+  </swh:deposit>
+
 
 The value of the ``swhid`` attribute must be a `SWHID <persistent-identifiers>`,
 with any context qualifiers in this list:

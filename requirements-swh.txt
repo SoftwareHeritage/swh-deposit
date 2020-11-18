@@ -1,1 +1,2 @@
 swh.core[http] >= 0.4
+swh.model >= 0.7.2

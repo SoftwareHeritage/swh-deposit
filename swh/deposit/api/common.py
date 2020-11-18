@@ -9,6 +9,7 @@ import hashlib
 import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
 
+import attr
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -19,7 +20,18 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.models import Deposit
+from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
+from swh.model.identifiers import SWHID, ValidationError
+from swh.model.model import (
+    MetadataAuthority,
+    MetadataAuthorityType,
+    MetadataFetcher,
+    RawExtrinsicMetadata,
+)
 from swh.scheduler.utils import create_oneshot_task_dict
 
 from ..config import (
@@ -47,13 +59,15 @@ from ..errors import (
     METHOD_NOT_ALLOWED,
     NOT_FOUND,
     PARSING_ERROR,
+    BadRequestError,
     ParserError,
     make_error_dict,
     make_error_response,
     make_error_response_from_dict,
+    make_missing_slug_error,
 )
-from ..models import Deposit, DepositClient, DepositCollection, DepositRequest
-from ..parsers import parse_xml
+from ..models import DepositClient, DepositCollection, DepositRequest
+from ..parsers import parse_swh_reference, parse_xml
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -182,15 +196,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     )
                     .order_by("-id")[0:1]
                     .get()
-                )  # noqa
+                )
             except Deposit.DoesNotExist:
                 # then no parent for that deposit, deposit_parent already None
                 pass
 
-            assert external_id is not None
             deposit = Deposit(
                 collection=self._collection,
-                external_id=external_id,
+                external_id=external_id or "",
                 complete_date=complete_date,
                 status=status_type,
                 client=self._client,
@@ -211,6 +224,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     "check-deposit",
                     collection=deposit.collection.name,
                     deposit_id=deposit.id,
+                    retries_left=3,
                 )
                 check_task_id = scheduler.create_tasks([task])[0]["id"]
                 deposit.check_task_id = check_task_id
@@ -369,6 +383,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
         replace_archives: bool = False,
+        check_slug_is_present: bool = False,
     ) -> Dict[str, Any]:
         """Binary upload routine.
 
@@ -387,6 +402,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
+            check_slug_is_present: Check for the slug header if True and raise
+              if not present
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -439,7 +456,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if precondition_status_response:
             return precondition_status_response
 
-        external_id = headers["slug"]
+        slug = headers.get("slug")
+        if check_slug_is_present and not slug:
+            return make_missing_slug_error()
 
         # actual storage of data
         archive_metadata = filehandler
@@ -447,7 +466,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             request,
             deposit_id=deposit_id,
             in_progress=headers["in-progress"],
-            external_id=external_id,
+            external_id=slug,
         )
         self._deposit_request_put(
             deposit,
@@ -480,6 +499,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
         replace_archives: bool = False,
+        check_slug_is_present: bool = False,
     ) -> Dict:
         """Multipart upload supported with exactly:
         - 1 archive (zip)
@@ -500,6 +520,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
+            check_slug_is_present: Check for the slug header if True and raise
+              if not present
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -519,7 +541,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        external_id = headers["slug"]
+        slug = headers.get("slug")
+        if check_slug_is_present and not slug:
+            return make_missing_slug_error()
 
         content_types_present = set()
 
@@ -583,7 +607,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             request,
             deposit_id=deposit_id,
             in_progress=headers["in-progress"],
-            external_id=external_id,
+            external_id=slug,
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
@@ -602,6 +626,98 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             "status": deposit.status,
         }
 
+    def _store_metadata_deposit(
+        self,
+        deposit: Deposit,
+        swhid_reference: Union[str, SWHID],
+        metadata: Dict,
+        raw_metadata: bytes,
+        deposit_origin: Optional[str] = None,
+    ) -> Tuple[Union[SWHID, str], Union[SWHID, str], Deposit, DepositRequest]:
+        """When all user inputs pass the checks, this associates the raw_metadata to the
+           swhid_reference in the raw extrinsic metadata storage. In case of any issues,
+           a bad request response is returned to the user with the details.
+
+            Checks:
+            - metadata are technically parsable
+            - metadata pass the functional checks
+            - SWHID (if any) is technically valid
+
+        Args:
+            deposit: Deposit reference
+            swhid_reference: The swhid or the origin to attach metadata information to
+            metadata: Full dict of metadata to check for validity (parsed out of
+              raw_metadata)
+            raw_metadata: The actual raw metadata to send in the storage metadata
+            deposit_origin: Optional deposit origin url to use if any (e.g. deposit
+              update scenario provides one)
+
+        Raises:
+            BadRequestError in case of incorrect inputs from the deposit client
+            (e.g. functionally invalid metadata, ...)
+
+        Returns:
+            Tuple of core swhid, swhid context, deposit and deposit request
+
+        """
+        metadata_ok, error_details = check_metadata(metadata)
+        if not metadata_ok:
+            assert error_details, "Details should be set when a failure occurs"
+            raise BadRequestError(
+                "Functional metadata checks failure",
+                convert_status_detail(error_details),
+            )
+
+        metadata_authority = MetadataAuthority(
+            type=MetadataAuthorityType.DEPOSIT_CLIENT,
+            url=deposit.client.provider_url,
+            metadata={"name": deposit.client.last_name},
+        )
+
+        metadata_fetcher = MetadataFetcher(
+            name=self.tool["name"],
+            version=self.tool["version"],
+            metadata=self.tool["configuration"],
+        )
+
+        # replace metadata within the deposit backend
+        deposit_request_data = {
+            METADATA_KEY: metadata,
+            RAW_METADATA_KEY: raw_metadata,
+        }
+
+        # actually add the metadata to the completed deposit
+        deposit_request = self._deposit_request_put(deposit, deposit_request_data)
+
+        object_type, metadata_context = compute_metadata_context(swhid_reference)
+        if deposit_origin:  # metadata deposit update on completed deposit
+            metadata_context["origin"] = deposit_origin
+
+        swhid_core: Union[str, SWHID]
+        if isinstance(swhid_reference, str):
+            swhid_core = swhid_reference
+        else:
+            swhid_core = attr.evolve(swhid_reference, metadata={})
+
+        # store that metadata to the metadata storage
+        metadata_object = RawExtrinsicMetadata(
+            type=object_type,
+            target=swhid_core,  # core swhid or origin
+            discovery_date=deposit_request.date,
+            authority=metadata_authority,
+            fetcher=metadata_fetcher,
+            format="sword-v2-atom-codemeta",
+            metadata=raw_metadata,
+            **metadata_context,
+        )
+
+        # write to metadata storage
+        self.storage_metadata.metadata_authority_add([metadata_authority])
+        self.storage_metadata.metadata_fetcher_add([metadata_fetcher])
+        self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
+
+        return (swhid_core, swhid_reference, deposit, deposit_request)
+
     def _atom_entry(
         self,
         request: Request,
@@ -610,6 +726,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit_id: Optional[int] = None,
         replace_metadata: bool = False,
         replace_archives: bool = False,
+        check_slug_is_present: bool = False,
     ) -> Dict[str, Any]:
         """Atom entry deposit.
 
@@ -626,6 +743,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
+            check_slug_is_present: Check for the slug header if True and raise
+              if not present
 
         Returns:
             In the optimal case a dict with the following keys:
@@ -661,11 +780,20 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "If the body is empty, there is no metadata.",
             )
 
-        external_id = metadata.get("external_identifier", headers["slug"])
+        # Determine if we are in the metadata-only deposit case
+        try:
+            swhid = parse_swh_reference(metadata)
+        except ValidationError as e:
+            return make_error_dict(PARSING_ERROR, "Invalid SWHID reference", str(e),)
 
-        # TODO: Determine if we are in the metadata-only deposit case. If it is, then
-        # save deposit and deposit request typed 'metadata' and send metadata to the
-        # metadata storage. Otherwise, do as existing deposit.
+        if swhid is not None:
+            external_id = metadata.get("external_identifier", headers.get("slug"))
+        else:
+            slug = headers.get("slug")
+            if check_slug_is_present and not slug:
+                return make_missing_slug_error()
+
+            external_id = metadata.get("external_identifier", slug)
 
         deposit = self._deposit_put(
             request,
@@ -673,6 +801,29 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             in_progress=headers["in-progress"],
             external_id=external_id,
         )
+
+        if swhid is not None:
+            try:
+                swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
+                    deposit, swhid, metadata, raw_metadata
+                )
+            except BadRequestError as bad_request_error:
+                return bad_request_error.to_dict()
+
+            deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
+            if isinstance(swhid_ref, SWHID):
+                deposit.swhid = str(swhid)
+                deposit.swhid_context = str(swhid_ref)
+            deposit.complete_date = depo_request.date
+            deposit.reception_date = depo_request.date
+            deposit.save()
+
+            return {
+                "deposit_id": deposit.id,
+                "deposit_date": depo_request.date,
+                "status": deposit.status,
+                "archive": None,
+            }
 
         self._deposit_request_put(
             deposit,
@@ -897,7 +1048,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
 
 class APIPost(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support DELETE method.
+    """Mixin for class to support POST method.
 
     """
 

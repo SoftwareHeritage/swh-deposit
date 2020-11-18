@@ -37,11 +37,11 @@ docs/.gitignore
 docs/Makefile
 docs/conf.py
 docs/dev-info.rst
-docs/getting-started.rst
 docs/index.rst
 docs/metadata.rst
 docs/spec-api.rst
 docs/sys-info.rst
+docs/user-manual.rst
 docs/_static/.placeholder
 docs/_templates/.placeholder
 docs/endpoints/collection.rst
@@ -57,12 +57,12 @@ docs/images/deposit-delete-chart.uml
 docs/images/deposit-update-chart.uml
 docs/images/status.uml
 docs/specs/blueprint.rst
+docs/specs/index.rst
 docs/specs/metadata_example.xml
 docs/specs/spec-loading.rst
 docs/specs/spec-meta-deposit.rst
 docs/specs/spec-sparse-deposit.rst
 docs/specs/spec-technical.rst
-docs/specs/specs.rst
 docs/specs/swh.xsd
 docs/tests/tests_HAL.rst
 resources/deposit/server.yml
@@ -175,6 +175,7 @@ swh/deposit/tests/api/test_deposit_binary.py
 swh/deposit/tests/api/test_deposit_content.py
 swh/deposit/tests/api/test_deposit_delete.py
 swh/deposit/tests/api/test_deposit_list.py
+swh/deposit/tests/api/test_deposit_metadata.py
 swh/deposit/tests/api/test_deposit_multipart.py
 swh/deposit/tests/api/test_deposit_private_check.py
 swh/deposit/tests/api/test_deposit_private_read_archive.py
@@ -184,7 +185,7 @@ swh/deposit/tests/api/test_deposit_schedule.py
 swh/deposit/tests/api/test_deposit_status.py
 swh/deposit/tests/api/test_deposit_update.py
 swh/deposit/tests/api/test_exception.py
-swh/deposit/tests/api/test_parser.py
+swh/deposit/tests/api/test_parsers.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/cli/__init__.py
 swh/deposit/tests/cli/conftest.py
@@ -199,6 +200,9 @@ swh/deposit/tests/data/atom/entry-data-fail-metadata-functional-checks.xml
 swh/deposit/tests/data/atom/entry-data-ko.xml
 swh/deposit/tests/data/atom/entry-data-minimal.xml
 swh/deposit/tests/data/atom/entry-data-parsing-error-prone.xml
+swh/deposit/tests/data/atom/entry-data-with-origin.xml
+swh/deposit/tests/data/atom/entry-data-with-swhid-fail-metadata-functional-checks.xml
+swh/deposit/tests/data/atom/entry-data-with-swhid.xml
 swh/deposit/tests/data/atom/entry-data0.xml
 swh/deposit/tests/data/atom/entry-data1.xml
 swh/deposit/tests/data/atom/entry-data2.xml

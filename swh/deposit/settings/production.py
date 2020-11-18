@@ -52,27 +52,9 @@ ALLOWED_HOSTS += conf.get("allowed_hosts", [])
 private_conf = conf["private"]
 SECRET_KEY = private_conf["secret_key"]
 
-# https://docs.djangoproject.com/en/1.10/ref/settings/#logging
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",  # noqa
-            "datefmt": "%d/%b/%Y %H:%M:%S",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-        },
-    },
-    "loggers": {
-        "django": {"handlers": ["console"], "level": "INFO", "propagate": True,},
-    },
-}
+# Deactivate logging configuration as our uwsgi application is configured to do it
+# https://docs.djangoproject.com/en/2.2/ref/settings/#logging-config
+LOGGING_CONFIG = None
 
 # database
 

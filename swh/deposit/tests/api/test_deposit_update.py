@@ -671,7 +671,7 @@ def test_put_update_metadata_done_deposit_nominal(
         results=[
             RawExtrinsicMetadata(
                 type=MetadataTargetType.DIRECTORY,
-                id=directory_swhid,
+                target=directory_swhid,
                 discovery_date=request_meta1.date,
                 authority=attr.evolve(metadata_authority, metadata=None),
                 fetcher=attr.evolve(metadata_fetcher, metadata=None),

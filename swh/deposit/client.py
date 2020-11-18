@@ -11,13 +11,15 @@ from abc import ABCMeta, abstractmethod
 import hashlib
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urljoin
+import warnings
 
 import requests
 import xmltodict
 
 from swh.core.config import load_from_envvar
+from swh.deposit import __version__ as swh_deposit_version
 
 logger = logging.getLogger(__name__)
 
@@ -131,20 +133,49 @@ def _parse_with_filter(stream, encoding="utf-8", keys=[]):
     return m
 
 
+def handle_deprecated_config(config: Dict) -> Tuple[str, Optional[Tuple[str, str]]]:
+    warnings.warn(
+        '"config" argument is deprecated, please '
+        'use "url" and "auth" arguments instead; note that "auth" '
+        "expects now a couple (username, password) and not a dict.",
+        DeprecationWarning,
+    )
+    url: str = config["url"]
+    auth: Optional[Tuple[str, str]] = None
+
+    if config.get("auth"):
+        auth = (config["auth"]["username"], config["auth"]["password"])
+
+    return (url, auth)
+
+
 class BaseApiDepositClient:
     """Deposit client base class
 
     """
 
-    def __init__(self, config=None, _client=requests):
-        self.config: Dict[str, Any] = config or load_from_envvar()
-        self._client = _client
-        self.base_url = self.config["url"].strip("/") + "/"
-        auth = self.config["auth"]
-        if auth == {}:
-            self.auth = None
-        else:
-            self.auth = (auth["username"], auth["password"])
+    def __init__(
+        self,
+        config: Optional[Dict] = None,
+        url: Optional[str] = None,
+        auth: Optional[Tuple[str, str]] = None,
+    ):
+        if not url and not config:
+            config = load_from_envvar()
+        if config:
+            url, auth = handle_deprecated_config(config)
+
+        # needed to help mypy not be fooled by the Optional nature of url
+        assert url is not None
+
+        self.base_url = url.strip("/") + "/"
+        self.auth = auth
+        self.session = requests.Session()
+        if auth:
+            self.session.auth = auth
+        self.session.headers.update(
+            {"user-agent": f"swh-deposit/{swh_deposit_version}"}
+        )
 
     def do(self, method, url, *args, **kwargs):
         """Internal method to deal with requests, possibly with basic http
@@ -157,16 +188,8 @@ class BaseApiDepositClient:
             The request's execution
 
         """
-        if hasattr(self._client, method):
-            method_fn = getattr(self._client, method)
-        else:
-            raise ValueError("Development error, unsupported method %s" % (method))
-
-        if self.auth:
-            kwargs["auth"] = self.auth
-
         full_url = urljoin(self.base_url, url.lstrip("/"))
-        return method_fn(full_url, *args, **kwargs)
+        return self.session.request(method, full_url, *args, **kwargs)
 
 
 class PrivateApiDepositClient(BaseApiDepositClient):
@@ -278,8 +301,10 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
 
     """
 
-    def __init__(self, config, error_msg=None, empty_result={}):
-        super().__init__(config)
+    def __init__(
+        self, config=None, url=None, auth=None, error_msg=None, empty_result={}
+    ):
+        super().__init__(url=url, auth=auth, config=config)
         self.error_msg = error_msg
         self.empty_result = empty_result
 
@@ -382,9 +407,11 @@ class ServiceDocumentDepositClient(BaseDepositClient):
 
     """
 
-    def __init__(self, config):
+    def __init__(self, config=None, url=None, auth=None):
         super().__init__(
-            config,
+            url=url,
+            auth=auth,
+            config=config,
             error_msg="Service document failure at %s: %s",
             empty_result={"collection": None},
         )
@@ -407,9 +434,11 @@ class StatusDepositClient(BaseDepositClient):
 
     """
 
-    def __init__(self, config):
+    def __init__(self, config=None, url=None, auth=None):
         super().__init__(
-            config,
+            url=url,
+            auth=auth,
+            config=config,
             error_msg="Status check failure at %s: %s",
             empty_result={
                 "deposit_status": None,
@@ -446,9 +475,11 @@ class BaseCreateDepositClient(BaseDepositClient):
 
     """
 
-    def __init__(self, config):
+    def __init__(self, config=None, url=None, auth=None):
         super().__init__(
-            config,
+            url=url,
+            auth=auth,
+            config=config,
             error_msg="Post Deposit failure at %s: %s",
             empty_result={"deposit_id": None, "deposit_status": None,},
         )
@@ -606,11 +637,13 @@ class PublicApiDepositClient(BaseApiDepositClient):
 
     def service_document(self):
         """Retrieve service document endpoint's information."""
-        return ServiceDocumentDepositClient(self.config).execute()
+        return ServiceDocumentDepositClient(url=self.base_url, auth=self.auth).execute()
 
     def deposit_status(self, collection: str, deposit_id: int):
         """Retrieve status information on a deposit."""
-        return StatusDepositClient(self.config).execute(collection, deposit_id)
+        return StatusDepositClient(url=self.base_url, auth=self.auth).execute(
+            collection, deposit_id
+        )
 
     def deposit_create(
         self,
@@ -622,15 +655,17 @@ class PublicApiDepositClient(BaseApiDepositClient):
     ):
         """Create a new deposit (archive, metadata, both as multipart)."""
         if archive and not metadata:
-            return CreateArchiveDepositClient(self.config).execute(
-                collection, in_progress, slug, archive_path=archive
-            )
+            return CreateArchiveDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(collection, in_progress, slug, archive_path=archive)
         elif not archive and metadata:
-            return CreateMetadataDepositClient(self.config).execute(
-                collection, in_progress, slug, metadata_path=metadata
-            )
+            return CreateMetadataDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(collection, in_progress, slug, metadata_path=metadata)
         else:
-            return CreateMultipartDepositClient(self.config).execute(
+            return CreateMultipartDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(
                 collection,
                 in_progress,
                 slug,
@@ -670,7 +705,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 "deposit_id": deposit_id,
             }
         if archive and not metadata:
-            r = UpdateArchiveDepositClient(self.config).execute(
+            r = UpdateArchiveDepositClient(url=self.base_url, auth=self.auth).execute(
                 collection,
                 in_progress,
                 slug,
@@ -679,7 +714,9 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 replace=replace,
             )
         elif not archive and metadata and swhid is None:
-            r = UpdateMetadataOnPartialDepositClient(self.config).execute(
+            r = UpdateMetadataOnPartialDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(
                 collection,
                 in_progress,
                 slug,
@@ -688,7 +725,9 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 replace=replace,
             )
         elif not archive and metadata and swhid is not None:
-            r = UpdateMetadataOnDoneDepositClient(self.config).execute(
+            r = UpdateMetadataOnDoneDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(
                 collection,
                 in_progress,
                 slug,
@@ -697,7 +736,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 swhid=swhid,
             )
         else:
-            r = UpdateMultipartDepositClient(self.config).execute(
+            r = UpdateMultipartDepositClient(url=self.base_url, auth=self.auth).execute(
                 collection,
                 in_progress,
                 slug,
