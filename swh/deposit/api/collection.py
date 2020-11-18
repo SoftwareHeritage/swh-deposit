@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from rest_framework import status
 
-from ..config import EDIT_SE_IRI
+from ..config import EDIT_IRI
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
@@ -99,4 +99,4 @@ class CollectionAPI(APIPost):
                 req, headers, collection_name, check_slug_is_present=True
             )
 
-        return status.HTTP_201_CREATED, EDIT_SE_IRI, data
+        return status.HTTP_201_CREATED, EDIT_IRI, data

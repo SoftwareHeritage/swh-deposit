@@ -123,11 +123,11 @@ def test_post_deposit_binary_upload_ok(
     assert int(response_content["deposit_id"]) == deposit.id
     assert response_content["deposit_status"] == deposit.status
 
-    edit_se_iri = reverse("edit_se_iri", args=[deposit_collection.name, deposit.id])
+    edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit.id])
 
     assert response._headers["location"] == (
         "Location",
-        "http://testserver" + edit_se_iri,
+        "http://testserver" + edit_iri,
     )
 
 
@@ -465,7 +465,8 @@ def test_post_deposit_then_update_refused(
     # updating/adding is forbidden
 
     # uri to update the content
-    edit_se_iri = reverse("edit_se_iri", args=[deposit_collection.name, deposit_id])
+    edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit_id])
+    se_iri = reverse("se_iri", args=[deposit_collection.name, deposit_id])
     em_iri = reverse("em_iri", args=[deposit_collection.name, deposit_id])
 
     # Testing all update/add endpoint should fail
@@ -512,7 +513,7 @@ def test_post_deposit_then_update_refused(
     # replacing metadata is no longer possible since the deposit's
     # status is ready
     r = authenticated_client.put(
-        edit_se_iri,
+        edit_iri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
@@ -525,7 +526,7 @@ def test_post_deposit_then_update_refused(
     # adding new metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.post(
-        edit_se_iri,
+        se_iri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
@@ -557,7 +558,7 @@ def test_post_deposit_then_update_refused(
     # replacing multipart metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.put(
-        edit_se_iri,
+        edit_iri,
         format="multipart",
         data={"archive": archive, "atom_entry": atom_entry,},
     )
@@ -568,7 +569,7 @@ def test_post_deposit_then_update_refused(
     # adding new metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.post(
-        edit_se_iri,
+        se_iri,
         format="multipart",
         data={"archive": archive, "atom_entry": atom_entry,},
     )

@@ -14,8 +14,9 @@ from swh.deposit.api.common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_PARTIAL,
-    EDIT_SE_IRI,
+    EDIT_IRI,
     EM_IRI,
+    SE_IRI,
     APIConfig,
 )
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
@@ -57,7 +58,7 @@ def test_replace_archive_to_deposit_is_possible(
     assert len(requests) == 0
 
     response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id]),
+        reverse(SE_IRI, args=[deposit_collection.name, deposit.id]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG=deposit.external_id,
@@ -120,7 +121,7 @@ def test_replace_metadata_to_deposit_is_possible(
     requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive0) == 1
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
 
     response = authenticated_client.put(
         update_uri,
@@ -221,7 +222,7 @@ def test_add_metadata_to_deposit_is_possible(
     requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive0) == 1
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
 
     atom_entry = atom_dataset["entry-data1"]
     response = authenticated_client.post(
@@ -267,7 +268,7 @@ def test_add_both_archive_and_metadata_to_deposit(
     requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive0) == 1
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
     archive = InMemoryUploadedFile(
         BytesIO(sample_archive["data"]),
         field_name=sample_archive["name"],
@@ -287,7 +288,7 @@ def test_add_both_archive_and_metadata_to_deposit(
         charset="utf-8",
     )
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.post(
         update_uri,
         format="multipart",
@@ -327,7 +328,7 @@ def test_post_metadata_empty_post_finalize_deposit_ok(
     deposit = partial_deposit_with_metadata
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.post(
         update_uri,
         content_type="application/atom+xml;type=entry",
@@ -353,7 +354,7 @@ def test_add_metadata_to_unknown_deposit(
     except Deposit.DoesNotExist:
         assert True
 
-    url = reverse(EDIT_SE_IRI, args=[deposit_collection, unknown_deposit_id])
+    url = reverse(SE_IRI, args=[deposit_collection, unknown_deposit_id])
     response = authenticated_client.post(
         url,
         content_type="application/atom+xml;type=entry",
@@ -377,7 +378,7 @@ def test_add_metadata_to_unknown_collection(
     except DepositCollection.DoesNotExist:
         assert True
 
-    url = reverse(EDIT_SE_IRI, args=[unknown_collection_name, deposit.id])
+    url = reverse(SE_IRI, args=[unknown_collection_name, deposit.id])
     response = authenticated_client.post(
         url,
         content_type="application/atom+xml;type=entry",
@@ -399,7 +400,7 @@ def test_replace_metadata_to_unknown_deposit(
         Deposit.objects.get(pk=unknown_deposit_id)
     except Deposit.DoesNotExist:
         assert True
-    url = reverse(EDIT_SE_IRI, args=[deposit_collection.name, unknown_deposit_id])
+    url = reverse(EDIT_IRI, args=[deposit_collection.name, unknown_deposit_id])
     response = authenticated_client.put(
         url,
         content_type="application/atom+xml;type=entry",
@@ -546,7 +547,7 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
         charset="utf-8",
     )
 
-    update_uri = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.put(
         update_uri,
         format="multipart",
@@ -612,9 +613,7 @@ def test_put_update_metadata_done_deposit_nominal(
     )
     nb_metadata = len(actual_existing_requests_metadata)
 
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
     response = authenticated_client.put(
         update_uri,
         content_type="application/atom+xml;type=entry",
@@ -700,9 +699,7 @@ def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
     incorrect_swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
     assert complete_deposit.swhid != incorrect_swhid
 
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
     response = authenticated_client.put(
         update_uri,
         content_type="application/atom+xml;type=entry",
@@ -727,9 +724,7 @@ def test_put_update_metadata_done_deposit_failure_malformed_xml(
        Response: 400
 
     """
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
     response = authenticated_client.put(
         update_uri,
         content_type="application/atom+xml;type=entry",
@@ -754,9 +749,7 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
        Response: 400
 
     """
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
 
     for atom_key in ["entry-data-empty-body", "entry-data-empty-body-no-namespace"]:
         atom_content = atom_dataset[atom_key]
@@ -784,9 +777,7 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
        Response: 400
 
     """
-    update_uri = reverse(
-        EDIT_SE_IRI, args=[deposit_collection.name, complete_deposit.id]
-    )
+    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
 
     response = authenticated_client.put(
         update_uri,

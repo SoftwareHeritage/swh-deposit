@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from swh.deposit import __version__, utils
-from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
+from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SE_IRI, SWH_PERSON
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
@@ -26,7 +26,7 @@ def private_get_raw_url_endpoints(collection, deposit):
 def update_deposit_with_metadata(authenticated_client, collection, deposit, metadata):
     # update deposit's metadata
     response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[collection.name, deposit.id]),
+        reverse(SE_IRI, args=[collection.name, deposit.id]),
         content_type="application/atom+xml;type=entry",
         data=metadata,
         HTTP_SLUG=deposit.external_id,

@@ -41,11 +41,12 @@ from ..config import (
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_PARTIAL,
-    EDIT_SE_IRI,
+    EDIT_IRI,
     EM_IRI,
     METADATA_KEY,
     METADATA_TYPE,
     RAW_METADATA_KEY,
+    SE_IRI,
     STATE_IRI,
     APIConfig,
 )
@@ -885,7 +886,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         args = [collection_name, deposit_id]
         return {
             iri: request.build_absolute_uri(reverse(iri, args=args))
-            for iri in [EM_IRI, EDIT_SE_IRI, CONT_FILE_IRI, STATE_IRI]
+            for iri in [EM_IRI, EDIT_IRI, CONT_FILE_IRI, SE_IRI, STATE_IRI]
         }
 
     def additional_checks(
@@ -1102,7 +1103,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
         Returns
             Tuple of:
             - response status code (200, 201, etc...)
-            - key iri (EM_IRI, EDIT_SE_IRI, etc...)
+            - key iri (EM_IRI, EDIT_IRI, etc...)
             - dictionary of the processing result
 
         """

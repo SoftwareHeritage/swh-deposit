@@ -10,13 +10,14 @@
 from django.conf.urls import url
 from django.shortcuts import render
 
-from ..config import COL_IRI, CONT_FILE_IRI, EDIT_SE_IRI, EM_IRI, SD_IRI, STATE_IRI
+from ..config import COL_IRI, CONT_FILE_IRI, EDIT_IRI, EM_IRI, SD_IRI, SE_IRI, STATE_IRI
 from .collection import CollectionAPI
 from .content import ContentAPI
 from .edit import EditAPI
 from .edit_media import EditMediaAPI
 from .service_document import ServiceDocumentAPI
 from .state import StateAPI
+from .sword_edit import SwordEditAPI
 
 
 def api_view(req):
@@ -42,13 +43,19 @@ urlpatterns = [
         name=EM_IRI,
     ),
     # Edit IRI - Atom Entry Edit IRI (update metadata IRI)
-    # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
     # -> PUT (update in place)
+    # -> DELETE (delete container)
+    url(
+        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/atom/$",
+        EditAPI.as_view(),
+        name=EDIT_IRI,
+    ),
+    # SE IRI - Sword Edit IRI ;; possibly same as Edit IRI
     # -> POST (add new metadata)
     url(
         r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/metadata/$",
-        EditAPI.as_view(),
-        name=EDIT_SE_IRI,
+        SwordEditAPI.as_view(),
+        name=SE_IRI,
     ),
     # State IRI
     # -> GET

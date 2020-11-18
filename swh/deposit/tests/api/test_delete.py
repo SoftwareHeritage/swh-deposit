@@ -12,7 +12,7 @@ from rest_framework import status
 from swh.deposit.config import (
     ARCHIVE_KEY,
     DEPOSIT_STATUS_DEPOSITED,
-    EDIT_SE_IRI,
+    EDIT_IRI,
     EM_IRI,
     METADATA_KEY,
 )
@@ -99,7 +99,7 @@ def test_delete_partial_deposit(
     deposit = partial_deposit
 
     # when
-    url = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    url = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.delete(url)
     # then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -109,7 +109,7 @@ def test_delete_partial_deposit(
     assert deposits == []
 
 
-def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(
+def test_delete_on_edit_iri_cannot_delete_non_partial_deposit(
     authenticated_client, deposit_collection, complete_deposit
 ):
     """Delete !partial deposit should return a 400 response
@@ -119,7 +119,7 @@ def test_delete_on_edit_se_iri_cannot_delete_non_partial_deposit(
     deposit = complete_deposit
 
     # when
-    url = reverse(EDIT_SE_IRI, args=[deposit_collection.name, deposit.id])
+    url = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.delete(url)
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST

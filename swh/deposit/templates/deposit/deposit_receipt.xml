@@ -7,11 +7,11 @@
     <deposit_status>{{ status }}</deposit_status>
 
     <!-- Edit-IRI -->
-    <link rel="edit" href="{{ edit_se_iri }}" />
+    <link rel="edit" href="{{ edit_iri }}" />
     <!-- EM-IRI -->
     <link rel="edit-media" href="{{ em_iri }}"/>
     <!-- SE-IRI -->
-    <link rel="http://purl.org/net/sword/terms/add" href="{{ edit_se_iri }}" />
+    <link rel="http://purl.org/net/sword/terms/add" href="{{ se_iri }}" />
     <!-- State-IRI -->
     <link rel="alternate" href="{{ state_iri }}" />
 

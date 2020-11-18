@@ -28,7 +28,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_PARTIAL,
     DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_VERIFIED,
-    EDIT_SE_IRI,
+    SE_IRI,
     setup_django_for,
 )
 from swh.deposit.parsers import parse_xml
@@ -315,7 +315,7 @@ def create_binary_deposit(
     )
 
     response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[collection_name, deposit.id]),
+        reverse(SE_IRI, args=[collection_name, deposit.id]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % deposit.external_id.encode("utf-8"),
         HTTP_SLUG=deposit.external_id,

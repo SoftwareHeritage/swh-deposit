@@ -15,7 +15,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_PARTIAL,
     DEPOSIT_STATUS_REJECTED,
-    EDIT_SE_IRI,
+    SE_IRI,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
@@ -89,7 +89,7 @@ def test_act_on_deposit_rejected_is_not_permitted(
     deposit = rejected_deposit
 
     response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[deposit.collection.name, deposit.id]),
+        reverse(SE_IRI, args=[deposit.collection.name, deposit.id]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG=deposit.external_id,
