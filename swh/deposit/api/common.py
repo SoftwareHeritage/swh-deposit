@@ -61,7 +61,7 @@ from ..errors import (
     METHOD_NOT_ALLOWED,
     NOT_FOUND,
     PARSING_ERROR,
-    BadRequestError,
+    DepositError,
     ParserError,
     make_error_dict,
     make_error_response,
@@ -652,7 +652,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               update scenario provides one)
 
         Raises:
-            BadRequestError in case of incorrect inputs from the deposit client
+            DepositError in case of incorrect inputs from the deposit client
             (e.g. functionally invalid metadata, ...)
 
         Returns:
@@ -662,7 +662,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         metadata_ok, error_details = check_metadata(metadata)
         if not metadata_ok:
             assert error_details, "Details should be set when a failure occurs"
-            raise BadRequestError(
+            raise DepositError(
+                BAD_REQUEST,
                 "Functional metadata checks failure",
                 convert_status_detail(error_details),
             )
@@ -806,8 +807,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
                     deposit, swhid, metadata, raw_metadata
                 )
-            except BadRequestError as bad_request_error:
-                return bad_request_error.to_dict()
+            except DepositError as deposit_error:
+                return deposit_error.to_dict()
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
             if isinstance(swhid_ref, SWHID):

@@ -166,13 +166,13 @@ def make_missing_slug_error() -> Dict[str, Any]:
     )
 
 
-class BadRequestError(ValueError):
-    """Represents a bad input from the deposit client
+class DepositError(ValueError):
+    """Represents an error that should be reported to the client
 
     """
 
-    def __init__(self, summary, verbose_description):
-        self.key = BAD_REQUEST
+    def __init__(self, key, summary, verbose_description):
+        self.key = key
         self.summary = summary
         self.verbose_description = verbose_description
 

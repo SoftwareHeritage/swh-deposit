@@ -11,7 +11,7 @@ from swh.deposit.models import Deposit
 from swh.model.identifiers import parse_swhid
 
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..errors import BAD_REQUEST, BadRequestError, ParserError, make_error_dict
+from ..errors import BAD_REQUEST, DepositError, ParserError, make_error_dict
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
 from .common import APIDelete, APIPut, ParsedRequestHeaders
 
@@ -133,8 +133,8 @@ class EditAPI(APIPut, APIDelete):
             _, _, deposit, deposit_request = self._store_metadata_deposit(
                 deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
             )
-        except BadRequestError as bad_request_error:
-            return bad_request_error.to_dict()
+        except DepositError as deposit_error:
+            return deposit_error.to_dict()
 
         return {
             "deposit_id": deposit.id,
