@@ -394,5 +394,5 @@ def test_access_to_nonexisting_deposit_returns_404_response(
     for url in private_get_raw_url_endpoints(deposit_collection, unknown_id):
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        msg = "Deposit with id %s does not exist" % unknown_id
+        msg = "Deposit %s does not exist" % unknown_id
         assert msg in response.content.decode("utf-8")

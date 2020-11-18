@@ -19,7 +19,7 @@ from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_VERIFIED
 from ...models import Deposit, DepositRequest
 from ..checks import check_metadata
-from ..common import APIGet
+from ..common import APIGet, get_deposit_by_id
 
 MANDATORY_ARCHIVE_UNREADABLE = (
     "At least one of its associated archives is not readable"  # noqa
@@ -145,7 +145,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             Tuple status, stream of content, content-type
 
         """
-        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
         metadata, _ = self._metadata_get(deposit)
         problems: Dict = {}
         # will check each deposit's associated request (both of type

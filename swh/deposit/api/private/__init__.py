@@ -9,10 +9,10 @@ from rest_framework.permissions import AllowAny
 
 from swh.deposit import utils
 from swh.deposit.api.common import AuthenticatedAPIView
-from swh.deposit.errors import NOT_FOUND, DepositError
 
 from ...config import METADATA_TYPE, APIConfig
 from ...models import Deposit, DepositRequest
+from ..common import get_deposit_by_id
 
 
 class DepositReadMixin:
@@ -32,7 +32,7 @@ class DepositReadMixin:
 
         """
         if isinstance(deposit, int):
-            deposit = Deposit.objects.get(pk=deposit)
+            deposit = get_deposit_by_id(deposit)
 
         deposit_requests = DepositRequest.objects.filter(
             type=request_type, deposit=deposit
@@ -78,12 +78,7 @@ class APIPrivateView(APIConfig, AuthenticatedAPIView):
 
         """
         if deposit_id:
-            try:
-                Deposit.objects.get(pk=deposit_id)
-            except Deposit.DoesNotExist:
-                raise DepositError(
-                    NOT_FOUND, "Deposit with id %s does not exist" % deposit_id
-                )
+            get_deposit_by_id(deposit_id)
 
         headers = self._read_headers(req)
         self.additional_checks(req, headers, collection_name, deposit_id)

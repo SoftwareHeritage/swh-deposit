@@ -104,6 +104,25 @@ def _compute_md5(filehandler: InMemoryUploadedFile) -> bytes:
     return h.digest()
 
 
+def get_deposit_by_id(
+    deposit_id: int, collection_name: Optional[str] = None
+) -> Deposit:
+    """Gets an existing Deposit object if it exists, or raises `DepositError`.
+    If `collection` is not None, also checks the deposit belongs to the collection."""
+    try:
+        deposit = Deposit.objects.get(pk=deposit_id)
+    except Deposit.DoesNotExist:
+        raise DepositError(NOT_FOUND, f"Deposit {deposit_id} does not exist")
+
+    if collection_name and deposit.collection.name != collection_name:
+        raise DepositError(
+            NOT_FOUND,
+            f"Deposit {deposit_id} does not belong to collection {collection_name}",
+        )
+
+    return deposit
+
+
 class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
@@ -217,7 +236,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 parent=deposit_parent,
             )
         else:
-            deposit = Deposit.objects.get(pk=deposit_id)
+            deposit = get_deposit_by_id(deposit_id)
 
             # update metadata
             deposit.complete_date = complete_date
@@ -295,10 +314,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """Delete archive references from the deposit id.
 
         """
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-        except Deposit.DoesNotExist:
-            raise DepositError(NOT_FOUND, f"The deposit {deposit_id} does not exist")
+        deposit = get_deposit_by_id(deposit_id)
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
         return {}
@@ -315,10 +331,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             Dict with error key to describe the failure.
 
         """
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-        except Deposit.DoesNotExist:
-            raise DepositError(NOT_FOUND, f"The deposit {deposit_id} does not exist")
+        deposit = get_deposit_by_id(deposit_id)
 
         if deposit.collection.name != collection_name:
             summary = "Cannot delete a deposit from another collection"
@@ -821,7 +834,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             collection_name: the associated client
             deposit_id: deposit identifier
         """
-        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
         deposit.complete_date = timezone.now()
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
@@ -878,12 +891,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         headers = self._read_headers(request)
 
         if deposit_id:
-            try:
-                deposit = Deposit.objects.get(pk=deposit_id)
-            except Deposit.DoesNotExist:
-                raise DepositError(
-                    NOT_FOUND, f"Deposit with id {deposit_id} does not exist"
-                )
+            deposit = get_deposit_by_id(deposit_id)
 
             assert deposit is not None
             self.restrict_access(request, headers, deposit)

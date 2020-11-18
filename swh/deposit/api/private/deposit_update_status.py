@@ -9,8 +9,8 @@ from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 from . import APIPrivateView
 from ...errors import BAD_REQUEST, DepositError
-from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
-from ..common import APIPut, ParsedRequestHeaders
+from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS
+from ..common import APIPut, ParsedRequestHeaders, get_deposit_by_id
 
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 
@@ -79,7 +79,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
         """
         data = request.data
 
-        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
 
         status = data["status"]
         deposit.status = status

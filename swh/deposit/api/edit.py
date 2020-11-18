@@ -11,7 +11,7 @@ from swh.model.identifiers import parse_swhid
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import BAD_REQUEST, DepositError, ParserError
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIDelete, APIPut, ParsedRequestHeaders
+from .common import APIDelete, APIPut, ParsedRequestHeaders, get_deposit_by_id
 
 
 class EditAPI(APIPut, APIDelete):
@@ -97,7 +97,7 @@ class EditAPI(APIPut, APIDelete):
         # Write to the metadata storage (and the deposit backend)
         # no ingestion triggered
 
-        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = get_deposit_by_id(deposit_id, collection_name)
         assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
 
         if swhid != deposit.swhid:

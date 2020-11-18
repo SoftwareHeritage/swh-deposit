@@ -19,7 +19,7 @@ from swh.model.model import MetadataAuthorityType
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
-from ..common import APIGet
+from ..common import APIGet, get_deposit_by_id
 
 
 @contextmanager
@@ -195,6 +195,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
     def process_get(
         self, request, collection_name: str, deposit_id: int
     ) -> Tuple[int, Dict, str]:
-        deposit = Deposit.objects.get(pk=deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
         data = self.metadata_read(deposit)
         return status.HTTP_200_OK, data if data else {}, "application/json"

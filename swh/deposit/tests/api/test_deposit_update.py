@@ -409,7 +409,7 @@ def test_replace_metadata_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit with id %s does not exist" % unknown_deposit_id
+        "Deposit %s does not exist" % unknown_deposit_id
         == response_content["sword:error"]["summary"]
     )
 
@@ -433,7 +433,7 @@ def test_add_archive_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit with id %s does not exist" % unknown_deposit_id
+        "Deposit %s does not exist" % unknown_deposit_id
         == response_content["sword:error"]["summary"]
     )
 
@@ -457,7 +457,7 @@ def test_replace_archive_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit with id %s does not exist" % unknown_deposit_id
+        "Deposit %s does not exist" % unknown_deposit_id
         == response_content["sword:error"]["summary"]
     )
 
