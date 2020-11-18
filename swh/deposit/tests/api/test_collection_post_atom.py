@@ -297,11 +297,16 @@ def test_post_deposit_atom_entry_multiple_steps(
         "utf-8"
     )  # noqa
 
-    update_uri = response._headers["location"][1]
+    for link in response_content["link"]:
+        if link["@rel"] == "http://purl.org/net/sword/terms/add":
+            se_iri = link["@href"]
+            break
+    else:
+        assert False, f"missing SE-IRI from {response_content['link']}"
 
     # when updating the first deposit post
     response = authenticated_client.post(
-        update_uri,
+        se_iri,
         content_type="application/atom+xml;type=entry",
         data=atom_entry_data,
         HTTP_IN_PROGRESS="False",
