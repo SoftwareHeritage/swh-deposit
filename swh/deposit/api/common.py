@@ -10,7 +10,7 @@ import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
 
 import attr
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import UploadedFile
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -97,7 +97,7 @@ class Receipt:
     archive = attr.ib(type=Optional[str])
 
 
-def _compute_md5(filehandler: InMemoryUploadedFile) -> bytes:
+def _compute_md5(filehandler: UploadedFile) -> bytes:
     h = hashlib.md5()
     for chunk in filehandler:
         h.update(chunk)  # type: ignore
@@ -143,7 +143,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
            not stored in the same location or not properly formatted).
 
         Args:
-            request (Request): Input request
+            request: Input request
 
         Returns:
             Dictionary with the following keys (some associated values may be
@@ -349,13 +349,16 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return {}
 
     def _check_preconditions_on(
-        self, filehandler, md5sum: Optional[bytes], content_length: Optional[int] = None
+        self,
+        filehandler: UploadedFile,
+        md5sum: Optional[bytes],
+        content_length: Optional[int] = None,
     ) -> None:
         """Check preconditions on provided file are respected. That is the
            length and/or the md5sum hash match the file's content.
 
         Args:
-            filehandler (InMemoryUploadedFile): The file to check
+            filehandler: The file to check
             md5sum: md5 hash expected from the file's content
             content_length: the expected length if provided.
 
@@ -402,15 +405,15 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Other than such a request, a 415 response is returned.
 
         Args:
-            request (Request): the request holding information to parse
+            request: the request holding information to parse
                 and inject in db
-            headers (ParsedRequestHeaders): parsed request headers
-            collection_name (str): the associated client
-            deposit_id (id): deposit identifier if provided
-            replace_metadata (bool): 'Update or add' request to existing
+            headers: parsed request headers
+            collection_name: the associated client
+            deposit_id: deposit identifier if provided
+            replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
-            replace_archives (bool): 'Update or add' request to existing
+            replace_archives: 'Update or add' request to existing
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
@@ -452,6 +455,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             )
 
         filehandler = request.FILES["file"]
+        assert isinstance(filehandler, UploadedFile), filehandler
 
         self._check_preconditions_on(
             filehandler, headers.content_md5sum, content_length
@@ -509,7 +513,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Other than such a request, a 415 response is returned.
 
         Args:
-            request (Request): the request holding information to parse
+            request: the request holding information to parse
                 and inject in db
             headers: parsed request headers
             collection_name: the associated client
@@ -577,6 +581,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         filehandler = data["application/zip"]
         if not filehandler:
             filehandler = data["application/x-tar"]
+
+        assert isinstance(filehandler, UploadedFile), filehandler
 
         self._check_preconditions_on(filehandler, headers.content_md5sum)
 
