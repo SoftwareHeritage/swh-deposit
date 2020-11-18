@@ -8,29 +8,11 @@ from typing import Any, Dict, Optional, Tuple
 from rest_framework import status
 from rest_framework.request import Request
 
-from swh.deposit.api.checks import check_metadata
-from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.models import Deposit
 from swh.model.identifiers import parse_swhid
-from swh.model.model import (
-    MetadataAuthority,
-    MetadataAuthorityType,
-    MetadataFetcher,
-    MetadataTargetType,
-    RawExtrinsicMetadata,
-)
-from swh.storage import get_storage
-from swh.storage.interface import StorageInterface
 
-from ..config import (
-    CONT_FILE_IRI,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    EDIT_SE_IRI,
-    EM_IRI,
-    METADATA_KEY,
-    RAW_METADATA_KEY,
-)
-from ..errors import BAD_REQUEST, ParserError, make_error_dict
+from ..config import CONT_FILE_IRI, DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_SE_IRI, EM_IRI
+from ..errors import BAD_REQUEST, BadRequestError, ParserError, make_error_dict
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
@@ -124,12 +106,6 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
     """
 
     parser_classes = (SWHMultiPartParser, SWHAtomEntryParser)
-
-    def __init__(self):
-        super().__init__()
-        self.storage_metadata: StorageInterface = get_storage(
-            **self.config["storage_metadata"]
-        )
 
     def restrict_access(
         self, request: Request, headers: Dict, deposit: Deposit
@@ -229,56 +205,15 @@ class APIUpdateMetadata(APIPost, APIPut, APIDelete):
                 "If the body is empty, there is no metadata.",
             )
 
-        metadata_ok, error_details = check_metadata(metadata)
-        if not metadata_ok:
-            assert error_details, "Details should be set when a failure occurs"
-            return make_error_dict(
-                BAD_REQUEST,
-                "Functional metadata checks failure",
-                convert_status_detail(error_details),
+        try:
+            _, _, deposit, deposit_request = self._store_metadata_deposit(
+                deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
             )
-
-        metadata_authority = MetadataAuthority(
-            type=MetadataAuthorityType.DEPOSIT_CLIENT,
-            url=deposit.client.provider_url,
-            metadata={"name": deposit.client.last_name},
-        )
-
-        metadata_fetcher = MetadataFetcher(
-            name=self.tool["name"],
-            version=self.tool["version"],
-            metadata=self.tool["configuration"],
-        )
-
-        deposit_swhid = parse_swhid(swhid)
-
-        # replace metadata within the deposit backend
-        deposit_request_data = {
-            METADATA_KEY: metadata,
-            RAW_METADATA_KEY: raw_metadata,
-        }
-
-        # actually add the metadata to the completed deposit
-        deposit_request = self._deposit_request_put(deposit, deposit_request_data)
-        # store that metadata to the metadata storage
-        metadata_object = RawExtrinsicMetadata(
-            type=MetadataTargetType.DIRECTORY,
-            id=deposit_swhid,
-            discovery_date=deposit_request.date,
-            authority=metadata_authority,
-            fetcher=metadata_fetcher,
-            format="sword-v2-atom-codemeta",
-            metadata=raw_metadata,
-            origin=deposit.origin_url,
-        )
-
-        # write to metadata storage
-        self.storage_metadata.metadata_authority_add([metadata_authority])
-        self.storage_metadata.metadata_fetcher_add([metadata_fetcher])
-        self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
+        except BadRequestError as bad_request_error:
+            return bad_request_error.to_dict()
 
         return {
-            "deposit_id": deposit_id,
+            "deposit_id": deposit.id,
             "deposit_date": deposit_request.date,
             "status": deposit.status,
             "archive": None,

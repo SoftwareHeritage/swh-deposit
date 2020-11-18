@@ -1,21 +1,23 @@
+.. _swh-loading-specs:
+
 Loading specification
 =====================
 
 An important part of the deposit specifications is the loading procedure where
-a deposit is ingested into the Software Heritage (archive), using
-the tarball loader and the complete process of software artifacts creation
+a deposit is ingested into the Software Heritage Archive (SWH) using
+the deposit loader and the complete process of software artifacts creation
 in the archive.
 
-Tarball Loading
+Deposit Loading
 ---------------
 
-The ``swh-loader-tar`` module is already able to inject tarballs in swh
-with very limited metadata (mainly the origin).
+The ``swh.loader.package.deposit`` module is able to inject zipfile/tarball's
+content in SWH with its metadata.
 
 The loading of the deposit will use the deposit's associated data:
 
 * the metadata
-* the archive(s)
+* the archive file(s)
 
 
 Artifacts creation
@@ -31,18 +33,18 @@ This is a global view of the deposit ingestion
 +====================================+=========================================+
 | origin                             | https://hal.inria.fr/hal-id             |
 +------------------------------------+-----------------------------------------+
-| origin_metadata                    | aggregated metadata                     |
+| raw_extrinsic_metadata             | aggregated metadata                     |
 +------------------------------------+-----------------------------------------+
 | snapshot                           | reception of all occurrences (branches) |
 +------------------------------------+-----------------------------------------+
-| branches                           | master &                                |
-|                                    | branch (optional): tag to release       |
+| branches                           | master & tags for releases              |
+|                                    | (not yet implemented)                   |
 +------------------------------------+-----------------------------------------+
 | release                            | (optional) synthetic release created    |
-|                                    | from metadata                           |
+|                                    | from metadata (not yet implemented)     |
 +------------------------------------+-----------------------------------------+
 | revision                           | synthetic revision pointing to          |
-|                                    | the expanded submitted tarball          |
+|                                    | the directory (see below)               |
 +------------------------------------+-----------------------------------------+
 | directory                          | root directory of the expanded submitted|
 |                                    | tarball                                 |
@@ -52,52 +54,66 @@ This is a global view of the deposit ingestion
 Origin artifact
 ~~~~~~~~~~~~~~~
 
-We create an origin URL by concatenating the client URI and the value of the
-Slug header of the initial POST request of the deposit.
+We create an origin URL by concatenating the client's `provider_url` and the
+value of the Slug header of the initial POST request of the deposit.
+
+For examples:
+
+.. code-block:: bash
+
+    $ http -pb https://archive.softwareheritage.org/api/1/origin/https://hal.archives-ouvertes.fr/hal-02560320/get/
+
+would result in:
 
 .. code-block:: json
 
     {
-        "origin": {
-            "id": 89283768,
-            "origin_visits_url": "/api/1/origin/89283768/visits/",
-            "type": "deposit",
-            "url": "https://hal.archives-ouvertes.fr/hal-02140606"
-        }
+        "origin_visits_url": "https://archive.softwareheritage.org/api/1/origin/https://hal.archives-ouvertes.fr/hal-02560320/visits/",
+        "url": "https://hal.archives-ouvertes.fr/hal-02560320"
     }
+
 
 Visits
 ~~~~~~
 
-We identify with a visit each deposit push of the same external_id.
+We identify with a visit each deposit push of the same `external_id`.
 Here in the example below, two snapshots are identified by two different visits.
+
+For examples:
+
+.. code-block:: bash
+
+	$ http -pb https://archive.softwareheritage.org/api/1/origin/https://hal.archives-ouvertes.fr/hal-02560320/visits/
+
+would result in:
 
 .. code-block:: json
 
-    {
-        "visits": [
-          {
-              "date": "2019-06-03T09:28:10.223007+00:00",
-              "origin": 89283768,
-              "origin_visit_url": "/api/1/origin/89283768/visit/2/",
-              "snapshot": "a3773941561cc557853898773a19c07cfe2efc5a",
-              "snapshot_url": "/api/1/snapshot/a3773941561cc557853898773a19c07cfe2efc5a/",
-              "status": "full",
-              "type": "deposit",
-              "visit": 2
-          },
-          {
-              "date": "2019-05-27T12:23:31.037273+00:00",
-              "origin": 89283768,
-              "origin_visit_url": "/api/1/origin/89283768/visit/1/",
-              "snapshot": "43fdb8291f1bf6962211c370e394f6abb1cbe01d",
-              "snapshot_url": "/api/1/snapshot/43fdb8291f1bf6962211c370e394f6abb1cbe01d/",
-              "status": "full",
-              "type": "deposit",
-              "visit": 1
-          }
-        ]
-    }
+    [
+        {
+            "date": "2020-05-14T11:59:55.942964+00:00",
+            "metadata": {},
+            "origin": "https://hal.archives-ouvertes.fr/hal-02560320",
+            "origin_visit_url": "https://archive.softwareheritage.org/api/1/origin/https://hal.archives-ouvertes.fr/hal-02560320/visit/2/",
+            "snapshot": "e5e82d064a9c3df7464223042e0c55d72ccff7f0",
+            "snapshot_url": "https://archive.softwareheritage.org/api/1/snapshot/e5e82d064a9c3df7464223042e0c55d72ccff7f0/",
+            "status": "full",
+            "type": "deposit",
+            "visit": 2
+        },
+        {
+            "date": "2020-05-14T11:59:41.094260+00:00",
+            "metadata": {},
+            "origin": "https://hal.archives-ouvertes.fr/hal-02560320",
+            "origin_visit_url": "https://archive.softwareheritage.org/api/1/origin/https://hal.archives-ouvertes.fr/hal-02560320/visit/1/",
+            "snapshot": "3e95ef6e04c381a34cc2f314576bc5644f2c797f",
+            "snapshot_url": "https://archive.softwareheritage.org/api/1/snapshot/3e95ef6e04c381a34cc2f314576bc5644f2c797f/",
+            "status": "full",
+            "type": "deposit",
+            "visit": 1
+        }
+    ]
+
 
 Snapshot artifact
 ~~~~~~~~~~~~~~~~~
@@ -105,21 +121,28 @@ Snapshot artifact
 The snapshot represents one deposit push. The ``HEAD`` branch points to a
 synthetic revision.
 
-   .. code-block:: json
+For example:
+
+.. code-block:: bash
+
+	$ http -pb https://archive.softwareheritage.org/api/1/snapshot/3e95ef6e04c381a34cc2f314576bc5644f2c797f/
+
+would result in:
+
+.. code-block:: json
 
     {
-        "snapshot": {
-            "branches": {
-                "HEAD": {
-                    "target": "396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52",
-                    "target_type": "revision",
-                    "target_url": "/api/1/revision/396b1ff29f7c75a0a3cc36f30e24ff7bae70bb52/"
-                }
-            },
-            "id": "a3773941561cc557853898773a19c07cfe2efc5a",
-            "next_branch": null
-        }
+        "branches": {
+            "HEAD": {
+                "target": "2122424b547a8eca9282ba3131ec61ff1d8df7d4",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/2122424b547a8eca9282ba3131ec61ff1d8df7d4/"
+            }
+        },
+        "id": "3e95ef6e04c381a34cc2f314576bc5644f2c797f",
+        "next_branch": null
     }
+
 
 Note that previous versions of the deposit-loader named the branch ``master``
 instead, and created release branches under certain conditions.
@@ -447,4 +470,3 @@ Metadata loading
 
 - ``authority`` is computed from the deposit client information, and ``fetcher``
   is the deposit loader.
-

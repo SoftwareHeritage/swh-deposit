@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Tuple
 from rest_framework import status
 
 from ..config import EDIT_SE_IRI
-from ..errors import BAD_REQUEST, make_error_dict
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
@@ -33,21 +32,6 @@ class APIPostDeposit(APIPost):
         SWHFileUploadTarParser,
         SWHAtomEntryParser,
     )
-
-    def additional_checks(
-        self,
-        req,
-        headers: Dict[str, Any],
-        collection_name: str,
-        deposit_id: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        slug = headers["slug"]
-        if not slug:
-            msg = "Missing SLUG header in request"
-            verbose_description = "Provide in the SLUG header one identifier, for example the url pointing to the resource you are depositing."  # noqa
-            return make_error_dict(BAD_REQUEST, msg, verbose_description)
-
-        return {}
 
     def process_post(
         self,
@@ -103,10 +87,16 @@ class APIPostDeposit(APIPost):
         """
         assert deposit_id is None
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            data = self._binary_upload(req, headers, collection_name)
+            data = self._binary_upload(
+                req, headers, collection_name, check_slug_is_present=True
+            )
         elif req.content_type.startswith("multipart/"):
-            data = self._multipart_upload(req, headers, collection_name)
+            data = self._multipart_upload(
+                req, headers, collection_name, check_slug_is_present=True
+            )
         else:
-            data = self._atom_entry(req, headers, collection_name)
+            data = self._atom_entry(
+                req, headers, collection_name, check_slug_is_present=True
+            )
 
         return status.HTTP_201_CREATED, EDIT_SE_IRI, data

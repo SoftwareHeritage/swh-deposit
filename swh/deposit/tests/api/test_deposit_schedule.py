@@ -66,16 +66,10 @@ def test_add_deposit_schedules_check(
     task = tasks[0]
 
     assert timestamp_before_call <= task.pop("next_run") <= timestamp_after_call
-    assert task == {
-        "arguments": {
-            "args": [],
-            "kwargs": {"collection": "test", "deposit_id": int(deposit_id),},
-        },
-        "current_interval": datetime.timedelta(days=1),
-        "id": 1,
-        "policy": "oneshot",
-        "priority": None,
-        "retries_left": 3,
-        "status": "next_run_scheduled",
-        "type": "check-deposit",
+    assert task["arguments"] == {
+        "args": [],
+        "kwargs": {"collection": "test", "deposit_id": int(deposit_id),},
     }
+    assert task["policy"] == "oneshot"
+    assert task["type"] == "check-deposit"
+    assert task["retries_left"] == 3

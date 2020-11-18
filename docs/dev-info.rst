@@ -1,3 +1,5 @@
+.. _swh-deposit-dev:
+
 Hacking on swh-deposit
 ======================
 

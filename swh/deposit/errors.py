@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2020  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,6 +6,8 @@
 """Module in charge of providing the standard sword errors
 
 """
+
+from typing import Any, Dict
 
 from django.shortcuts import render
 from rest_framework import status
@@ -148,3 +150,31 @@ def make_error_response(req, key, summary=None, verbose_description=None):
     """
     error = make_error_dict(key, summary, verbose_description)
     return make_error_response_from_dict(req, error["error"])
+
+
+def make_missing_slug_error() -> Dict[str, Any]:
+    """Returns a missing slug header error dict
+
+    """
+    return make_error_dict(
+        BAD_REQUEST,
+        "Missing SLUG header",
+        verbose_description=(
+            "Provide in the SLUG header one identifier, for example the "
+            "url pointing to the resource you are depositing."
+        ),
+    )
+
+
+class BadRequestError(ValueError):
+    """Represents a bad input from the deposit client
+
+    """
+
+    def __init__(self, summary, verbose_description):
+        self.key = BAD_REQUEST
+        self.summary = summary
+        self.verbose_description = verbose_description
+
+    def to_dict(self):
+        return make_error_dict(self.key, self.summary, self.verbose_description)
