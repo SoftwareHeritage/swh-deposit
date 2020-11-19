@@ -31,7 +31,7 @@ def test_api_deposit_content_nominal(
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
         actual_deposit = dict(parse_xml(response.content))
-        expected_deposit["sword:request"] = actual_deposit["sword:request"]
+        del actual_deposit["deposit_date"]
         assert actual_deposit == expected_deposit
 
 
