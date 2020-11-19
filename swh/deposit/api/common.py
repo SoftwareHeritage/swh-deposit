@@ -348,24 +348,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         return {}
 
-    def _check_preconditions_on(
-        self,
-        filehandler: UploadedFile,
-        md5sum: Optional[bytes],
-        content_length: Optional[int] = None,
+    def _check_file_length(
+        self, filehandler: UploadedFile, content_length: Optional[int] = None,
     ) -> None:
-        """Check preconditions on provided file are respected. That is the
-           length and/or the md5sum hash match the file's content.
+        """Check the filehandler passed as argument has exactly the
+        expected content_length
 
         Args:
             filehandler: The file to check
-            md5sum: md5 hash expected from the file's content
             content_length: the expected length if provided.
 
-        Returns:
-            Either none if no error or a dictionary with a key error
-            detailing the problem.
-
+        Raises:
+            DepositError if the actual length does not match
         """
         max_upload_size = self.config["max_upload_size"]
         if content_length:
@@ -380,6 +374,19 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             if length != content_length:
                 raise DepositError(status.HTTP_412_PRECONDITION_FAILED, "Wrong length")
 
+    def _check_file_md5sum(
+        self, filehandler: UploadedFile, md5sum: Optional[bytes],
+    ) -> None:
+        """Check the filehandler passed as argument has the expected md5sum
+
+        Args:
+            filehandler: The file to check
+            md5sum: md5 hash expected from the file's content
+
+        Raises:
+            DepositError if the md5sum does not match
+
+        """
         if md5sum:
             _md5sum = _compute_md5(filehandler)
             if _md5sum != md5sum:
@@ -457,9 +464,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         filehandler = request.FILES["file"]
         assert isinstance(filehandler, UploadedFile), filehandler
 
-        self._check_preconditions_on(
-            filehandler, headers.content_md5sum, content_length
-        )
+        self._check_file_length(filehandler, content_length)
+        self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         slug = headers.slug
         if check_slug_is_present and not slug:
@@ -584,7 +590,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         assert isinstance(filehandler, UploadedFile), filehandler
 
-        self._check_preconditions_on(filehandler, headers.content_md5sum)
+        self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         try:
             raw_metadata, metadata = self._read_metadata(data["application/atom+xml"])
