@@ -121,7 +121,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
 
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     assert deposit_id != deposit.id  # new deposit
 
@@ -151,7 +151,7 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
 
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     assert deposit_id != deposit.id
 
@@ -182,7 +182,7 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
 
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     assert deposit_id != deposit.id
 

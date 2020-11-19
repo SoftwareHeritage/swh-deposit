@@ -36,12 +36,19 @@ Display content
 
        <entry xmlns="http://www.w3.org/2005/Atom"
               xmlns:sword="http://purl.org/net/sword/"
-              xmlns:dcterms="http://purl.org/dc/terms/">
-           <deposit_id>1</deposit_id>
-           <deposit_status>done</deposit_status>
-           <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
-           <deposit_date>Oct. 28, 2020, 3:58 p.m.</deposit_date>
+              xmlns:dcterms="http://purl.org/dc/terms/"
+              xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit"
+              >
+           <swhdeposit:deposit_id>1</swhdeposit:deposit_id>
+           <swhdeposit:deposit_date>Oct. 28, 2020, 3:58 p.m.</swhdeposit:deposit_date>
+           <swhdeposit:deposit_status>done</swhdeposit:deposit_status>
+           <swhdeposit:deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</swhdeposit:deposit_status_detail>
        </entry>
+
+    Note: older versions of the deposit used the ``http://www.w3.org/2005/Atom``
+    namespace instead of ``https://www.softwareheritage.org/schema/2018/deposit``.
+    Tags in the Atom namespace are still provided for backward compatibility, but
+    are deprecated.
 
 
     :reqheader Authorization: Basic authentication token

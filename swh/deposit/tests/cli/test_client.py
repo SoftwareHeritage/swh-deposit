@@ -601,13 +601,6 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     """
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = 321
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
-    assert expected_deposit_status["deposit_status"] != "done"
 
     # fmt: off
     result = cli_runner.invoke(

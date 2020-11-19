@@ -200,7 +200,7 @@ def create_deposit_archive_with_archive(
     # then
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(response.content)
-    deposit_status = response_content["deposit_status"]
+    deposit_status = response_content["swh:deposit_status"]
     assert deposit_status == DEPOSIT_STATUS_DEPOSITED
     deposit_id = int(response_content["deposit_id"])
 

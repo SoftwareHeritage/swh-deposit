@@ -1,6 +1,15 @@
 <entry xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/"
-       xmlns:dcterms="http://purl.org/dc/terms/">
+       xmlns:dcterms="http://purl.org/dc/terms/"
+       xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit"
+       >
+    <sd:deposit_id>{{ deposit_id }}</sd:deposit_id>
+    <sd:deposit_date>{{ deposit_date }}</sd:deposit_date>
+    <sd:deposit_archive>{{ archive }}</sd:deposit_archive>
+    <sd:deposit_status>{{ status }}</sd:deposit_status>
+
+    <!-- The following tags are deprecated and may be removed in the future,
+         as they do not belong in the http://www.w3.org/2005/Atom namespace. -->
     <deposit_id>{{ deposit_id }}</deposit_id>
     <deposit_date>{{ deposit_date }}</deposit_date>
     <deposit_archive>{{ archive }}</deposit_archive>

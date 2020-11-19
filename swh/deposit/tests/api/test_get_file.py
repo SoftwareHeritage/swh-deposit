@@ -31,8 +31,8 @@ def test_api_deposit_content_nominal(
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
         actual_deposit = dict(parse_xml(response.content))
-        del actual_deposit["deposit_date"]
-        assert actual_deposit == expected_deposit
+        del actual_deposit["swh:deposit_date"]
+        assert set(actual_deposit.items()) >= set(expected_deposit.items())
 
 
 def test_api_deposit_content_unknown(client, complete_deposit, deposit_collection):

@@ -57,7 +57,7 @@ def test_add_deposit_schedules_check(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    actual_state = response_content["deposit_status"]
+    actual_state = response_content["swh:deposit_status"]
     assert actual_state == DEPOSIT_STATUS_DEPOSITED
     deposit_id = response_content["deposit_id"]
 
