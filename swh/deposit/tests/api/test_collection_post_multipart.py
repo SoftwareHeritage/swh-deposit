@@ -9,6 +9,7 @@ from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
+import pytest
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
@@ -401,3 +402,49 @@ def test_post_deposit_multipart_400_when_badly_formatted_xml(
 
     assert b"Malformed xml metadata" in response.content
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post_deposit_multipart_if_upload_size_limit_exceeded(
+    authenticated_client, deposit_collection, atom_dataset, sample_archive
+):
+    # given
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    data = sample_archive["data"] * 8
+    archive = InMemoryUploadedFile(
+        BytesIO(data),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/zip",
+        size=len(data),
+        charset=None,
+    )
+
+    data_atom_entry = atom_dataset["entry-data-deposit-binary"]
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(data_atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(data_atom_entry),
+        charset="utf-8",
+    )
+
+    external_id = "external-id"
+
+    # when
+    response = authenticated_client.post(
+        url,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+        # + headers
+        HTTP_IN_PROGRESS="false",
+        HTTP_SLUG=external_id,
+    )
+
+    # then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert b"Upload size limit exceeded" in response.content
+
+    with pytest.raises(Deposit.DoesNotExist):
+        Deposit.objects.get(external_id=external_id)

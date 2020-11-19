@@ -363,16 +363,16 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         max_upload_size = self.config["max_upload_size"]
         if content_length:
-            if content_length > max_upload_size:
-                raise DepositError(
-                    MAX_UPLOAD_SIZE_EXCEEDED,
-                    f"Upload size limit exceeded (max {max_upload_size} bytes)."
-                    "Please consider sending the archive in multiple steps.",
-                )
-
             length = filehandler.size
             if length != content_length:
                 raise DepositError(status.HTTP_412_PRECONDITION_FAILED, "Wrong length")
+
+        if filehandler.size > max_upload_size:
+            raise DepositError(
+                MAX_UPLOAD_SIZE_EXCEEDED,
+                f"Upload size limit exceeded (max {max_upload_size} bytes)."
+                "Please consider sending the archive in multiple steps.",
+            )
 
     def _check_file_md5sum(
         self, filehandler: UploadedFile, md5sum: Optional[bytes],
@@ -590,6 +590,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         assert isinstance(filehandler, UploadedFile), filehandler
 
+        self._check_file_length(filehandler)
         self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         try:
