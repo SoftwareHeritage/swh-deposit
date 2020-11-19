@@ -17,7 +17,7 @@ def parse_xml(stream, encoding="utf-8"):
     namespaces = {
         "http://www.w3.org/2005/Atom": None,
         "http://www.w3.org/2007/app": "app",
-        "http://purl.org/dc/terms/": None,
+        "http://purl.org/dc/terms/": "dc",
         "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
         "http://purl.org/net/sword/terms/": "sword",
         "https://www.softwareheritage.org/schema/2018/deposit": "swh",
