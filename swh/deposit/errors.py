@@ -7,6 +7,7 @@
 
 """
 
+import logging
 from typing import NoReturn
 
 from django.shortcuts import render
@@ -22,6 +23,9 @@ MEDIATION_NOT_ALLOWED = "mediation-not-allowed"
 METHOD_NOT_ALLOWED = "method-not-allowed"
 MAX_UPLOAD_SIZE_EXCEEDED = "max_upload_size_exceeded"
 PARSING_ERROR = "parsing-error"
+
+
+logger = logging.getLogger(__name__)
 
 
 class ParserError(ValueError):
@@ -196,6 +200,14 @@ class DepositErrorMiddleware:
 
     def process_exception(self, request, exception):
         if isinstance(exception, DepositError):
+            logger.info(
+                "%s %s -> %s('%s'):\n%s",
+                request.method,
+                request.path,
+                exception.key,
+                exception.summary,
+                exception.verbose_description,
+            )
             return make_error_response_from_dict(request, exception.to_dict()["error"])
         else:
             return None
