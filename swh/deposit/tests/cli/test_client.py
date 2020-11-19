@@ -134,9 +134,9 @@ def test_cli_client_generate_metadata_ok(slug):
     )
 
     actual_metadata = dict(parse_xml(actual_metadata_xml))
-    assert actual_metadata["author"] == "deposit-client"
-    assert actual_metadata["title"] == "project-name"
-    assert actual_metadata["updated"] is not None
+    assert actual_metadata["atom:author"] == "deposit-client"
+    assert actual_metadata["atom:title"] == "project-name"
+    assert actual_metadata["atom:updated"] is not None
     assert actual_metadata["codemeta:name"] == "project-name"
     assert actual_metadata["codemeta:identifier"] == "external-id"
     assert actual_metadata["codemeta:author"] == [
@@ -185,10 +185,10 @@ def test_cli_single_minimal_deposit(
 
     with open(metadata_path) as fd:
         actual_metadata = dict(parse_xml(fd.read()))
-        assert actual_metadata["author"] == TEST_USER["username"]
+        assert actual_metadata["atom:author"] == TEST_USER["username"]
         assert actual_metadata["codemeta:name"] == "test-project"
-        assert actual_metadata["title"] == "test-project"
-        assert actual_metadata["updated"] is not None
+        assert actual_metadata["atom:title"] == "test-project"
+        assert actual_metadata["atom:updated"] is not None
         assert actual_metadata["codemeta:identifier"] == slug
         assert actual_metadata["codemeta:author"] == OrderedDict(
             [("codemeta:name", "Jane Doe")]

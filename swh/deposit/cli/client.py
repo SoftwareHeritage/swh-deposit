@@ -95,7 +95,7 @@ def generate_metadata(
 
     # generate a metadata file with the minimum required metadata
     codemetadata = {
-        "entry": {
+        "atom:entry": {
             "@xmlns:atom": "http://www.w3.org/2005/Atom",
             "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
             "codemeta:identifier": external_id,

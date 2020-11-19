@@ -125,9 +125,9 @@ def test_post_deposit_binary_upload_ok(
     assert response_content["swh:deposit_status"] == deposit.status
 
     # deprecated tags
-    assert response_content["deposit_archive"] == sample_archive["name"]
-    assert int(response_content["swh:deposit_id"]) == deposit.id
-    assert response_content["deposit_status"] == deposit.status
+    assert response_content["atom:deposit_archive"] == sample_archive["name"]
+    assert int(response_content["atom:deposit_id"]) == deposit.id
+    assert response_content["atom:deposit_status"] == deposit.status
 
     edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit.id])
 

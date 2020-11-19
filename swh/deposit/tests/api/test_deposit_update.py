@@ -362,7 +362,7 @@ def test_add_metadata_to_unknown_deposit(
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
-    assert "Unknown collection name" in response_content["sword:error"]["summary"]
+    assert "Unknown collection name" in response_content["sword:error"]["atom:summary"]
 
 
 def test_add_metadata_to_unknown_collection(
@@ -386,7 +386,7 @@ def test_add_metadata_to_unknown_collection(
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
-    assert "Unknown collection name" in response_content["sword:error"]["summary"]
+    assert "Unknown collection name" in response_content["sword:error"]["atom:summary"]
 
 
 def test_replace_metadata_to_unknown_deposit(
@@ -410,7 +410,7 @@ def test_replace_metadata_to_unknown_deposit(
     response_content = parse_xml(response.content)
     assert (
         "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["summary"]
+        == response_content["sword:error"]["atom:summary"]
     )
 
 
@@ -434,7 +434,7 @@ def test_add_archive_to_unknown_deposit(
     response_content = parse_xml(response.content)
     assert (
         "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["summary"]
+        == response_content["sword:error"]["atom:summary"]
     )
 
 
@@ -458,7 +458,7 @@ def test_replace_archive_to_unknown_deposit(
     response_content = parse_xml(response.content)
     assert (
         "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["summary"]
+        == response_content["sword:error"]["atom:summary"]
     )
 
 
@@ -751,17 +751,16 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
 
-    for atom_key in ["entry-data-empty-body", "entry-data-empty-body-no-namespace"]:
-        atom_content = atom_dataset[atom_key]
-        response = authenticated_client.put(
-            update_uri,
-            content_type="application/atom+xml;type=entry",
-            data=atom_content,
-            HTTP_X_CHECK_SWHID=complete_deposit.swhid,
-        )
+    atom_content = atom_dataset["entry-data-empty-body"]
+    response = authenticated_client.put(
+        update_uri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_content,
+        HTTP_X_CHECK_SWHID=complete_deposit.swhid,
+    )
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert b"Empty body request is not supported" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"Empty body request is not supported" in response.content
 
 
 def test_put_update_metadata_done_deposit_failure_functional_checks(
@@ -790,7 +789,8 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Functional metadata checks failure" in response.content
     # detail on the errors
-    assert b"- Mandatory fields are missing (author)" in response.content
+    assert b"- Mandatory fields are missing (atom:author)" in response.content
     assert (
-        b"- Mandatory alternate fields are missing (name or title)" in response.content
+        b"- Mandatory alternate fields are missing (atom:name or atom:title)"
+        in response.content
     )

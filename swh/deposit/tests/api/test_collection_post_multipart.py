@@ -119,7 +119,7 @@ def test_post_deposit_multipart_zip(
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -189,7 +189,7 @@ def test_post_deposit_multipart_tar(
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -258,7 +258,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -288,7 +288,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert (

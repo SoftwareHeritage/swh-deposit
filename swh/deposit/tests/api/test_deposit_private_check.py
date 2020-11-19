@@ -133,10 +133,10 @@ def test_deposit_ko_unsupported_tarball(
         assert len(details["metadata"]) == 2
         mandatory = details["metadata"][0]
         assert mandatory["summary"] == MANDATORY_FIELDS_MISSING
-        assert set(mandatory["fields"]) == set(["author"])
+        assert set(mandatory["fields"]) == set(["atom:author"])
         alternate = details["metadata"][1]
         assert alternate["summary"] == ALTERNATE_FIELDS_MISSING
-        assert alternate["fields"] == ["name or title"]
+        assert alternate["fields"] == ["atom:name or atom:title"]
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_REJECTED

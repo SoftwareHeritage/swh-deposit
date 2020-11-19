@@ -30,11 +30,11 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
     """
     # following fields are mandatory
     required_fields = {
-        "author": False,
+        "atom:author": False,
     }
     # at least one value per couple below is mandatory
     alternate_fields = {
-        ("name", "title"): False,
+        ("atom:name", "atom:title"): False,
     }
 
     for field, value in metadata.items():
