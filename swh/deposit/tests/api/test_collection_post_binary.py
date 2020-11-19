@@ -268,6 +268,43 @@ def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
         Deposit.objects.get(external_id=external_id)
 
 
+def test_post_deposit_binary_upload_fail_if_content_length_missing(
+    authenticated_client, deposit_collection, sample_archive, tmp_path
+):
+    """The Content-Length header is mandatory
+
+    """
+    tmp_path = str(tmp_path)
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    archive = create_arborescence_archive(
+        tmp_path, "archive2", "file2", b"some content in file", up_to_size=500
+    )
+
+    external_id = "some-external-id"
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/zip",
+        data=archive["data"],
+        # + headers
+        CONTENT_LENGTH=None,
+        HTTP_SLUG=external_id,
+        HTTP_CONTENT_MD5=archive["md5sum"],
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        HTTP_IN_PROGRESS="false",
+        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
+    )
+
+    # then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"the CONTENT_LENGTH header must be sent." in response.content
+
+    with pytest.raises(Deposit.DoesNotExist):
+        Deposit.objects.get(external_id=external_id)
+
+
 def test_post_deposit_2_post_2_different_deposits(
     authenticated_client, deposit_collection, sample_archive
 ):
