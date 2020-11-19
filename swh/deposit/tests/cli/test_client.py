@@ -522,12 +522,17 @@ def test_cli_deposit_status_with_output_format(
     """
     api_url_basename = "deposit.test.status"
     deposit_id = 1033
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+    expected_deposit_status = {
+        "deposit_id": str(deposit_id),
+        "deposit_status": "done",
+        "deposit_status_detail": (
+            "The deposit has been successfully loaded into the "
+            "Software Heritage archive"
+        ),
+        "deposit_swh_id": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+        "deposit_swh_id_context": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/",  # noqa
+        "deposit_external_id": "check-deposit-2020-10-08T13:52:34.509655",
+    }
 
     # fmt: off
     result = cli_runner.invoke(
@@ -562,12 +567,17 @@ def test_cli_update_metadata_with_swhid_on_completed_deposit(
     """
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = 123
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+    expected_deposit_status = {
+        "deposit_external_id": "check-deposit-2020-10-08T13:52:34.509655",
+        "deposit_id": str(deposit_id),
+        "deposit_status": "done",
+        "deposit_status_detail": (
+            "The deposit has been successfully loaded into the "
+            "Software Heritage archive"
+        ),
+        "deposit_swh_id": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+        "deposit_swh_id_context": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/",  # noqa
+    }
 
     assert expected_deposit_status["deposit_status"] == "done"
     assert expected_deposit_status["deposit_swh_id"] is not None

@@ -401,7 +401,7 @@ def partial_deposit_only_metadata(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(response.content)
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
     from swh.deposit.models import Deposit
 
     deposit = Deposit._default_manager.get(pk=deposit_id)

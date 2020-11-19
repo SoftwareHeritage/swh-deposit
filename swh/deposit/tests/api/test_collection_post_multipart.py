@@ -101,7 +101,7 @@ def test_post_deposit_multipart_zip(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -171,7 +171,7 @@ def test_post_deposit_multipart_tar(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -241,7 +241,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"

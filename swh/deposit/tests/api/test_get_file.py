@@ -22,9 +22,9 @@ def test_api_deposit_content_nominal(
 
     for deposit in [complete_deposit, partial_deposit_only_metadata]:
         expected_deposit = {
-            "deposit_id": str(deposit.id),
-            "deposit_status": deposit.status,
-            "deposit_status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
+            "swh:deposit_id": str(deposit.id),
+            "swh:deposit_status": deposit.status,
+            "swh:deposit_status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
         }
 
         url = reverse(CONT_FILE_IRI, args=[deposit.collection.name, deposit.id])

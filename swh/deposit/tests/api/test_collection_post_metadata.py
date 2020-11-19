@@ -137,7 +137,7 @@ def test_deposit_metadata_swhid(
     response_content = parse_xml(BytesIO(response.content))
 
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["deposit_id"])
+    deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     assert isinstance(swhid_core, SWHID)
     assert deposit.swhid == str(swhid_core)
@@ -217,7 +217,7 @@ def test_deposit_metadata_origin(
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["deposit_id"])
+    deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     # we got not swhid as input so we cannot have those
     assert deposit.swhid is None

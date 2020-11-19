@@ -104,7 +104,7 @@ def test_post_deposit_binary_upload_ok(
     # then
     response_content = parse_xml(BytesIO(response.content))
     assert response.status_code == status.HTTP_201_CREATED
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -126,7 +126,7 @@ def test_post_deposit_binary_upload_ok(
 
     # deprecated tags
     assert response_content["deposit_archive"] == sample_archive["name"]
-    assert int(response_content["deposit_id"]) == deposit.id
+    assert int(response_content["swh:deposit_id"]) == deposit.id
     assert response_content["deposit_status"] == deposit.status
 
     edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit.id])
@@ -337,7 +337,7 @@ def test_post_deposit_2_post_2_different_deposits(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -362,7 +362,7 @@ def test_post_deposit_2_post_2_different_deposits(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id2 = response_content["deposit_id"]
+    deposit_id2 = response_content["swh:deposit_id"]
 
     deposit2 = Deposit.objects.get(pk=deposit_id2)
 
@@ -402,7 +402,7 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"
@@ -493,7 +493,7 @@ def test_post_deposit_then_update_refused(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED

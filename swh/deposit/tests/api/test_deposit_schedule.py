@@ -59,7 +59,7 @@ def test_add_deposit_schedules_check(
     response_content = parse_xml(BytesIO(response.content))
     actual_state = response_content["swh:deposit_status"]
     assert actual_state == DEPOSIT_STATUS_DEPOSITED
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     tasks = swh_scheduler.grab_ready_tasks("check-deposit")
     assert len(tasks) == 1

@@ -16,6 +16,7 @@ from swh.model.model import MetadataTargetType
 def parse_xml(stream, encoding="utf-8"):
     namespaces = {
         "http://www.w3.org/2005/Atom": None,
+        "http://www.w3.org/2007/app": "app",
         "http://purl.org/dc/terms/": None,
         "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
         "http://purl.org/net/sword/terms/": "sword",

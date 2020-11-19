@@ -31,10 +31,13 @@ def test_post_deposit_with_status_check(authenticated_client, deposited_deposit)
     assert status_response.status_code == status.HTTP_200_OK
     r = parse_xml(BytesIO(status_response.content))
 
-    assert int(r["deposit_id"]) == deposit.id
-    assert r["deposit_status"] == DEPOSIT_STATUS_DEPOSITED
-    assert r["deposit_status_detail"] == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED]
-    assert r["deposit_external_id"] == deposit.external_id
+    assert int(r["swh:deposit_id"]) == deposit.id
+    assert r["swh:deposit_status"] == DEPOSIT_STATUS_DEPOSITED
+    assert (
+        r["swh:deposit_status_detail"]
+        == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED]
+    )
+    assert r["swh:deposit_external_id"] == deposit.external_id
 
 
 def test_status_unknown_deposit(authenticated_client, deposit_collection):
@@ -71,11 +74,11 @@ def test_status_deposit_rejected(authenticated_client, rejected_deposit):
     # then
     assert status_response.status_code == status.HTTP_200_OK
     r = parse_xml(BytesIO(status_response.content))
-    assert int(r["deposit_id"]) == deposit.id
-    assert r["deposit_status"] == DEPOSIT_STATUS_REJECTED
-    assert r["deposit_status_detail"] == "Deposit failed the checks"
+    assert int(r["swh:deposit_id"]) == deposit.id
+    assert r["swh:deposit_status"] == DEPOSIT_STATUS_REJECTED
+    assert r["swh:deposit_status_detail"] == "Deposit failed the checks"
     if deposit.swhid:
-        assert r["deposit_swhid"] == deposit.swhid
+        assert r["swh:deposit_swhid"] == deposit.swhid
 
 
 def test_status_with_http_accept_header_should_not_break(
@@ -110,12 +113,13 @@ def test_status_complete_deposit(authenticated_client, complete_deposit):
     # then
     assert status_response.status_code == status.HTTP_200_OK
     r = parse_xml(BytesIO(status_response.content))
-    assert int(r["deposit_id"]) == deposit.id
-    assert r["deposit_status"] == DEPOSIT_STATUS_LOAD_SUCCESS
+    assert int(r["swh:deposit_id"]) == deposit.id
+    assert r["swh:deposit_status"] == DEPOSIT_STATUS_LOAD_SUCCESS
     assert (
-        r["deposit_status_detail"] == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS]
+        r["swh:deposit_status_detail"]
+        == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS]
     )
     assert deposit.swhid is not None
-    assert r["deposit_swh_id"] == deposit.swhid
+    assert r["swh:deposit_swh_id"] == deposit.swhid
     assert deposit.swhid_context is not None
-    assert r["deposit_swh_id_context"] == deposit.swhid_context
+    assert r["swh:deposit_swh_id_context"] == deposit.swhid_context
