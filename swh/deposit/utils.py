@@ -18,7 +18,7 @@ def parse_xml(stream, encoding="utf-8"):
         "http://www.w3.org/2005/Atom": None,
         "http://purl.org/dc/terms/": None,
         "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
-        "http://purl.org/net/sword/": "sword",
+        "http://purl.org/net/sword/terms/": "sword",
         "https://www.softwareheritage.org/schema/2018/deposit": "swh",
     }
 
