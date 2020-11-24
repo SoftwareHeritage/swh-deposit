@@ -20,6 +20,8 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
+from ..conftest import create_deposit
+
 
 def test_deposit_post_will_fail_with_401(client):
     """Without authentication, endpoint refuses access with 401 response
@@ -185,6 +187,98 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
     deposit_id = response_content["swh:deposit_id"]
 
     assert deposit_id != deposit.id
+
+    new_deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == new_deposit.collection
+    assert deposit.external_id == new_deposit.external_id
+
+    assert new_deposit != deposit
+    assert new_deposit.parent == deposit
+
+
+def test_add_deposit_external_id_conflict_no_parent(
+    authenticated_client,
+    another_authenticated_client,
+    deposit_collection,
+    deposit_another_collection,
+    atom_dataset,
+    sample_archive,
+):
+    """Posting a deposit with an external_id conflicting with an external_id
+    of a different client does not create a parent relationship
+
+    """
+    external_id = "foobar"
+
+    # create a deposit for that other user, with the same slug
+    other_deposit = create_deposit(
+        another_authenticated_client,
+        deposit_another_collection.name,
+        sample_archive,
+        external_id,
+        DEPOSIT_STATUS_LOAD_SUCCESS,
+    )
+
+    # adding a new deposit with the same external id as a completed deposit
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"],
+        HTTP_SLUG=external_id,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    assert other_deposit.id != deposit_id
+
+    new_deposit = Deposit.objects.get(pk=deposit_id)
+
+    assert new_deposit.parent is None
+
+
+def test_add_deposit_external_id_conflict_with_parent(
+    authenticated_client,
+    another_authenticated_client,
+    deposit_collection,
+    deposit_another_collection,
+    completed_deposit,
+    atom_dataset,
+    sample_archive,
+):
+    """Posting a deposit with an external_id conflicting with an external_id
+    of a different client creates a parent relationship with the deposit
+    of the right client instead of the last matching deposit
+
+    """
+    # given multiple deposit already loaded
+    deposit = completed_deposit
+    assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+
+    # create a deposit for that other user, with the same slug
+    other_deposit = create_deposit(
+        another_authenticated_client,
+        deposit_another_collection.name,
+        sample_archive,
+        deposit.external_id,
+        DEPOSIT_STATUS_LOAD_SUCCESS,
+    )
+
+    # adding a new deposit with the same external id as a completed deposit
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"],
+        HTTP_SLUG=deposit.external_id,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    assert deposit_id != deposit.id
+    assert other_deposit.id != deposit.id
 
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == new_deposit.collection

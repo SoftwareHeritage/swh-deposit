@@ -5,6 +5,7 @@
 
 import base64
 from functools import partial
+from io import BytesIO
 import os
 import re
 from typing import Mapping
@@ -47,6 +48,16 @@ TEST_USER = {
     "provider_url": "https://hal-test.archives-ouvertes.fr/",
     "domain": "archives-ouvertes.fr/",
     "collection": {"name": "test"},
+}
+
+
+ANOTHER_TEST_USER = {
+    "username": "test2",
+    "password": "password2",
+    "email": "test@example2.org",
+    "provider_url": "https://hal-test.archives-ouvertes.example/",
+    "domain": "archives-ouvertes.example/",
+    "collection": {"name": "another-collection"},
 }
 
 
@@ -174,26 +185,35 @@ deposit_collection = deposit_collection_factory()
 deposit_another_collection = deposit_collection_factory("another-collection")
 
 
-@pytest.fixture
-def deposit_user(db, deposit_collection):
+def _create_deposit_user(db, collection, user_data):
     """Create/Return the test_user "test"
 
     """
     from swh.deposit.models import DepositClient
 
     try:
-        user = DepositClient._default_manager.get(username=TEST_USER["username"])
+        user = DepositClient._default_manager.get(username=user_data["username"])
     except DepositClient.DoesNotExist:
         user = DepositClient._default_manager.create_user(
-            username=TEST_USER["username"],
-            email=TEST_USER["email"],
-            password=TEST_USER["password"],
-            provider_url=TEST_USER["provider_url"],
-            domain=TEST_USER["domain"],
+            username=user_data["username"],
+            email=user_data["email"],
+            password=user_data["password"],
+            provider_url=user_data["provider_url"],
+            domain=user_data["domain"],
         )
-        user.collections = [deposit_collection.id]
+        user.collections = [collection.id]
         user.save()
     return user
+
+
+@pytest.fixture
+def deposit_user(db, deposit_collection):
+    return _create_deposit_user(db, deposit_collection, TEST_USER)
+
+
+@pytest.fixture
+def deposit_another_user(db, deposit_another_collection):
+    return _create_deposit_user(db, deposit_another_collection, ANOTHER_TEST_USER)
 
 
 @pytest.fixture
@@ -204,21 +224,33 @@ def client():
     return APIClient()  # <- drf's client
 
 
-@pytest.fixture
-def authenticated_client(client, deposit_user):
+def _create_authenticated_client(client, user, user_data):
     """Returned a logged client
 
     This also patched the client instance to keep a reference on the associated
     deposit_user.
 
     """
-    _token = "%s:%s" % (deposit_user.username, TEST_USER["password"])
+    _token = "%s:%s" % (user.username, user_data["password"])
     token = base64.b64encode(_token.encode("utf-8"))
     authorization = "Basic %s" % token.decode("utf-8")
     client.credentials(HTTP_AUTHORIZATION=authorization)
-    client.deposit_client = deposit_user
+    client.deposit_client = user
     yield client
     client.logout()
+
+
+@pytest.fixture
+def authenticated_client(client, deposit_user):
+    yield from _create_authenticated_client(client, deposit_user, TEST_USER)
+
+
+@pytest.fixture
+def another_authenticated_client(deposit_another_user):
+    client = APIClient()
+    yield from _create_authenticated_client(
+        client, deposit_another_user, ANOTHER_TEST_USER
+    )
 
 
 @pytest.fixture
@@ -282,10 +314,12 @@ def create_deposit(
     )
 
     # then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     from swh.deposit.models import Deposit
 
-    deposit = Deposit._default_manager.get(external_id=external_id)
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+    deposit = Deposit._default_manager.get(id=deposit_id)
 
     if deposit.status != deposit_status:
         deposit.status = deposit_status

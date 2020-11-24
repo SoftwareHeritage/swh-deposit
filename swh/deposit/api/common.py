@@ -218,7 +218,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 # find a deposit parent (same external id, status load to success)
                 deposit_parent = (
                     Deposit.objects.filter(
-                        external_id=external_id, status=DEPOSIT_STATUS_LOAD_SUCCESS
+                        client=self._client,
+                        external_id=external_id,
+                        status=DEPOSIT_STATUS_LOAD_SUCCESS,
                     )
                     .order_by("-id")[0:1]
                     .get()
