@@ -4,24 +4,17 @@
     <xsd:complexType>
       <xsd:choice>
 
+        <!-- metadata-only deposit -->
         <xsd:element name="reference">
           <xsd:complexType>
             <xsd:choice>
-              <xsd:element name="object">
-                <xsd:complexType>
-                <xsd:attribute type="xsd:string" name="swhid"/>
-                </xsd:complexType>
-              </xsd:element>
-              <xsd:element name="origin">
-                <xsd:complexType>
-                <xsd:attribute type="xsd:string" name="url"/>
-                </xsd:complexType>
-              </xsd:element>
+              <xsd:element ref="origin" />
+              <xsd:element ref="object" />
             </xsd:choice>
           </xsd:complexType>
         </xsd:element>
 
-
+        <!-- sparse deposit -->
         <xsd:element name="bindings">
           <xsd:complexType>
             <xsd:sequence>
@@ -36,6 +29,20 @@
         </xsd:element>
 
       </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references a SWHID -->
+  <xsd:element name="object">
+    <xsd:complexType>
+    <xsd:attribute type="xsd:string" name="swhid"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references an origin by URL -->
+  <xsd:element name="origin">
+    <xsd:complexType>
+    <xsd:attribute type="xsd:string" name="url"/>
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
