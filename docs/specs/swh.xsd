@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="https://www.softwareheritage.org/schema/2018/deposit"
+            xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+            elementFormDefault="qualified"
+            >
   <xsd:element name="deposit">
     <xsd:complexType>
       <xsd:choice>
@@ -8,8 +12,8 @@
         <xsd:element name="reference">
           <xsd:complexType>
             <xsd:choice>
-              <xsd:element ref="origin" />
-              <xsd:element ref="object" />
+              <xsd:element ref="swh:origin" />
+              <xsd:element ref="swh:object" />
             </xsd:choice>
           </xsd:complexType>
         </xsd:element>
