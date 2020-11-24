@@ -12,7 +12,6 @@ from swh.deposit.api.common import AuthenticatedAPIView
 
 from ...config import METADATA_TYPE, APIConfig
 from ...models import Deposit, DepositRequest
-from ..common import get_deposit_by_id
 
 
 class DepositReadMixin:
@@ -20,20 +19,17 @@ class DepositReadMixin:
 
     """
 
-    def _deposit_requests(self, deposit, request_type):
+    def _deposit_requests(self, deposit: Deposit, request_type: str):
         """Given a deposit, yields its associated deposit_request
 
         Args:
-            deposit (Deposit): Deposit to list requests for
-            request_type (str): 'archive' or 'metadata'
+            deposit: Deposit to list requests for
+            request_type: 'archive' or 'metadata'
 
         Yields:
             deposit requests of type request_type associated to the deposit
 
         """
-        if isinstance(deposit, int):
-            deposit = get_deposit_by_id(deposit)
-
         deposit_requests = DepositRequest.objects.filter(
             type=request_type, deposit=deposit
         ).order_by("id")
@@ -73,15 +69,12 @@ class APIPrivateView(APIConfig, AuthenticatedAPIView):
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
-    def checks(self, req, collection_name, deposit_id=None):
+    def checks(self, req, collection_name, deposit=None):
         """Override default checks implementation to allow empty collection.
 
         """
-        if deposit_id:
-            get_deposit_by_id(deposit_id)
-
         headers = self._read_headers(req)
-        self.additional_checks(req, headers, collection_name, deposit_id)
+        self.additional_checks(req, headers, collection_name, deposit)
 
         return {"headers": headers}
 

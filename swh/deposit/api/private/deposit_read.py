@@ -19,7 +19,7 @@ from swh.model.model import MetadataAuthorityType
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
-from ..common import APIGet, get_deposit_by_id
+from ..common import APIGet
 
 
 @contextmanager
@@ -74,7 +74,7 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
             os.makedirs(self.extraction_dir)
 
     def process_get(
-        self, request, collection_name: str, deposit_id: int
+        self, request, collection_name: str, deposit: Deposit
     ) -> Tuple[int, Any, str]:
         """Build a unique tarball from the multiple received and stream that
            content to the client.
@@ -82,7 +82,7 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
         Args:
             request (Request):
             collection_name: Collection owning the deposit
-            deposit_id: Deposit concerned by the reading
+            deposit: Deposit concerned by the reading
 
         Returns:
             Tuple status, stream of content, content-type
@@ -90,7 +90,7 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
         """
         archive_paths = [
             r.archive.path
-            for r in self._deposit_requests(deposit_id, request_type=ARCHIVE_TYPE)
+            for r in self._deposit_requests(deposit, request_type=ARCHIVE_TYPE)
         ]
         return (
             status.HTTP_200_OK,
@@ -193,8 +193,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         }
 
     def process_get(
-        self, request, collection_name: str, deposit_id: int
+        self, request, collection_name: str, deposit: Deposit
     ) -> Tuple[int, Dict, str]:
-        deposit = get_deposit_by_id(deposit_id)
         data = self.metadata_read(deposit)
         return status.HTTP_200_OK, data if data else {}, "application/json"

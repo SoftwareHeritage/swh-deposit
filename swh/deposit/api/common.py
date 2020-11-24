@@ -188,7 +188,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _deposit_put(
         self,
         request: Request,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         in_progress: bool = False,
         external_id: Optional[str] = None,
     ) -> Deposit:
@@ -196,7 +196,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         Args:
             request: request data
-            deposit_id: deposit identifier
+            deposit: deposit being updated/created
             in_progress: deposit status
             external_id: external identifier to associate to the deposit
 
@@ -205,7 +205,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         """
         complete_date: Optional[datetime.datetime] = None
-        deposit_parent: Optional[Deposit] = None
 
         if in_progress is False:
             complete_date = timezone.now()
@@ -213,36 +212,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         else:
             status_type = DEPOSIT_STATUS_PARTIAL
 
-        if not deposit_id:
-            try:
-                # find a deposit parent (same external id, status load to success)
-                deposit_parent = (
-                    Deposit.objects.filter(
-                        client=self._client,
-                        external_id=external_id,
-                        status=DEPOSIT_STATUS_LOAD_SUCCESS,
-                    )
-                    .order_by("-id")[0:1]
-                    .get()
-                )
-            except Deposit.DoesNotExist:
-                # then no parent for that deposit, deposit_parent already None
-                pass
-
-            deposit = Deposit(
-                collection=self._collection,
-                external_id=external_id or "",
-                complete_date=complete_date,
-                status=status_type,
-                client=self._client,
-                parent=deposit_parent,
-            )
-        else:
-            deposit = get_deposit_by_id(deposit_id)
-
-            # update metadata
-            deposit.complete_date = complete_date
-            deposit.status = status_type
+        # update metadata
+        deposit.complete_date = complete_date
+        deposit.status = status_type
 
         if self.config["checks"]:
             deposit.save()  # needed to have a deposit id
@@ -312,33 +284,30 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         assert deposit_request is not None
         return deposit_request
 
-    def _delete_archives(self, collection_name: str, deposit_id: int) -> Dict:
+    def _delete_archives(self, collection_name: str, deposit: Deposit) -> Dict:
         """Delete archive references from the deposit id.
 
         """
-        deposit = get_deposit_by_id(deposit_id)
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
         return {}
 
-    def _delete_deposit(self, collection_name: str, deposit_id: int) -> Dict:
+    def _delete_deposit(self, collection_name: str, deposit: Deposit) -> Dict:
         """Delete deposit reference.
 
         Args:
             collection_name: Client's collection
-            deposit_id: The deposit to delete
+            deposit: The deposit to delete
 
         Returns
             Empty dict when ok.
             Dict with error key to describe the failure.
 
         """
-        deposit = get_deposit_by_id(deposit_id)
-
         if deposit.collection.name != collection_name:
             summary = "Cannot delete a deposit from another collection"
             description = "Deposit %s does not belong to the collection %s" % (
-                deposit_id,
+                deposit.id,
                 collection_name,
             )
             raise DepositError(
@@ -404,7 +373,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
@@ -418,7 +387,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 and inject in db
             headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier if provided
+            deposit: deposit to be updated
             replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
@@ -476,10 +445,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         # actual storage of data
         archive_metadata = filehandler
         deposit = self._deposit_put(
-            request,
-            deposit_id=deposit_id,
-            in_progress=headers.in_progress,
-            external_id=slug,
+            request, deposit=deposit, in_progress=headers.in_progress, external_id=slug,
         )
         self._deposit_request_put(
             deposit,
@@ -509,7 +475,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
@@ -525,7 +491,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 and inject in db
             headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier if provided
+            deposit: deposit to be updated
             replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
@@ -607,10 +573,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         # actual storage of data
         deposit = self._deposit_put(
-            request,
-            deposit_id=deposit_id,
-            in_progress=headers.in_progress,
-            external_id=slug,
+            request, deposit=deposit, in_progress=headers.in_progress, external_id=slug,
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
@@ -727,7 +690,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
         check_slug_is_present: bool = False,
@@ -739,7 +702,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 and inject in db
             headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier if provided
+            deposit: deposit to be updated
             replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
@@ -800,7 +763,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         deposit = self._deposit_put(
             request,
-            deposit_id=deposit_id,
+            deposit=deposit,
             in_progress=headers.in_progress,
             external_id=headers.slug,
         )
@@ -844,7 +807,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: int,
+        deposit: Deposit,
     ) -> Receipt:
         """Empty post to finalize an empty deposit.
 
@@ -853,15 +816,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 and inject in db
             headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier
+            deposit: deposit to be finalized
         """
-        deposit = get_deposit_by_id(deposit_id)
         deposit.complete_date = timezone.now()
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
         return Receipt(
-            deposit_id=deposit_id,
+            deposit_id=deposit.id,
             deposit_date=deposit.complete_date,
             status=deposit.status,
             archive=None,
@@ -872,7 +834,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit],
     ) -> Dict[str, Any]:
         """Permit the child class to enrich additional checks.
 
@@ -883,7 +845,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         return {}
 
     def checks(
-        self, request: Request, collection_name: str, deposit_id: Optional[int] = None
+        self, request: Request, collection_name: str, deposit: Optional[Deposit] = None
     ) -> ParsedRequestHeaders:
         try:
             self._collection = DepositCollection.objects.get(name=collection_name)
@@ -911,16 +873,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         headers = self._read_headers(request)
 
-        if deposit_id:
-            deposit = get_deposit_by_id(deposit_id)
-
-            assert deposit is not None
+        if deposit is not None:
             self.restrict_access(request, headers, deposit)
 
         if headers.on_behalf_of:
             raise DepositError(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
 
-        self.additional_checks(request, headers, collection_name, deposit_id)
+        self.additional_checks(request, headers, collection_name, deposit)
 
         return headers
 
@@ -981,9 +940,10 @@ class APIGet(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        self.checks(request, collection_name, deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
+        self.checks(request, collection_name, deposit)
 
-        r = self.process_get(request, collection_name, deposit_id)
+        r = self.process_get(request, collection_name, deposit)
 
         status, content, content_type = r
         if content_type == "swh/generator":
@@ -999,7 +959,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
     @abstractmethod
     def process_get(
-        self, request: Request, collection_name: str, deposit_id: int
+        self, request: Request, collection_name: str, deposit: Deposit
     ) -> Tuple[int, Any, str]:
         """Routine to deal with the deposit's get processing.
 
@@ -1026,10 +986,14 @@ class APIPost(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        headers = self.checks(request, collection_name, deposit_id)
+        if deposit_id is None:
+            deposit = None
+        else:
+            deposit = get_deposit_by_id(deposit_id)
+        headers = self.checks(request, collection_name, deposit)
 
         status, iri_key, receipt = self.process_post(
-            request, headers, collection_name, deposit_id
+            request, headers, collection_name, deposit
         )
 
         return self._make_deposit_receipt(
@@ -1075,7 +1039,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
         request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit] = None,
     ) -> Tuple[int, str, Receipt]:
         """Routine to deal with the deposit's processing.
 
@@ -1105,8 +1069,12 @@ class APIPut(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        headers = self.checks(request, collection_name, deposit_id)
-        self.process_put(request, headers, collection_name, deposit_id)
+        if deposit_id is None:
+            deposit = None
+        else:
+            deposit = get_deposit_by_id(deposit_id)
+        headers = self.checks(request, collection_name, deposit)
+        self.process_put(request, headers, collection_name, deposit)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
@@ -1116,7 +1084,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
         request: Request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: int,
+        deposit: Deposit,
     ) -> None:
         """Routine to deal with updating a deposit in some way.
 
@@ -1143,15 +1111,16 @@ class APIDelete(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        self.checks(request, collection_name, deposit_id)
         assert deposit_id is not None
-        self.process_delete(request, collection_name, deposit_id)
+        deposit = get_deposit_by_id(deposit_id)
+        self.checks(request, collection_name, deposit)
+        self.process_delete(request, collection_name, deposit)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
     @abstractmethod
     def process_delete(
-        self, request: Request, collection_name: str, deposit_id: int
+        self, request: Request, collection_name: str, deposit: Deposit
     ) -> None:
         """Routine to delete a resource.
 

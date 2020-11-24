@@ -11,6 +11,7 @@ from swh.storage import get_storage
 from swh.storage.interface import StorageInterface
 
 from ..config import EDIT_IRI, EM_IRI
+from ..models import Deposit
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
 from .common import APIPost, ParsedRequestHeaders, Receipt
 
@@ -37,7 +38,7 @@ class SwordEditAPI(APIPost):
         request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit] = None,
     ) -> Tuple[int, str, Receipt]:
         """Add new metadata/archive to existing deposit.
 
@@ -63,20 +64,18 @@ class SwordEditAPI(APIPost):
             For the empty post case, this returns a 200.
 
         """  # noqa
-        assert deposit_id is not None
+        assert deposit is not None
         if request.content_type.startswith("multipart/"):
             receipt = self._multipart_upload(
-                request, headers, collection_name, deposit_id=deposit_id
+                request, headers, collection_name, deposit=deposit
             )
             return (status.HTTP_201_CREATED, EM_IRI, receipt)
 
         content_length = headers.content_length or 0
         if content_length == 0 and headers.in_progress is False:
             # check for final empty post
-            receipt = self._empty_post(request, headers, collection_name, deposit_id)
+            receipt = self._empty_post(request, headers, collection_name, deposit)
             return (status.HTTP_200_OK, EDIT_IRI, receipt)
 
-        receipt = self._atom_entry(
-            request, headers, collection_name, deposit_id=deposit_id
-        )
+        receipt = self._atom_entry(request, headers, collection_name, deposit=deposit)
         return (status.HTTP_201_CREATED, EM_IRI, receipt)

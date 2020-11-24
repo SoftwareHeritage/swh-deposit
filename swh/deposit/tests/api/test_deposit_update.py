@@ -358,7 +358,9 @@ def test_add_metadata_to_unknown_deposit(
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
-    assert "Unknown collection name" in response_content["sword:error"]["atom:summary"]
+    assert (
+        "Deposit 1000 does not exist" in response_content["sword:error"]["atom:summary"]
+    )
 
 
 def test_add_metadata_to_unknown_collection(

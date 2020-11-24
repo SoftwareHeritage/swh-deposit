@@ -11,7 +11,7 @@ from swh.model.identifiers import parse_swhid
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import BAD_REQUEST, DepositError, ParserError
 from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIDelete, APIPut, ParsedRequestHeaders, get_deposit_by_id
+from .common import APIDelete, APIPut, ParsedRequestHeaders
 
 
 class EditAPI(APIPut, APIDelete):
@@ -47,7 +47,7 @@ class EditAPI(APIPut, APIDelete):
         request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: int,
+        deposit: Deposit,
     ) -> None:
         """This allows the following scenarios:
 
@@ -77,7 +77,7 @@ class EditAPI(APIPut, APIDelete):
                     request,
                     headers,
                     collection_name,
-                    deposit_id=deposit_id,
+                    deposit=deposit,
                     replace_archives=True,
                     replace_metadata=True,
                 )
@@ -88,7 +88,7 @@ class EditAPI(APIPut, APIDelete):
                     request,
                     headers,
                     collection_name,
-                    deposit_id=deposit_id,
+                    deposit=deposit,
                     replace_metadata=True,
                 )
             return
@@ -97,7 +97,6 @@ class EditAPI(APIPut, APIDelete):
         # Write to the metadata storage (and the deposit backend)
         # no ingestion triggered
 
-        deposit = get_deposit_by_id(deposit_id, collection_name)
         assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
 
         if swhid != deposit.swhid:
@@ -130,10 +129,10 @@ class EditAPI(APIPut, APIDelete):
             deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
         )
 
-    def process_delete(self, req, collection_name: str, deposit_id: int) -> None:
+    def process_delete(self, req, collection_name: str, deposit: Deposit) -> None:
         """Delete the container (deposit).
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deleteconteiner  # noqa
 
         """
-        self._delete_deposit(collection_name, deposit_id)
+        self._delete_deposit(collection_name, deposit)

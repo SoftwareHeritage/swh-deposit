@@ -7,7 +7,8 @@ from typing import Optional, Tuple
 
 from rest_framework import status
 
-from ..config import EDIT_IRI
+from ..config import DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_IRI
+from ..models import Deposit
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
@@ -38,7 +39,7 @@ class CollectionAPI(APIPost):
         req,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit] = None,
     ) -> Tuple[int, str, Receipt]:
         """Create a first deposit as:
         - archive deposit (1 zip)
@@ -83,18 +84,47 @@ class CollectionAPI(APIPost):
                   provided
 
         """
-        assert deposit_id is None
+        assert deposit is None
+
+        deposit = self._deposit_create(external_id=headers.slug)
+
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
             receipt = self._binary_upload(
-                req, headers, collection_name, check_slug_is_present=True
+                req, headers, collection_name, deposit, check_slug_is_present=True
             )
         elif req.content_type.startswith("multipart/"):
             receipt = self._multipart_upload(
-                req, headers, collection_name, check_slug_is_present=True
+                req, headers, collection_name, deposit, check_slug_is_present=True
             )
         else:
             receipt = self._atom_entry(
-                req, headers, collection_name, check_slug_is_present=True
+                req, headers, collection_name, deposit, check_slug_is_present=True
             )
 
         return status.HTTP_201_CREATED, EDIT_IRI, receipt
+
+    def _deposit_create(self, external_id: Optional[str]) -> Deposit:
+        deposit_parent: Optional[Deposit] = None
+
+        if external_id:
+            try:
+                # find a deposit parent (same external id, status load to success)
+                deposit_parent = (
+                    Deposit.objects.filter(
+                        client=self._client,
+                        external_id=external_id,
+                        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+                    )
+                    .order_by("-id")[0:1]
+                    .get()
+                )
+            except Deposit.DoesNotExist:
+                # then no parent for that deposit, deposit_parent already None
+                pass
+
+        return Deposit(
+            collection=self._collection,
+            external_id=external_id or "",
+            client=self._client,
+            parent=deposit_parent,
+        )

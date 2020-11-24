@@ -9,6 +9,7 @@ from rest_framework import status
 
 from ..config import CONT_FILE_IRI
 from ..errors import BAD_REQUEST, DepositError
+from ..models import Deposit
 from ..parsers import SWHFileUploadTarParser, SWHFileUploadZipParser
 from .common import (
     ACCEPT_ARCHIVE_CONTENT_TYPES,
@@ -35,7 +36,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
     )
 
     def process_put(
-        self, req, headers: ParsedRequestHeaders, collection_name: str, deposit_id: int
+        self, req, headers: ParsedRequestHeaders, collection_name: str, deposit: Deposit
     ) -> None:
         """Replace existing content for the existing deposit.
 
@@ -52,7 +53,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             raise DepositError(BAD_REQUEST, msg)
 
         self._binary_upload(
-            req, headers, collection_name, deposit_id=deposit_id, replace_archives=True
+            req, headers, collection_name, deposit=deposit, replace_archives=True
         )
 
     def process_post(
@@ -60,7 +61,7 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
         req,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit] = None,
     ) -> Tuple[int, str, Receipt]:
         """Add new content to the existing deposit.
 
@@ -73,6 +74,8 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             Body: [optional Deposit Receipt]
 
         """
+        assert deposit is not None
+
         if req.content_type not in ACCEPT_ARCHIVE_CONTENT_TYPES:
             msg = "Packaging format supported is restricted to %s" % (
                 ", ".join(ACCEPT_ARCHIVE_CONTENT_TYPES)
@@ -82,10 +85,10 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
         return (
             status.HTTP_201_CREATED,
             CONT_FILE_IRI,
-            self._binary_upload(req, headers, collection_name, deposit_id),
+            self._binary_upload(req, headers, collection_name, deposit),
         )
 
-    def process_delete(self, req, collection_name: str, deposit_id: int) -> None:
+    def process_delete(self, req, collection_name: str, deposit: Deposit) -> None:
         """Delete content (archives) from existing deposit.
 
            source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deletingcontent  # noqa
@@ -94,4 +97,4 @@ class EditMediaAPI(APIPost, APIPut, APIDelete):
             204 Created
 
         """
-        self._delete_archives(collection_name, deposit_id)
+        self._delete_archives(collection_name, deposit)

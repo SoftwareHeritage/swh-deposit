@@ -9,8 +9,8 @@ from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 from . import APIPrivateView
 from ...errors import BAD_REQUEST, DepositError
-from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS
-from ..common import APIPut, ParsedRequestHeaders, get_deposit_by_id
+from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
+from ..common import APIPut, ParsedRequestHeaders
 
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 
@@ -25,7 +25,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
     parser_classes = (JSONParser,)
 
     def additional_checks(
-        self, request, headers: ParsedRequestHeaders, collection_name, deposit_id=None
+        self, request, headers: ParsedRequestHeaders, collection_name, deposit=None
     ):
         """Enrich existing checks to the default ones.
 
@@ -68,7 +68,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
         request,
         headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: int,
+        deposit: Deposit,
     ) -> None:
         """Update the deposit with status and SWHIDs
 
@@ -78,8 +78,6 @@ class APIUpdateStatus(APIPrivateView, APIPut):
 
         """
         data = request.data
-
-        deposit = get_deposit_by_id(deposit_id)
 
         status = data["status"]
         deposit.status = status
