@@ -44,6 +44,7 @@ def test_read_metadata(
     """
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
     metadata_xml_atoms = [
@@ -107,6 +108,7 @@ def test_read_metadata_revision_with_parent(
     """
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
     metadata_xml_atoms = [
         atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
@@ -179,6 +181,7 @@ def test_read_metadata_3(
     """
     deposit = partial_deposit
     deposit.external_id = "hal-01243065"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
     # add metadata to the deposit with datePublished and dateCreated

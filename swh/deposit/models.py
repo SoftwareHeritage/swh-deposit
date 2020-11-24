@@ -121,8 +121,10 @@ class Deposit(models.Model):
     complete_date = models.DateTimeField(null=True)
     # collection concerned by the deposit
     collection = models.ForeignKey("DepositCollection", models.DO_NOTHING)
-    # Deposit's external identifier
+    # Deprecated: Deposit's external identifier
     external_id = models.TextField()
+    # URL of the origin of this deposit, null if this is a metadata-only deposit
+    origin_url = models.TextField(null=True)
     # Deposit client
     client = models.ForeignKey("DepositClient", models.DO_NOTHING)
     # SWH's loading result identifier
@@ -149,6 +151,7 @@ class Deposit(models.Model):
             "reception_date": self.reception_date,
             "collection": self.collection.name,
             "external_id": self.external_id,
+            "origin_url": self.origin_url,
             "client": self.client.username,
             "status": self.status,
         }
@@ -156,10 +159,6 @@ class Deposit(models.Model):
         if self.status in (DEPOSIT_STATUS_REJECTED):
             d["status_detail"] = self.status_detail
         return str(d)
-
-    @property
-    def origin_url(self):
-        return "%s/%s" % (self.client.provider_url.rstrip("/"), self.external_id)
 
 
 def client_directory_path(instance: "DepositRequest", filename: str) -> str:

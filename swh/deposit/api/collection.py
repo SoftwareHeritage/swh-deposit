@@ -21,6 +21,7 @@ from .common import (
     ParsedRequestHeaders,
     Receipt,
     get_collection_by_name,
+    guess_deposit_origin_url,
 )
 
 
@@ -132,9 +133,11 @@ class CollectionAPI(APIPost):
                 # then no parent for that deposit, deposit_parent already None
                 pass
 
-        return Deposit(
+        deposit = Deposit(
             collection=collection,
             external_id=external_id or "",
             client=client,
             parent=deposit_parent,
         )
+        deposit.origin_url = guess_deposit_origin_url(deposit)
+        return deposit

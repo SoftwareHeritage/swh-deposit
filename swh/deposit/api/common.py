@@ -137,6 +137,11 @@ def get_collection_by_name(collection_name: str):
     return collection
 
 
+def guess_deposit_origin_url(deposit: Deposit):
+    """Guesses an origin url for the given deposit."""
+    return "%s/%s" % (deposit.client.provider_url.rstrip("/"), deposit.external_id,)
+
+
 class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
