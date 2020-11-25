@@ -226,6 +226,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
+        if deposit.external_id and not deposit.origin_url:
+            deposit.origin_url = guess_deposit_origin_url(deposit)
+
         if self.config["checks"]:
             scheduler = self.scheduler
             if deposit.status == DEPOSIT_STATUS_DEPOSITED and not deposit.check_task_id:
@@ -238,7 +241,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 check_task_id = scheduler.create_tasks([task])[0]["id"]
                 deposit.check_task_id = check_task_id
 
-            deposit.save()
+        deposit.save()
 
     def _deposit_request_put(
         self,

@@ -272,10 +272,7 @@ def test_read_metadata_4(
         actual_data = response.json()
 
         assert actual_data == {
-            "origin": {
-                "type": "deposit",
-                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
-            },
+            "origin": {"type": "deposit", "url": None,},
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
@@ -344,10 +341,7 @@ def test_read_metadata_5(
         actual_data = response.json()
 
         assert actual_data == {
-            "origin": {
-                "type": "deposit",
-                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
-            },
+            "origin": {"type": "deposit", "url": None,},
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
