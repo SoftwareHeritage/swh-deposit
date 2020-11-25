@@ -220,20 +220,22 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             The Deposit instance saved or updated.
 
         """
-        complete_date: Optional[datetime.datetime] = None
-
         if in_progress is False:
-            complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_DEPOSITED
+            self._complete_deposit(deposit)
         else:
-            status_type = DEPOSIT_STATUS_PARTIAL
+            deposit.status = DEPOSIT_STATUS_PARTIAL
+            deposit.save()
 
-        # update metadata
-        deposit.complete_date = complete_date
-        deposit.status = status_type
+        return deposit
+
+    def _complete_deposit(self, deposit: Deposit) -> None:
+        """Marks the deposit as 'deposited', then schedule a check task if configured
+        to do so."""
+        deposit.complete_date = timezone.now()
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
         if self.config["checks"]:
-            deposit.save()  # needed to have a deposit id
             scheduler = self.scheduler
             if deposit.status == DEPOSIT_STATUS_DEPOSITED and not deposit.check_task_id:
                 task = create_oneshot_task_dict(
@@ -245,9 +247,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 check_task_id = scheduler.create_tasks([task])[0]["id"]
                 deposit.check_task_id = check_task_id
 
-        deposit.save()
-
-        return deposit
+            deposit.save()
 
     def _deposit_request_put(
         self,
@@ -825,7 +825,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         collection_name: str,
         deposit: Deposit,
     ) -> Receipt:
-        """Empty post to finalize an empty deposit.
+        """Empty post to finalize a deposit.
 
         Args:
             request: the request holding information to parse
@@ -834,9 +834,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             collection_name: the associated client
             deposit: deposit to be finalized
         """
-        deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_DEPOSITED
-        deposit.save()
+        self._complete_deposit(deposit)
+
+        assert deposit.complete_date is not None
 
         return Receipt(
             deposit_id=deposit.id,
