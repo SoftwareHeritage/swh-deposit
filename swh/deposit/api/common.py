@@ -201,32 +201,18 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             swhid=meta.get("HTTP_X_CHECK_SWHID"),
         )
 
-    def _deposit_put(
-        self,
-        request: Request,
-        deposit: Deposit,
-        in_progress: bool = False,
-        external_id: Optional[str] = None,
-    ) -> Deposit:
+    def _deposit_put(self, deposit: Deposit, in_progress: bool = False) -> None:
         """Save/Update a deposit in db.
 
         Args:
-            request: request data
             deposit: deposit being updated/created
             in_progress: deposit status
-            external_id: external identifier to associate to the deposit
-
-        Returns:
-            The Deposit instance saved or updated.
-
         """
         if in_progress is False:
             self._complete_deposit(deposit)
         else:
             deposit.status = DEPOSIT_STATUS_PARTIAL
             deposit.save()
-
-        return deposit
 
     def _complete_deposit(self, deposit: Deposit) -> None:
         """Marks the deposit as 'deposited', then schedule a check task if configured
@@ -460,8 +446,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         # actual storage of data
         archive_metadata = filehandler
-        deposit = self._deposit_put(
-            request, deposit=deposit, in_progress=headers.in_progress, external_id=slug,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
         self._deposit_request_put(
             deposit,
@@ -588,8 +574,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             )
 
         # actual storage of data
-        deposit = self._deposit_put(
-            request, deposit=deposit, in_progress=headers.in_progress, external_id=slug,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
@@ -777,11 +763,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if swhid is None and check_slug_is_present and not headers.slug:
             raise_missing_slug_error()
 
-        deposit = self._deposit_put(
-            request,
-            deposit=deposit,
-            in_progress=headers.in_progress,
-            external_id=headers.slug,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
 
         if swhid is not None:
