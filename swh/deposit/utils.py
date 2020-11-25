@@ -24,7 +24,11 @@ def parse_xml(stream, encoding="utf-8"):
     }
 
     data = xmltodict.parse(
-        stream, encoding=encoding, namespaces=namespaces, process_namespaces=True
+        stream,
+        encoding=encoding,
+        namespaces=namespaces,
+        process_namespaces=True,
+        dict_constructor=dict,
     )
     if "atom:entry" in data:
         data = data["atom:entry"]
