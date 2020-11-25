@@ -347,11 +347,12 @@ def create_binary_deposit(
         **kwargs,
     )
 
+    origin_url = deposit.client.provider_url + deposit.external_id
+
     response = authenticated_client.post(
         reverse(SE_IRI, args=[collection_name, deposit.id]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
-        HTTP_SLUG=deposit.external_id,
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
 

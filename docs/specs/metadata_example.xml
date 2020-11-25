@@ -23,6 +23,9 @@
             <codemeta:affiliation> UPMC </codemeta:affiliation>
         </codemeta:author>
         <swh:deposit>
+          <swh:create_origin>
+            <swh:origin url="http://has.archives-ouvertes.fr/hal-01243573" />
+          </swh:create_origin>
           <swh:bindings>
           <swh:binding source="path/to/file.txt" destination="aaaaaaaaaaa..."/>
         </swh:bindings>

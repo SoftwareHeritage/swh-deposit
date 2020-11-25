@@ -341,7 +341,10 @@ def test_read_metadata_5(
         actual_data = response.json()
 
         assert actual_data == {
-            "origin": {"type": "deposit", "url": None,},
+            "origin": {
+                "type": "deposit",
+                "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
+            },
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {

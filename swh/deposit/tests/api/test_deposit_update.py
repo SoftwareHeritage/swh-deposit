@@ -12,6 +12,7 @@ from rest_framework import status
 
 from swh.deposit.api.common import ACCEPT_ARCHIVE_CONTENT_TYPES
 from swh.deposit.config import (
+    COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_PARTIAL,
     EDIT_IRI,
@@ -105,13 +106,15 @@ def test_replace_metadata_to_deposit_is_possible(
     partial_deposit_with_metadata,
     deposit_collection,
     atom_dataset,
+    deposit_user,
 ):
     """Replace all metadata with another one should return a 204 response
 
     """
     # given
     deposit = partial_deposit_with_metadata
-    raw_metadata0 = atom_dataset["entry-data0"]
+    origin_url = deposit_user.provider_url + deposit.external_id
+    raw_metadata0 = atom_dataset["entry-data0"] % origin_url
 
     requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
     assert len(requests_meta) == 1
@@ -210,11 +213,13 @@ def test_add_metadata_to_deposit_is_possible(
     deposit_collection,
     partial_deposit_with_metadata,
     atom_dataset,
+    deposit_user,
 ):
     """Add metadata with another one should return a 204 response
 
     """
     deposit = partial_deposit_with_metadata
+    origin_url = deposit_user.provider_url + deposit.external_id
     requests = DepositRequest.objects.filter(deposit=deposit, type="metadata")
 
     assert len(requests) == 1
@@ -236,7 +241,7 @@ def test_add_metadata_to_deposit_is_possible(
     )
 
     assert len(requests) == 2
-    expected_raw_meta0 = atom_dataset["entry-data0"]
+    expected_raw_meta0 = atom_dataset["entry-data0"] % origin_url
     # a new one was added
     assert requests[0].raw_metadata == expected_raw_meta0
     assert requests[1].raw_metadata == atom_entry
@@ -253,6 +258,7 @@ def test_add_both_archive_and_metadata_to_deposit(
     partial_deposit_with_metadata,
     atom_dataset,
     sample_archive,
+    deposit_user,
 ):
     """Scenario: Add both a new archive and new metadata to a partial deposit is ok
 
@@ -260,6 +266,7 @@ def test_add_both_archive_and_metadata_to_deposit(
 
     """
     deposit = partial_deposit_with_metadata
+    origin_url = deposit_user.provider_url + deposit.external_id
     requests = DepositRequest.objects.filter(deposit=deposit, type="metadata")
     assert len(requests) == 1
 
@@ -299,7 +306,7 @@ def test_add_both_archive_and_metadata_to_deposit(
     )
 
     assert len(requests) == 1 + 1, "New deposit request archive got added"
-    expected_raw_meta0 = atom_dataset["entry-data0"]
+    expected_raw_meta0 = atom_dataset["entry-data0"] % origin_url
     # a new one was added
     assert requests[0].raw_metadata == expected_raw_meta0
     assert requests[1].raw_metadata == data_atom_entry
@@ -508,6 +515,7 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
     deposit_collection,
     atom_dataset,
     sample_archive,
+    deposit_user,
 ):
     """Scenario: Replace metadata and archive(s) with new ones should be ok
 
@@ -516,7 +524,8 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
     """
     # given
     deposit = partial_deposit_with_metadata
-    raw_metadata0 = atom_dataset["entry-data0"]
+    origin_url = deposit_user.provider_url + deposit.external_id
+    raw_metadata0 = atom_dataset["entry-data0"] % origin_url
 
     requests_meta = DepositRequest.objects.filter(deposit=deposit, type="metadata")
     assert len(requests_meta) == 1
@@ -792,3 +801,84 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
         b"- Mandatory alternate fields are missing (atom:name or atom:title)"
         in response.content
     )
+
+
+def test_put_atom_with_create_origin_and_external_identifier(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """<atom:external_identifier> was deprecated before <swh:create_origin>
+    was introduced, clients should get an error when trying to use both
+
+    """
+    external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"] % origin_url,
+        HTTP_IN_PROGRESS="true",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+
+    for link in response_content["atom:link"]:
+        if link["@rel"] == "edit":
+            edit_iri = link["@href"]
+            break
+    else:
+        assert False, response_content
+
+    # when
+    response = authenticated_client.put(
+        edit_iri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["error-with-external-identifier"] % external_id,
+        # + headers
+        HTTP_IN_PROGRESS="false",
+    )
+
+    assert b"&lt;external_identifier&gt; is deprecated" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_put_atom_with_create_origin_and_reference(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """<swh:reference> and <swh:create_origin> are mutually exclusive
+
+    """
+    external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"] % origin_url,
+        HTTP_IN_PROGRESS="true",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+
+    for link in response_content["atom:link"]:
+        if link["@rel"] == "edit":
+            edit_iri = link["@href"]
+            break
+    else:
+        assert False, response_content
+
+    # when
+    response = authenticated_client.put(
+        edit_iri,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-with-origin-reference"].format(url=origin_url),
+        # + headers
+        HTTP_IN_PROGRESS="false",
+    )
+
+    assert b"only one may be used on a given deposit" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

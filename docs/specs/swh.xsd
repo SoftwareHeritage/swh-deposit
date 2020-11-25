@@ -7,6 +7,12 @@
   <xsd:element name="deposit">
     <xsd:complexType>
       <xsd:choice>
+        <!-- code deposit on a new origin -->
+        <xsd:element name="create_origin" >
+          <xsd:complexType>
+            <xsd:element ref="swh:origin" />
+          </xsd:complexType>
+        </xsd:element>
 
         <!-- metadata-only deposit -->
         <xsd:element name="reference">

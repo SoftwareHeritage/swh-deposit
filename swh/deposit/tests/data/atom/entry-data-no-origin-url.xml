@@ -22,10 +22,5 @@ and other stuff</description>
     <version>0.0.1</version>
     <developmentStatus>running</developmentStatus>
     <runtimePlatform>all</runtimePlatform>
-
-    <swh:deposit>
-      <swh:create_origin>
-        <swh:origin url="%s" />
-      </swh:create_origin>
-    </swh:deposit>
 </entry>
+

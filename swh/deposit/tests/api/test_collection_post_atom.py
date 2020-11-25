@@ -34,7 +34,7 @@ def test_post_deposit_atom_201_even_with_decimal(
     )
 
     # then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = response_content["swh:deposit_id"]
@@ -96,22 +96,52 @@ def test_post_deposit_atom_parsing_error(
     assert b"Malformed xml metadata" in response.content
 
 
-def test_post_deposit_atom_no_slug_header(
+def test_post_deposit_atom_use_slug_header(
     authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
 ):
-    """Posting an atom entry without a slug header should generate one
+    """Posting an atom entry with a slug header but no origin url generates
+    an origin url from the slug
 
     """
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
-    id_ = str(uuid.uuid4())
-    mocker.patch("uuid.uuid4", return_value=id_)
+    slug = str(uuid.uuid4())
 
     # when
     response = authenticated_client.post(
         url,
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data-no-origin-url"],
+        HTTP_IN_PROGRESS="false",
+        HTTP_SLUG=slug,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + slug
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
+
+
+def test_post_deposit_atom_no_origin_url_nor_slug_header(
+    authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
+):
+    """Posting an atom entry without an origin url or a slug header should generate one
+
+    """
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    slug = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=slug)
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-no-origin-url"],
         # + headers
         HTTP_IN_PROGRESS="false",
     )
@@ -122,7 +152,7 @@ def test_post_deposit_atom_no_slug_header(
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
-    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.origin_url == deposit_user.provider_url + slug
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
@@ -132,19 +162,75 @@ def test_post_deposit_atom_with_external_identifier(
     """Posting an atom entry without a slug header should return a 400
 
     """
+    external_id = "foobar"
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
     response = authenticated_client.post(
         url,
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["error-with-external-identifier"],
+        data=atom_dataset["error-with-external-identifier"] % external_id,
         # + headers
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG="something",
     )
 
     assert b"The &#39;external_identifier&#39; tag is deprecated" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post_deposit_atom_with_create_origin_and_external_identifier(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """<atom:external_identifier> was deprecated before <swh:create_origin>
+    was introduced, clients should get an error when trying to use both
+
+    """
+    external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    document = atom_dataset["error-with-external-identifier-and-create-origin"].format(
+        external_id=external_id, url=origin_url,
+    )
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=document,
+        # + headers
+        HTTP_IN_PROGRESS="false",
+    )
+
+    assert b"&lt;external_identifier&gt; is deprecated" in response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post_deposit_atom_with_create_origin_and_reference(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """<swh:reference> and <swh:create_origin> are mutually exclusive
+
+    """
+    external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    document = atom_dataset["error-with-reference-and-create-origin"].format(
+        external_id=external_id, url=origin_url,
+    )
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/atom+xml;type=entry",
+        data=document,
+        # + headers
+        HTTP_IN_PROGRESS="false",
+    )
+
+    assert b"only one may be used on a given deposit" in response.content
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -167,37 +253,36 @@ def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset
 
 
 def test_post_deposit_atom_entry_initial(
-    authenticated_client, deposit_collection, atom_dataset
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
     """Posting an initial atom entry should return 201 with deposit receipt
 
     """
     # given
-    external_id = "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
+    origin_url = deposit_user.provider_url + "1225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
     with pytest.raises(Deposit.DoesNotExist):
-        Deposit.objects.get(external_id=external_id)
+        Deposit.objects.get(origin_url=origin_url)
 
-    atom_entry_data = atom_dataset["entry-data0"]
+    atom_entry_data = atom_dataset["entry-data0"] % origin_url
 
     # when
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_entry_data,
-        HTTP_SLUG=external_id,
         HTTP_IN_PROGRESS="false",
     )
 
     # then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
-    assert deposit.external_id == external_id
+    assert deposit.origin_url == origin_url
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
     # one associated request to a deposit
@@ -208,24 +293,23 @@ def test_post_deposit_atom_entry_initial(
 
 
 def test_post_deposit_atom_entry_with_codemeta(
-    authenticated_client, deposit_collection, atom_dataset
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
     """Posting an initial atom entry should return 201 with deposit receipt
 
     """
     # given
-    external_id = "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
+    origin_url = deposit_user.provider_url + "1225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
     with pytest.raises(Deposit.DoesNotExist):
-        Deposit.objects.get(external_id=external_id)
+        Deposit.objects.get(origin_url=origin_url)
 
-    atom_entry_data = atom_dataset["codemeta-sample"]
+    atom_entry_data = atom_dataset["codemeta-sample"] % origin_url
     # when
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_entry_data,
-        HTTP_SLUG=external_id,
         HTTP_IN_PROGRESS="false",
     )
 
@@ -238,7 +322,7 @@ def test_post_deposit_atom_entry_with_codemeta(
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
-    assert deposit.external_id == external_id
+    assert deposit.origin_url == origin_url
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
     # one associated request to a deposit
@@ -249,16 +333,16 @@ def test_post_deposit_atom_entry_with_codemeta(
 
 
 def test_post_deposit_atom_entry_multiple_steps(
-    authenticated_client, deposit_collection, atom_dataset
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
     """After initial deposit, updating a deposit should return a 201
 
     """
     # given
-    external_id = "urn:uuid:2225c695-cfb8-4ebb-aaaa-80da344efa6a"
+    origin_url = deposit_user.provider_url + "2225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
     with pytest.raises(Deposit.DoesNotExist):
-        deposit = Deposit.objects.get(external_id=external_id)
+        deposit = Deposit.objects.get(origin_url=origin_url)
 
     # when
     response = authenticated_client.post(
@@ -266,7 +350,6 @@ def test_post_deposit_atom_entry_multiple_steps(
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_IN_PROGRESS="True",
-        HTTP_SLUG=external_id,
     )
 
     # then
@@ -277,14 +360,14 @@ def test_post_deposit_atom_entry_multiple_steps(
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
-    assert deposit.external_id == external_id
+    assert deposit.origin_url is None  # not provided yet
     assert deposit.status == "partial"
 
     # one associated request to a deposit
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
     assert len(deposit_requests) == 1
 
-    atom_entry_data = atom_dataset["entry-data-minimal"]
+    atom_entry_data = atom_dataset["entry-only-create-origin"] % (origin_url)
 
     for link in response_content["atom:link"]:
         if link["@rel"] == "http://purl.org/net/sword/terms/add":
@@ -302,14 +385,14 @@ def test_post_deposit_atom_entry_multiple_steps(
     )
 
     # then
-    assert response.status_code == status.HTTP_201_CREATED, response.content
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = int(response_content["swh:deposit_id"])
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
-    assert deposit.external_id == external_id
+    assert deposit.origin_url == origin_url
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
     assert len(Deposit.objects.all()) == 1

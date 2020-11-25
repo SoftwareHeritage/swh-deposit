@@ -728,7 +728,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        if not metadata:
+        if metadata is None:
             raise DepositError(
                 BAD_REQUEST,
                 "Empty body request is not supported",
@@ -736,24 +736,46 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "If the body is empty, there is no metadata.",
             )
 
-        if (
-            "atom:external_identifier" in metadata
-            and headers.slug
-            and metadata["atom:external_identifier"] != headers.slug
-        ):
-            # TODO: When clients stopped using it, raise this error
-            # even when they are equal.
-            raise DepositError(
-                BAD_REQUEST,
-                "The 'external_identifier' tag is deprecated, "
-                "the Slug header should be used instead.",
-            )
+        create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
+        if create_origin:
+            origin_url = create_origin["swh:origin"]["@url"]
+            deposit.origin_url = origin_url
+
+        if "atom:external_identifier" in metadata:
+            # Deprecated tag.
+            # When clients stopped using it, this should raise an error
+            # unconditionally
+
+            if deposit.origin_url:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "<external_identifier> is deprecated, you should only use "
+                    "<swh:create_origin> from now on.",
+                )
+
+            if headers.slug and metadata["atom:external_identifier"] != headers.slug:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "The 'external_identifier' tag is deprecated, "
+                    "the Slug header should be used instead.",
+                )
+
         # Determine if we are in the metadata-only deposit case
         try:
             swhid = parse_swh_reference(metadata)
         except ValidationError as e:
             raise DepositError(
                 PARSING_ERROR, "Invalid SWHID reference", str(e),
+            )
+
+        if swhid is not None and (
+            deposit.origin_url or deposit.parent or deposit.external_id
+        ):
+            raise DepositError(
+                BAD_REQUEST,
+                "<swh:reference> is for metadata-only deposits and "
+                "<swh:create_origin> / Slug are for code deposits, "
+                "only one may be used on a given deposit.",
             )
 
         self._deposit_put(

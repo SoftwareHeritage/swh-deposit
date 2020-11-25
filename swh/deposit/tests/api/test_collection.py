@@ -105,23 +105,28 @@ def test_act_on_deposit_rejected_is_not_permitted(
 
 
 def test_add_deposit_when_partial_makes_new_deposit(
-    authenticated_client, deposit_collection, partial_deposit, atom_dataset
+    authenticated_client,
+    deposit_collection,
+    partial_deposit,
+    atom_dataset,
+    deposit_user,
 ):
     """Posting deposit on collection when previous is partial makes new deposit
 
     """
     deposit = partial_deposit
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
+    origin_url = deposit_user.provider_url + deposit.external_id
 
     # adding a new deposit with the same external id
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = response_content["swh:deposit_id"]
 
@@ -133,7 +138,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
 
 
 def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
-    authenticated_client, deposit_collection, failed_deposit, atom_dataset
+    authenticated_client, deposit_collection, failed_deposit, atom_dataset, deposit_user
 ):
     """Posting deposit on collection when deposit done makes new deposit with
     parent
@@ -141,13 +146,14 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
     """
     deposit = failed_deposit
     assert deposit.status == DEPOSIT_STATUS_LOAD_FAILURE
+    origin_url = deposit_user.provider_url + deposit.external_id
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
 
@@ -163,7 +169,11 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
 
 
 def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
-    authenticated_client, deposit_collection, completed_deposit, atom_dataset
+    authenticated_client,
+    deposit_collection,
+    completed_deposit,
+    atom_dataset,
+    deposit_user,
 ):
     """Posting deposit on collection when deposit done makes new deposit with
     parent
@@ -172,13 +182,14 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
     # given multiple deposit already loaded
     deposit = completed_deposit
     assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+    origin_url = deposit_user.provider_url + deposit.external_id
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
 
@@ -190,7 +201,7 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
 
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == new_deposit.collection
-    assert deposit.external_id == new_deposit.external_id
+    assert deposit.origin_url == origin_url
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
@@ -203,12 +214,14 @@ def test_add_deposit_external_id_conflict_no_parent(
     deposit_another_collection,
     atom_dataset,
     sample_archive,
+    deposit_user,
 ):
     """Posting a deposit with an external_id conflicting with an external_id
     of a different client does not create a parent relationship
 
     """
     external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
 
     # create a deposit for that other user, with the same slug
     other_deposit = create_deposit(
@@ -223,7 +236,7 @@ def test_add_deposit_external_id_conflict_no_parent(
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=external_id,
     )
 
@@ -246,6 +259,7 @@ def test_add_deposit_external_id_conflict_with_parent(
     completed_deposit,
     atom_dataset,
     sample_archive,
+    deposit_user,
 ):
     """Posting a deposit with an external_id conflicting with an external_id
     of a different client creates a parent relationship with the deposit
@@ -255,6 +269,7 @@ def test_add_deposit_external_id_conflict_with_parent(
     # given multiple deposit already loaded
     deposit = completed_deposit
     assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+    origin_url = deposit_user.provider_url + deposit.external_id
 
     # create a deposit for that other user, with the same slug
     other_deposit = create_deposit(
@@ -269,7 +284,7 @@ def test_add_deposit_external_id_conflict_with_parent(
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data0"],
+        data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
 
