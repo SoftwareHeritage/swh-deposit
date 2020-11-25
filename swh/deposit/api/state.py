@@ -46,7 +46,7 @@ class StateAPI(APIBase):
 
         return render(
             req,
-            "deposit/status.xml",
+            "deposit/state.xml",
             context=context,
             content_type="application/xml",
             status=status.HTTP_200_OK,
