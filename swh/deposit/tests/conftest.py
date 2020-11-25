@@ -294,6 +294,7 @@ def create_deposit(
     sample_archive,
     external_id: str,
     deposit_status=DEPOSIT_STATUS_DEPOSITED,
+    in_progress=False,
 ):
     """Create a skeleton shell deposit
 
@@ -309,7 +310,7 @@ def create_deposit(
         HTTP_SLUG=external_id,
         HTTP_CONTENT_MD5=sample_archive["md5sum"],
         HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
-        HTTP_IN_PROGRESS="false",
+        HTTP_IN_PROGRESS=str(in_progress).lower(),
         HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (sample_archive["name"]),
     )
 
@@ -331,10 +332,9 @@ def create_deposit(
 def create_binary_deposit(
     authenticated_client,
     collection_name: str,
-    sample_archive,
-    external_id: str,
     deposit_status: str = DEPOSIT_STATUS_DEPOSITED,
     atom_dataset: Mapping[str, bytes] = {},
+    **kwargs,
 ):
     """Create a deposit with both metadata and archive set. Then alters its status
        to `deposit_status`.
@@ -343,9 +343,8 @@ def create_binary_deposit(
     deposit = create_deposit(
         authenticated_client,
         collection_name,
-        sample_archive,
-        external_id=external_id,
         deposit_status=DEPOSIT_STATUS_PARTIAL,
+        **kwargs,
     )
 
     response = authenticated_client.post(
@@ -362,15 +361,12 @@ def create_binary_deposit(
     from swh.deposit.models import Deposit
 
     deposit = Deposit._default_manager.get(pk=deposit.id)
-    if deposit.status != deposit_status:
-        deposit.status = deposit_status
-        deposit.save()
 
     assert deposit.status == deposit_status
     return deposit
 
 
-def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED):
+def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED, in_progress=False):
     """Build deposit with a specific status
 
     """
@@ -389,6 +385,7 @@ def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED):
             sample_archive,
             external_id=external_id,
             deposit_status=deposit_status,
+            in_progress=in_progress,
         )
 
     return _deposit
@@ -396,7 +393,9 @@ def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED):
 
 deposited_deposit = deposit_factory()
 rejected_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_REJECTED)
-partial_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_PARTIAL)
+partial_deposit = deposit_factory(
+    deposit_status=DEPOSIT_STATUS_PARTIAL, in_progress=True
+)
 verified_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_VERIFIED)
 completed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_SUCCESS)
 failed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_FAILURE)
@@ -412,8 +411,9 @@ def partial_deposit_with_metadata(
     return create_binary_deposit(
         authenticated_client,
         deposit_collection.name,
-        sample_archive,
+        sample_archive=sample_archive,
         external_id="external-id-partial",
+        in_progress=True,
         deposit_status=DEPOSIT_STATUS_PARTIAL,
         atom_dataset=atom_dataset,
     )
