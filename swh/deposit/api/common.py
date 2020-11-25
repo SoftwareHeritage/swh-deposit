@@ -8,6 +8,7 @@ import datetime
 import hashlib
 import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
+import uuid
 
 import attr
 from django.core.files.uploadedfile import UploadedFile
@@ -63,7 +64,6 @@ from ..errors import (
     PARSING_ERROR,
     DepositError,
     ParserError,
-    raise_missing_slug_error,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_swh_reference, parse_xml
@@ -139,7 +139,12 @@ def get_collection_by_name(collection_name: str):
 
 def guess_deposit_origin_url(deposit: Deposit):
     """Guesses an origin url for the given deposit."""
-    return "%s/%s" % (deposit.client.provider_url.rstrip("/"), deposit.external_id,)
+    external_id = deposit.external_id
+    if not external_id:
+        # The client provided neither an origin_url nor a slug. That's inconvenient,
+        # but SWORD requires we support it. So let's generate a random slug.
+        external_id = str(uuid.uuid4())
+    return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
 
 
 class AuthenticatedAPIView(APIView):
@@ -226,7 +231,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 
-        if deposit.external_id and not deposit.origin_url:
+        if not deposit.origin_url:
             deposit.origin_url = guess_deposit_origin_url(deposit)
 
         if self.config["checks"]:
@@ -386,7 +391,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
     ) -> Receipt:
         """Binary upload routine.
 
@@ -405,8 +409,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
         Raises:
             - 400 (bad request) if the request is not providing an external
@@ -448,10 +450,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         self._check_file_length(filehandler, content_length)
         self._check_file_md5sum(filehandler, headers.content_md5sum)
 
-        slug = headers.slug
-        if check_slug_is_present and not slug:
-            raise_missing_slug_error()
-
         # actual storage of data
         archive_metadata = filehandler
         self._deposit_put(
@@ -488,7 +486,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
     ) -> Receipt:
         """Multipart upload supported with exactly:
         - 1 archive (zip)
@@ -509,8 +506,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
         Raises:
             - 400 (bad request) if the request is not providing an external
@@ -522,10 +517,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        slug = headers.slug
-        if check_slug_is_present and not slug:
-            raise_missing_slug_error()
-
         content_types_present = set()
 
         data: Dict[str, Optional[Any]] = {
@@ -703,7 +694,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
     ) -> Receipt:
         """Atom entry deposit.
 
@@ -720,8 +710,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
         Raises:
             - 400 (bad request) if the request is not providing an external
@@ -750,6 +738,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         if (
             "atom:external_identifier" in metadata
+            and headers.slug
             and metadata["atom:external_identifier"] != headers.slug
         ):
             # TODO: When clients stopped using it, raise this error
@@ -759,7 +748,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "The 'external_identifier' tag is deprecated, "
                 "the Slug header should be used instead.",
             )
-
         # Determine if we are in the metadata-only deposit case
         try:
             swhid = parse_swh_reference(metadata)
@@ -767,9 +755,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             raise DepositError(
                 PARSING_ERROR, "Invalid SWHID reference", str(e),
             )
-
-        if swhid is None and check_slug_is_present and not headers.slug:
-            raise_missing_slug_error()
 
         self._deposit_put(
             deposit=deposit, in_progress=headers.in_progress,

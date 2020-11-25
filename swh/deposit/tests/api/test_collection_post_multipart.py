@@ -6,6 +6,7 @@
 """Tests handling of multipart requests to POST Col-IRI."""
 
 from io import BytesIO
+import uuid
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
@@ -18,11 +19,14 @@ from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive
 
 
-def test_post_deposit_multipart_without_slug_header_is_bad_request(
-    authenticated_client, deposit_collection, atom_dataset
+def test_post_deposit_multipart_without_slug_header(
+    authenticated_client, deposit_collection, atom_dataset, mocker, deposit_user
 ):
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    id_ = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=id_)
 
     archive_content = b"some content representing archive"
     archive = InMemoryUploadedFile(
@@ -53,8 +57,14 @@ def test_post_deposit_multipart_without_slug_header_is_bad_request(
         HTTP_IN_PROGRESS="false",
     )
 
-    assert b"Missing SLUG header" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_post_deposit_multipart_zip(

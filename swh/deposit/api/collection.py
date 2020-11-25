@@ -95,17 +95,11 @@ class CollectionAPI(APIPost):
         deposit = self._deposit_create(req, collection_name, external_id=headers.slug)
 
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            receipt = self._binary_upload(
-                req, headers, collection_name, deposit, check_slug_is_present=True
-            )
+            receipt = self._binary_upload(req, headers, collection_name, deposit)
         elif req.content_type.startswith("multipart/"):
-            receipt = self._multipart_upload(
-                req, headers, collection_name, deposit, check_slug_is_present=True
-            )
+            receipt = self._multipart_upload(req, headers, collection_name, deposit)
         else:
-            receipt = self._atom_entry(
-                req, headers, collection_name, deposit, check_slug_is_present=True
-            )
+            receipt = self._atom_entry(req, headers, collection_name, deposit)
 
         return status.HTTP_201_CREATED, EDIT_IRI, receipt
 

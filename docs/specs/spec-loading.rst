@@ -55,7 +55,8 @@ Origin artifact
 ~~~~~~~~~~~~~~~
 
 We create an origin URL by concatenating the client's `provider_url` and the
-value of the Slug header of the initial POST request of the deposit.
+value of the Slug header of the initial POST request of the deposit
+(or a randomly generated slug if it is missing).
 
 For examples:
 

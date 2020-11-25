@@ -23,7 +23,6 @@ Create deposit
             -F "file=@deposit.json;type=application/zip;filename=payload" \
             -F "atom=@atom-entry.xml;type=application/atom+xml;charset=UTF-8" \
             -H 'In-Progress: false' \
-            -H 'Slug: some-external-id' \
             -XPOST https://deposit.softwareheritage.org/1/hal/
 
     .. code:: http
@@ -31,7 +30,6 @@ Create deposit
        POST /1/hal/ HTTP/1.1
        Host: deposit.softwareheritage.org
        Authorization: Basic xxxxxxxxxxxx=
-       Slug: some-external-id
        In-Progress: false
        Content-Length: 123456
        Content-Type: multipart/form-data; boundary=----------------------123456798

@@ -8,7 +8,6 @@
 """
 
 import logging
-from typing import NoReturn
 
 from django.shortcuts import render
 from rest_framework import status
@@ -154,20 +153,6 @@ def make_error_response(req, key, summary=None, verbose_description=None):
     """
     error = make_error_dict(key, summary, verbose_description)
     return make_error_response_from_dict(req, error["error"])
-
-
-def raise_missing_slug_error() -> NoReturn:
-    """Returns a missing slug header error dict
-
-    """
-    raise DepositError(
-        BAD_REQUEST,
-        "Missing SLUG header",
-        verbose_description=(
-            "Provide in the SLUG header one identifier, for example the "
-            "url pointing to the resource you are depositing."
-        ),
-    )
 
 
 class DepositError(ValueError):

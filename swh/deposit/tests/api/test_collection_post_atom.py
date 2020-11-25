@@ -6,6 +6,7 @@
 """Tests the handling of the Atom content when doing a POST Col-IRI."""
 
 from io import BytesIO
+import uuid
 
 from django.urls import reverse
 import pytest
@@ -96,12 +97,15 @@ def test_post_deposit_atom_parsing_error(
 
 
 def test_post_deposit_atom_no_slug_header(
-    authenticated_client, deposit_collection, atom_dataset
+    authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
 ):
-    """Posting an atom entry without a slug header should return a 400
+    """Posting an atom entry without a slug header should generate one
 
     """
     url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    id_ = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=id_)
 
     # when
     response = authenticated_client.post(
@@ -112,8 +116,14 @@ def test_post_deposit_atom_no_slug_header(
         HTTP_IN_PROGRESS="false",
     )
 
-    assert b"Missing SLUG header" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_post_deposit_atom_with_external_identifier(
@@ -134,7 +144,6 @@ def test_post_deposit_atom_with_external_identifier(
         HTTP_SLUG="something",
     )
 
-    print(response.content)
     assert b"The &#39;external_identifier&#39; tag is deprecated" in response.content
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 

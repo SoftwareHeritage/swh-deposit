@@ -6,6 +6,7 @@
 """Tests the handling of the binary content when doing a POST Col-IRI."""
 
 from io import BytesIO
+import uuid
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
@@ -19,11 +20,14 @@ from swh.deposit.tests.common import check_archive, create_arborescence_archive
 
 
 def test_post_deposit_binary_no_slug(
-    authenticated_client, deposit_collection, sample_archive
+    authenticated_client, deposit_collection, sample_archive, deposit_user, mocker
 ):
-    """Posting a binary deposit without slug header should return 400
+    """Posting a binary deposit without slug header should generate one
 
     """
+    id_ = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=id_)
+
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
@@ -39,8 +43,14 @@ def test_post_deposit_binary_no_slug(
         HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
-    assert b"Missing SLUG header" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_post_deposit_binary_support(
