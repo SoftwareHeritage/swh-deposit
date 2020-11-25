@@ -861,7 +861,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def checks(
         self, request: Request, collection_name: str, deposit: Optional[Deposit] = None
     ) -> ParsedRequestHeaders:
-        self._collection = get_collection_by_name(collection_name)
+        if deposit is None:
+            collection = get_collection_by_name(collection_name)
+        else:
+            assert collection_name == deposit.collection.name
+            collection = deposit.collection
 
         username = request.user.username
         if username:  # unauthenticated request can have the username empty
@@ -872,7 +876,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             except DepositClient.DoesNotExist:
                 raise DepositError(NOT_FOUND, f"Unknown client name {username}")
 
-            collection_id = self._collection.id
+            collection_id = collection.id
             collections = self._client.collections
             assert collections is not None
             if collection_id not in collections:

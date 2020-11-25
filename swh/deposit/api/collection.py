@@ -15,7 +15,13 @@ from ..parsers import (
     SWHFileUploadZipParser,
     SWHMultiPartParser,
 )
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost, ParsedRequestHeaders, Receipt
+from .common import (
+    ACCEPT_ARCHIVE_CONTENT_TYPES,
+    APIPost,
+    ParsedRequestHeaders,
+    Receipt,
+    get_collection_by_name,
+)
 
 
 class CollectionAPI(APIPost):
@@ -86,7 +92,7 @@ class CollectionAPI(APIPost):
         """
         assert deposit is None
 
-        deposit = self._deposit_create(external_id=headers.slug)
+        deposit = self._deposit_create(collection_name, external_id=headers.slug)
 
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
             receipt = self._binary_upload(
@@ -103,7 +109,10 @@ class CollectionAPI(APIPost):
 
         return status.HTTP_201_CREATED, EDIT_IRI, receipt
 
-    def _deposit_create(self, external_id: Optional[str]) -> Deposit:
+    def _deposit_create(
+        self, collection_name: str, external_id: Optional[str]
+    ) -> Deposit:
+        collection = get_collection_by_name(collection_name)
         deposit_parent: Optional[Deposit] = None
 
         if external_id:
@@ -123,7 +132,7 @@ class CollectionAPI(APIPost):
                 pass
 
         return Deposit(
-            collection=self._collection,
+            collection=collection,
             external_id=external_id or "",
             client=self._client,
             parent=deposit_parent,
