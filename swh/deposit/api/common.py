@@ -115,12 +115,26 @@ def get_deposit_by_id(
         raise DepositError(NOT_FOUND, f"Deposit {deposit_id} does not exist")
 
     if collection_name and deposit.collection.name != collection_name:
+        get_collection_by_name(collection_name)  # raises if does not exist
+
         raise DepositError(
             NOT_FOUND,
             f"Deposit {deposit_id} does not belong to collection {collection_name}",
         )
 
     return deposit
+
+
+def get_collection_by_name(collection_name: str):
+    """Gets an existing Deposit object if it exists, or raises `DepositError`."""
+    try:
+        collection = DepositCollection.objects.get(name=collection_name)
+    except DepositCollection.DoesNotExist:
+        raise DepositError(NOT_FOUND, f"Unknown collection name {collection_name}")
+
+    assert collection is not None
+
+    return collection
 
 
 class AuthenticatedAPIView(APIView):
@@ -847,11 +861,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def checks(
         self, request: Request, collection_name: str, deposit: Optional[Deposit] = None
     ) -> ParsedRequestHeaders:
-        try:
-            self._collection = DepositCollection.objects.get(name=collection_name)
-        except DepositCollection.DoesNotExist:
-            raise DepositError(NOT_FOUND, f"Unknown collection name {collection_name}")
-        assert self._collection is not None
+        self._collection = get_collection_by_name(collection_name)
 
         username = request.user.username
         if username:  # unauthenticated request can have the username empty
@@ -940,7 +950,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        deposit = get_deposit_by_id(deposit_id)
+        deposit = get_deposit_by_id(deposit_id, collection_name)
         self.checks(request, collection_name, deposit)
 
         r = self.process_get(request, collection_name, deposit)
@@ -989,7 +999,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
         if deposit_id is None:
             deposit = None
         else:
-            deposit = get_deposit_by_id(deposit_id)
+            deposit = get_deposit_by_id(deposit_id, collection_name)
         headers = self.checks(request, collection_name, deposit)
 
         status, iri_key, receipt = self.process_post(
@@ -1072,7 +1082,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
         if deposit_id is None:
             deposit = None
         else:
-            deposit = get_deposit_by_id(deposit_id)
+            deposit = get_deposit_by_id(deposit_id, collection_name)
         headers = self.checks(request, collection_name, deposit)
         self.process_put(request, headers, collection_name, deposit)
 
@@ -1112,7 +1122,7 @@ class APIDelete(APIBase, metaclass=ABCMeta):
 
         """
         assert deposit_id is not None
-        deposit = get_deposit_by_id(deposit_id)
+        deposit = get_deposit_by_id(deposit_id, collection_name)
         self.checks(request, collection_name, deposit)
         self.process_delete(request, collection_name, deposit)
 
