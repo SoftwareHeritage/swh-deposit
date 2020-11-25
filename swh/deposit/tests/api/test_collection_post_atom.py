@@ -96,6 +96,28 @@ def test_post_deposit_atom_parsing_error(
     assert b"Malformed xml metadata" in response.content
 
 
+def test_post_deposit_atom_403_wrong_origin_url_prefix(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """Creating an origin for a prefix not owned by the client is forbidden
+
+    """
+    origin_url = "http://example.org/foo"
+
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"] % origin_url,
+        HTTP_IN_PROGRESS="true",
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    expected_msg = (
+        f"Cannot create origin {origin_url}, "
+        f"it must start with {deposit_user.provider_url}"
+    )
+    assert expected_msg in response.content.decode()
+
+
 def test_post_deposit_atom_use_slug_header(
     authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
 ):

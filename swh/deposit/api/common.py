@@ -739,6 +739,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
         if create_origin:
             origin_url = create_origin["swh:origin"]["@url"]
+            if origin_url is not None:
+                provider_url = deposit.client.provider_url.rstrip("/") + "/"
+                if not origin_url.startswith(provider_url):
+                    raise DepositError(
+                        FORBIDDEN,
+                        f"Cannot create origin {origin_url}, it must start with "
+                        f"{provider_url}",
+                    )
             deposit.origin_url = origin_url
 
         if "atom:external_identifier" in metadata:
