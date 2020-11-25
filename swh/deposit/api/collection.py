@@ -116,8 +116,6 @@ class CollectionAPI(APIPost):
         client = self.get_client(request)
         deposit_parent: Optional[Deposit] = None
 
-        assert client
-
         if external_id:
             try:
                 # find a deposit parent (same external id, status load to success)

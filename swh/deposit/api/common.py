@@ -860,11 +860,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         return {}
 
-    def get_client(self, request) -> Optional[DepositClient]:
-        """Returns a DepositClient if request.user.username is not None"""
+    def get_client(self, request) -> DepositClient:
+        # This class depends on AuthenticatedAPIView, so request.user.username
+        # is always set
         username = request.user.username
-        if username is None:
-            return None
+        assert username is not None
 
         if self._client is None:
             try:
@@ -888,16 +888,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             collection = deposit.collection
 
         client = self.get_client(request)
-        if client:  # unauthenticated request can have the username empty
-            collection_id = collection.id
-            collections = client.collections
-            assert collections is not None
-            if collection_id not in collections:
-                raise DepositError(
-                    FORBIDDEN,
-                    f"Client {client.username} cannot access collection "
-                    f"{collection_name}",
-                )
+        collection_id = collection.id
+        collections = client.collections
+        assert collections is not None
+        if collection_id not in collections:
+            raise DepositError(
+                FORBIDDEN,
+                f"Client {client.username} cannot access collection {collection_name}",
+            )
 
         headers = self._read_headers(request)
 
