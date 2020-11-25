@@ -92,7 +92,7 @@ class CollectionAPI(APIPost):
         """
         assert deposit is None
 
-        deposit = self._deposit_create(collection_name, external_id=headers.slug)
+        deposit = self._deposit_create(req, collection_name, external_id=headers.slug)
 
         if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
             receipt = self._binary_upload(
@@ -110,17 +110,20 @@ class CollectionAPI(APIPost):
         return status.HTTP_201_CREATED, EDIT_IRI, receipt
 
     def _deposit_create(
-        self, collection_name: str, external_id: Optional[str]
+        self, request, collection_name: str, external_id: Optional[str]
     ) -> Deposit:
         collection = get_collection_by_name(collection_name)
+        client = self.get_client(request)
         deposit_parent: Optional[Deposit] = None
+
+        assert client
 
         if external_id:
             try:
                 # find a deposit parent (same external id, status load to success)
                 deposit_parent = (
                     Deposit.objects.filter(
-                        client=self._client,
+                        client=client,
                         external_id=external_id,
                         status=DEPOSIT_STATUS_LOAD_SUCCESS,
                     )
@@ -134,6 +137,6 @@ class CollectionAPI(APIPost):
         return Deposit(
             collection=collection,
             external_id=external_id or "",
-            client=self._client,
+            client=client,
             parent=deposit_parent,
         )

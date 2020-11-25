@@ -152,6 +152,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     """
 
+    _client: Optional[DepositClient] = None
+
     def _read_headers(self, request: Request) -> ParsedRequestHeaders:
         """Read and unify the necessary headers from the request (those are
            not stored in the same location or not properly formatted).
@@ -858,6 +860,24 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         return {}
 
+    def get_client(self, request) -> Optional[DepositClient]:
+        """Returns a DepositClient if request.user.username is not None"""
+        username = request.user.username
+        if username is None:
+            return None
+
+        if self._client is None:
+            try:
+                self._client = DepositClient.objects.get(  # type: ignore
+                    username=username
+                )
+            except DepositClient.DoesNotExist:
+                raise DepositError(NOT_FOUND, f"Unknown client name {username}")
+
+        assert self._client.username == username
+
+        return self._client
+
     def checks(
         self, request: Request, collection_name: str, deposit: Optional[Deposit] = None
     ) -> ParsedRequestHeaders:
@@ -867,22 +887,16 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             assert collection_name == deposit.collection.name
             collection = deposit.collection
 
-        username = request.user.username
-        if username:  # unauthenticated request can have the username empty
-            try:
-                self._client: DepositClient = DepositClient.objects.get(  # type: ignore
-                    username=username
-                )
-            except DepositClient.DoesNotExist:
-                raise DepositError(NOT_FOUND, f"Unknown client name {username}")
-
+        client = self.get_client(request)
+        if client:  # unauthenticated request can have the username empty
             collection_id = collection.id
-            collections = self._client.collections
+            collections = client.collections
             assert collections is not None
             if collection_id not in collections:
                 raise DepositError(
                     FORBIDDEN,
-                    f"Client {username} cannot access collection {collection_name}",
+                    f"Client {client.username} cannot access collection "
+                    f"{collection_name}",
                 )
 
         headers = self._read_headers(request)
