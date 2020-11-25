@@ -39,6 +39,7 @@ class StateAPI(APIBase):
             "swhid",
             "swhid_context",
             "external_id",
+            "origin_url",
         )
         for k in keys:
             context[k] = getattr(deposit, k, None)

@@ -38,6 +38,7 @@ def test_post_deposit_with_status_check(authenticated_client, deposited_deposit)
         == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED]
     )
     assert r["swh:deposit_external_id"] == deposit.external_id
+    assert r["swh:deposit_origin_url"] == deposit.origin_url
 
 
 def test_status_unknown_deposit(authenticated_client, deposit_collection):
@@ -123,3 +124,4 @@ def test_status_complete_deposit(authenticated_client, complete_deposit):
     assert r["swh:deposit_swh_id"] == deposit.swhid
     assert deposit.swhid_context is not None
     assert r["swh:deposit_swh_id_context"] == deposit.swhid_context
+    assert r["swh:deposit_origin_url"] == deposit.origin_url
