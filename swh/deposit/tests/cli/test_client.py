@@ -379,9 +379,9 @@ def test_cli_validation_replace_with_no_deposit_id_fails(
 def test_cli_single_deposit_slug_generation(
     sample_archive, patched_tmp_path, requests_mock_datadir, cli_runner
 ):
-    """Single deposit scenario without providing the slug, the slug is generated nonetheless
-    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
-    """  # noqa
+    """Single deposit scenario without providing the slug, it should
+    not be generated.
+    """
     metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
     # fmt: off
     result = cli_runner.invoke(
@@ -409,7 +409,7 @@ def test_cli_single_deposit_slug_generation(
     with open(metadata_path) as fd:
         metadata_xml = fd.read()
         actual_metadata = dict(parse_xml(metadata_xml))
-        assert actual_metadata["codemeta:identifier"] is not None
+        assert "codemeta:identifier" not in actual_metadata
 
 
 def test_cli_multisteps_deposit(

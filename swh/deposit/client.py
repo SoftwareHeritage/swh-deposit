@@ -474,13 +474,15 @@ class CreateArchiveDepositClient(BaseCreateDepositClient):
     """Post an archive (binary) deposit client."""
 
     def compute_headers(self, info):
-        return {
-            "SLUG": info["slug"],
+        headers = {
             "CONTENT_MD5": info["md5sum"],
             "IN-PROGRESS": str(info["in_progress"]),
             "CONTENT-TYPE": info["content-type"],
             "CONTENT-DISPOSITION": "attachment; filename=%s" % (info["filename"],),
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
+        return headers
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         info = compute_unified_information(
@@ -504,11 +506,13 @@ class CreateMetadataDepositClient(BaseCreateDepositClient):
     """Post a metadata deposit client."""
 
     def compute_headers(self, info):
-        return {
-            "SLUG": info["slug"],
+        headers = {
             "IN-PROGRESS": str(info["in_progress"]),
             "CONTENT-TYPE": "application/atom+xml;type=entry",
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
+        return headers
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         info = compute_unified_information(
@@ -561,10 +565,11 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
         ]
 
         headers = {
-            "SLUG": info["slug"],
             "CONTENT_MD5": info["md5sum"],
             "IN-PROGRESS": str(info["in_progress"]),
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
 
         return files, headers
 
@@ -606,7 +611,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
     def deposit_create(
         self,
         collection: str,
-        slug: str,
+        slug: Optional[str],
         archive: Optional[str] = None,
         metadata: Optional[str] = None,
         in_progress: bool = False,
@@ -635,7 +640,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
         self,
         collection: str,
         deposit_id: int,
-        slug: str,
+        slug: Optional[str],
         archive: Optional[str] = None,
         metadata: Optional[str] = None,
         in_progress: bool = False,
