@@ -131,4 +131,3 @@ Loading procedure
 
 In this case, the metadata-deposit will be injected as a metadata entry of
 the relevant object, with the information about the contributor of the deposit.
-Contrary to the complete and sparse deposit, there will be no object creation.
