@@ -1,3 +1,5 @@
+.. _spec-metadata-deposit:
+
 The metadata-deposit
 ^^^^^^^^^^^^^^^^^^^^
 

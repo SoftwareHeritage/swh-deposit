@@ -9,5 +9,6 @@ Blueprint Specifications
 
    blueprint.rst
    spec-loading.rst
+   protocol-reference.rst
    spec-technical.rst
    spec-meta-deposit.rst
