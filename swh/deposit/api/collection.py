@@ -111,6 +111,7 @@ class CollectionAPI(APIPost):
         deposit_parent: Optional[Deposit] = None
 
         if external_id:
+            # TODO: delete this when clients stopped relying on the slug
             try:
                 # find a deposit parent (same external id, status load to success)
                 deposit_parent = (

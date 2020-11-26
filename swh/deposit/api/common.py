@@ -147,6 +147,15 @@ def guess_deposit_origin_url(deposit: Deposit):
     return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
 
 
+def check_client_origin(client: DepositClient, origin_url: str):
+    provider_url = client.provider_url.rstrip("/") + "/"
+    if not origin_url.startswith(provider_url):
+        raise DepositError(
+            FORBIDDEN,
+            f"Cannot create origin {origin_url}, it must start with " f"{provider_url}",
+        )
+
+
 class AuthenticatedAPIView(APIView):
     """Mixin intended as a based API view to enforce the basic
        authentication check
@@ -737,17 +746,33 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             )
 
         create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
+        add_to_origin = metadata.get("swh:deposit", {}).get("swh:add_to_origin")
+
+        if create_origin and add_to_origin:
+            raise DepositError(
+                BAD_REQUEST,
+                "<swh:create_origin> and <swh:add_to_origin> are mutually exclusive, "
+                "as they respectively create a new origin and add to an existing "
+                "origin.",
+            )
+
         if create_origin:
             origin_url = create_origin["swh:origin"]["@url"]
-            if origin_url is not None:
-                provider_url = deposit.client.provider_url.rstrip("/") + "/"
-                if not origin_url.startswith(provider_url):
-                    raise DepositError(
-                        FORBIDDEN,
-                        f"Cannot create origin {origin_url}, it must start with "
-                        f"{provider_url}",
-                    )
+            check_client_origin(deposit.client, origin_url)
             deposit.origin_url = origin_url
+
+        if add_to_origin:
+            origin_url = add_to_origin["swh:origin"]["@url"]
+            check_client_origin(deposit.client, origin_url)
+            deposit.parent = (
+                Deposit.objects.filter(
+                    client=deposit.client,
+                    origin_url=origin_url,
+                    status=DEPOSIT_STATUS_LOAD_SUCCESS,
+                )
+                .order_by("-id")[0:1]
+                .get()
+            )
 
         if "atom:external_identifier" in metadata:
             # Deprecated tag.
@@ -759,6 +784,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                     BAD_REQUEST,
                     "<external_identifier> is deprecated, you should only use "
                     "<swh:create_origin> from now on.",
+                )
+
+            if deposit.parent:
+                raise DepositError(
+                    BAD_REQUEST, "<external_identifier> is deprecated.",
                 )
 
             if headers.slug and metadata["atom:external_identifier"] != headers.slug:
@@ -782,8 +812,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             raise DepositError(
                 BAD_REQUEST,
                 "<swh:reference> is for metadata-only deposits and "
-                "<swh:create_origin> / Slug are for code deposits, "
-                "only one may be used on a given deposit.",
+                "<swh:create_origin> / <swh:add_to_origin> / Slug are for "
+                "code deposits, only one may be used on a given deposit.",
             )
 
         self._deposit_put(

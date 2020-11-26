@@ -207,6 +207,43 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
     assert new_deposit.parent == deposit
 
 
+def test_add_deposit_with_add_to_origin(
+    authenticated_client,
+    deposit_collection,
+    completed_deposit,
+    atom_dataset,
+    deposit_user,
+):
+    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent
+
+    """
+    # given multiple deposit already loaded
+    deposit = completed_deposit
+    assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+    origin_url = deposit_user.provider_url + deposit.external_id
+
+    # adding a new deposit with the same external id as a completed deposit
+    # creates the parenting chain
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    assert deposit_id != deposit.id
+
+    new_deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == new_deposit.collection
+    assert deposit.origin_url == origin_url
+
+    assert new_deposit != deposit
+    assert new_deposit.parent == deposit
+
+
 def test_add_deposit_external_id_conflict_no_parent(
     authenticated_client,
     another_authenticated_client,
@@ -265,6 +302,8 @@ def test_add_deposit_external_id_conflict_with_parent(
     of a different client creates a parent relationship with the deposit
     of the right client instead of the last matching deposit
 
+    This test does not have an equivalent for origin url conflicts, as these
+    can not happen (assuming clients do not have provider_url overlaps)
     """
     # given multiple deposit already loaded
     deposit = completed_deposit
@@ -301,3 +340,60 @@ def test_add_deposit_external_id_conflict_with_parent(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+
+
+def test_add_deposit_add_to_origin_conflict(
+    authenticated_client,
+    another_authenticated_client,
+    deposit_collection,
+    deposit_another_collection,
+    atom_dataset,
+    sample_archive,
+    deposit_user,
+    deposit_another_user,
+):
+    """Posting a deposit with an <swh:add_to_origin> referencing an origin
+    owned by a different client raises an error
+
+    """
+    external_id = "foobar"
+    origin_url = deposit_another_user.provider_url + external_id
+
+    # create a deposit for that other user, with the same slug
+    create_deposit(
+        another_authenticated_client,
+        deposit_another_collection.name,
+        sample_archive,
+        external_id,
+        DEPOSIT_STATUS_LOAD_SUCCESS,
+    )
+
+    # adding a new deposit with the same external id as a completed deposit
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"] % origin_url,
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert b"must start with" in response.content
+
+
+def test_add_deposit_add_to_wrong_origin(
+    authenticated_client, deposit_collection, atom_dataset, sample_archive,
+):
+    """Posting a deposit with an <swh:add_to_origin> referencing an origin
+    not starting with the provider_url raises an error
+
+    """
+    origin_url = "http://example.org/foo"
+
+    # adding a new deposit with the same external id as a completed deposit
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data0"] % origin_url,
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert b"must start with" in response.content

@@ -14,6 +14,13 @@
           </xsd:complexType>
         </xsd:element>
 
+        <!-- code deposit on an origin already created by a previous deposit -->
+        <xsd:element name="add_to_origin" >
+          <xsd:complexType>
+            <xsd:element ref="swh:origin" />
+          </xsd:complexType>
+        </xsd:element>
+
         <!-- metadata-only deposit -->
         <xsd:element name="reference">
           <xsd:complexType>

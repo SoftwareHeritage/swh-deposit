@@ -206,7 +206,7 @@ def test_deposit_metadata_origin(
     """Posting a swhid reference is stored on raw extrinsic metadata storage
 
     """
-    xml_data = atom_dataset["entry-data-with-origin"].format(url=url)
+    xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     deposit_client = authenticated_client.deposit_client
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),

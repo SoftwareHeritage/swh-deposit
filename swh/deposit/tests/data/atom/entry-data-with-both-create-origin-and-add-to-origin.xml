@@ -6,8 +6,11 @@
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
     <author>dudess</author>
     <swh:deposit>
-      <swh:reference>
-        <swh:origin url="{url}" />
-      </swh:reference>
+      <swh:create_origin>
+          <swh:origin url="http://example.org/~user/id" />
+      </swh:create_origin>
+      <swh:add_to_origin>
+        <swh:origin url="http://example.org/~user/id" />
+      </swh:add_to_origin>
     </swh:deposit>
 </entry>

@@ -96,7 +96,51 @@ def test_post_deposit_atom_parsing_error(
     assert b"Malformed xml metadata" in response.content
 
 
-def test_post_deposit_atom_403_wrong_origin_url_prefix(
+def test_post_deposit_atom_400_both_create_origin_and_add_to_origin(
+    authenticated_client, deposit_collection, atom_dataset
+):
+    """Posting a badly formatted atom should return a 400 response
+
+    """
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-with-both-create-origin-and-add-to-origin"],
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        b"&lt;swh:create_origin&gt; and &lt;swh:add_to_origin&gt; "
+        b"are mutually exclusive"
+    ) in response.content
+
+
+def test_add_deposit_with_add_to_origin_and_external_identifier(
+    authenticated_client,
+    deposit_collection,
+    completed_deposit,
+    atom_dataset,
+    deposit_user,
+):
+    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent
+
+    """
+    # given multiple deposit already loaded
+    origin_url = deposit_user.provider_url + completed_deposit.external_id
+
+    # adding a new deposit with the same external id as a completed deposit
+    # creates the parenting chain
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-with-both-add-to-origin-and-external-id"]
+        % origin_url,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"&lt;external_identifier&gt; is deprecated." in response.content
+
+
+def test_post_deposit_atom_403_create_wrong_origin_url_prefix(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
     """Creating an origin for a prefix not owned by the client is forbidden
@@ -108,6 +152,28 @@ def test_post_deposit_atom_403_wrong_origin_url_prefix(
         reverse(COL_IRI, args=[deposit_collection.name]),
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
+        HTTP_IN_PROGRESS="true",
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    expected_msg = (
+        f"Cannot create origin {origin_url}, "
+        f"it must start with {deposit_user.provider_url}"
+    )
+    assert expected_msg in response.content.decode()
+
+
+def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user
+):
+    """Creating an origin for a prefix not owned by the client is forbidden
+
+    """
+    origin_url = "http://example.org/foo"
+
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        content_type="application/atom+xml;type=entry",
+        data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -178,10 +244,11 @@ def test_post_deposit_atom_no_origin_url_nor_slug_header(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
-def test_post_deposit_atom_with_external_identifier(
+def test_post_deposit_atom_with_mismatched_slug_and_external_identifier(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting an atom entry without a slug header should return a 400
+    """Posting an atom entry with mismatched slug header and external_identifier
+    should return a 400
 
     """
     external_id = "foobar"
