@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests metadata is loaded when sent via a POST Col-IRI"""
+
 from io import BytesIO
 
 import attr
@@ -135,7 +137,7 @@ def test_deposit_metadata_swhid(
     response_content = parse_xml(BytesIO(response.content))
 
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["deposit_id"])
+    deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     assert isinstance(swhid_core, SWHID)
     assert deposit.swhid == str(swhid_core)
@@ -204,7 +206,7 @@ def test_deposit_metadata_origin(
     """Posting a swhid reference is stored on raw extrinsic metadata storage
 
     """
-    xml_data = atom_dataset["entry-data-with-origin"].format(url=url)
+    xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     deposit_client = authenticated_client.deposit_client
     response = authenticated_client.post(
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -215,7 +217,7 @@ def test_deposit_metadata_origin(
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["deposit_id"])
+    deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     # we got not swhid as input so we cannot have those
     assert deposit.swhid is None

@@ -3,6 +3,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests 'GET File-IRI'."""
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -20,17 +22,17 @@ def test_api_deposit_content_nominal(
 
     for deposit in [complete_deposit, partial_deposit_only_metadata]:
         expected_deposit = {
-            "deposit_id": str(deposit.id),
-            "deposit_status": deposit.status,
-            "deposit_status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
+            "swh:deposit_id": str(deposit.id),
+            "swh:deposit_status": deposit.status,
+            "swh:deposit_status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
         }
 
         url = reverse(CONT_FILE_IRI, args=[deposit.collection.name, deposit.id])
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
         actual_deposit = dict(parse_xml(response.content))
-        expected_deposit["sword:request"] = actual_deposit["sword:request"]
-        assert actual_deposit == expected_deposit
+        del actual_deposit["swh:deposit_date"]
+        assert set(actual_deposit.items()) >= set(expected_deposit.items())
 
 
 def test_api_deposit_content_unknown(client, complete_deposit, deposit_collection):

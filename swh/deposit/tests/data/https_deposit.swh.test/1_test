@@ -1,6 +1,14 @@
 <entry xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/"
-       xmlns:dcterms="http://purl.org/dc/terms/">
+       xmlns:dcterms="http://purl.org/dc/terms/"
+       xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit"
+       >
+    <sd:deposit_id>615</sd:deposit_id>
+    <sd:deposit_date>Oct. 8, 2020, 4:57 p.m.</sd:deposit_date>
+    <sd:deposit_archive>None</sd:deposit_archive>
+    <sd:deposit_status>partial</sd:deposit_status>
+
+    <!-- deprecated tags: -->
     <deposit_id>615</deposit_id>
     <deposit_date>Oct. 8, 2020, 4:57 p.m.</deposit_date>
     <deposit_archive>None</deposit_archive>

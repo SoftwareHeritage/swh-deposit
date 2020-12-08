@@ -3,7 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests the handling of the binary content when doing a POST Col-IRI."""
+
 from io import BytesIO
+import uuid
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
@@ -17,11 +20,14 @@ from swh.deposit.tests.common import check_archive, create_arborescence_archive
 
 
 def test_post_deposit_binary_no_slug(
-    authenticated_client, deposit_collection, sample_archive
+    authenticated_client, deposit_collection, sample_archive, deposit_user, mocker
 ):
-    """Posting a binary deposit without slug header should return 400
+    """Posting a binary deposit without slug header should generate one
 
     """
+    id_ = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=id_)
+
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
@@ -37,8 +43,14 @@ def test_post_deposit_binary_no_slug(
         HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
-    assert b"Missing SLUG header" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_post_deposit_binary_support(
@@ -102,7 +114,7 @@ def test_post_deposit_binary_upload_ok(
     # then
     response_content = parse_xml(BytesIO(response.content))
     assert response.status_code == status.HTTP_201_CREATED
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -117,15 +129,21 @@ def test_post_deposit_binary_upload_ok(
     assert deposit_request.raw_metadata is None
 
     response_content = parse_xml(BytesIO(response.content))
-    assert response_content["deposit_archive"] == sample_archive["name"]
-    assert int(response_content["deposit_id"]) == deposit.id
-    assert response_content["deposit_status"] == deposit.status
 
-    edit_se_iri = reverse("edit_se_iri", args=[deposit_collection.name, deposit.id])
+    assert response_content["swh:deposit_archive"] == sample_archive["name"]
+    assert int(response_content["swh:deposit_id"]) == deposit.id
+    assert response_content["swh:deposit_status"] == deposit.status
+
+    # deprecated tags
+    assert response_content["atom:deposit_archive"] == sample_archive["name"]
+    assert int(response_content["atom:deposit_id"]) == deposit.id
+    assert response_content["atom:deposit_status"] == deposit.status
+
+    edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit.id])
 
     assert response._headers["location"] == (
         "Location",
-        "http://testserver" + edit_se_iri,
+        "http://testserver" + edit_iri,
     )
 
 
@@ -266,6 +284,43 @@ def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
         Deposit.objects.get(external_id=external_id)
 
 
+def test_post_deposit_binary_upload_fail_if_content_length_missing(
+    authenticated_client, deposit_collection, sample_archive, tmp_path
+):
+    """The Content-Length header is mandatory
+
+    """
+    tmp_path = str(tmp_path)
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    archive = create_arborescence_archive(
+        tmp_path, "archive2", "file2", b"some content in file", up_to_size=500
+    )
+
+    external_id = "some-external-id"
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/zip",
+        data=archive["data"],
+        # + headers
+        CONTENT_LENGTH=None,
+        HTTP_SLUG=external_id,
+        HTTP_CONTENT_MD5=archive["md5sum"],
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        HTTP_IN_PROGRESS="false",
+        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
+    )
+
+    # then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert b"the CONTENT_LENGTH header must be sent." in response.content
+
+    with pytest.raises(Deposit.DoesNotExist):
+        Deposit.objects.get(external_id=external_id)
+
+
 def test_post_deposit_2_post_2_different_deposits(
     authenticated_client, deposit_collection, sample_archive
 ):
@@ -292,7 +347,7 @@ def test_post_deposit_2_post_2_different_deposits(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -317,7 +372,7 @@ def test_post_deposit_2_post_2_different_deposits(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id2 = response_content["deposit_id"]
+    deposit_id2 = response_content["swh:deposit_id"]
 
     deposit2 = Deposit.objects.get(pk=deposit_id2)
 
@@ -357,7 +412,7 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"
@@ -448,7 +503,7 @@ def test_post_deposit_then_update_refused(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -463,7 +518,8 @@ def test_post_deposit_then_update_refused(
     # updating/adding is forbidden
 
     # uri to update the content
-    edit_se_iri = reverse("edit_se_iri", args=[deposit_collection.name, deposit_id])
+    edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit_id])
+    se_iri = reverse("se_iri", args=[deposit_collection.name, deposit_id])
     em_iri = reverse("em_iri", args=[deposit_collection.name, deposit_id])
 
     # Testing all update/add endpoint should fail
@@ -510,7 +566,7 @@ def test_post_deposit_then_update_refused(
     # replacing metadata is no longer possible since the deposit's
     # status is ready
     r = authenticated_client.put(
-        edit_se_iri,
+        edit_iri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
@@ -523,7 +579,7 @@ def test_post_deposit_then_update_refused(
     # adding new metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.post(
-        edit_se_iri,
+        se_iri,
         content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
@@ -555,7 +611,7 @@ def test_post_deposit_then_update_refused(
     # replacing multipart metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.put(
-        edit_se_iri,
+        edit_iri,
         format="multipart",
         data={"archive": archive, "atom_entry": atom_entry,},
     )
@@ -566,7 +622,7 @@ def test_post_deposit_then_update_refused(
     # adding new metadata is no longer possible since the
     # deposit's status is ready
     r = authenticated_client.post(
-        edit_se_iri,
+        se_iri,
         format="multipart",
         data={"archive": archive, "atom_entry": atom_entry,},
     )

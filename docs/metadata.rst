@@ -36,12 +36,11 @@ Metadata requirements
 
   .. code:: xml
 
-      <codemeta:url>www.url-example.com</codemeta:url>
+      <codemeta:url>http://example.com/my_project</codemeta:url>
 
-- **the external\_identifier** *MAY* be provided as an identifier
-
-- **the external\_identifier** *SHOULD* match the Slug external-identifier in
-  the header
+- **the create\_origin** tag *SHOULD* be used to specify the URL of the origin
+  to create (otherwise, a fallback is created using the slug, or a random
+  string if missing)
 
 - **the description** of the software deposit *SHOULD* be provided
   [codemeta:description]: short or long description of the software
@@ -60,12 +59,17 @@ Using only Atom
 .. code:: xml
 
     <?xml version="1.0"?>
-        <entry xmlns="http://www.w3.org/2005/Atom">
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                 xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit">
             <title>Awesome Compiler</title>
             <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-            <external_identifier>1785io25c695</external_identifier>
             <updated>2017-10-07T15:17:08Z</updated>
             <author>some awesome author</author>
+            <swhdeposit:deposit>
+              <swhdeposit:create_origin>
+                <swhdeposit:origin url="http://example.com/my_project" />
+              </swhdeposit:create_origin>
+            </swhdeposit:deposit>
     </entry>
 
 Using Atom with CodeMeta
@@ -75,10 +79,15 @@ Using Atom with CodeMeta
 
     <?xml version="1.0"?>
         <entry xmlns="http://www.w3.org/2005/Atom"
-                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+                 xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                 xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit">
             <title>Awesome Compiler</title>
             <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-            <external_identifier>1785io25c695</external_identifier>
+            <swhdeposit:deposit>
+              <swhdeposit:create_origin>
+                <swhdeposit:origin url="http://example.com/1785io25c695" />
+              </swhdeposit:create_origin>
+            </swhdeposit:deposit>
             <codemeta:id>1785io25c695</codemeta:id>
             <codemeta:url>origin url</codemeta:url>
             <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
@@ -136,11 +145,15 @@ Using Atom with DublinCore and CodeMeta (multi-schema entry)
     <?xml version="1.0"?>
     <entry xmlns="http://www.w3.org/2005/Atom"
            xmlns:dcterms="http://purl.org/dc/terms/"
-           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+           xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit">
         <title>Awesome Compiler</title>
-        <client>hal</client>
         <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-        <external_identifier>%s</external_identifier>
+        <swhdeposit:deposit>
+          <swhdeposit:create_origin>
+            <swhdeposit:origin url="http://example.com/225c695-cfb8-4ebb-aaaa-80da344efa6a" />
+          </swhdeposit:create_origin>
+        <swhdeposit:deposit>
         <dcterms:identifier>hal-01587361</dcterms:identifier>
         <dcterms:identifier>doi:10.5281/zenodo.438684</dcterms:identifier>
         <dcterms:title xml:lang="en">The assignment problem</dcterms:title>

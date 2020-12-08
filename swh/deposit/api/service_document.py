@@ -11,7 +11,7 @@ from ..models import DepositClient, DepositCollection
 from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, ACCEPT_PACKAGINGS, APIBase
 
 
-class APIServiceDocument(APIBase):
+class ServiceDocumentAPI(APIBase):
     def get(self, req, *args, **kwargs):
         client = DepositClient.objects.get(username=req.user)
 

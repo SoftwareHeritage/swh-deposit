@@ -3,10 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""Tests handling of multipart requests to POST Col-IRI."""
+
 from io import BytesIO
+import uuid
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
+import pytest
 from rest_framework import status
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
@@ -15,11 +19,14 @@ from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive
 
 
-def test_post_deposit_multipart_without_slug_header_is_bad_request(
-    authenticated_client, deposit_collection, atom_dataset
+def test_post_deposit_multipart_without_slug_header(
+    authenticated_client, deposit_collection, atom_dataset, mocker, deposit_user
 ):
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    id_ = str(uuid.uuid4())
+    mocker.patch("uuid.uuid4", return_value=id_)
 
     archive_content = b"some content representing archive"
     archive = InMemoryUploadedFile(
@@ -50,8 +57,14 @@ def test_post_deposit_multipart_without_slug_header_is_bad_request(
         HTTP_IN_PROGRESS="false",
     )
 
-    assert b"Missing SLUG header" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + id_
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
 def test_post_deposit_multipart_zip(
@@ -98,7 +111,7 @@ def test_post_deposit_multipart_zip(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -116,7 +129,7 @@ def test_post_deposit_multipart_zip(
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -168,7 +181,7 @@ def test_post_deposit_multipart_tar(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -186,7 +199,7 @@ def test_post_deposit_multipart_tar(
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -238,7 +251,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     assert response.status_code == status.HTTP_201_CREATED
 
     response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["deposit_id"]
+    deposit_id = response_content["swh:deposit_id"]
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"
@@ -255,7 +268,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -285,7 +298,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["id"]
+                deposit_request.metadata["atom:id"]
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert (
@@ -399,3 +412,49 @@ def test_post_deposit_multipart_400_when_badly_formatted_xml(
 
     assert b"Malformed xml metadata" in response.content
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post_deposit_multipart_if_upload_size_limit_exceeded(
+    authenticated_client, deposit_collection, atom_dataset, sample_archive
+):
+    # given
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    data = sample_archive["data"] * 8
+    archive = InMemoryUploadedFile(
+        BytesIO(data),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/zip",
+        size=len(data),
+        charset=None,
+    )
+
+    data_atom_entry = atom_dataset["entry-data-deposit-binary"]
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(data_atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(data_atom_entry),
+        charset="utf-8",
+    )
+
+    external_id = "external-id"
+
+    # when
+    response = authenticated_client.post(
+        url,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+        # + headers
+        HTTP_IN_PROGRESS="false",
+        HTTP_SLUG=external_id,
+    )
+
+    # then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert b"Upload size limit exceeded" in response.content
+
+    with pytest.raises(Deposit.DoesNotExist):
+        Deposit.objects.get(external_id=external_id)

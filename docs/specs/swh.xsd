@@ -1,41 +1,51 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="https://www.softwareheritage.org/schema/2018/deposit"
+            xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+            elementFormDefault="qualified"
+            >
   <xsd:element name="deposit">
     <xsd:complexType>
       <xsd:choice>
+        <!-- code deposit on a new origin -->
+        <xsd:element name="create_origin" >
+          <xsd:complexType>
+            <xsd:element ref="swh:origin" />
+          </xsd:complexType>
+        </xsd:element>
 
+        <!-- code deposit on an origin already created by a previous deposit -->
+        <xsd:element name="add_to_origin" >
+          <xsd:complexType>
+            <xsd:element ref="swh:origin" />
+          </xsd:complexType>
+        </xsd:element>
+
+        <!-- metadata-only deposit -->
         <xsd:element name="reference">
           <xsd:complexType>
             <xsd:choice>
-              <xsd:element name="object">
-                <xsd:complexType>
-                <xsd:attribute type="xsd:string" name="swhid"/>
-                </xsd:complexType>
-              </xsd:element>
-              <xsd:element name="origin">
-                <xsd:complexType>
-                <xsd:attribute type="xsd:string" name="url"/>
-                </xsd:complexType>
-              </xsd:element>
+              <xsd:element ref="swh:origin" />
+              <xsd:element ref="swh:object" />
             </xsd:choice>
           </xsd:complexType>
         </xsd:element>
 
-
-        <xsd:element name="bindings">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element name="binding" minOccurs="0" maxOccurs="unbounded">
-                <xsd:complexType>
-                    <xsd:attribute type="xsd:string" name="source"/>
-                    <xsd:attribute type="xsd:string" name="destination"/>
-                </xsd:complexType>
-              </xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
-
       </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references a SWHID -->
+  <xsd:element name="object">
+    <xsd:complexType>
+    <xsd:attribute type="xsd:string" name="swhid"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references an origin by URL -->
+  <xsd:element name="origin">
+    <xsd:complexType>
+    <xsd:attribute type="xsd:string" name="url"/>
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>

@@ -33,12 +33,14 @@ Retrieve status
 
         <entry xmlns="http://www.w3.org/2005/Atom"
                xmlns:sword="http://purl.org/net/sword/"
-               xmlns:dcterms="http://purl.org/dc/terms/">
-            <deposit_id>160</deposit_id>
-            <deposit_status>done</deposit_status>
-            <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
-            <deposit_swh_id>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9</deposit_swh_id>
-            <deposit_swh_id_context>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/;visit=swh:1:snp:68c0d26104d47e278dd6be07ed61fafb561d0d20;anchor=swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;path=/</deposit_swh_id>
+               xmlns:dcterms="http://purl.org/dc/terms/"
+               xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit"
+               >
+            <swhdeposit:deposit_id>160</swhdeposit:deposit_id>
+            <swhdeposit:deposit_status>done</swhdeposit:deposit_status>
+            <swhdeposit:deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</swhdeposit:deposit_status_detail>
+            <swhdeposit:deposit_swh_id>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9</swhdeposit:deposit_swh_id>
+            <swhdeposit:deposit_swh_id_context>swh:1:dir:d83b7dda887dc790f7207608474650d4344b8df9;origin=https://forge.softwareheritage.org/source/jesuisgpl/;visit=swh:1:snp:68c0d26104d47e278dd6be07ed61fafb561d0d20;anchor=swh:1:rev:e76ea49c9ffbb7f73611087ba6e999b19e5d71eb;path=/</swhdeposit:deposit_swh_id>
         </entry>
 
     **Example rejeced deposit response**:
@@ -47,12 +49,18 @@ Retrieve status
 
         <entry xmlns="http://www.w3.org/2005/Atom"
                xmlns:sword="http://purl.org/net/sword/"
-               xmlns:dcterms="http://purl.org/dc/terms/">
-            <deposit_id>148</deposit_id>
-            <deposit_status>rejected</deposit_status>
-            <deposit_status_detail>- At least one url field must be compatible with the client&#39;s domain name (codemeta:url)</deposit_status_detail>
+               xmlns:dcterms="http://purl.org/dc/terms/"
+               xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit"
+               >
+            <swhdeposit:deposit_id>148</swhdeposit:deposit_id>
+            <swhdeposit:deposit_status>rejected</swhdeposit:deposit_status>
+            <swhdeposit:deposit_status_detail>- At least one url field must be compatible with the client&#39;s domain name (codemeta:url)</swhdeposit:deposit_status_detail>
         </entry>
 
+    Note: older versions of the deposit used the ``http://www.w3.org/2005/Atom``
+    namespace instead of ``https://www.softwareheritage.org/schema/2018/deposit``.
+    Tags in the Atom namespace are still provided for backward compatibility, but
+    are deprecated.
 
     :reqheader Authorization: Basic authentication token
     :statuscode 201: with the deposit's status

@@ -8,8 +8,10 @@ import datetime
 import hashlib
 import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
+import uuid
 
 import attr
+from django.core.files.uploadedfile import UploadedFile
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -41,11 +43,12 @@ from ..config import (
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_PARTIAL,
-    EDIT_SE_IRI,
+    EDIT_IRI,
     EM_IRI,
     METADATA_KEY,
     METADATA_TYPE,
     RAW_METADATA_KEY,
+    SE_IRI,
     STATE_IRI,
     APIConfig,
 )
@@ -59,18 +62,98 @@ from ..errors import (
     METHOD_NOT_ALLOWED,
     NOT_FOUND,
     PARSING_ERROR,
-    BadRequestError,
+    DepositError,
     ParserError,
-    make_error_dict,
-    make_error_response,
-    make_error_response_from_dict,
-    make_missing_slug_error,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_swh_reference, parse_xml
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
+
+
+@attr.s
+class ParsedRequestHeaders:
+    content_type = attr.ib(type=str)
+    content_length = attr.ib(type=Optional[int])
+    in_progress = attr.ib(type=bool)
+    content_disposition = attr.ib(type=Optional[str])
+    content_md5sum = attr.ib(type=Optional[bytes])
+    packaging = attr.ib(type=Optional[str])
+    slug = attr.ib(type=Optional[str])
+    on_behalf_of = attr.ib(type=Optional[str])
+    metadata_relevant = attr.ib(type=Optional[str])
+    swhid = attr.ib(type=Optional[str])
+
+
+@attr.s
+class Receipt:
+    """Data computed while handling the request body that will be served in the
+    Deposit Receipt."""
+
+    deposit_id = attr.ib(type=int)
+    deposit_date = attr.ib(type=datetime.datetime)
+    status = attr.ib(type=str)
+    archive = attr.ib(type=Optional[str])
+
+
+def _compute_md5(filehandler: UploadedFile) -> bytes:
+    h = hashlib.md5()
+    for chunk in filehandler:
+        h.update(chunk)  # type: ignore
+    return h.digest()
+
+
+def get_deposit_by_id(
+    deposit_id: int, collection_name: Optional[str] = None
+) -> Deposit:
+    """Gets an existing Deposit object if it exists, or raises `DepositError`.
+    If `collection` is not None, also checks the deposit belongs to the collection."""
+    try:
+        deposit = Deposit.objects.get(pk=deposit_id)
+    except Deposit.DoesNotExist:
+        raise DepositError(NOT_FOUND, f"Deposit {deposit_id} does not exist")
+
+    if collection_name and deposit.collection.name != collection_name:
+        get_collection_by_name(collection_name)  # raises if does not exist
+
+        raise DepositError(
+            NOT_FOUND,
+            f"Deposit {deposit_id} does not belong to collection {collection_name}",
+        )
+
+    return deposit
+
+
+def get_collection_by_name(collection_name: str):
+    """Gets an existing Deposit object if it exists, or raises `DepositError`."""
+    try:
+        collection = DepositCollection.objects.get(name=collection_name)
+    except DepositCollection.DoesNotExist:
+        raise DepositError(NOT_FOUND, f"Unknown collection name {collection_name}")
+
+    assert collection is not None
+
+    return collection
+
+
+def guess_deposit_origin_url(deposit: Deposit):
+    """Guesses an origin url for the given deposit."""
+    external_id = deposit.external_id
+    if not external_id:
+        # The client provided neither an origin_url nor a slug. That's inconvenient,
+        # but SWORD requires we support it. So let's generate a random slug.
+        external_id = str(uuid.uuid4())
+    return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
+
+
+def check_client_origin(client: DepositClient, origin_url: str):
+    provider_url = client.provider_url.rstrip("/") + "/"
+    if not origin_url.startswith(provider_url):
+        raise DepositError(
+            FORBIDDEN,
+            f"Cannot create origin {origin_url}, it must start with " f"{provider_url}",
+        )
 
 
 class AuthenticatedAPIView(APIView):
@@ -88,12 +171,14 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
     """
 
-    def _read_headers(self, request: Request) -> Dict[str, Any]:
+    _client: Optional[DepositClient] = None
+
+    def _read_headers(self, request: Request) -> ParsedRequestHeaders:
         """Read and unify the necessary headers from the request (those are
            not stored in the same location or not properly formatted).
 
         Args:
-            request (Request): Input request
+            request: Input request
 
         Returns:
             Dictionary with the following keys (some associated values may be
@@ -108,14 +193,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         """
         meta = request._request.META
-        content_type = request.content_type
+
         content_length = meta.get("CONTENT_LENGTH")
         if content_length and isinstance(content_length, str):
             content_length = int(content_length)
 
         # final deposit if not provided
         in_progress = meta.get("HTTP_IN_PROGRESS", False)
-        content_disposition = meta.get("HTTP_CONTENT_DISPOSITION")
         if isinstance(in_progress, str):
             in_progress = in_progress.lower() == "true"
 
@@ -123,101 +207,43 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if content_md5sum:
             content_md5sum = bytes.fromhex(content_md5sum)
 
-        packaging = meta.get("HTTP_PACKAGING")
-        slug = meta.get("HTTP_SLUG")
-        on_behalf_of = meta.get("HTTP_ON_BEHALF_OF")
-        metadata_relevant = meta.get("HTTP_METADATA_RELEVANT")
+        return ParsedRequestHeaders(
+            content_type=request.content_type,
+            content_length=content_length,
+            in_progress=in_progress,
+            content_disposition=meta.get("HTTP_CONTENT_DISPOSITION"),
+            content_md5sum=content_md5sum,
+            packaging=meta.get("HTTP_PACKAGING"),
+            slug=meta.get("HTTP_SLUG"),
+            on_behalf_of=meta.get("HTTP_ON_BEHALF_OF"),
+            metadata_relevant=meta.get("HTTP_METADATA_RELEVANT"),
+            swhid=meta.get("HTTP_X_CHECK_SWHID"),
+        )
 
-        swhid = meta.get("HTTP_X_CHECK_SWHID")
-
-        return {
-            "content-type": content_type,
-            "content-length": content_length,
-            "in-progress": in_progress,
-            "content-disposition": content_disposition,
-            "content-md5sum": content_md5sum,
-            "packaging": packaging,
-            "slug": slug,
-            "on-behalf-of": on_behalf_of,
-            "metadata-relevant": metadata_relevant,
-            "swhid": swhid,
-        }
-
-    def _compute_md5(self, filehandler) -> bytes:
-        """Compute uploaded file's md5 sum.
-
-        Args:
-            filehandler (InMemoryUploadedFile): the file to compute the md5
-                hash
-
-        Returns:
-            the md5 checksum (str)
-
-        """
-        h = hashlib.md5()
-        for chunk in filehandler:
-            h.update(chunk)
-        return h.digest()
-
-    def _deposit_put(
-        self,
-        request: Request,
-        deposit_id: Optional[int] = None,
-        in_progress: bool = False,
-        external_id: Optional[str] = None,
-    ) -> Deposit:
+    def _deposit_put(self, deposit: Deposit, in_progress: bool = False) -> None:
         """Save/Update a deposit in db.
 
         Args:
-            request: request data
-            deposit_id: deposit identifier
+            deposit: deposit being updated/created
             in_progress: deposit status
-            external_id: external identifier to associate to the deposit
-
-        Returns:
-            The Deposit instance saved or updated.
-
         """
-        complete_date: Optional[datetime.datetime] = None
-        deposit_parent: Optional[Deposit] = None
-
         if in_progress is False:
-            complete_date = timezone.now()
-            status_type = DEPOSIT_STATUS_DEPOSITED
+            self._complete_deposit(deposit)
         else:
-            status_type = DEPOSIT_STATUS_PARTIAL
+            deposit.status = DEPOSIT_STATUS_PARTIAL
+            deposit.save()
 
-        if not deposit_id:
-            try:
-                # find a deposit parent (same external id, status load to success)
-                deposit_parent = (
-                    Deposit.objects.filter(
-                        external_id=external_id, status=DEPOSIT_STATUS_LOAD_SUCCESS
-                    )
-                    .order_by("-id")[0:1]
-                    .get()
-                )
-            except Deposit.DoesNotExist:
-                # then no parent for that deposit, deposit_parent already None
-                pass
+    def _complete_deposit(self, deposit: Deposit) -> None:
+        """Marks the deposit as 'deposited', then schedule a check task if configured
+        to do so."""
+        deposit.complete_date = timezone.now()
+        deposit.status = DEPOSIT_STATUS_DEPOSITED
+        deposit.save()
 
-            deposit = Deposit(
-                collection=self._collection,
-                external_id=external_id or "",
-                complete_date=complete_date,
-                status=status_type,
-                client=self._client,
-                parent=deposit_parent,
-            )
-        else:
-            deposit = Deposit.objects.get(pk=deposit_id)
-
-            # update metadata
-            deposit.complete_date = complete_date
-            deposit.status = status_type
+        if not deposit.origin_url:
+            deposit.origin_url = guess_deposit_origin_url(deposit)
 
         if self.config["checks"]:
-            deposit.save()  # needed to have a deposit id
             scheduler = self.scheduler
             if deposit.status == DEPOSIT_STATUS_DEPOSITED and not deposit.check_task_id:
                 task = create_oneshot_task_dict(
@@ -230,8 +256,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 deposit.check_task_id = check_task_id
 
         deposit.save()
-
-        return deposit
 
     def _deposit_request_put(
         self,
@@ -284,46 +308,33 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         assert deposit_request is not None
         return deposit_request
 
-    def _delete_archives(self, collection_name: str, deposit_id: int) -> Dict:
+    def _delete_archives(self, collection_name: str, deposit: Deposit) -> Dict:
         """Delete archive references from the deposit id.
 
         """
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-        except Deposit.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"The deposit {deposit_id} does not exist"
-            )
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
         return {}
 
-    def _delete_deposit(self, collection_name: str, deposit_id: int) -> Dict:
+    def _delete_deposit(self, collection_name: str, deposit: Deposit) -> Dict:
         """Delete deposit reference.
 
         Args:
             collection_name: Client's collection
-            deposit_id: The deposit to delete
+            deposit: The deposit to delete
 
         Returns
             Empty dict when ok.
             Dict with error key to describe the failure.
 
         """
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-        except Deposit.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"The deposit {deposit_id} does not exist"
-            )
-
         if deposit.collection.name != collection_name:
             summary = "Cannot delete a deposit from another collection"
             description = "Deposit %s does not belong to the collection %s" % (
-                deposit_id,
+                deposit.id,
                 collection_name,
             )
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST, summary=summary, verbose_description=description
             )
 
@@ -332,88 +343,83 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         return {}
 
-    def _check_preconditions_on(
-        self, filehandler, md5sum: str, content_length: Optional[int] = None
-    ) -> Optional[Dict]:
-        """Check preconditions on provided file are respected. That is the
-           length and/or the md5sum hash match the file's content.
+    def _check_file_length(
+        self, filehandler: UploadedFile, content_length: Optional[int] = None,
+    ) -> None:
+        """Check the filehandler passed as argument has exactly the
+        expected content_length
 
         Args:
-            filehandler (InMemoryUploadedFile): The file to check
-            md5sum: md5 hash expected from the file's content
+            filehandler: The file to check
             content_length: the expected length if provided.
 
-        Returns:
-            Either none if no error or a dictionary with a key error
-            detailing the problem.
-
+        Raises:
+            DepositError if the actual length does not match
         """
         max_upload_size = self.config["max_upload_size"]
         if content_length:
-            if content_length > max_upload_size:
-                return make_error_dict(
-                    MAX_UPLOAD_SIZE_EXCEEDED,
-                    f"Upload size limit exceeded (max {max_upload_size} bytes)."
-                    "Please consider sending the archive in multiple steps.",
-                )
-
             length = filehandler.size
             if length != content_length:
-                return make_error_dict(
-                    status.HTTP_412_PRECONDITION_FAILED, "Wrong length"
-                )
+                raise DepositError(status.HTTP_412_PRECONDITION_FAILED, "Wrong length")
 
+        if filehandler.size > max_upload_size:
+            raise DepositError(
+                MAX_UPLOAD_SIZE_EXCEEDED,
+                f"Upload size limit exceeded (max {max_upload_size} bytes)."
+                "Please consider sending the archive in multiple steps.",
+            )
+
+    def _check_file_md5sum(
+        self, filehandler: UploadedFile, md5sum: Optional[bytes],
+    ) -> None:
+        """Check the filehandler passed as argument has the expected md5sum
+
+        Args:
+            filehandler: The file to check
+            md5sum: md5 hash expected from the file's content
+
+        Raises:
+            DepositError if the md5sum does not match
+
+        """
         if md5sum:
-            _md5sum = self._compute_md5(filehandler)
+            _md5sum = _compute_md5(filehandler)
             if _md5sum != md5sum:
-                return make_error_dict(
+                raise DepositError(
                     CHECKSUM_MISMATCH,
                     "Wrong md5 hash",
                     f"The checksum sent {hashutil.hash_to_hex(md5sum)} and the actual "
                     f"checksum {hashutil.hash_to_hex(_md5sum)} does not match.",
                 )
 
-        return None
-
     def _binary_upload(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Receipt:
         """Binary upload routine.
 
         Other than such a request, a 415 response is returned.
 
         Args:
-            request (Request): the request holding information to parse
+            request: the request holding information to parse
                 and inject in db
-            headers (dict): request headers formatted
-            collection_name (str): the associated client
-            deposit_id (id): deposit identifier if provided
-            replace_metadata (bool): 'Update or add' request to existing
+            headers: parsed request headers
+            collection_name: the associated client
+            deposit: deposit to be updated
+            replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
-            replace_archives (bool): 'Update or add' request to existing
+            replace_archives: 'Update or add' request to existing
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-                - deposit_id (int): Deposit identifier
-                - deposit_date (date): Deposit date
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 413 (request entity too large) if the length of the
@@ -423,50 +429,40 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        content_length = headers["content-length"]
+        content_length = headers.content_length
         if not content_length:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "CONTENT_LENGTH header is mandatory",
                 "For archive deposit, the CONTENT_LENGTH header must be sent.",
             )
 
-        content_disposition = headers["content-disposition"]
+        content_disposition = headers.content_disposition
         if not content_disposition:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "CONTENT_DISPOSITION header is mandatory",
                 "For archive deposit, the CONTENT_DISPOSITION header must be sent.",
             )
 
-        packaging = headers["packaging"]
+        packaging = headers.packaging
         if packaging and packaging not in ACCEPT_PACKAGINGS:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 f"Only packaging {ACCEPT_PACKAGINGS} is supported",
                 f"The packaging provided {packaging} is not supported",
             )
 
         filehandler = request.FILES["file"]
+        assert isinstance(filehandler, UploadedFile), filehandler
 
-        precondition_status_response = self._check_preconditions_on(
-            filehandler, headers["content-md5sum"], content_length
-        )
-
-        if precondition_status_response:
-            return precondition_status_response
-
-        slug = headers.get("slug")
-        if check_slug_is_present and not slug:
-            return make_missing_slug_error()
+        self._check_file_length(filehandler, content_length)
+        self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         # actual storage of data
         archive_metadata = filehandler
-        deposit = self._deposit_put(
-            request,
-            deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
-            external_id=slug,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
         self._deposit_request_put(
             deposit,
@@ -475,12 +471,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             replace_archives=replace_archives,
         )
 
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "status": deposit.status,
-            "archive": filehandler.name,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            status=deposit.status,
+            archive=filehandler.name,
+        )
 
     def _read_metadata(self, metadata_stream) -> Tuple[bytes, Dict[str, Any]]:
         """Given a metadata stream, reads the metadata and returns both the
@@ -494,13 +490,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _multipart_upload(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
-    ) -> Dict:
+    ) -> Receipt:
         """Multipart upload supported with exactly:
         - 1 archive (zip)
         - 1 atom entry
@@ -508,11 +503,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         Other than such a request, a 415 response is returned.
 
         Args:
-            request (Request): the request holding information to parse
+            request: the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier if provided
+            deposit: deposit to be updated
             replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
@@ -520,18 +515,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-                - deposit_id (int): Deposit identifier
-                - deposit_date (date): Deposit date
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 412 (precondition failed) if the potentially md5 hash provided
@@ -541,10 +526,6 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
-        slug = headers.get("slug")
-        if check_slug_is_present and not slug:
-            return make_missing_slug_error()
-
         content_types_present = set()
 
         data: Dict[str, Optional[Any]] = {
@@ -556,7 +537,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             fh = value
             content_type = fh.content_type
             if content_type in content_types_present:
-                return make_error_dict(
+                raise DepositError(
                     ERROR_CONTENT,
                     "Only 1 application/zip (or application/x-tar) archive "
                     "and 1 atom+xml entry is supported (as per sword2.0 "
@@ -571,7 +552,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             data[content_type] = fh
 
         if len(content_types_present) != 2:
-            return make_error_dict(
+            raise DepositError(
                 ERROR_CONTENT,
                 "You must provide both 1 application/zip (or "
                 "application/x-tar) and 1 atom+xml entry for multipart "
@@ -585,17 +566,15 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         if not filehandler:
             filehandler = data["application/x-tar"]
 
-        precondition_status_response = self._check_preconditions_on(
-            filehandler, headers["content-md5sum"]
-        )
+        assert isinstance(filehandler, UploadedFile), filehandler
 
-        if precondition_status_response:
-            return precondition_status_response
+        self._check_file_length(filehandler)
+        self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         try:
             raw_metadata, metadata = self._read_metadata(data["application/atom+xml"])
         except ParserError:
-            return make_error_dict(
+            raise DepositError(
                 PARSING_ERROR,
                 "Malformed xml metadata",
                 "The xml received is malformed. "
@@ -603,11 +582,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             )
 
         # actual storage of data
-        deposit = self._deposit_put(
-            request,
-            deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
-            external_id=slug,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
@@ -619,12 +595,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         )
 
         assert filehandler is not None
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "archive": filehandler.name,
-            "status": deposit.status,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            archive=filehandler.name,
+            status=deposit.status,
+        )
 
     def _store_metadata_deposit(
         self,
@@ -653,7 +629,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               update scenario provides one)
 
         Raises:
-            BadRequestError in case of incorrect inputs from the deposit client
+            DepositError in case of incorrect inputs from the deposit client
             (e.g. functionally invalid metadata, ...)
 
         Returns:
@@ -663,7 +639,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         metadata_ok, error_details = check_metadata(metadata)
         if not metadata_ok:
             assert error_details, "Details should be set when a failure occurs"
-            raise BadRequestError(
+            raise DepositError(
+                BAD_REQUEST,
                 "Functional metadata checks failure",
                 convert_status_detail(error_details),
             )
@@ -721,21 +698,20 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _atom_entry(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Deposit,
         replace_metadata: bool = False,
         replace_archives: bool = False,
-        check_slug_is_present: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Receipt:
         """Atom entry deposit.
 
         Args:
             request: the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier if provided
+            deposit: deposit to be updated
             replace_metadata: 'Update or add' request to existing
               deposit. If False (default), this adds new metadata request to
               existing ones. Otherwise, this will replace existing metadata.
@@ -743,19 +719,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
               deposit. If False (default), this adds new archive request to
               existing ones. Otherwise, this will replace existing archives.
               ones.
-            check_slug_is_present: Check for the slug header if True and raise
-              if not present
 
-        Returns:
-            In the optimal case a dict with the following keys:
-
-                - deposit_id: deposit id associated to the deposit
-                - deposit_date: date of the deposit
-                - archive: None (no archive is provided here)
-
-            Otherwise, a dictionary with the key error and the
-            associated failures, either:
-
+        Raises:
             - 400 (bad request) if the request is not providing an external
               identifier
             - 400 (bad request) if the request's body is empty
@@ -765,50 +730,100 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         try:
             raw_metadata, metadata = self._read_metadata(request.data)
         except ParserError:
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST,
                 "Malformed xml metadata",
                 "The xml received is malformed. "
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        if not metadata:
-            return make_error_dict(
+        if metadata is None:
+            raise DepositError(
                 BAD_REQUEST,
                 "Empty body request is not supported",
                 "Atom entry deposit is supposed to send for metadata. "
                 "If the body is empty, there is no metadata.",
             )
 
+        create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
+        add_to_origin = metadata.get("swh:deposit", {}).get("swh:add_to_origin")
+
+        if create_origin and add_to_origin:
+            raise DepositError(
+                BAD_REQUEST,
+                "<swh:create_origin> and <swh:add_to_origin> are mutually exclusive, "
+                "as they respectively create a new origin and add to an existing "
+                "origin.",
+            )
+
+        if create_origin:
+            origin_url = create_origin["swh:origin"]["@url"]
+            check_client_origin(deposit.client, origin_url)
+            deposit.origin_url = origin_url
+
+        if add_to_origin:
+            origin_url = add_to_origin["swh:origin"]["@url"]
+            check_client_origin(deposit.client, origin_url)
+            deposit.parent = (
+                Deposit.objects.filter(
+                    client=deposit.client,
+                    origin_url=origin_url,
+                    status=DEPOSIT_STATUS_LOAD_SUCCESS,
+                )
+                .order_by("-id")[0:1]
+                .get()
+            )
+
+        if "atom:external_identifier" in metadata:
+            # Deprecated tag.
+            # When clients stopped using it, this should raise an error
+            # unconditionally
+
+            if deposit.origin_url:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "<external_identifier> is deprecated, you should only use "
+                    "<swh:create_origin> from now on.",
+                )
+
+            if deposit.parent:
+                raise DepositError(
+                    BAD_REQUEST, "<external_identifier> is deprecated.",
+                )
+
+            if headers.slug and metadata["atom:external_identifier"] != headers.slug:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "The 'external_identifier' tag is deprecated, "
+                    "the Slug header should be used instead.",
+                )
+
         # Determine if we are in the metadata-only deposit case
         try:
             swhid = parse_swh_reference(metadata)
         except ValidationError as e:
-            return make_error_dict(PARSING_ERROR, "Invalid SWHID reference", str(e),)
+            raise DepositError(
+                PARSING_ERROR, "Invalid SWHID reference", str(e),
+            )
 
-        if swhid is not None:
-            external_id = metadata.get("external_identifier", headers.get("slug"))
-        else:
-            slug = headers.get("slug")
-            if check_slug_is_present and not slug:
-                return make_missing_slug_error()
+        if swhid is not None and (
+            deposit.origin_url or deposit.parent or deposit.external_id
+        ):
+            raise DepositError(
+                BAD_REQUEST,
+                "<swh:reference> is for metadata-only deposits and "
+                "<swh:create_origin> / <swh:add_to_origin> / Slug are for "
+                "code deposits, only one may be used on a given deposit.",
+            )
 
-            external_id = metadata.get("external_identifier", slug)
-
-        deposit = self._deposit_put(
-            request,
-            deposit_id=deposit_id,
-            in_progress=headers["in-progress"],
-            external_id=external_id,
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
         )
 
         if swhid is not None:
-            try:
-                swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
-                    deposit, swhid, metadata, raw_metadata
-                )
-            except BadRequestError as bad_request_error:
-                return bad_request_error.to_dict()
+            swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
+                deposit, swhid, metadata, raw_metadata
+            )
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
             if isinstance(swhid_ref, SWHID):
@@ -818,12 +833,12 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             deposit.reception_date = depo_request.date
             deposit.save()
 
-            return {
-                "deposit_id": deposit.id,
-                "deposit_date": depo_request.date,
-                "status": deposit.status,
-                "archive": None,
-            }
+            return Receipt(
+                deposit_id=deposit.id,
+                deposit_date=depo_request.date,
+                status=deposit.status,
+                archive=None,
+            )
 
         self._deposit_request_put(
             deposit,
@@ -832,68 +847,46 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             replace_archives,
         )
 
-        return {
-            "deposit_id": deposit.id,
-            "deposit_date": deposit.reception_date,
-            "archive": None,
-            "status": deposit.status,
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.reception_date,
+            status=deposit.status,
+            archive=None,
+        )
 
     def _empty_post(
-        self, request: Request, headers: Dict, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
-        """Empty post to finalize an empty deposit.
+        self,
+        request: Request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit: Deposit,
+    ) -> Receipt:
+        """Empty post to finalize a deposit.
 
         Args:
             request: the request holding information to parse
                 and inject in db
-            headers: request headers formatted
+            headers: parsed request headers
             collection_name: the associated client
-            deposit_id: deposit identifier
-
-        Returns:
-            Dictionary of result with the deposit's id, the date
-            it was completed and no archive.
-
+            deposit: deposit to be finalized
         """
-        deposit = Deposit.objects.get(pk=deposit_id)
-        deposit.complete_date = timezone.now()
-        deposit.status = DEPOSIT_STATUS_DEPOSITED
-        deposit.save()
+        self._complete_deposit(deposit)
 
-        return {
-            "deposit_id": deposit_id,
-            "deposit_date": deposit.complete_date,
-            "status": deposit.status,
-            "archive": None,
-        }
+        assert deposit.complete_date is not None
 
-    def _make_iris(
-        self, request: Request, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
-        """Define the IRI endpoints
-
-        Args:
-            request (Request): The initial request
-            collection_name (str): client/collection's name
-            deposit_id (id): Deposit identifier
-
-        Returns:
-            Dictionary of keys with the iris' urls.
-
-        """
-        args = [collection_name, deposit_id]
-        return {
-            iri: request.build_absolute_uri(reverse(iri, args=args))
-            for iri in [EM_IRI, EDIT_SE_IRI, CONT_FILE_IRI, STATE_IRI]
-        }
+        return Receipt(
+            deposit_id=deposit.id,
+            deposit_date=deposit.complete_date,
+            status=deposit.status,
+            archive=None,
+        )
 
     def additional_checks(
         self,
         request: Request,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
+        deposit: Optional[Deposit],
     ) -> Dict[str, Any]:
         """Permit the child class to enrich additional checks.
 
@@ -903,62 +896,58 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         """
         return {}
 
-    def checks(
-        self, request: Request, collection_name: str, deposit_id: Optional[int] = None
-    ) -> Dict[str, Any]:
-        try:
-            self._collection = DepositCollection.objects.get(name=collection_name)
-        except DepositCollection.DoesNotExist:
-            return make_error_dict(
-                NOT_FOUND, f"Unknown collection name {collection_name}"
-            )
-        assert self._collection is not None
-
+    def get_client(self, request) -> DepositClient:
+        # This class depends on AuthenticatedAPIView, so request.user.username
+        # is always set
         username = request.user.username
-        if username:  # unauthenticated request can have the username empty
+        assert username is not None
+
+        if self._client is None:
             try:
-                self._client: DepositClient = DepositClient.objects.get(  # type: ignore
+                self._client = DepositClient.objects.get(  # type: ignore
                     username=username
                 )
             except DepositClient.DoesNotExist:
-                return make_error_dict(NOT_FOUND, f"Unknown client name {username}")
+                raise DepositError(NOT_FOUND, f"Unknown client name {username}")
 
-            collection_id = self._collection.id
-            collections = self._client.collections
-            assert collections is not None
-            if collection_id not in collections:
-                return make_error_dict(
-                    FORBIDDEN,
-                    f"Client {username} cannot access collection {collection_name}",
-                )
+        assert self._client.username == username
+
+        return self._client
+
+    def checks(
+        self, request: Request, collection_name: str, deposit: Optional[Deposit] = None
+    ) -> ParsedRequestHeaders:
+        if deposit is None:
+            collection = get_collection_by_name(collection_name)
+        else:
+            assert collection_name == deposit.collection.name
+            collection = deposit.collection
+
+        client = self.get_client(request)
+        collection_id = collection.id
+        collections = client.collections
+        assert collections is not None
+        if collection_id not in collections:
+            raise DepositError(
+                FORBIDDEN,
+                f"Client {client.username} cannot access collection {collection_name}",
+            )
 
         headers = self._read_headers(request)
 
-        if deposit_id:
-            try:
-                deposit = Deposit.objects.get(pk=deposit_id)
-            except Deposit.DoesNotExist:
-                return make_error_dict(
-                    NOT_FOUND, f"Deposit with id {deposit_id} does not exist"
-                )
+        if deposit is not None:
+            self.restrict_access(request, headers, deposit)
 
-            assert deposit is not None
-            checks = self.restrict_access(request, headers, deposit)
-            if checks:
-                return checks
+        if headers.on_behalf_of:
+            raise DepositError(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
 
-        if headers["on-behalf-of"]:
-            return make_error_dict(MEDIATION_NOT_ALLOWED, "Mediation is not supported.")
+        self.additional_checks(request, headers, collection_name, deposit)
 
-        checks = self.additional_checks(request, headers, collection_name, deposit_id)
-        if "error" in checks:
-            return checks
-
-        return {"headers": headers}
+        return headers
 
     def restrict_access(
-        self, request: Request, headers: Dict, deposit: Deposit
-    ) -> Dict[str, Any]:
+        self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
+    ) -> None:
         """Allow modifications on deposit with status 'partial' only, reject the rest.
 
         """
@@ -967,16 +956,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 DEPOSIT_STATUS_PARTIAL,
             )
             description = f"This deposit has status '{deposit.status}'"
-            return make_error_dict(
+            raise DepositError(
                 BAD_REQUEST, summary=summary, verbose_description=description
             )
-        return {}
 
     def _basic_not_allowed_method(self, request: Request, method: str):
-        return make_error_response(
-            request,
-            METHOD_NOT_ALLOWED,
-            f"{method} method is not supported on this endpoint",
+        raise DepositError(
+            METHOD_NOT_ALLOWED, f"{method} method is not supported on this endpoint",
         )
 
     def get(
@@ -1016,11 +1002,10 @@ class APIGet(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
+        deposit = get_deposit_by_id(deposit_id, collection_name)
+        self.checks(request, collection_name, deposit)
 
-        r = self.process_get(request, collection_name, deposit_id)
+        r = self.process_get(request, collection_name, deposit)
 
         status, content, content_type = r
         if content_type == "swh/generator":
@@ -1036,7 +1021,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
     @abstractmethod
     def process_get(
-        self, request: Request, collection_name: str, deposit_id: int
+        self, request: Request, collection_name: str, deposit: Deposit
     ) -> Tuple[int, Any, str]:
         """Routine to deal with the deposit's get processing.
 
@@ -1063,47 +1048,68 @@ class APIPost(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
+        if deposit_id is None:
+            deposit = None
+        else:
+            deposit = get_deposit_by_id(deposit_id, collection_name)
+        headers = self.checks(request, collection_name, deposit)
 
-        headers = checks["headers"]
-        _status, _iri_key, data = self.process_post(
-            request, headers, collection_name, deposit_id
+        status, iri_key, receipt = self.process_post(
+            request, headers, collection_name, deposit
         )
 
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
+        return self._make_deposit_receipt(
+            request, collection_name, status, iri_key, receipt,
+        )
 
-        data["packagings"] = ACCEPT_PACKAGINGS
-        iris = self._make_iris(request, collection_name, data["deposit_id"])
-        data.update(iris)
+    def _make_deposit_receipt(
+        self,
+        request,
+        collection_name: str,
+        status: int,
+        iri_key: str,
+        receipt: Receipt,
+    ) -> HttpResponse:
+        """Returns an HttpResponse with a SWORD Deposit receipt as content."""
+
+        # Build the IRIs in the receipt
+        args = [collection_name, receipt.deposit_id]
+        iris = {
+            iri: request.build_absolute_uri(reverse(iri, args=args))
+            for iri in [EM_IRI, EDIT_IRI, CONT_FILE_IRI, SE_IRI, STATE_IRI]
+        }
+
+        context = {
+            **attr.asdict(receipt),
+            **iris,
+            "packagings": ACCEPT_PACKAGINGS,
+        }
+
         response = render(
             request,
             "deposit/deposit_receipt.xml",
-            context=data,
+            context=context,
             content_type="application/xml",
-            status=_status,
+            status=status,
         )
-        response._headers["location"] = "Location", data[_iri_key]  # type: ignore
+        response._headers["location"] = "Location", iris[iri_key]  # type: ignore
         return response
 
     @abstractmethod
     def process_post(
         self,
         request,
-        headers: Dict,
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
-    ) -> Tuple[int, str, Dict]:
+        deposit: Optional[Deposit] = None,
+    ) -> Tuple[int, str, Receipt]:
         """Routine to deal with the deposit's processing.
 
         Returns
             Tuple of:
             - response status code (200, 201, etc...)
-            - key iri (EM_IRI, EDIT_SE_IRI, etc...)
-            - dictionary of the processing result
+            - key iri (EM_IRI, EDIT_IRI, etc...)
+            - Receipt
 
         """
         pass
@@ -1125,23 +1131,23 @@ class APIPut(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
-
-        headers = checks["headers"]
-        data = self.process_put(request, headers, collection_name, deposit_id)
-
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
+        if deposit_id is None:
+            deposit = None
+        else:
+            deposit = get_deposit_by_id(deposit_id, collection_name)
+        headers = self.checks(request, collection_name, deposit)
+        self.process_put(request, headers, collection_name, deposit)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
     @abstractmethod
     def process_put(
-        self, request: Request, headers: Dict, collection_name: str, deposit_id: int
-    ) -> Dict[str, Any]:
+        self,
+        request: Request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit: Deposit,
+    ) -> None:
         """Routine to deal with updating a deposit in some way.
 
         Returns
@@ -1167,26 +1173,21 @@ class APIDelete(APIBase, metaclass=ABCMeta):
             404 if the deposit or the collection does not exist
 
         """
-        checks = self.checks(request, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(request, checks["error"])
-
         assert deposit_id is not None
-        data = self.process_delete(request, collection_name, deposit_id)
-        error = data.get("error")
-        if error:
-            return make_error_response_from_dict(request, error)
+        deposit = get_deposit_by_id(deposit_id, collection_name)
+        self.checks(request, collection_name, deposit)
+        self.process_delete(request, collection_name, deposit)
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
     @abstractmethod
     def process_delete(
-        self, request: Request, collection_name: str, deposit_id: int
-    ) -> Dict:
+        self, request: Request, collection_name: str, deposit: Deposit
+    ) -> None:
         """Routine to delete a resource.
 
         This is mostly not allowed except for the
         EM_IRI (cf. .api.deposit_update.APIUpdateArchive)
 
         """
-        return {}
+        pass

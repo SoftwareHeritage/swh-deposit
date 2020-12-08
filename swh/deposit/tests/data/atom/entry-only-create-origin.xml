@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+    <swh:deposit>
+      <swh:create_origin>
+        <swh:origin url="%s" />
+      </swh:create_origin>
+    </swh:deposit>
+</entry>
+

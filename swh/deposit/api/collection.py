@@ -3,24 +3,31 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 from rest_framework import status
 
-from ..config import EDIT_SE_IRI
+from ..config import DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_IRI
+from ..models import Deposit
 from ..parsers import (
     SWHAtomEntryParser,
     SWHFileUploadTarParser,
     SWHFileUploadZipParser,
     SWHMultiPartParser,
 )
-from .common import ACCEPT_ARCHIVE_CONTENT_TYPES, APIPost
+from .common import (
+    ACCEPT_ARCHIVE_CONTENT_TYPES,
+    APIPost,
+    ParsedRequestHeaders,
+    Receipt,
+    get_collection_by_name,
+)
 
 
-class APIPostDeposit(APIPost):
+class CollectionAPI(APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
-    What's known as 'Col IRI' in the sword specification.
+    What's known as 'Col-IRI' in the sword specification.
 
     HTTP verbs supported: POST
 
@@ -36,10 +43,10 @@ class APIPostDeposit(APIPost):
     def process_post(
         self,
         req,
-        headers: Dict[str, Any],
+        headers: ParsedRequestHeaders,
         collection_name: str,
-        deposit_id: Optional[int] = None,
-    ) -> Tuple[int, str, Dict[str, Any]]:
+        deposit: Optional[Deposit] = None,
+    ) -> Tuple[int, str, Receipt]:
         """Create a first deposit as:
         - archive deposit (1 zip)
         - multipart (1 zip + 1 atom entry)
@@ -56,9 +63,7 @@ class APIPostDeposit(APIPost):
             If everything is ok, a 201 response (created) with a
             deposit receipt.
 
-            Otherwise, depending on the upload, the following errors
-            can be returned:
-
+        Raises:
             - archive deposit:
                 - 400 (bad request) if the request is not providing an external
                   identifier
@@ -85,18 +90,46 @@ class APIPostDeposit(APIPost):
                   provided
 
         """
-        assert deposit_id is None
-        if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
-            data = self._binary_upload(
-                req, headers, collection_name, check_slug_is_present=True
-            )
-        elif req.content_type.startswith("multipart/"):
-            data = self._multipart_upload(
-                req, headers, collection_name, check_slug_is_present=True
-            )
-        else:
-            data = self._atom_entry(
-                req, headers, collection_name, check_slug_is_present=True
-            )
+        assert deposit is None
 
-        return status.HTTP_201_CREATED, EDIT_SE_IRI, data
+        deposit = self._deposit_create(req, collection_name, external_id=headers.slug)
+
+        if req.content_type in ACCEPT_ARCHIVE_CONTENT_TYPES:
+            receipt = self._binary_upload(req, headers, collection_name, deposit)
+        elif req.content_type.startswith("multipart/"):
+            receipt = self._multipart_upload(req, headers, collection_name, deposit)
+        else:
+            receipt = self._atom_entry(req, headers, collection_name, deposit)
+
+        return status.HTTP_201_CREATED, EDIT_IRI, receipt
+
+    def _deposit_create(
+        self, request, collection_name: str, external_id: Optional[str]
+    ) -> Deposit:
+        collection = get_collection_by_name(collection_name)
+        client = self.get_client(request)
+        deposit_parent: Optional[Deposit] = None
+
+        if external_id:
+            # TODO: delete this when clients stopped relying on the slug
+            try:
+                # find a deposit parent (same external id, status load to success)
+                deposit_parent = (
+                    Deposit.objects.filter(
+                        client=client,
+                        external_id=external_id,
+                        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+                    )
+                    .order_by("-id")[0:1]
+                    .get()
+                )
+            except Deposit.DoesNotExist:
+                # then no parent for that deposit, deposit_parent already None
+                pass
+
+        return Deposit(
+            collection=collection,
+            external_id=external_id or "",
+            client=client,
+            parent=deposit_parent,
+        )

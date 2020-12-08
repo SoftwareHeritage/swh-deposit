@@ -9,7 +9,6 @@ from rest_framework.permissions import AllowAny
 
 from swh.deposit import utils
 from swh.deposit.api.common import AuthenticatedAPIView
-from swh.deposit.errors import NOT_FOUND, make_error_dict
 
 from ...config import METADATA_TYPE, APIConfig
 from ...models import Deposit, DepositRequest
@@ -20,20 +19,17 @@ class DepositReadMixin:
 
     """
 
-    def _deposit_requests(self, deposit, request_type):
+    def _deposit_requests(self, deposit: Deposit, request_type: str):
         """Given a deposit, yields its associated deposit_request
 
         Args:
-            deposit (Deposit): Deposit to list requests for
-            request_type (str): 'archive' or 'metadata'
+            deposit: Deposit to list requests for
+            request_type: 'archive' or 'metadata'
 
         Yields:
             deposit requests of type request_type associated to the deposit
 
         """
-        if isinstance(deposit, int):
-            deposit = Deposit.objects.get(pk=deposit)
-
         deposit_requests = DepositRequest.objects.filter(
             type=request_type, deposit=deposit
         ).order_by("id")
@@ -73,22 +69,12 @@ class APIPrivateView(APIConfig, AuthenticatedAPIView):
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
-    def checks(self, req, collection_name, deposit_id=None):
+    def checks(self, req, collection_name, deposit=None):
         """Override default checks implementation to allow empty collection.
 
         """
-        if deposit_id:
-            try:
-                Deposit.objects.get(pk=deposit_id)
-            except Deposit.DoesNotExist:
-                return make_error_dict(
-                    NOT_FOUND, "Deposit with id %s does not exist" % deposit_id
-                )
-
         headers = self._read_headers(req)
-        checks = self.additional_checks(req, headers, collection_name, deposit_id)
-        if "error" in checks:
-            return checks
+        self.additional_checks(req, headers, collection_name, deposit)
 
         return {"headers": headers}
 
