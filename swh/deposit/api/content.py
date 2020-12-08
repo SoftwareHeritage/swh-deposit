@@ -7,28 +7,23 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 
-from ..errors import NOT_FOUND, make_error_response, make_error_response_from_dict
-from ..models import DEPOSIT_STATUS_DETAIL, Deposit, DepositRequest
-from .common import APIBase
+from ..models import DEPOSIT_STATUS_DETAIL, DepositRequest
+from .common import APIBase, get_deposit_by_id
 
 
-class APIContent(APIBase):
+class ContentAPI(APIBase):
+    """Deposit request class defining api endpoints for sword deposit.
+
+    What's known as 'Cont-IRI' and 'File-IRI' in the sword specification.
+
+    HTTP verbs supported: GET
+
+    """
+
     def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
-        checks = self.checks(req, collection_name, deposit_id)
-        if "error" in checks:
-            return make_error_response_from_dict(req, checks["error"])
+        deposit = get_deposit_by_id(deposit_id, collection_name)
 
-        try:
-            deposit = Deposit.objects.get(pk=deposit_id)
-            if deposit.collection.name != collection_name:
-                raise Deposit.DoesNotExist
-        except Deposit.DoesNotExist:
-            return make_error_response(
-                req,
-                NOT_FOUND,
-                "deposit %s does not belong to collection %s"
-                % (deposit_id, collection_name),
-            )
+        self.checks(req, collection_name, deposit)
 
         requests = DepositRequest.objects.filter(deposit=deposit)
         context = {

@@ -36,38 +36,19 @@ Display content
 
        <entry xmlns="http://www.w3.org/2005/Atom"
               xmlns:sword="http://purl.org/net/sword/"
-              xmlns:dcterms="http://purl.org/dc/terms/">
-           <deposit_id>1</deposit_id>
-           <deposit_status>done</deposit_status>
-           <deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</deposit_status_detail>
-
-           <sword:request>
-
-               <deposit_date>Oct. 28, 2020, 3:58 p.m.</deposit_date>
-           </sword:request>
-           <sword:request>
-
-               <metadata>
-                   <id>test-01243065</id>
-                   <title>Verifiable online voting system</title>
-                   <author>{&#39;name&#39;: &#39;Belenios&#39;, &#39;email&#39;: &#39;belenios@example.com&#39;}</author>
-                   <client>test</client>
-                   <codemeta:url>https://gitlab.inria.fr/belenios/belenios</codemeta:url>
-                   <codemeta:author>{&#39;codemeta:name&#39;: &#39;Belenios Test User&#39;}</codemeta:author>
-                   <codemeta:license>{&#39;codemeta:name&#39;: &#39;GNU Affero General Public License&#39;}</codemeta:license>
-                   <codemeta:version>1.12</codemeta:version>
-                   <codemeta:keywords>Online voting</codemeta:keywords>
-                   <external_identifier>test-01243065</external_identifier>
-                   <codemeta:description>Verifiable online voting system</codemeta:description>
-                   <codemeta:runtimePlatform>opam</codemeta:runtimePlatform>
-                   <codemeta:developmentStatus>stable</codemeta:developmentStatus>
-                   <codemeta:applicationCategory>test</codemeta:applicationCategory>
-                   <codemeta:programmingLanguage>ocaml</codemeta:programmingLanguage>
-                   </metadata>
-
-               <deposit_date>Oct. 28, 2020, 3:58 p.m.</deposit_date>
-           </sword:request>
+              xmlns:dcterms="http://purl.org/dc/terms/"
+              xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit"
+              >
+           <swhdeposit:deposit_id>1</swhdeposit:deposit_id>
+           <swhdeposit:deposit_date>Oct. 28, 2020, 3:58 p.m.</swhdeposit:deposit_date>
+           <swhdeposit:deposit_status>done</swhdeposit:deposit_status>
+           <swhdeposit:deposit_status_detail>The deposit has been successfully loaded into the Software Heritage archive</swhdeposit:deposit_status_detail>
        </entry>
+
+    Note: older versions of the deposit used the ``http://www.w3.org/2005/Atom``
+    namespace instead of ``https://www.softwareheritage.org/schema/2018/deposit``.
+    Tags in the Atom namespace are still provided for backward compatibility, but
+    are deprecated.
 
 
     :reqheader Authorization: Basic authentication token

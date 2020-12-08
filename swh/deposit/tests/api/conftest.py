@@ -81,7 +81,7 @@ def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
     )
 
     response_content = parse_xml(response.content)
-    deposit_id = int(response_content["deposit_id"])
+    deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
     deposit.status = DEPOSIT_STATUS_DEPOSITED
     deposit.save()

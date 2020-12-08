@@ -60,7 +60,7 @@ def _url(url: str) -> str:
 
 
 def generate_metadata(
-    deposit_client: str, name: str, external_id: str, authors: List[str]
+    deposit_client: str, name: str, external_id: Optional[str], authors: List[str]
 ) -> str:
     """Generate sword compliant xml metadata with the minimum required metadata.
 
@@ -94,11 +94,10 @@ def generate_metadata(
     import xmltodict
 
     # generate a metadata file with the minimum required metadata
-    codemetadata = {
-        "entry": {
+    document = {
+        "atom:entry": {
             "@xmlns:atom": "http://www.w3.org/2005/Atom",
             "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-            "codemeta:identifier": external_id,
             "atom:updated": datetime.now(tz=timezone.utc),  # mandatory, cf. docstring
             "atom:author": deposit_client,  # mandatory, cf. docstring
             "atom:title": name,  # mandatory, cf. docstring
@@ -108,8 +107,11 @@ def generate_metadata(
             ],
         },
     }
-    logging.debug("Metadata dict to generate as xml: %s", codemetadata)
-    return xmltodict.unparse(codemetadata, pretty=True)
+    if external_id:
+        document["atom:entry"]["codemeta:identifier"] = external_id
+
+    logging.debug("Atom entry dict to generate as xml: %s", document)
+    return xmltodict.unparse(document, pretty=True)
 
 
 def _collection(client: PublicApiDepositClient) -> str:
@@ -120,7 +122,9 @@ def _collection(client: PublicApiDepositClient) -> str:
     sd_content = client.service_document()
     if "error" in sd_content:
         raise InputError("Service document retrieval: %s" % (sd_content["error"],))
-    collection = sd_content["service"]["workspace"]["collection"]["sword:name"]
+    collection = sd_content["app:service"]["app:workspace"]["app:collection"][
+        "sword:name"
+    ]
     return collection
 
 
@@ -181,10 +185,6 @@ def client_command_parse_input(
             "swhid": optional deposit swhid
             "replace": whether the given deposit is to be replaced or not
     """
-
-    if not slug:  # generate one as this is mandatory
-        slug = generate_slug()
-
     if not metadata:
         if name and authors:
             metadata_path = os.path.join(temp_dir, "metadata.xml")

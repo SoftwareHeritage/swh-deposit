@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from swh.deposit import __version__, utils
-from swh.deposit.config import EDIT_SE_IRI, PRIVATE_GET_DEPOSIT_METADATA, SWH_PERSON
+from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SE_IRI, SWH_PERSON
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 
@@ -26,7 +26,7 @@ def private_get_raw_url_endpoints(collection, deposit):
 def update_deposit_with_metadata(authenticated_client, collection, deposit, metadata):
     # update deposit's metadata
     response = authenticated_client.post(
-        reverse(EDIT_SE_IRI, args=[collection.name, deposit.id]),
+        reverse(SE_IRI, args=[collection.name, deposit.id]),
         content_type="application/atom+xml;type=entry",
         data=metadata,
         HTTP_SLUG=deposit.external_id,
@@ -44,6 +44,7 @@ def test_read_metadata(
     """
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
     metadata_xml_atoms = [
@@ -107,6 +108,7 @@ def test_read_metadata_revision_with_parent(
     """
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
     metadata_xml_atoms = [
         atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
@@ -179,6 +181,7 @@ def test_read_metadata_3(
     """
     deposit = partial_deposit
     deposit.external_id = "hal-01243065"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
     # add metadata to the deposit with datePublished and dateCreated
@@ -269,10 +272,7 @@ def test_read_metadata_4(
         actual_data = response.json()
 
         assert actual_data == {
-            "origin": {
-                "type": "deposit",
-                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
-            },
+            "origin": {"type": "deposit", "url": None,},
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
@@ -343,7 +343,7 @@ def test_read_metadata_5(
         assert actual_data == {
             "origin": {
                 "type": "deposit",
-                "url": "https://hal-test.archives-ouvertes.fr/external-id-partial",
+                "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
             "metadata_raw": [codemeta_entry_data],
             "metadata_dict": parse_xml(codemeta_entry_data),
@@ -394,5 +394,5 @@ def test_access_to_nonexisting_deposit_returns_404_response(
     for url in private_get_raw_url_endpoints(deposit_collection, unknown_id):
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        msg = "Deposit with id %s does not exist" % unknown_id
+        msg = "Deposit %s does not exist" % unknown_id
         assert msg in response.content.decode("utf-8")

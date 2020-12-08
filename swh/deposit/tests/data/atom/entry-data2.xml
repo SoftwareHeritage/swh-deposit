@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
-  <external_identifier>some-external-id</external_identifier>
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
   <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
   <author>some awesome author</author>
+
+  <swh:deposit>
+    <swh:create_origin>
+      <swh:origin url="https://hal-test.archives-ouvertes.fr/some-external-id" />
+    </swh:create_origin>
+  </swh:deposit>
 </entry>

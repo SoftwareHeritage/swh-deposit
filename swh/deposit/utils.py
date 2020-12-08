@@ -7,9 +7,32 @@ from types import GeneratorType
 from typing import Any, Dict, Tuple, Union
 
 import iso8601
+import xmltodict
 
 from swh.model.identifiers import SWHID, normalize_timestamp, parse_swhid
 from swh.model.model import MetadataTargetType
+
+
+def parse_xml(stream, encoding="utf-8"):
+    namespaces = {
+        "http://www.w3.org/2005/Atom": "atom",
+        "http://www.w3.org/2007/app": "app",
+        "http://purl.org/dc/terms/": "dc",
+        "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
+        "http://purl.org/net/sword/terms/": "sword",
+        "https://www.softwareheritage.org/schema/2018/deposit": "swh",
+    }
+
+    data = xmltodict.parse(
+        stream,
+        encoding=encoding,
+        namespaces=namespaces,
+        process_namespaces=True,
+        dict_constructor=dict,
+    )
+    if "atom:entry" in data:
+        data = data["atom:entry"]
+    return data
 
 
 def merge(*dicts):

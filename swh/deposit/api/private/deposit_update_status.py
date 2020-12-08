@@ -3,16 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Dict
-
 from rest_framework.parsers import JSONParser
 
 from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 from . import APIPrivateView
-from ...errors import BAD_REQUEST, make_error_dict
+from ...errors import BAD_REQUEST, DepositError
 from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
-from ..common import APIPut
+from ..common import APIPut, ParsedRequestHeaders
 
 MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
 
@@ -26,7 +24,9 @@ class APIUpdateStatus(APIPrivateView, APIPut):
 
     parser_classes = (JSONParser,)
 
-    def additional_checks(self, request, headers, collection_name, deposit_id=None):
+    def additional_checks(
+        self, request, headers: ParsedRequestHeaders, collection_name, deposit=None
+    ):
         """Enrich existing checks to the default ones.
 
         New checks:
@@ -41,11 +41,11 @@ class APIUpdateStatus(APIPrivateView, APIPut):
             msg = "The status key is mandatory with possible values %s" % list(
                 DEPOSIT_STATUS_DETAIL.keys()
             )
-            return make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         if status not in DEPOSIT_STATUS_DETAIL:
             msg = "Possible status in %s" % list(DEPOSIT_STATUS_DETAIL.keys())
-            return make_error_dict(BAD_REQUEST, msg)
+            raise DepositError(BAD_REQUEST, msg)
 
         if status == DEPOSIT_STATUS_LOAD_SUCCESS:
             missing_keys = []
@@ -59,13 +59,17 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                     f"Updating deposit status to {status}"
                     f" requires information {','.join(missing_keys)}"
                 )
-                return make_error_dict(BAD_REQUEST, msg)
+                raise DepositError(BAD_REQUEST, msg)
 
         return {}
 
     def process_put(
-        self, request, headers: Dict, collection_name: str, deposit_id: int
-    ) -> Dict:
+        self,
+        request,
+        headers: ParsedRequestHeaders,
+        collection_name: str,
+        deposit: Deposit,
+    ) -> None:
         """Update the deposit with status and SWHIDs
 
         Returns:
@@ -74,8 +78,6 @@ class APIUpdateStatus(APIPrivateView, APIPut):
 
         """
         data = request.data
-
-        deposit = Deposit.objects.get(pk=deposit_id)
 
         status = data["status"]
         deposit.status = status
@@ -103,5 +105,3 @@ class APIUpdateStatus(APIPrivateView, APIPut):
             deposit.status = status
 
         deposit.save()
-
-        return {}
