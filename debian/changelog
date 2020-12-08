@@ -1,3 +1,9 @@
+swh-deposit (0.7.0-1~swh2) unstable-swh; urgency=medium
+
+  * Bump new dependency
+
+ -- Antoine R. Dumont (@ardumont) <ardumont@softwareheritage.org>  Tue, 08 Dec 2020 05:12:30 +0000
+
 swh-deposit (0.7.0-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.7.0     - (tagged by Antoine R. Dumont
