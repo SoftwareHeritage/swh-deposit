@@ -23,7 +23,6 @@ Create deposit
             -F "file=@deposit.json;type=application/zip;filename=payload" \
             -F "atom=@atom-entry.xml;type=application/atom+xml;charset=UTF-8" \
             -H 'In-Progress: false' \
-            -H 'Slug: some-external-id' \
             -XPOST https://deposit.softwareheritage.org/1/hal/
 
     .. code:: http
@@ -31,7 +30,6 @@ Create deposit
        POST /1/hal/ HTTP/1.1
        Host: deposit.softwareheritage.org
        Authorization: Basic xxxxxxxxxxxx=
-       Slug: some-external-id
        In-Progress: false
        Content-Length: 123456
        Content-Type: multipart/form-data; boundary=----------------------123456798
@@ -51,11 +49,13 @@ Create deposit
 
        <entry xmlns="http://www.w3.org/2005/Atom"
               xmlns:sword="http://purl.org/net/sword/"
-              xmlns:dcterms="http://purl.org/dc/terms/">
-           <deposit_id>10</deposit_id>
-           <deposit_date>Sept. 26, 2017, 10:32 a.m.</deposit_date>
-           <deposit_archive>None</deposit_archive>
-           <deposit_status>deposited</deposit_status>
+              xmlns:dcterms="http://purl.org/dc/terms/"
+              xmlns:swhdeposit="https://www.softwareheritage.org/schema/2018/deposit"
+              >
+           <swhdeposit:deposit_id>10</swhdeposit:deposit_id>
+           <swhdeposit:deposit_date>Sept. 26, 2017, 10:32 a.m.</swhdeposit:deposit_date>
+           <swhdeposit:deposit_archive>None</swhdeposit:deposit_archive>
+           <swhdeposit:deposit_status>deposited</swhdeposit:deposit_status>
 
            <!-- Edit-IRI -->
            <link rel="edit" href="/1/hal/10/metadata/" />
@@ -68,6 +68,11 @@ Create deposit
 
            <sword:packaging>http://purl.org/net/sword/package/SimpleZip</sword:packaging>
        </entry>
+
+    Note: older versions of the deposit used the ``http://www.w3.org/2005/Atom``
+    namespace instead of ``https://www.softwareheritage.org/schema/2018/deposit``.
+    Tags in the Atom namespace are still provided for backward compatibility, but
+    are deprecated.
 
     :reqheader Authorization: Basic authentication token
     :reqheader Content-Type: accepted mimetype

@@ -98,11 +98,10 @@ file could be:
    (deposit)$ cat metadata.xml
    <?xml version="1.0" encoding="utf-8"?>
    <entry xmlns="http://www.w3.org/2005/Atom"
-   xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+          xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+          xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
      <title>Verifiable online voting system</title>
-     <client>belenios</client>
      <id>belenios-01243065</id>
-     <external_identifier>test-01243065</external_identifier>
      <codemeta:url>https://gitlab.inria.fr/belenios/belenios</codemeta:url>
      <codemeta:applicationCategory>test</codemeta:applicationCategory>
      <codemeta:keywords>Online voting</codemeta:keywords>
@@ -121,6 +120,11 @@ file could be:
      <codemeta:author>
        <codemeta:name>Belenios Test User</codemeta:name>
      </codemeta:author>
+     <swh:deposit>
+       <swh:create_origin>
+         <swh:origin url="http://has.archives-ouvertes.fr/test-01243065" />
+       </swh:create_origin>
+     </swh:deposit>
    </entry>
 
    (deposit)$

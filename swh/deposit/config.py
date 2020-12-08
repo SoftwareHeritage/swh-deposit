@@ -14,7 +14,8 @@ from swh.storage import get_storage
 from swh.storage.interface import StorageInterface
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
-EDIT_SE_IRI = "edit_se_iri"
+EDIT_IRI = "edit_iri"
+SE_IRI = "se_iri"
 EM_IRI = "em_iri"
 CONT_FILE_IRI = "cont_file_iri"
 SD_IRI = "servicedocument"

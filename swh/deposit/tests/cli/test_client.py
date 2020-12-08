@@ -134,9 +134,9 @@ def test_cli_client_generate_metadata_ok(slug):
     )
 
     actual_metadata = dict(parse_xml(actual_metadata_xml))
-    assert actual_metadata["author"] == "deposit-client"
-    assert actual_metadata["title"] == "project-name"
-    assert actual_metadata["updated"] is not None
+    assert actual_metadata["atom:author"] == "deposit-client"
+    assert actual_metadata["atom:title"] == "project-name"
+    assert actual_metadata["atom:updated"] is not None
     assert actual_metadata["codemeta:name"] == "project-name"
     assert actual_metadata["codemeta:identifier"] == "external-id"
     assert actual_metadata["codemeta:author"] == [
@@ -185,10 +185,10 @@ def test_cli_single_minimal_deposit(
 
     with open(metadata_path) as fd:
         actual_metadata = dict(parse_xml(fd.read()))
-        assert actual_metadata["author"] == TEST_USER["username"]
+        assert actual_metadata["atom:author"] == TEST_USER["username"]
         assert actual_metadata["codemeta:name"] == "test-project"
-        assert actual_metadata["title"] == "test-project"
-        assert actual_metadata["updated"] is not None
+        assert actual_metadata["atom:title"] == "test-project"
+        assert actual_metadata["atom:updated"] is not None
         assert actual_metadata["codemeta:identifier"] == slug
         assert actual_metadata["codemeta:author"] == OrderedDict(
             [("codemeta:name", "Jane Doe")]
@@ -379,9 +379,9 @@ def test_cli_validation_replace_with_no_deposit_id_fails(
 def test_cli_single_deposit_slug_generation(
     sample_archive, patched_tmp_path, requests_mock_datadir, cli_runner
 ):
-    """Single deposit scenario without providing the slug, the slug is generated nonetheless
-    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
-    """  # noqa
+    """Single deposit scenario without providing the slug, it should
+    not be generated.
+    """
     metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
     # fmt: off
     result = cli_runner.invoke(
@@ -409,7 +409,7 @@ def test_cli_single_deposit_slug_generation(
     with open(metadata_path) as fd:
         metadata_xml = fd.read()
         actual_metadata = dict(parse_xml(metadata_xml))
-        assert actual_metadata["codemeta:identifier"] is not None
+        assert "codemeta:identifier" not in actual_metadata
 
 
 def test_cli_multisteps_deposit(
@@ -522,12 +522,17 @@ def test_cli_deposit_status_with_output_format(
     """
     api_url_basename = "deposit.test.status"
     deposit_id = 1033
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+    expected_deposit_status = {
+        "deposit_id": str(deposit_id),
+        "deposit_status": "done",
+        "deposit_status_detail": (
+            "The deposit has been successfully loaded into the "
+            "Software Heritage archive"
+        ),
+        "deposit_swh_id": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+        "deposit_swh_id_context": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/",  # noqa
+        "deposit_external_id": "check-deposit-2020-10-08T13:52:34.509655",
+    }
 
     # fmt: off
     result = cli_runner.invoke(
@@ -562,12 +567,17 @@ def test_cli_update_metadata_with_swhid_on_completed_deposit(
     """
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = 123
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
+    expected_deposit_status = {
+        "deposit_external_id": "check-deposit-2020-10-08T13:52:34.509655",
+        "deposit_id": str(deposit_id),
+        "deposit_status": "done",
+        "deposit_status_detail": (
+            "The deposit has been successfully loaded into the "
+            "Software Heritage archive"
+        ),
+        "deposit_swh_id": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+        "deposit_swh_id_context": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/",  # noqa
+    }
 
     assert expected_deposit_status["deposit_status"] == "done"
     assert expected_deposit_status["deposit_swh_id"] is not None
@@ -601,13 +611,6 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     """
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = 321
-    deposit_status_xml_path = os.path.join(
-        datadir, f"https_{api_url_basename}", f"1_test_{deposit_id}_status"
-    )
-    with open(deposit_status_xml_path, "r") as f:
-        deposit_status_xml = f.read()
-    expected_deposit_status = dict(parse_xml(deposit_status_xml))
-    assert expected_deposit_status["deposit_status"] != "done"
 
     # fmt: off
     result = cli_runner.invoke(

@@ -7,7 +7,6 @@
           <email>hal@ccsd.cnrs.fr</email>
         </author>
         <client>hal</client>
-        <external_identifier>hal-01243573</external_identifier>
         <codemeta:name>The assignment problem</codemeta:name>
         <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
         <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
@@ -24,8 +23,8 @@
             <codemeta:affiliation> UPMC </codemeta:affiliation>
         </codemeta:author>
         <swh:deposit>
-          <swh:bindings>
-          <swh:binding source="path/to/file.txt" destination="aaaaaaaaaaa..."/>
-        </swh:bindings>
+          <swh:create_origin>
+            <swh:origin url="http://has.archives-ouvertes.fr/hal-01243573" />
+          </swh:create_origin>
         </swh:deposit>
     </entry>

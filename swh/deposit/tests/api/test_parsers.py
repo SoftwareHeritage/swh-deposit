@@ -36,7 +36,7 @@ def test_parsing_without_duplicates():
     actual_result = SWHXMLParser().parse(xml_no_duplicate)
     expected_dict = OrderedDict(
         [
-            ("title", "Awesome Compiler"),
+            ("atom:title", "Awesome Compiler"),
             (
                 "codemeta:license",
                 OrderedDict(
@@ -94,7 +94,7 @@ def test_parsing_with_duplicates():
 
     expected_dict = OrderedDict(
         [
-            ("title", "Another Compiler"),
+            ("atom:title", "Another Compiler"),
             ("codemeta:runtimePlatform", ["GNU/Linux", "Un*x"]),
             (
                 "codemeta:license",

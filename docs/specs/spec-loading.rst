@@ -54,8 +54,10 @@ This is a global view of the deposit ingestion
 Origin artifact
 ~~~~~~~~~~~~~~~
 
-We create an origin URL by concatenating the client's `provider_url` and the
-value of the Slug header of the initial POST request of the deposit.
+If the ``<swh:create_origin>`` is missing,
+we create an origin URL by concatenating the client's `provider_url` and the
+value of the Slug header of the initial POST request of the deposit
+(or a randomly generated slug if it is missing).
 
 For examples:
 
@@ -177,7 +179,7 @@ If present, a release artifact will be created with the mapping below:
 +-------------------+-----------------------------------+-----------------+----------------+
 | date              | release date = publication date   | datePublished   | deposit_date   |
 +-------------------+-----------------------------------+-----------------+----------------+
-| author            | deposit client                    | author          | client         |
+| author            | deposit client                    | author          | X              |
 +-------------------+-----------------------------------+-----------------+----------------+
 
 
@@ -308,7 +310,6 @@ A release contains one date:
                     "email": "hal@ccsd.cnrs.fr",
                     "name": "HAL"
                 },
-                "client": "hal",
                 "codemeta:applicationCategory": "info",
                 "codemeta:author": {
                     "codemeta:name": "Morane Gruenpeter"

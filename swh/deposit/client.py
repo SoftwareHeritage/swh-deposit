@@ -16,10 +16,10 @@ from urllib.parse import urljoin
 import warnings
 
 import requests
-import xmltodict
 
 from swh.core.config import load_from_envvar
 from swh.deposit import __version__ as swh_deposit_version
+from swh.deposit.utils import parse_xml
 
 logger = logging.getLogger(__name__)
 
@@ -88,49 +88,6 @@ class MaintenanceError(ValueError):
     """
 
     pass
-
-
-def _parse(stream, encoding="utf-8"):
-    """Given a xml stream, parse the result.
-
-    Args:
-        stream (bytes/text): The stream to parse
-        encoding (str): The encoding to use if to decode the bytes
-            stream
-
-    Returns:
-        A dict of values corresponding to the parsed xml
-
-    """
-    if isinstance(stream, bytes):
-        stream = stream.decode(encoding)
-    data = xmltodict.parse(stream, encoding=encoding, process_namespaces=False)
-    if "entry" in data:
-        data = data["entry"]
-    if "sword:error" in data:
-        data = data["sword:error"]
-    return dict(data)
-
-
-def _parse_with_filter(stream, encoding="utf-8", keys=[]):
-    """Given a xml stream, parse the result and filter with keys.
-
-    Args:
-        stream (bytes/text): The stream to parse
-        encoding (str): The encoding to use if to decode the bytes
-            stream
-        keys ([str]): Keys to filter the parsed result
-
-    Returns:
-        A dict of values corresponding to the parsed xml filtered by
-        the keys provided.
-
-    """
-    data = _parse(stream, encoding=encoding)
-    m = {}
-    for key in keys:
-        m[key] = data.get(key)
-    return m
 
 
 def handle_deprecated_config(config: Dict) -> Tuple[str, Optional[Tuple[str, str]]]:
@@ -343,9 +300,12 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
                 'detail': Some more detail about the error if any
 
         """
-        return _parse_with_filter(
-            xml_content, keys=["summary", "detail", "sword:verboseDescription"]
-        )
+        data = parse_xml(xml_content)
+        return {
+            "summary": data["summary"],
+            "detail": data["detail"],
+            "sword:verboseDescription": data["sword:verboseDescription"],
+        }
 
     def do_execute(self, method, url, info):
         """Execute the http query to url using method and info information.
@@ -426,7 +386,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """Parse service document's success response.
 
         """
-        return _parse(xml_content)
+        return parse_xml(xml_content)
 
 
 class StatusDepositClient(BaseDepositClient):
@@ -457,17 +417,16 @@ class StatusDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        return _parse_with_filter(
-            xml_content,
-            keys=[
-                "deposit_id",
-                "deposit_status",
-                "deposit_status_detail",
-                "deposit_swh_id",
-                "deposit_swh_id_context",
-                "deposit_external_id",
-            ],
-        )
+        data = parse_xml(xml_content)
+        keys = [
+            "deposit_id",
+            "deposit_status",
+            "deposit_status_detail",
+            "deposit_swh_id",
+            "deposit_swh_id_context",
+            "deposit_external_id",
+        ]
+        return {key: data.get("swh:" + key) for key in keys}
 
 
 class BaseCreateDepositClient(BaseDepositClient):
@@ -481,7 +440,7 @@ class BaseCreateDepositClient(BaseDepositClient):
             auth=auth,
             config=config,
             error_msg="Post Deposit failure at %s: %s",
-            empty_result={"deposit_id": None, "deposit_status": None,},
+            empty_result={"swh:deposit_id": None, "swh:deposit_status": None,},
         )
 
     def compute_url(self, collection, *args, **kwargs):
@@ -494,15 +453,14 @@ class BaseCreateDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        return _parse_with_filter(
-            xml_content,
-            keys=[
-                "deposit_id",
-                "deposit_status",
-                "deposit_status_detail",
-                "deposit_date",
-            ],
-        )
+        data = parse_xml(xml_content)
+        keys = [
+            "deposit_id",
+            "deposit_status",
+            "deposit_status_detail",
+            "deposit_date",
+        ]
+        return {key: data.get("swh:" + key) for key in keys}
 
     def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
         return info
@@ -516,13 +474,15 @@ class CreateArchiveDepositClient(BaseCreateDepositClient):
     """Post an archive (binary) deposit client."""
 
     def compute_headers(self, info):
-        return {
-            "SLUG": info["slug"],
+        headers = {
             "CONTENT_MD5": info["md5sum"],
             "IN-PROGRESS": str(info["in_progress"]),
             "CONTENT-TYPE": info["content-type"],
             "CONTENT-DISPOSITION": "attachment; filename=%s" % (info["filename"],),
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
+        return headers
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         info = compute_unified_information(
@@ -546,11 +506,13 @@ class CreateMetadataDepositClient(BaseCreateDepositClient):
     """Post a metadata deposit client."""
 
     def compute_headers(self, info):
-        return {
-            "SLUG": info["slug"],
+        headers = {
             "IN-PROGRESS": str(info["in_progress"]),
             "CONTENT-TYPE": "application/atom+xml;type=entry",
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
+        return headers
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         info = compute_unified_information(
@@ -603,10 +565,11 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
         ]
 
         headers = {
-            "SLUG": info["slug"],
             "CONTENT_MD5": info["md5sum"],
             "IN-PROGRESS": str(info["in_progress"]),
         }
+        if "slug" in info:
+            headers["SLUG"] = info["slug"]
 
         return files, headers
 
@@ -648,7 +611,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
     def deposit_create(
         self,
         collection: str,
-        slug: str,
+        slug: Optional[str],
         archive: Optional[str] = None,
         metadata: Optional[str] = None,
         in_progress: bool = False,
@@ -677,7 +640,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
         self,
         collection: str,
         deposit_id: int,
-        slug: str,
+        slug: Optional[str],
         archive: Optional[str] = None,
         metadata: Optional[str] = None,
         in_progress: bool = False,

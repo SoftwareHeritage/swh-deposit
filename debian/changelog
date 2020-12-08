@@ -1,8 +1,36 @@
-swh-deposit (0.6.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.7.0-1~swh2) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * Bump new dependency
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 18 Nov 2020 15:04:25 +0000
+ -- Antoine R. Dumont (@ardumont) <ardumont@softwareheritage.org>  Tue, 08 Dec 2020 05:12:30 +0000
+
+swh-deposit (0.7.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.7.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-12-08 13:25:57
+    +0100)
+  * Upstream changes:     - v0.7.0     - docs: Add a complete deposit
+    protocol reference     - Implement tag <swh:add_to_origin> to
+    replace the Slug header for parent     - relationships     -
+    Implement tag <swh:create_origin> to replace the Slug header     -
+    Return the origin url on 'GET State-IRI'     - Make the Slug header
+    optional     - docs: Improve documentations and drop non implemented
+    specifications     - Remove the <client> tag from the protocol.     -
+    Remove the <external_identifier> tag from the protocol.     - Move
+    SWH-specific tags to the
+    https://www.softwareheritage.org/schema/2018/deposit namespace     -
+    logging: Log error messages when that occurs     - typing: Improve
+    deposit types     - Refactor exception handling     - Split SE-IRI
+    and Edit-IRI.     - remove assumption that Edit-IRI and SE-IRI are
+    the same from test     - Rename files and classes in
+    swh/deposit/api/deposit_* to be consistent with SWORD terminology.
+    - swh.xsd: Use the
+    https://www.softwareheritage.org/schema/2018/deposit namespace     -
+    Fix SWORD XMLNS (http://purl.org/net/sword/ ->
+    http://purl.org/net/sword/terms/)     - Refactoring to clarify
+    source     - tests: Refactoring
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 08 Dec 2020 12:35:45 +0000
 
 swh-deposit (0.6.0-1~swh1) unstable-swh; urgency=medium
 

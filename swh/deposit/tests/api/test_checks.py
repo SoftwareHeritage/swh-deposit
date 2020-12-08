@@ -12,16 +12,16 @@ from swh.deposit.api.checks import check_metadata
     "metadata_ok",
     [
         {
-            "url": "something",
-            "external_identifier": "something-else",
-            "name": "foo",
-            "author": "someone",
+            "atom:url": "something",
+            "atom:external_identifier": "something-else",
+            "atom:name": "foo",
+            "atom:author": "someone",
         },
         {
-            "url": "some url",
-            "external_identifier": "some id",
-            "title": "bar",
-            "author": "no one",
+            "atom:url": "some url",
+            "atom:external_identifier": "some id",
+            "atom:title": "bar",
+            "atom:author": "no one",
         },
     ],
 )
@@ -36,22 +36,22 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
     [
         (
             {
-                "url": "something",
-                "external_identifier": "something-else",
-                "author": "someone",
+                "atom:url": "something",
+                "atom:external_identifier": "something-else",
+                "atom:author": "someone",
             },
             {
                 "summary": "Mandatory alternate fields are missing",
-                "fields": ["name or title"],
+                "fields": ["atom:name or atom:title"],
             },
         ),
         (
             {
-                "url": "something",
-                "external_identifier": "something-else",
-                "title": "foobar",
+                "atom:url": "something",
+                "atom:external_identifier": "something-else",
+                "atom:title": "foobar",
             },
-            {"summary": "Mandatory fields are missing", "fields": ["author"],},
+            {"summary": "Mandatory fields are missing", "fields": ["atom:author"],},
         ),
     ],
 )
