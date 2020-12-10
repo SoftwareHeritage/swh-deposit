@@ -796,11 +796,12 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Functional metadata checks failure" in response.content
     # detail on the errors
-    assert b"- Mandatory fields are missing (atom:author)" in response.content
-    assert (
-        b"- Mandatory alternate fields are missing (atom:name or atom:title)"
-        in response.content
+    msg = (
+        b"- Mandatory fields are missing ("
+        b"atom:name or atom:title or codemeta:name, "
+        b"atom:author or codemeta:author)"
     )
+    assert msg in response.content
 
 
 def test_put_atom_with_create_origin_and_external_identifier(
