@@ -14,7 +14,6 @@ Mandatory fields:
 from typing import Dict, Optional, Tuple
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
-ALTERNATE_FIELDS_MISSING = "Mandatory alternate fields are missing"
 
 
 def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
@@ -28,36 +27,22 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
           ok (False, <detailed-error>) otherwise.
 
     """
-    # following fields are mandatory
-    required_fields = {
-        "atom:author": False,
-    }
     # at least one value per couple below is mandatory
     alternate_fields = {
-        ("atom:name", "atom:title"): False,
+        ("atom:name", "atom:title", "codemeta:name"): False,
+        ("atom:author", "codemeta:author"): False,
     }
 
     for field, value in metadata.items():
-        for name in required_fields:
-            if name in field:
-                required_fields[name] = True
-
         for possible_names in alternate_fields:
             for possible_name in possible_names:
                 if possible_name in field:
                     alternate_fields[possible_names] = True
                     continue
 
-    mandatory_result = [k for k, v in required_fields.items() if not v]
-    optional_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
+    mandatory_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
 
-    if mandatory_result == [] and optional_result == []:
+    if mandatory_result == []:
         return True, None
-    detail = []
-    if mandatory_result != []:
-        detail.append({"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result})
-    if optional_result != []:
-        detail.append(
-            {"summary": ALTERNATE_FIELDS_MISSING, "fields": optional_result,}
-        )
+    detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
     return False, {"metadata": detail}

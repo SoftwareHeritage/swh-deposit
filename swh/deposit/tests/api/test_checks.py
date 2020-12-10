@@ -23,11 +23,12 @@ from swh.deposit.api.checks import check_metadata
             "atom:title": "bar",
             "atom:author": "no one",
         },
+        {"atom:url": "some url", "codemeta:name": "bar", "codemeta:author": "no one",},
     ],
 )
 def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
     actual_check, detail = check_metadata(metadata_ok)
-    assert actual_check is True
+    assert actual_check is True, detail
     assert detail is None
 
 
@@ -41,8 +42,8 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
                 "atom:author": "someone",
             },
             {
-                "summary": "Mandatory alternate fields are missing",
-                "fields": ["atom:name or atom:title"],
+                "summary": "Mandatory fields are missing",
+                "fields": ["atom:name or atom:title or codemeta:name"],
             },
         ),
         (
@@ -51,7 +52,34 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
                 "atom:external_identifier": "something-else",
                 "atom:title": "foobar",
             },
-            {"summary": "Mandatory fields are missing", "fields": ["atom:author"],},
+            {
+                "summary": "Mandatory fields are missing",
+                "fields": ["atom:author or codemeta:author"],
+            },
+        ),
+        (
+            {
+                "atom:url": "something",
+                "atom:external_identifier": "something-else",
+                "codemeta:title": "bar",
+                "atom:author": "someone",
+            },
+            {
+                "summary": "Mandatory fields are missing",
+                "fields": ["atom:name or atom:title or codemeta:name"],
+            },
+        ),
+        (
+            {
+                "atom:url": "something",
+                "atom:external_identifier": "something-else",
+                "atom:title": "foobar",
+                "author": "foo",
+            },
+            {
+                "summary": "Mandatory fields are missing",
+                "fields": ["atom:author or codemeta:author"],
+            },
         ),
     ],
 )
