@@ -81,6 +81,18 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
                 "fields": ["atom:author or codemeta:author"],
             },
         ),
+        (
+            {
+                "atom:url": "something",
+                "atom:external_identifier": "something-else",
+                "atom:title": "foobar",
+                "atom:authorblahblah": "foo",
+            },
+            {
+                "summary": "Mandatory fields are missing",
+                "fields": ["atom:author or codemeta:author"],
+            },
+        ),
     ],
 )
 def test_api_checks_check_metadata_ko(

@@ -35,10 +35,9 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
 
     for field, value in metadata.items():
         for possible_names in alternate_fields:
-            for possible_name in possible_names:
-                if possible_name in field:
-                    alternate_fields[possible_names] = True
-                    continue
+            if field in possible_names:
+                alternate_fields[possible_names] = True
+                continue
 
     mandatory_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
 
