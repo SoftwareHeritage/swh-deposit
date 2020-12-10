@@ -7,7 +7,7 @@ from swh.deposit.models import Deposit
 def fill_origin_url(apps, schema_editor):
     for deposit in Deposit.objects.all():
         if deposit.origin_url is None:
-            deposit.origin_url = guess_deposit_origin_url()
+            deposit.origin_url = guess_deposit_origin_url(deposit)
             deposit.save()
 
 
