@@ -1,3 +1,15 @@
+swh-deposit (0.7.1-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.7.1     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-12-10 13:55:22
+    +0100)
+  * Upstream changes:     - v0.7.1     - Use string equality instead of
+    substring search to check for mandatory fields.     - Accept
+    <codemeta:name> and <codemeta:author> as alternatives to
+    <atom:name>/<atom:title> and <atom:author>.
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 10 Dec 2020 13:01:47 +0000
+
 swh-deposit (0.7.0-1~swh2) unstable-swh; urgency=medium
 
   * Bump new dependency
