@@ -1,3 +1,13 @@
+swh-deposit (0.7.2-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.7.2     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2020-12-10 19:09:54
+    +0100)
+  * Upstream changes:     - v0.7.2     - swh/deposit/migrations/0021:
+    Fix migration script
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 10 Dec 2020 18:13:50 +0000
+
 swh-deposit (0.7.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.7.1     - (tagged by Antoine R. Dumont
