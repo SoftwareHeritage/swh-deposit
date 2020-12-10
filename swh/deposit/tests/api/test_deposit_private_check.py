@@ -7,7 +7,7 @@ from django.urls import reverse
 import pytest
 from rest_framework import status
 
-from swh.deposit.api.checks import ALTERNATE_FIELDS_MISSING, MANDATORY_FIELDS_MISSING
+from swh.deposit.api.checks import MANDATORY_FIELDS_MISSING
 from swh.deposit.api.private.deposit_check import (
     MANDATORY_ARCHIVE_INVALID,
     MANDATORY_ARCHIVE_MISSING,
@@ -130,13 +130,15 @@ def test_deposit_ko_unsupported_tarball(
         assert len(details["archive"]) == 1
         assert details["archive"][0]["summary"] == MANDATORY_ARCHIVE_UNSUPPORTED
         # metadata check failure
-        assert len(details["metadata"]) == 2
+        assert len(details["metadata"]) == 1
         mandatory = details["metadata"][0]
         assert mandatory["summary"] == MANDATORY_FIELDS_MISSING
-        assert set(mandatory["fields"]) == set(["atom:author"])
-        alternate = details["metadata"][1]
-        assert alternate["summary"] == ALTERNATE_FIELDS_MISSING
-        assert alternate["fields"] == ["atom:name or atom:title"]
+        assert set(mandatory["fields"]) == set(
+            [
+                "atom:author or codemeta:author",
+                "atom:name or atom:title or codemeta:name",
+            ]
+        )
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_REJECTED
