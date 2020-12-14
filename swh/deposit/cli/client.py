@@ -486,3 +486,53 @@ def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
         click.echo(yaml.dump(data))
     else:
         logger.info(data)
+
+
+@deposit.command("metadata-only")
+@click.option(
+    "--url",
+    default="https://deposit.softwareheritage.org",
+    help="(Optional) Deposit server api endpoint. By default, "
+    "https://deposit.softwareheritage.org/1",
+)
+@click.option("--username", required=True, help="(Mandatory) User's name")
+@click.option(
+    "--password", required=True, help="(Mandatory) User's associated password"
+)
+@click.option(
+    "--metadata",
+    "metadata_path",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to xml metadata file",
+)
+@click.option(
+    "-f",
+    "--format",
+    "output_format",
+    default="logging",
+    type=click.Choice(["logging", "yaml", "json"]),
+    help="Output format results.",
+)
+@click.pass_context
+def metadata_only(ctx, url, username, password, metadata_path, output_format):
+    """Deposit metadata only upload
+
+    """
+    from swh.deposit.client import PublicApiDepositClient
+    from swh.deposit.utils import parse_swh_reference, parse_xml
+
+    # Parse to check for a swhid presence within the metadata file
+    with open(metadata_path, "r") as f:
+        metadata_raw = f.read()
+    actual_swhid = parse_swh_reference(parse_xml(metadata_raw))
+
+    if not actual_swhid:
+        raise InputError("A SWHID must be provided for a metadata-only deposit")
+
+    with trap_and_report_exceptions():
+        client = PublicApiDepositClient(url=_url(url), auth=(username, password))
+        collection = _collection(client)
+        result = client.deposit_metadata_only(collection, metadata_path)
+
+    print_result(result, output_format)
