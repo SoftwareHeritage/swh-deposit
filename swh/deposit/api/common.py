@@ -66,7 +66,8 @@ from ..errors import (
     ParserError,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
-from ..parsers import parse_swh_reference, parse_xml
+from ..parsers import parse_xml
+from ..utils import parse_swh_reference
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
