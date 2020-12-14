@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import logging
 
@@ -32,6 +33,23 @@ class InputError(ValueError):
     """
 
     pass
+
+
+@contextmanager
+def trap_and_report_exceptions():
+    """Trap and report exceptions (InputError, MaintenanceError) in a unified way.
+
+    """
+    from swh.deposit.client import MaintenanceError
+
+    try:
+        yield
+    except InputError as e:
+        logger.error("Problem during parsing options: %s", e)
+        sys.exit(1)
+    except MaintenanceError as e:
+        logger.error(e)
+        sys.exit(1)
 
 
 def generate_slug() -> str:
@@ -368,7 +386,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
     """
     import tempfile
 
-    from swh.deposit.client import MaintenanceError, PublicApiDepositClient
+    from swh.deposit.client import PublicApiDepositClient
 
     if archive_deposit or metadata_deposit:
         warnings.warn(
@@ -383,7 +401,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     client = PublicApiDepositClient(url=url, auth=(username, password))
     with tempfile.TemporaryDirectory() as temp_dir:
-        try:
+        with trap_and_report_exceptions():
             logger.debug("Parsing cli options")
             config = client_command_parse_input(
                 client,
@@ -401,12 +419,6 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 author,
                 temp_dir,
             )
-        except InputError as e:
-            logger.error("Problem during parsing options: %s", e)
-            sys.exit(1)
-        except MaintenanceError as e:
-            logger.error(e)
-            sys.exit(1)
 
         if verbose:
             logger.info("Parsed configuration: %s", config)
@@ -446,19 +458,13 @@ def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
 
     """
-    from swh.deposit.client import MaintenanceError, PublicApiDepositClient
+    from swh.deposit.client import PublicApiDepositClient
 
     url = _url(url)
     logger.debug("Status deposit")
-    try:
+    with trap_and_report_exceptions():
         client = PublicApiDepositClient(url=url, auth=(username, password))
         collection = _collection(client)
-    except InputError as e:
-        logger.error("Problem during parsing options: %s", e)
-        sys.exit(1)
-    except MaintenanceError as e:
-        logger.error(e)
-        sys.exit(1)
 
     print_result(
         client.deposit_status(collection=collection, deposit_id=deposit_id),
