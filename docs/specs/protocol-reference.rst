@@ -210,6 +210,7 @@ All deposits must include:
 We also highly recommend their CodeMeta equivalent, and any other relevant
 metadata, but this is not enforced.
 
+.. _metatadata-only-deposit
 
 Metadata-only deposit
 =====================
