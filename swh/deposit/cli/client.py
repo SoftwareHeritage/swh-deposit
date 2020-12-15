@@ -269,11 +269,41 @@ def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
     return {k: v for k, v in d.items() if k in keys}
 
 
+def credentials_decorator(f):
+    """Add default --url, --username and --password flag to cli.
+
+    """
+    f = click.option(
+        "--password", required=True, help="(Mandatory) User's associated password"
+    )(f)
+    f = click.option("--username", required=True, help="(Mandatory) User's name")(f)
+    f = click.option(
+        "--url",
+        default="https://deposit.softwareheritage.org",
+        help=(
+            "(Optional) Deposit server api endpoint. By default, "
+            "https://deposit.softwareheritage.org/1"
+        ),
+    )(f)
+    return f
+
+
+def output_format_decorator(f):
+    """Add --format output flag decorator to cli.
+
+    """
+    return click.option(
+        "-f",
+        "--format",
+        "output_format",
+        default="logging",
+        type=click.Choice(["logging", "yaml", "json"]),
+        help="Output format results.",
+    )(f)
+
+
 @deposit.command()
-@click.option("--username", required=True, help="(Mandatory) User's name")
-@click.option(
-    "--password", required=True, help="(Mandatory) User's associated password"
-)
+@credentials_decorator
 @click.option(
     "--archive",
     type=click.Path(exists=True),
@@ -331,14 +361,6 @@ def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
     default=False,
     help="(Optional) Update by replacing existing metadata to a deposit",
 )  # noqa
-@click.option(
-    "--url",
-    default="https://deposit.softwareheritage.org",
-    help=(
-        "(Optional) Deposit server api endpoint. By default, "
-        "https://deposit.softwareheritage.org/1"
-    ),
-)  # noqa
 @click.option("--verbose/--no-verbose", default=False, help="Verbose mode")
 @click.option("--name", help="Software name")
 @click.option(
@@ -347,14 +369,7 @@ def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
     help="Software author(s), this can be repeated as many times"
     " as there are authors",
 )
-@click.option(
-    "-f",
-    "--format",
-    "output_format",
-    default="logging",
-    type=click.Choice(["logging", "yaml", "json"]),
-    help="Output format results.",
-)
+@output_format_decorator
 @click.pass_context
 def upload(
     ctx,
@@ -434,25 +449,9 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
 
 @deposit.command()
-@click.option(
-    "--url",
-    default="https://deposit.softwareheritage.org",
-    help="(Optional) Deposit server api endpoint. By default, "
-    "https://deposit.softwareheritage.org/1",
-)
-@click.option("--username", required=True, help="(Mandatory) User's name")
-@click.option(
-    "--password", required=True, help="(Mandatory) User's associated password"
-)
+@credentials_decorator
 @click.option("--deposit-id", default=None, required=True, help="Deposit identifier.")
-@click.option(
-    "-f",
-    "--format",
-    "output_format",
-    default="logging",
-    type=click.Choice(["logging", "yaml", "json"]),
-    help="Output format results.",
-)
+@output_format_decorator
 @click.pass_context
 def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status
@@ -489,16 +488,7 @@ def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
 
 
 @deposit.command("metadata-only")
-@click.option(
-    "--url",
-    default="https://deposit.softwareheritage.org",
-    help="(Optional) Deposit server api endpoint. By default, "
-    "https://deposit.softwareheritage.org/1",
-)
-@click.option("--username", required=True, help="(Mandatory) User's name")
-@click.option(
-    "--password", required=True, help="(Mandatory) User's associated password"
-)
+@credentials_decorator
 @click.option(
     "--metadata",
     "metadata_path",
@@ -506,14 +496,7 @@ def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
     required=True,
     help="Path to xml metadata file",
 )
-@click.option(
-    "-f",
-    "--format",
-    "output_format",
-    default="logging",
-    type=click.Choice(["logging", "yaml", "json"]),
-    help="Output format results.",
-)
+@output_format_decorator
 @click.pass_context
 def metadata_only(ctx, url, username, password, metadata_path, output_format):
     """Deposit metadata only upload
