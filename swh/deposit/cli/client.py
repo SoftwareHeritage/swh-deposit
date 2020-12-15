@@ -316,7 +316,7 @@ def output_format_decorator(f):
         "(Optional) Path to xml metadata file. If not provided, "
         "this will use a file named <archive>.metadata.xml"
     ),
-)  # noqa
+)
 @click.option(
     "--archive-deposit/--no-archive-deposit",
     default=False,
@@ -330,14 +330,14 @@ def output_format_decorator(f):
 @click.option(
     "--collection",
     help="(Optional) User's collection. If not provided, this will be fetched.",
-)  # noqa
+)
 @click.option(
     "--slug",
     help=(
         "(Optional) External system information identifier. "
         "If not provided, it will be generated"
     ),
-)  # noqa
+)
 @click.option(
     "--partial/--no-partial",
     default=False,
@@ -345,12 +345,12 @@ def output_format_decorator(f):
         "(Optional) The deposit will be partial, other deposits "
         "will have to take place to finalize it."
     ),
-)  # noqa
+)
 @click.option(
     "--deposit-id",
     default=None,
     help="(Optional) Update an existing partial deposit with its identifier",
-)  # noqa
+)
 @click.option(
     "--swhid",
     default=None,
@@ -360,7 +360,7 @@ def output_format_decorator(f):
     "--replace/--no-replace",
     default=False,
     help="(Optional) Update by replacing existing metadata to a deposit",
-)  # noqa
+)
 @click.option("--verbose/--no-verbose", default=False, help="Verbose mode")
 @click.option("--name", help="Software name")
 @click.option(
