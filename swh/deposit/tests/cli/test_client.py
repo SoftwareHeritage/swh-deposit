@@ -25,6 +25,7 @@ from swh.deposit.cli.client import (
 )
 from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 from swh.deposit.parsers import parse_xml
+from swh.model.exceptions import ValidationError
 
 from ..conftest import TEST_USER
 
@@ -637,3 +638,103 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
         "deposit_status": "partial",
         "deposit_id": 321,
     }
+
+
+def test_cli_metadata_only_deposit_full_metadata_file(
+    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+):
+    """Post metadata-only deposit through cli
+
+    The metadata file posted by the client already contains the swhid
+
+    """
+    api_url_basename = "deposit.test.metadataonly"
+    swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
+    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
+    with open(metadata_path, "w") as m:
+        m.write(metadata)
+
+    expected_deposit_status = {
+        "deposit_id": "100",
+        "deposit_status": "done",
+        "deposit_date": "2020-10-08T13:52:34.509655",
+    }
+
+    assert expected_deposit_status["deposit_status"] == "done"
+
+    # fmt: off
+    result = cli_runner.invoke(
+        cli,
+        [
+            "metadata-only",
+            "--url", f"https://{api_url_basename}/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+            "--format", "json",
+        ],
+    )
+    # fmt: on
+    assert result.exit_code == 0, result.output
+    actual_deposit_status = json.loads(result.output)
+    assert "error" not in actual_deposit_status
+    assert actual_deposit_status == expected_deposit_status
+
+
+def test_cli_metadata_only_deposit_invalid_swhid(
+    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+):
+    """Post metadata-only deposit through cli with invalid swhid raises
+
+    """
+    api_url_basename = "deposit.test.metadataonly"
+    invalid_swhid = "ssh:2:sth:xxx"
+    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=invalid_swhid)
+    metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata)
+
+    # fmt: off
+    with pytest.raises(ValidationError, match="Invalid"):
+        cli_runner.invoke(
+            cli,
+            [
+                "metadata-only",
+                "--url", f"https://{api_url_basename}/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--metadata", metadata_path,
+                "--format", "json",
+            ],
+            catch_exceptions=False,
+        )
+        # fmt: on
+
+
+def test_cli_metadata_only_deposit_no_swhid(
+    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+):
+    """Post metadata-only deposit through cli with invalid swhid raises
+
+    """
+    api_url_basename = "deposit.test.metadataonly"
+    metadata = atom_dataset["entry-data-minimal"]
+    metadata_path = os.path.join(tmp_path, "entry-data-minimal.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata)
+
+    with pytest.raises(InputError, match="SWHID must be provided"):
+        cli_runner.invoke(
+            cli,
+            [
+                "metadata-only",
+                "--url", f"https://{api_url_basename}/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--metadata", metadata_path,
+                "--format", "json",
+            ],
+            catch_exceptions=False,
+        )
+        # fmt: on
