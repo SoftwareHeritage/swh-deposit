@@ -545,6 +545,28 @@ class UpdateMetadataOnDoneDepositClient(UpdateMetadataOnPartialDepositClient):
         return "put"
 
 
+class CreateMetadataOnlyDepositClient(BaseCreateDepositClient):
+    """Create metadata-only deposit."""
+
+    def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
+        return {
+            "headers": {"CONTENT-TYPE": "application/atom+xml;type=entry",},
+            "filepath": kwargs["metadata_path"],
+        }
+
+    def parse_result_ok(self, xml_content):
+        """Given an xml content as string, returns a deposit dict.
+
+        """
+        data = parse_xml(xml_content)
+        keys = [
+            "deposit_id",
+            "deposit_status",
+            "deposit_date",
+        ]
+        return {key: data.get("swh:" + key) for key in keys}
+
+
 class CreateMultipartDepositClient(BaseCreateDepositClient):
     """Create a multipart deposit client."""
 
@@ -712,3 +734,11 @@ class PublicApiDepositClient(BaseApiDepositClient):
         if "error" in r:
             return r
         return self.deposit_status(collection, deposit_id)
+
+    def deposit_metadata_only(
+        self, collection: str, metadata: Optional[str] = None,
+    ):
+        assert metadata is not None
+        return CreateMetadataOnlyDepositClient(
+            url=self.base_url, auth=self.auth
+        ).execute(collection, metadata_path=metadata)

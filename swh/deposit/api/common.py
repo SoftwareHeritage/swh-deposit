@@ -66,7 +66,8 @@ from ..errors import (
     ParserError,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
-from ..parsers import parse_swh_reference, parse_xml
+from ..parsers import parse_xml
+from ..utils import parse_swh_reference
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -816,11 +817,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "code deposits, only one may be used on a given deposit.",
             )
 
-        self._deposit_put(
-            deposit=deposit, in_progress=headers.in_progress,
-        )
-
         if swhid is not None:
+            deposit.save()  # We need a deposit id
             swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
                 deposit, swhid, metadata, raw_metadata
             )
@@ -839,6 +837,10 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 status=deposit.status,
                 archive=None,
             )
+
+        self._deposit_put(
+            deposit=deposit, in_progress=headers.in_progress,
+        )
 
         self._deposit_request_put(
             deposit,
