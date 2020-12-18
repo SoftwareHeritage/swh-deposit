@@ -64,6 +64,7 @@ packaging system. For example, on a Debian system:
 
    $ sudo apt install jq
 
+.. _prepare_deposit
 
 Prepare a deposit
 -----------------
@@ -150,6 +151,11 @@ You can push a deposit with:
   2. Add data to a deposit (in multiple requests if needed)
   3. Finalize deposit (the status becomes ``deposited``)
 
+* a metadata-only deposit:
+
+  The user posts in one query an associated metadata file on a :ref:`SWHID
+  <persistent-identifiers>` object. The deposit is directly marked with status
+  ``done``.
 
 Overall, a deposit can be a in series of steps as follow:
 
@@ -274,7 +280,58 @@ status` command:
    }
 
 
+Metadata-only deposit
+^^^^^^^^^^^^^^^^^^^^^
 
+This allows to deposit only metadata information on a :ref:`SWHID reference
+<persistent-identifiers>`. Prepare a metadata file as described in the
+:ref:`prepare deposit section <prepare-deposit>`
+
+Ensure this metadata file also declares a :ref:`SWHID reference
+<persistent-identifiers>`:
+
+.. code:: xml
+
+   <entry ...
+          xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+          >
+
+     <!-- ... -->
+
+     <swh:deposit>
+       <swh:reference>
+         <swh:object swhid="swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49" />
+       </swh:reference>
+     </swh:deposit>
+
+     <!-- ... -->
+
+   </entry>
+
+For this, we then need to provide the following information:
+
+* arguments: ``--username 'name' --password 'pass'`` as credentials
+* metadata file path (example: ``--metadata path/to/metadata.xml``)
+
+to the `swh deposit metadata-only` command.
+
+
+Example:
+
+.. code:: console
+
+  (deposit) swh deposit metadata-only --username <name> --password <secret> \
+  --url https://deposit.staging.swh.network/1 \
+  --metadata ../deposit-swh.metadata-only.xml \
+  --format json | jq .
+  {
+    "deposit_id": "29",
+    "deposit_status": "done",
+    "deposit_date": "Dec. 15, 2020, 11:37 a.m."
+  }
+
+For details on the metadata-only deposit, see the
+:ref:`metadata-only deposit protocol reference <metadata-only-deposit>`
 
 Multisteps deposit
 ^^^^^^^^^^^^^^^^^^
