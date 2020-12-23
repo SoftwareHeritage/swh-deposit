@@ -18,7 +18,9 @@ from swh.deposit.tests.common import (
     check_archive,
     create_arborescence_archive,
     post_archive,
+    post_atom,
     put_archive,
+    put_atom,
 )
 
 
@@ -123,9 +125,9 @@ def test_replace_archive_to_deposit_is_possible(
     requests = list(DepositRequest.objects.filter(deposit=deposit, type="metadata"))
     assert len(requests) == 0
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(SE_IRI, args=[deposit_collection.name, deposit.id]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG=deposit.external_id,
         HTTP_IN_PROGRESS=True,
@@ -340,9 +342,9 @@ def test_post_deposit_then_update_refused(
 
     # replacing metadata is no longer possible since the deposit's
     # status is ready
-    r = authenticated_client.put(
+    r = put_atom(
+        authenticated_client,
         edit_iri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
         HTTP_SLUG=external_id,
@@ -353,9 +355,9 @@ def test_post_deposit_then_update_refused(
 
     # adding new metadata is no longer possible since the
     # deposit's status is ready
-    r = authenticated_client.post(
+    r = post_atom(
+        authenticated_client,
         se_iri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-deposit-binary"],
         CONTENT_LENGTH=len(atom_dataset["entry-data-deposit-binary"]),
         HTTP_SLUG=external_id,

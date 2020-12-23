@@ -18,6 +18,7 @@ from swh.deposit.config import (
     SE_IRI,
 )
 from swh.deposit.models import Deposit, DepositRequest
+from swh.deposit.tests.common import post_atom
 
 
 def test_add_both_archive_and_metadata_to_deposit(
@@ -100,12 +101,8 @@ def test_post_metadata_empty_post_finalize_deposit_ok(
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
 
     update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
-    response = authenticated_client.post(
-        update_uri,
-        content_type="application/atom+xml;type=entry",
-        data="",
-        size=0,
-        HTTP_IN_PROGRESS=False,
+    response = post_atom(
+        authenticated_client, update_uri, data="", size=0, HTTP_IN_PROGRESS=False,
     )
 
     assert response.status_code == status.HTTP_200_OK

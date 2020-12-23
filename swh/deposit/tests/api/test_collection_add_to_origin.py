@@ -11,6 +11,7 @@ from rest_framework import status
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import post_atom
 
 from ..conftest import create_deposit
 
@@ -32,9 +33,9 @@ def test_add_deposit_with_add_to_origin(
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
     )
 
@@ -79,9 +80,9 @@ def test_add_deposit_add_to_origin_conflict(
     )
 
     # adding a new deposit with the same external id as a completed deposit
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
     )
 
@@ -99,9 +100,9 @@ def test_add_deposit_add_to_wrong_origin(
     origin_url = "http://example.org/foo"
 
     # adding a new deposit with the same external id as a completed deposit
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
     )
 
@@ -124,9 +125,9 @@ def test_add_deposit_with_add_to_origin_and_external_identifier(
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-with-both-add-to-origin-and-external-id"]
         % origin_url,
     )
@@ -143,9 +144,9 @@ def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
     """
     origin_url = "http://example.org/foo"
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )

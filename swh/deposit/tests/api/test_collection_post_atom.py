@@ -21,6 +21,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import post_atom
 from swh.deposit.utils import compute_metadata_context
 from swh.model.identifiers import SWHID, parse_swhid
 from swh.model.model import (
@@ -41,9 +42,9 @@ def test_post_deposit_atom_201_even_with_decimal(
     """
     atom_error_with_decimal = atom_dataset["error-with-decimal"]
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_error_with_decimal,
         HTTP_SLUG="external-id",
         HTTP_IN_PROGRESS="false",
@@ -70,9 +71,9 @@ def test_post_deposit_atom_400_with_empty_body(
 
     """
     atom_content = atom_dataset["entry-data-empty-body"]
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_content,
         HTTP_SLUG="external-id",
     )
@@ -86,9 +87,9 @@ def test_post_deposit_atom_400_badly_formatted_atom(
     """Posting a badly formatted atom should return a 400 response
 
     """
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-badly-formatted"],
         HTTP_SLUG="external-id",
     )
@@ -102,9 +103,9 @@ def test_post_deposit_atom_parsing_error(
     """Posting parsing error prone atom should return 400
 
     """
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-parsing-error-prone"],
         HTTP_SLUG="external-id",
     )
@@ -118,9 +119,9 @@ def test_post_deposit_atom_400_both_create_origin_and_add_to_origin(
     """Posting a badly formatted atom should return a 400 response
 
     """
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-with-both-create-origin-and-add-to-origin"],
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -138,9 +139,9 @@ def test_post_deposit_atom_403_create_wrong_origin_url_prefix(
     """
     origin_url = "http://example.org/foo"
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
@@ -164,9 +165,9 @@ def test_post_deposit_atom_use_slug_header(
     slug = str(uuid.uuid4())
 
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         url,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-no-origin-url"],
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG=slug,
@@ -194,11 +195,10 @@ def test_post_deposit_atom_no_origin_url_nor_slug_header(
     mocker.patch("uuid.uuid4", return_value=slug)
 
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         url,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-no-origin-url"],
-        # + headers
         HTTP_IN_PROGRESS="false",
     )
 
@@ -223,11 +223,10 @@ def test_post_deposit_atom_with_mismatched_slug_and_external_identifier(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         url,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["error-with-external-identifier"] % external_id,
-        # + headers
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG="something",
     )
@@ -252,12 +251,8 @@ def test_post_deposit_atom_with_create_origin_and_external_identifier(
     )
 
     # when
-    response = authenticated_client.post(
-        url,
-        content_type="application/atom+xml;type=entry",
-        data=document,
-        # + headers
-        HTTP_IN_PROGRESS="false",
+    response = post_atom(
+        authenticated_client, url, data=document, HTTP_IN_PROGRESS="false",
     )
 
     assert b"&lt;external_identifier&gt; is deprecated" in response.content
@@ -279,12 +274,8 @@ def test_post_deposit_atom_with_create_origin_and_reference(
     )
 
     # when
-    response = authenticated_client.post(
-        url,
-        content_type="application/atom+xml;type=entry",
-        data=document,
-        # + headers
-        HTTP_IN_PROGRESS="false",
+    response = post_atom(
+        authenticated_client, url, data=document, HTTP_IN_PROGRESS="false",
     )
 
     assert b"only one may be used on a given deposit" in response.content
@@ -299,9 +290,9 @@ def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset
     with pytest.raises(DepositCollection.DoesNotExist):
         DepositCollection.objects.get(name=unknown_collection)
 
-    response = authenticated_client.post(
-        reverse(COL_IRI, args=[unknown_collection]),  # <- unknown collection
-        content_type="application/atom+xml;type=entry",
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[unknown_collection]),
         data=atom_dataset["entry-data0"],
         HTTP_SLUG="something",
     )
@@ -324,9 +315,9 @@ def test_post_deposit_atom_entry_initial(
     atom_entry_data = atom_dataset["entry-data0"] % origin_url
 
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_entry_data,
         HTTP_IN_PROGRESS="false",
     )
@@ -363,9 +354,9 @@ def test_post_deposit_atom_entry_with_codemeta(
 
     atom_entry_data = atom_dataset["codemeta-sample"] % origin_url
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_entry_data,
         HTTP_IN_PROGRESS="false",
     )
@@ -398,9 +389,9 @@ def test_deposit_metadata_invalid(
     invalid_swhid = "swh:1:dir :31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
     xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=invalid_swhid)
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=xml_data,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -418,9 +409,9 @@ def test_deposit_metadata_fails_functional_checks(
         "entry-data-with-swhid-fail-metadata-functional-checks"
     ].format(swhid=swhid)
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=invalid_xml_data,
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -489,9 +480,9 @@ def test_deposit_metadata_swhid(
     xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
     deposit_client = authenticated_client.deposit_client
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=xml_data,
     )
 
@@ -570,9 +561,9 @@ def test_deposit_metadata_origin(
     """
     xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     deposit_client = authenticated_client.deposit_client
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=xml_data,
     )
 

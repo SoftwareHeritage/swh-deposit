@@ -21,6 +21,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import post_atom, put_atom
 from swh.model.hashutil import hash_to_bytes
 from swh.model.identifiers import parse_swhid, swhid
 from swh.model.model import (
@@ -46,9 +47,9 @@ def test_post_deposit_atom_entry_multiple_steps(
         deposit = Deposit.objects.get(origin_url=origin_url)
 
     # when
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_IN_PROGRESS="True",
     )
@@ -78,11 +79,8 @@ def test_post_deposit_atom_entry_multiple_steps(
         assert False, f"missing SE-IRI from {response_content['link']}"
 
     # when updating the first deposit post
-    response = authenticated_client.post(
-        se_iri,
-        content_type="application/atom+xml;type=entry",
-        data=atom_entry_data,
-        HTTP_IN_PROGRESS="False",
+    response = post_atom(
+        authenticated_client, se_iri, data=atom_entry_data, HTTP_IN_PROGRESS="False",
     )
 
     # then
@@ -141,10 +139,8 @@ def test_replace_metadata_to_deposit_is_possible(
 
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
 
-    response = authenticated_client.put(
-        update_uri,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
+    response = put_atom(
+        authenticated_client, update_uri, data=atom_dataset["entry-data1"],
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -186,9 +182,7 @@ def test_add_metadata_to_deposit_is_possible(
     update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
 
     atom_entry = atom_dataset["entry-data1"]
-    response = authenticated_client.post(
-        update_uri, content_type="application/atom+xml;type=entry", data=atom_entry
-    )
+    response = post_atom(authenticated_client, update_uri, data=atom_entry)
 
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -221,11 +215,7 @@ def test_add_metadata_to_unknown_deposit(
         assert True
 
     url = reverse(SE_IRI, args=[deposit_collection, unknown_deposit_id])
-    response = authenticated_client.post(
-        url,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
-    )
+    response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
@@ -247,11 +237,7 @@ def test_add_metadata_to_unknown_collection(
         assert True
 
     url = reverse(SE_IRI, args=[unknown_collection_name, deposit.id])
-    response = authenticated_client.post(
-        url,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
-    )
+    response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert "Unknown collection name" in response_content["sword:error"]["atom:summary"]
@@ -269,11 +255,7 @@ def test_replace_metadata_to_unknown_deposit(
     except Deposit.DoesNotExist:
         assert True
     url = reverse(EDIT_IRI, args=[deposit_collection.name, unknown_deposit_id])
-    response = authenticated_client.put(
-        url,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
-    )
+    response = put_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
@@ -311,10 +293,8 @@ def test_put_metadata_to_em_iri_failure(
     deposit = partial_deposit
     # when
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit.id])
-    response = authenticated_client.put(
-        update_uri,
-        content_type="application/atom+xml;type=entry",
-        data=atom_dataset["entry-data1"],
+    response = put_atom(
+        authenticated_client, update_uri, data=atom_dataset["entry-data1"],
     )
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -366,9 +346,9 @@ def test_put_update_metadata_done_deposit_nominal(
     nb_metadata = len(actual_existing_requests_metadata)
 
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         update_uri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
@@ -452,9 +432,9 @@ def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
     assert complete_deposit.swhid != incorrect_swhid
 
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         update_uri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_X_CHECK_SWHID=incorrect_swhid,
     )
@@ -477,9 +457,9 @@ def test_put_update_metadata_done_deposit_failure_malformed_xml(
 
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         update_uri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-ko"],
         HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
@@ -504,9 +484,9 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
 
     atom_content = atom_dataset["entry-data-empty-body"]
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         update_uri,
-        content_type="application/atom+xml;type=entry",
         data=atom_content,
         HTTP_X_CHECK_SWHID=complete_deposit.swhid,
     )
@@ -530,9 +510,9 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
 
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         update_uri,
-        content_type="application/atom+xml;type=entry",
         # no title, nor author, nor name fields
         data=atom_dataset["entry-data-fail-metadata-functional-checks"],
         HTTP_X_CHECK_SWHID=complete_deposit.swhid,
@@ -560,9 +540,9 @@ def test_put_atom_with_create_origin_and_external_identifier(
     origin_url = deposit_user.provider_url + external_id
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         url,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
@@ -578,11 +558,10 @@ def test_put_atom_with_create_origin_and_external_identifier(
         assert False, response_content
 
     # when
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         edit_iri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["error-with-external-identifier"] % external_id,
-        # + headers
         HTTP_IN_PROGRESS="false",
     )
 
@@ -600,9 +579,9 @@ def test_put_atom_with_create_origin_and_reference(
     origin_url = deposit_user.provider_url + external_id
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         url,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
@@ -618,11 +597,10 @@ def test_put_atom_with_create_origin_and_reference(
         assert False, response_content
 
     # when
-    response = authenticated_client.put(
+    response = put_atom(
+        authenticated_client,
         edit_iri,
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data-with-origin-reference"].format(url=origin_url),
-        # + headers
         HTTP_IN_PROGRESS="false",
     )
 

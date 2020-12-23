@@ -33,7 +33,11 @@ from swh.deposit.config import (
     setup_django_for,
 )
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import create_arborescence_archive, post_archive
+from swh.deposit.tests.common import (
+    create_arborescence_archive,
+    post_archive,
+    post_atom,
+)
 from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 from swh.scheduler import get_scheduler
 
@@ -344,9 +348,9 @@ def create_binary_deposit(
 
     origin_url = deposit.client.provider_url + deposit.external_id
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(SE_IRI, args=[collection_name, deposit.id]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
@@ -420,9 +424,9 @@ def partial_deposit_only_metadata(
     deposit_collection, authenticated_client, atom_dataset
 ):
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG="external-id-partial",
         HTTP_IN_PROGRESS=True,

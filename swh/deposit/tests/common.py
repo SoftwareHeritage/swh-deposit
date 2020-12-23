@@ -163,3 +163,15 @@ def post_archive(authenticated_client, *args, **kwargs):
 
 def put_archive(authenticated_client, *args, **kwargs):
     return _post_or_put_archive(authenticated_client.put, *args, **kwargs)
+
+
+def post_atom(authenticated_client, url, data, **kwargs):
+    return authenticated_client.post(
+        url, content_type="application/atom+xml;type=entry", data=data, **kwargs
+    )
+
+
+def put_atom(authenticated_client, url, data, **kwargs):
+    return authenticated_client.put(
+        url, content_type="application/atom+xml;type=entry", data=data, **kwargs
+    )

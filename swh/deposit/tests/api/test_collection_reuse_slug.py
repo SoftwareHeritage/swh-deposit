@@ -17,6 +17,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.common import post_atom
 
 from ..conftest import create_deposit
 
@@ -26,9 +27,9 @@ def test_act_on_deposit_rejected_is_not_permitted(
 ):
     deposit = rejected_deposit
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(SE_IRI, args=[deposit.collection.name, deposit.id]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG=deposit.external_id,
     )
@@ -55,9 +56,9 @@ def test_add_deposit_when_partial_makes_new_deposit(
     origin_url = deposit_user.provider_url + deposit.external_id
 
     # adding a new deposit with the same external id
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
@@ -86,9 +87,9 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
@@ -122,9 +123,9 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
 
     # adding a new deposit with the same external id as a completed deposit
     # creates the parenting chain
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
@@ -169,9 +170,9 @@ def test_add_deposit_external_id_conflict_no_parent(
     )
 
     # adding a new deposit with the same external id as a completed deposit
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=external_id,
     )
@@ -219,9 +220,9 @@ def test_add_deposit_external_id_conflict_with_parent(
     )
 
     # adding a new deposit with the same external id as a completed deposit
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_SLUG=deposit.external_id,
     )
