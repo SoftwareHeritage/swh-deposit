@@ -43,32 +43,32 @@ swh namespace:
 
   <?xml version="1.0"?>
   <entry xmlns="http://www.w3.org/2005/Atom"
-           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
-      <author>
-        <name>HAL</name>
-        <email>hal@ccsd.cnrs.fr</email>
-      </author>
-      <codemeta:name>The assignment problem</codemeta:name>
-      <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
-      <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
-      <codemeta:applicationCategory>Domain</codemeta:applicationCategory>
-      <codemeta:description>description</codemeta:description>
-      <codemeta:author>
-        <codemeta:name> author1 </codemeta:name>
-        <codemeta:affiliation> Inria </codemeta:affiliation>
-        <codemeta:affiliation> UPMC </codemeta:affiliation>
-      </codemeta:author>
-      <codemeta:author>
-        <codemeta:name> author2 </codemeta:name>
-        <codemeta:affiliation> Inria </codemeta:affiliation>
-        <codemeta:affiliation> UPMC </codemeta:affiliation>
-      </codemeta:author>
-      <swh:deposit>
-        <swh:reference>
-          <swh:origin url='https://github.com/user/repo'/>
-        </swh:reference>
-      </swh:deposit>
+         xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+         xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+    <author>
+      <name>HAL</name>
+      <email>hal@ccsd.cnrs.fr</email>
+    </author>
+    <codemeta:name>The assignment problem</codemeta:name>
+    <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
+    <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
+    <codemeta:applicationCategory>Domain</codemeta:applicationCategory>
+    <codemeta:description>description</codemeta:description>
+    <codemeta:author>
+      <codemeta:name>Author1</codemeta:name>
+      <codemeta:affiliation>Inria</codemeta:affiliation>
+      <codemeta:affiliation>UPMC</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+      <codemeta:name>Author2</codemeta:name>
+      <codemeta:affiliation>Inria</codemeta:affiliation>
+      <codemeta:affiliation>UPMC</codemeta:affiliation>
+    </codemeta:author>
+    <swh:deposit>
+      <swh:reference>
+        <swh:origin url='https://github.com/user/repo'/>
+      </swh:reference>
+    </swh:deposit>
   </entry>
 
 References
