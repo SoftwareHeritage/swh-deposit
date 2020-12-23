@@ -144,3 +144,22 @@ def check_archive(archive_name: str, archive_name_to_check: str):
     else:
         pattern = re.compile(".*/%s" % archive_name)
     assert pattern.match(archive_name_to_check) is not None
+
+
+def _post_or_put_archive(f, url, archive, slug=None, in_progress=None, **kwargs):
+    default_kwargs = dict(
+        content_type="application/zip",
+        CONTENT_LENGTH=archive["length"],
+        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (archive["name"],),
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+    )
+    kwargs = {**default_kwargs, **kwargs}
+    return f(url, data=archive["data"], HTTP_CONTENT_MD5=archive["md5sum"], **kwargs,)
+
+
+def post_archive(authenticated_client, *args, **kwargs):
+    return _post_or_put_archive(authenticated_client.post, *args, **kwargs)
+
+
+def put_archive(authenticated_client, *args, **kwargs):
+    return _post_or_put_archive(authenticated_client.put, *args, **kwargs)

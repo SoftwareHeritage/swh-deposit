@@ -15,7 +15,11 @@ from rest_framework import status
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import check_archive, create_arborescence_archive
+from swh.deposit.tests.common import (
+    check_archive,
+    create_arborescence_archive,
+    post_archive,
+)
 
 
 def test_post_deposit_binary_no_slug(
@@ -30,16 +34,8 @@ def test_post_deposit_binary_no_slug(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
-    response = authenticated_client.post(
-        url,
-        content_type="application/zip",  # as zip
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
-        HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
+    response = post_archive(
+        authenticated_client, url, sample_archive, in_progress="false",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -66,15 +62,10 @@ def test_post_deposit_binary_support(
     # when
     response = authenticated_client.post(
         url,
-        content_type="application/octet-stream",
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        content_type="application/octet-stream",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -96,18 +87,12 @@ def test_post_deposit_binary_upload_ok(
     external_id = "some-external-id-1"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",  # as zip
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
-        # other headers needs HTTP_ prefix to be taken into account
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (sample_archive["name"],),
     )
 
     # then
@@ -158,16 +143,12 @@ def test_post_deposit_binary_failure_unsupported_packaging_header(
     external_id = "some-external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
         HTTP_PACKAGING="something-unsupported",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -193,16 +174,13 @@ def test_post_deposit_binary_upload_no_content_disposition_header(
     external_id = "some-external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
+        HTTP_CONTENT_DISPOSITION=None,
     )
 
     # then
@@ -225,18 +203,13 @@ def test_post_deposit_mediation_not_supported(
     external_id = "some-external-id-1"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
         HTTP_ON_BEHALF_OF="someone",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -262,17 +235,12 @@ def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
     external_id = "some-external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",
-        data=archive["data"],
-        # + headers
-        CONTENT_LENGTH=archive["length"],
+        archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -299,17 +267,13 @@ def test_post_deposit_binary_upload_fail_if_content_length_missing(
     external_id = "some-external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",
-        data=archive["data"],
-        # + headers
+        archive,
         CONTENT_LENGTH=None,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -329,17 +293,12 @@ def test_post_deposit_2_post_2_different_deposits(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",  # as zip
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG="some-external-id-1",
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
     )
 
     # then
@@ -355,17 +314,13 @@ def test_post_deposit_2_post_2_different_deposits(
     assert deposits[0] == deposit
 
     # second post
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/x-tar",  # as zip
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
+        content_type="application/x-tar",
         HTTP_SLUG="another-external-id",
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS="false",
-        HTTP_CONTENT_DISPOSITION="attachment; filename=filename1",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
