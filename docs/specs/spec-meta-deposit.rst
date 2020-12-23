@@ -1,15 +1,15 @@
 .. _spec-metadata-deposit:
 
-The metadata-deposit
-^^^^^^^^^^^^^^^^^^^^
+The metadata-only deposit
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Goal
 ====
 
-A client wishes to deposit only metadata about an origin or object already
+A client may wish to deposit only metadata about an origin or object already
 present in the Software Heritage archive.
 
-The metadata-deposit is a special deposit where no content is
+The metadata-only deposit is a special deposit where no content is
 provided and the data transferred to Software Heritage is only
 the metadata about an object in the archive.
 
@@ -17,7 +17,7 @@ Requirements
 ============
 
 1. Create a metadata-only deposit through a :ref:`POST request<API-create-deposit>`
-2. It is composed of ONLY one xml metadata file
+2. It is composed of ONLY one Atom XML document
 3. It MUST comply with :ref:`the metadata requirements<metadata-requirements>`
 4. It MUST reference an **object** or an **origin** in a deposit tag
 5. The reference SHOULD exist in the SWH archive
