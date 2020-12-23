@@ -4,10 +4,13 @@
 # See top-level LICENSE file for more information
 
 import hashlib
+from io import BytesIO
 import os
 import re
 import tarfile
 import tempfile
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from swh.core import tarball
 
@@ -175,3 +178,38 @@ def put_atom(authenticated_client, url, data, **kwargs):
     return authenticated_client.put(
         url, content_type="application/atom+xml;type=entry", data=data, **kwargs
     )
+
+
+def _post_or_put_multipart(f, url, archive, atom_entry, **kwargs):
+    archive = InMemoryUploadedFile(
+        BytesIO(archive["data"]),
+        field_name=archive["name"],
+        name=archive["name"],
+        content_type="application/x-tar",
+        size=archive["length"],
+        charset=None,
+    )
+
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(atom_entry),
+        charset="utf-8",
+    )
+
+    return f(
+        url,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+        **kwargs,
+    )
+
+
+def post_multipart(authenticated_client, *args, **kwargs):
+    return _post_or_put_multipart(authenticated_client.post, *args, **kwargs)
+
+
+def put_multipart(authenticated_client, *args, **kwargs):
+    return _post_or_put_multipart(authenticated_client.put, *args, **kwargs)

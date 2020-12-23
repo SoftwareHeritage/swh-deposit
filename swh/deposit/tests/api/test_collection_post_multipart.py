@@ -16,44 +16,29 @@ from rest_framework import status
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import check_archive
+from swh.deposit.tests.common import check_archive, post_multipart
 
 
 def test_post_deposit_multipart_without_slug_header(
-    authenticated_client, deposit_collection, atom_dataset, mocker, deposit_user
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    mocker,
+    deposit_user,
+    sample_archive,
 ):
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
-
+    data_atom_entry = atom_dataset["entry-data-deposit-binary"]
     id_ = str(uuid.uuid4())
     mocker.patch("uuid.uuid4", return_value=id_)
 
-    archive_content = b"some content representing archive"
-    archive = InMemoryUploadedFile(
-        BytesIO(archive_content),
-        field_name="archive0",
-        name="archive0",
-        content_type="application/zip",
-        size=len(archive_content),
-        charset=None,
-    )
-
-    data_atom_entry = atom_dataset["entry-data-deposit-binary"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        sample_archive,
+        data_atom_entry,
         HTTP_IN_PROGRESS="false",
     )
 
@@ -75,34 +60,15 @@ def test_post_deposit_multipart_zip(
     """
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
-
-    archive = InMemoryUploadedFile(
-        BytesIO(sample_archive["data"]),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/zip",
-        size=sample_archive["length"],
-        charset=None,
-    )
-
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
     external_id = "external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        sample_archive,
+        data_atom_entry,
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG=external_id,
     )
@@ -143,36 +109,15 @@ def test_post_deposit_multipart_tar(
     """
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
-
-    # from django.core.files import uploadedfile
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
-
-    archive = InMemoryUploadedFile(
-        BytesIO(sample_archive["data"]),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/x-tar",
-        size=sample_archive["length"],
-        charset=None,
-    )
-
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
     external_id = "external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        sample_archive,
+        data_atom_entry,
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG=external_id,
     )
@@ -214,35 +159,15 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     """
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
-
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
-
-    archive = InMemoryUploadedFile(
-        BytesIO(sample_archive["data"]),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/zip",
-        size=sample_archive["length"],
-        charset=None,
-    )
-
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
     external_id = "external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        sample_archive,
+        data_atom_entry,
         HTTP_IN_PROGRESS="true",
         HTTP_SLUG=external_id,
     )
@@ -379,33 +304,14 @@ def test_post_deposit_multipart_400_when_badly_formatted_xml(
 ):
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
-
-    archive_content = sample_archive["data"]
-    archive = InMemoryUploadedFile(
-        BytesIO(archive_content),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/zip",
-        size=len(archive_content),
-        charset=None,
-    )
-
     data_atom_entry_ko = atom_dataset["entry-data-ko"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry_ko.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry_ko),
-        charset="utf-8",
-    )
 
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        sample_archive,
+        data_atom_entry_ko,
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG="external-id",
     )
@@ -420,34 +326,20 @@ def test_post_deposit_multipart_if_upload_size_limit_exceeded(
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
-    data = sample_archive["data"] * 8
-    archive = InMemoryUploadedFile(
-        BytesIO(data),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/zip",
-        size=len(data),
-        charset=None,
-    )
-
+    archive = {
+        **sample_archive,
+        "data": sample_archive["data"] * 8,
+    }
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
 
     external_id = "external-id"
 
     # when
-    response = authenticated_client.post(
+    response = post_multipart(
+        authenticated_client,
         url,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
-        # + headers
+        archive,
+        data_atom_entry,
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG=external_id,
     )

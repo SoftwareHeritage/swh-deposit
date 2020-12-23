@@ -5,9 +5,6 @@
 
 """Tests updates on SE-IRI."""
 
-from io import BytesIO
-
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
@@ -18,7 +15,7 @@ from swh.deposit.config import (
     SE_IRI,
 )
 from swh.deposit.models import Deposit, DepositRequest
-from swh.deposit.tests.common import post_atom
+from swh.deposit.tests.common import post_atom, post_multipart, put_multipart
 
 
 def test_add_both_archive_and_metadata_to_deposit(
@@ -42,31 +39,12 @@ def test_add_both_archive_and_metadata_to_deposit(
     requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive0) == 1
 
-    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
-    archive = InMemoryUploadedFile(
-        BytesIO(sample_archive["data"]),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/x-tar",
-        size=sample_archive["length"],
-        charset=None,
-    )
-
     data_atom_entry = atom_dataset["entry-data1"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
-    update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
-    response = authenticated_client.post(
-        update_uri,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
+    response = post_multipart(
+        authenticated_client,
+        reverse(SE_IRI, args=[deposit_collection.name, deposit.id]),
+        sample_archive,
+        data_atom_entry,
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -137,30 +115,12 @@ def test_put_update_metadata_and_archive_deposit_partial_nominal(
     requests_archive0 = DepositRequest.objects.filter(deposit=deposit, type="archive")
     assert len(requests_archive0) == 1
 
-    archive = InMemoryUploadedFile(
-        BytesIO(sample_archive["data"]),
-        field_name=sample_archive["name"],
-        name=sample_archive["name"],
-        content_type="application/x-tar",
-        size=sample_archive["length"],
-        charset=None,
-    )
-
     data_atom_entry = atom_dataset["entry-data1"]
-    atom_entry = InMemoryUploadedFile(
-        BytesIO(data_atom_entry.encode("utf-8")),
-        field_name="atom0",
-        name="atom0",
-        content_type='application/atom+xml; charset="utf-8"',
-        size=len(data_atom_entry),
-        charset="utf-8",
-    )
-
-    update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
-    response = authenticated_client.put(
-        update_uri,
-        format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
+    response = put_multipart(
+        authenticated_client,
+        reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id]),
+        sample_archive,
+        data_atom_entry,
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
