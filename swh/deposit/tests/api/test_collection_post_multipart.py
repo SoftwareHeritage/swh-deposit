@@ -19,7 +19,41 @@ from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive, post_multipart
 
 
-def test_post_deposit_multipart_without_slug_header(
+def test_post_deposit_multipart(
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    mocker,
+    deposit_user,
+    sample_archive,
+):
+    # given
+    external_id = "foobar"
+    origin_url = deposit_user.provider_url + external_id
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+    data_atom_entry = atom_dataset["entry-data0"] % origin_url
+
+    # when
+    response = post_multipart(
+        authenticated_client,
+        url,
+        sample_archive,
+        data_atom_entry,
+        HTTP_IN_PROGRESS="false",
+    )
+
+    print(response.content.decode())
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == origin_url
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
+
+
+def test_post_deposit_multipart_without_origin_url(
     authenticated_client,
     deposit_collection,
     atom_dataset,

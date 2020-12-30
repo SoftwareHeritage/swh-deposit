@@ -582,6 +582,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
+        self._set_deposit_origin_from_metadata(deposit, metadata, headers)
+
         # actual storage of data
         self._deposit_put(
             deposit=deposit, in_progress=headers.in_progress,
