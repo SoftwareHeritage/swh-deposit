@@ -746,58 +746,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "If the body is empty, there is no metadata.",
             )
 
-        create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
-        add_to_origin = metadata.get("swh:deposit", {}).get("swh:add_to_origin")
-
-        if create_origin and add_to_origin:
-            raise DepositError(
-                BAD_REQUEST,
-                "<swh:create_origin> and <swh:add_to_origin> are mutually exclusive, "
-                "as they respectively create a new origin and add to an existing "
-                "origin.",
-            )
-
-        if create_origin:
-            origin_url = create_origin["swh:origin"]["@url"]
-            check_client_origin(deposit.client, origin_url)
-            deposit.origin_url = origin_url
-
-        if add_to_origin:
-            origin_url = add_to_origin["swh:origin"]["@url"]
-            check_client_origin(deposit.client, origin_url)
-            deposit.parent = (
-                Deposit.objects.filter(
-                    client=deposit.client,
-                    origin_url=origin_url,
-                    status=DEPOSIT_STATUS_LOAD_SUCCESS,
-                )
-                .order_by("-id")[0:1]
-                .get()
-            )
-
-        if "atom:external_identifier" in metadata:
-            # Deprecated tag.
-            # When clients stopped using it, this should raise an error
-            # unconditionally
-
-            if deposit.origin_url:
-                raise DepositError(
-                    BAD_REQUEST,
-                    "<external_identifier> is deprecated, you should only use "
-                    "<swh:create_origin> from now on.",
-                )
-
-            if deposit.parent:
-                raise DepositError(
-                    BAD_REQUEST, "<external_identifier> is deprecated.",
-                )
-
-            if headers.slug and metadata["atom:external_identifier"] != headers.slug:
-                raise DepositError(
-                    BAD_REQUEST,
-                    "The 'external_identifier' tag is deprecated, "
-                    "the Slug header should be used instead.",
-                )
+        self._set_deposit_origin_from_metadata(deposit, metadata, headers)
 
         # Determine if we are in the metadata-only deposit case
         try:
@@ -855,6 +804,60 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             status=deposit.status,
             archive=None,
         )
+
+    def _set_deposit_origin_from_metadata(self, deposit, metadata, headers):
+        create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
+        add_to_origin = metadata.get("swh:deposit", {}).get("swh:add_to_origin")
+
+        if create_origin and add_to_origin:
+            raise DepositError(
+                BAD_REQUEST,
+                "<swh:create_origin> and <swh:add_to_origin> are mutually exclusive, "
+                "as they respectively create a new origin and add to an existing "
+                "origin.",
+            )
+
+        if create_origin:
+            origin_url = create_origin["swh:origin"]["@url"]
+            check_client_origin(deposit.client, origin_url)
+            deposit.origin_url = origin_url
+
+        if add_to_origin:
+            origin_url = add_to_origin["swh:origin"]["@url"]
+            check_client_origin(deposit.client, origin_url)
+            deposit.parent = (
+                Deposit.objects.filter(
+                    client=deposit.client,
+                    origin_url=origin_url,
+                    status=DEPOSIT_STATUS_LOAD_SUCCESS,
+                )
+                .order_by("-id")[0:1]
+                .get()
+            )
+
+        if "atom:external_identifier" in metadata:
+            # Deprecated tag.
+            # When clients stopped using it, this should raise an error
+            # unconditionally
+
+            if deposit.origin_url:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "<external_identifier> is deprecated, you should only use "
+                    "<swh:create_origin> from now on.",
+                )
+
+            if deposit.parent:
+                raise DepositError(
+                    BAD_REQUEST, "<external_identifier> is deprecated.",
+                )
+
+            if headers.slug and metadata["atom:external_identifier"] != headers.slug:
+                raise DepositError(
+                    BAD_REQUEST,
+                    "The 'external_identifier' tag is deprecated, "
+                    "the Slug header should be used instead.",
+                )
 
     def _empty_post(
         self,
