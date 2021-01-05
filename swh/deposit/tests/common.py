@@ -4,10 +4,13 @@
 # See top-level LICENSE file for more information
 
 import hashlib
+from io import BytesIO
 import os
 import re
 import tarfile
 import tempfile
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from swh.core import tarball
 
@@ -144,3 +147,69 @@ def check_archive(archive_name: str, archive_name_to_check: str):
     else:
         pattern = re.compile(".*/%s" % archive_name)
     assert pattern.match(archive_name_to_check) is not None
+
+
+def _post_or_put_archive(f, url, archive, slug=None, in_progress=None, **kwargs):
+    default_kwargs = dict(
+        content_type="application/zip",
+        CONTENT_LENGTH=archive["length"],
+        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (archive["name"],),
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+    )
+    kwargs = {**default_kwargs, **kwargs}
+    return f(url, data=archive["data"], HTTP_CONTENT_MD5=archive["md5sum"], **kwargs,)
+
+
+def post_archive(authenticated_client, *args, **kwargs):
+    return _post_or_put_archive(authenticated_client.post, *args, **kwargs)
+
+
+def put_archive(authenticated_client, *args, **kwargs):
+    return _post_or_put_archive(authenticated_client.put, *args, **kwargs)
+
+
+def post_atom(authenticated_client, url, data, **kwargs):
+    return authenticated_client.post(
+        url, content_type="application/atom+xml;type=entry", data=data, **kwargs
+    )
+
+
+def put_atom(authenticated_client, url, data, **kwargs):
+    return authenticated_client.put(
+        url, content_type="application/atom+xml;type=entry", data=data, **kwargs
+    )
+
+
+def _post_or_put_multipart(f, url, archive, atom_entry, **kwargs):
+    archive = InMemoryUploadedFile(
+        BytesIO(archive["data"]),
+        field_name=archive["name"],
+        name=archive["name"],
+        content_type="application/x-tar",
+        size=archive["length"],
+        charset=None,
+    )
+
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(atom_entry.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type='application/atom+xml; charset="utf-8"',
+        size=len(atom_entry),
+        charset="utf-8",
+    )
+
+    return f(
+        url,
+        format="multipart",
+        data={"archive": archive, "atom_entry": atom_entry,},
+        **kwargs,
+    )
+
+
+def post_multipart(authenticated_client, *args, **kwargs):
+    return _post_or_put_multipart(authenticated_client.post, *args, **kwargs)
+
+
+def put_multipart(authenticated_client, *args, **kwargs):
+    return _post_or_put_multipart(authenticated_client.put, *args, **kwargs)

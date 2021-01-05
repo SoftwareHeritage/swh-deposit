@@ -124,13 +124,17 @@ This would be the case for example if the client initially posted a
 without metadata, or a split archive because the initial one exceeded
 the limit size imposed by swh repository deposit).
 
-.. note::
+The content of a deposit can only be updated while it is in the ``partial``
+state; this causes the content to be **replaced** (the old version is discarded).
 
-   It is currently only possible to update deposits in the ``partial`` state,
-   but we are planning to allow depositing metadata in the ``done`` state
-   as well.
-   In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
-   in the ``partial`` state, but only to ``deposited``.
+Its metadata, however, can also be updated while in the ``done`` state;
+which adds a new version of the metadata in the SWH archive,
+**in addition to** the old one(s).
+In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
+in the ``partial`` state, but only to ``deposited``.
+As a failsafe, to avoid accidentally updating the wrong deposit, this requires
+the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
+deposit's content (returned after the deposit finished loading).
 
 
 Schema representation

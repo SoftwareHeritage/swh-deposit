@@ -172,10 +172,11 @@ swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/conftest.py
 swh/deposit/tests/api/test_checks.py
 swh/deposit/tests/api/test_collection.py
+swh/deposit/tests/api/test_collection_add_to_origin.py
 swh/deposit/tests/api/test_collection_post_atom.py
 swh/deposit/tests/api/test_collection_post_binary.py
-swh/deposit/tests/api/test_collection_post_metadata.py
 swh/deposit/tests/api/test_collection_post_multipart.py
+swh/deposit/tests/api/test_collection_reuse_slug.py
 swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_delete.py
 swh/deposit/tests/api/test_deposit_list.py
@@ -186,6 +187,8 @@ swh/deposit/tests/api/test_deposit_private_update_status.py
 swh/deposit/tests/api/test_deposit_schedule.py
 swh/deposit/tests/api/test_deposit_state.py
 swh/deposit/tests/api/test_deposit_update.py
+swh/deposit/tests/api/test_deposit_update_atom.py
+swh/deposit/tests/api/test_deposit_update_binary.py
 swh/deposit/tests/api/test_exception.py
 swh/deposit/tests/api/test_get_file.py
 swh/deposit/tests/api/test_parsers.py
