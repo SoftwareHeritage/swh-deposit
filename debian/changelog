@@ -1,8 +1,17 @@
-swh-deposit (0.8.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.9.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.9.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-01-04 17:31:18
+    +0100)
+  * Upstream changes:     - v0.9.0     - Handle <swh:create_origin> /
+    <swh:add_to_origin> in multipart uploads     - Split
+    <swh:create_origin> / <swh:add_to_origin> handling to its own
+    function     - Catch invalid dates before marking a deposit as
+    verified     - tests: Reorganize and refactor boilerplate     -
+    docs: Rephrase introduction of the metadata-only deposit
+    documentation     - docs: Document metadata updates
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 18 Dec 2020 09:32:21 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 05 Jan 2021 08:06:42 +0000
 
 swh-deposit (0.8.0-1~swh1) unstable-swh; urgency=medium
 

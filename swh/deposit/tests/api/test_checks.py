@@ -24,6 +24,14 @@ from swh.deposit.api.checks import check_metadata
             "atom:author": "no one",
         },
         {"atom:url": "some url", "codemeta:name": "bar", "codemeta:author": "no one",},
+        {
+            "atom:url": "some url",
+            "atom:external_identifier": "some id",
+            "atom:title": "bar",
+            "atom:author": "no one",
+            "codemeta:datePublished": "2020-12-21",
+            "codemeta:dateCreated": "2020-12-21",
+        },
     ],
 )
 def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
@@ -93,14 +101,25 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
                 "fields": ["atom:author or codemeta:author"],
             },
         ),
+        (
+            {
+                "atom:url": "some url",
+                "atom:external_identifier": "some id",
+                "atom:title": "bar",
+                "atom:author": "no one",
+                "codemeta:datePublished": "2020-aa-21",
+                "codemeta:dateCreated": "2020-12-bb",
+            },
+            {
+                "summary": "Invalid date format",
+                "fields": ["codemeta:datePublished", "codemeta:dateCreated"],
+            },
+        ),
     ],
 )
 def test_api_checks_check_metadata_ko(
     metadata_ko, expected_summary, swh_checks_deposit
 ):
-    """Missing optional field should be caught
-
-    """
     actual_check, error_detail = check_metadata(metadata_ko)
     assert actual_check is False
     assert error_detail == {"metadata": [expected_summary]}
