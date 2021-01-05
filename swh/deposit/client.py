@@ -532,8 +532,11 @@ class UpdateMetadataOnPartialDepositClient(CreateMetadataDepositClient):
         return "put" if replace else "post"
 
 
-class UpdateMetadataOnDoneDepositClient(UpdateMetadataOnPartialDepositClient):
+class UpdateMetadataOnDoneDepositClient(CreateMetadataDepositClient):
     """Update metadata on "done" deposit. This requires the deposit swhid."""
+
+    def compute_url(self, collection, *args, deposit_id=None, **kwargs):
+        return f"/{collection}/{deposit_id}/atom/"
 
     def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
         return {
