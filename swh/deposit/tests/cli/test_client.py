@@ -695,8 +695,8 @@ def test_cli_metadata_only_deposit_invalid_swhid(
     with open(metadata_path, "w") as f:
         f.write(metadata)
 
-    # fmt: off
     with pytest.raises(ValidationError, match="Invalid"):
+        # fmt: off
         cli_runner.invoke(
             cli,
             [
@@ -725,6 +725,7 @@ def test_cli_metadata_only_deposit_no_swhid(
         f.write(metadata)
 
     with pytest.raises(InputError, match="SWHID must be provided"):
+        # fmt: off
         cli_runner.invoke(
             cli,
             [

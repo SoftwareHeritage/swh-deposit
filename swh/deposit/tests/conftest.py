@@ -33,7 +33,11 @@ from swh.deposit.config import (
     setup_django_for,
 )
 from swh.deposit.parsers import parse_xml
-from swh.deposit.tests.common import create_arborescence_archive
+from swh.deposit.tests.common import (
+    create_arborescence_archive,
+    post_archive,
+    post_atom,
+)
 from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 from swh.scheduler import get_scheduler
 
@@ -301,17 +305,12 @@ def create_deposit(
     """
     url = reverse(COL_IRI, args=[collection_name])
     # when
-    response = authenticated_client.post(
+    response = post_archive(
+        authenticated_client,
         url,
-        content_type="application/zip",  # as zip
-        data=sample_archive["data"],
-        # + headers
-        CONTENT_LENGTH=sample_archive["length"],
+        sample_archive,
         HTTP_SLUG=external_id,
-        HTTP_CONTENT_MD5=sample_archive["md5sum"],
-        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
         HTTP_IN_PROGRESS=str(in_progress).lower(),
-        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (sample_archive["name"]),
     )
 
     # then
@@ -349,9 +348,9 @@ def create_binary_deposit(
 
     origin_url = deposit.client.provider_url + deposit.external_id
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(SE_IRI, args=[collection_name, deposit.id]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data0"] % origin_url,
         HTTP_IN_PROGRESS="true",
     )
@@ -425,9 +424,9 @@ def partial_deposit_only_metadata(
     deposit_collection, authenticated_client, atom_dataset
 ):
 
-    response = authenticated_client.post(
+    response = post_atom(
+        authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
-        content_type="application/atom+xml;type=entry",
         data=atom_dataset["entry-data1"],
         HTTP_SLUG="external-id-partial",
         HTTP_IN_PROGRESS=True,

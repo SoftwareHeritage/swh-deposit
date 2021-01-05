@@ -1,15 +1,15 @@
 .. _spec-metadata-deposit:
 
-The metadata-deposit
-^^^^^^^^^^^^^^^^^^^^
+The metadata-only deposit
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Goal
 ====
 
-A client wishes to deposit only metadata about an origin or object already
+A client may wish to deposit only metadata about an origin or object already
 present in the Software Heritage archive.
 
-The metadata-deposit is a special deposit where no content is
+The metadata-only deposit is a special deposit where no content is
 provided and the data transferred to Software Heritage is only
 the metadata about an object in the archive.
 
@@ -17,7 +17,7 @@ Requirements
 ============
 
 1. Create a metadata-only deposit through a :ref:`POST request<API-create-deposit>`
-2. It is composed of ONLY one xml metadata file
+2. It is composed of ONLY one Atom XML document
 3. It MUST comply with :ref:`the metadata requirements<metadata-requirements>`
 4. It MUST reference an **object** or an **origin** in a deposit tag
 5. The reference SHOULD exist in the SWH archive
@@ -43,32 +43,32 @@ swh namespace:
 
   <?xml version="1.0"?>
   <entry xmlns="http://www.w3.org/2005/Atom"
-           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
-      <author>
-        <name>HAL</name>
-        <email>hal@ccsd.cnrs.fr</email>
-      </author>
-      <codemeta:name>The assignment problem</codemeta:name>
-      <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
-      <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
-      <codemeta:applicationCategory>Domain</codemeta:applicationCategory>
-      <codemeta:description>description</codemeta:description>
-      <codemeta:author>
-        <codemeta:name> author1 </codemeta:name>
-        <codemeta:affiliation> Inria </codemeta:affiliation>
-        <codemeta:affiliation> UPMC </codemeta:affiliation>
-      </codemeta:author>
-      <codemeta:author>
-        <codemeta:name> author2 </codemeta:name>
-        <codemeta:affiliation> Inria </codemeta:affiliation>
-        <codemeta:affiliation> UPMC </codemeta:affiliation>
-      </codemeta:author>
-      <swh:deposit>
-        <swh:reference>
-          <swh:origin url='https://github.com/user/repo'/>
-        </swh:reference>
-      </swh:deposit>
+         xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+         xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+    <author>
+      <name>HAL</name>
+      <email>hal@ccsd.cnrs.fr</email>
+    </author>
+    <codemeta:name>The assignment problem</codemeta:name>
+    <codemeta:url>https://hal.archives-ouvertes.fr/hal-01243573</codemeta:url>
+    <codemeta:identifier>other identifier, DOI, ARK</codemeta:identifier>
+    <codemeta:applicationCategory>Domain</codemeta:applicationCategory>
+    <codemeta:description>description</codemeta:description>
+    <codemeta:author>
+      <codemeta:name>Author1</codemeta:name>
+      <codemeta:affiliation>Inria</codemeta:affiliation>
+      <codemeta:affiliation>UPMC</codemeta:affiliation>
+    </codemeta:author>
+    <codemeta:author>
+      <codemeta:name>Author2</codemeta:name>
+      <codemeta:affiliation>Inria</codemeta:affiliation>
+      <codemeta:affiliation>UPMC</codemeta:affiliation>
+    </codemeta:author>
+    <swh:deposit>
+      <swh:reference>
+        <swh:origin url='https://github.com/user/repo'/>
+      </swh:reference>
+    </swh:deposit>
   </entry>
 
 References

@@ -13,14 +13,19 @@ Mandatory fields:
 
 from typing import Dict, Optional, Tuple
 
+import iso8601
+
+from swh.deposit.utils import normalize_date
+
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
+INVALID_DATE_FORMAT = "Invalid date format"
 
 
 def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
-    """Check metadata for mandatory field presence.
+    """Check metadata for mandatory field presence and date format.
 
     Args:
-        metadata: Metadata dictionary to check for mandatory fields
+        metadata: Metadata dictionary to check
 
     Returns:
         tuple (status, error_detail): True, None if metadata are
@@ -41,7 +46,29 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
 
     mandatory_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
 
-    if mandatory_result == []:
-        return True, None
-    detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
-    return False, {"metadata": detail}
+    if mandatory_result:
+        detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
+        return False, {"metadata": detail}
+
+    fields = []
+
+    commit_date = metadata.get("codemeta:datePublished")
+    author_date = metadata.get("codemeta:dateCreated")
+
+    if commit_date:
+        try:
+            normalize_date(commit_date)
+        except iso8601.iso8601.ParseError:
+            fields.append("codemeta:datePublished")
+
+    if author_date:
+        try:
+            normalize_date(author_date)
+        except iso8601.iso8601.ParseError:
+            fields.append("codemeta:dateCreated")
+
+    if fields:
+        detail = [{"summary": INVALID_DATE_FORMAT, "fields": fields}]
+        return False, {"metadata": detail}
+
+    return True, None
