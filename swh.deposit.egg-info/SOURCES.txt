@@ -35,6 +35,7 @@ bin/update-deposit-with-another-archive.sh
 bin/update-status.sh
 docs/.gitignore
 docs/Makefile
+docs/cli.rst
 docs/conf.py
 docs/dev-info.rst
 docs/index.rst
@@ -235,7 +236,7 @@ swh/deposit/tests/data/https_deposit.test.metadataonly/1_test
 swh/deposit/tests/data/https_deposit.test.status/1_servicedocument
 swh/deposit/tests/data/https_deposit.test.status/1_test_1033_status
 swh/deposit/tests/data/https_deposit.test.updateswhid/1_servicedocument
-swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_123_metadata
+swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_123_atom
 swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_123_status
 swh/deposit/tests/data/https_deposit.test.updateswhid/1_test_321_status
 swh/deposit/tests/loader/__init__.py
