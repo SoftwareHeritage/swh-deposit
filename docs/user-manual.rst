@@ -413,7 +413,7 @@ Update deposit
                         --archive updated-je-suis-gpl.tgz \
                         --replace
 
-* update a loaded deposit with a new version:
+* Update a loaded deposit with a new version (this creates a new deposit):
 
   - by using the external-id with the ``--slug`` argument, you will
     link the new deposit with its parent deposit:
@@ -422,8 +422,7 @@ Update deposit
 
   $ swh deposit upload --username name --password secret \
                        --archive je-suis-gpl-v2.tgz \
-                       --slug 'je-suis-gpl' \
-
+                       --slug 'je-suis-gpl'
 
 
 Check the deposit's status
