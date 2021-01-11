@@ -69,7 +69,11 @@ def _url(url: str) -> str:
 
 
 def generate_metadata(
-    deposit_client: str, name: str, external_id: Optional[str], authors: List[str]
+    deposit_client: str,
+    name: str,
+    authors: List[str],
+    external_id: Optional[str] = None,
+    create_origin: Optional[str] = None,
 ) -> str:
     """Generate sword compliant xml metadata with the minimum required metadata.
 
@@ -93,8 +97,8 @@ def generate_metadata(
     Args:
         deposit_client: Deposit client username,
         name: Software name
-        external_id: External identifier (slug) or generated one
         authors: List of author names
+        create_origin: Origin concerned by the deposit
 
     Returns:
         metadata xml string
@@ -118,6 +122,14 @@ def generate_metadata(
     }
     if external_id:
         document["atom:entry"]["codemeta:identifier"] = external_id
+
+    if create_origin:
+        document["atom:entry"][
+            "@xmlns:swh"
+        ] = "https://www.softwareheritage.org/schema/2018/deposit"
+        document["atom:entry"]["swh:create_origin"] = {
+            "swh:origin": {"@url": create_origin}
+        }
 
     logging.debug("Atom entry dict to generate as xml: %s", document)
     return xmltodict.unparse(document, pretty=True)
@@ -144,6 +156,7 @@ def client_command_parse_input(
     metadata: Optional[str],
     collection: Optional[str],
     slug: Optional[str],
+    create_origin: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -187,7 +200,7 @@ def client_command_parse_input(
             "username": username
             "metadata": the metadata file to deposit
             "collection": the user's collection under which to put the deposit
-            "slug": the slug or external id identifying the deposit to make
+            "create_origin": the origin concerned by the deposit
             "in_progress": if the deposit is partial or not
             "url": deposit's server main entry point
             "deposit_id": optional deposit identifier
@@ -198,7 +211,9 @@ def client_command_parse_input(
         if name and authors:
             metadata_path = os.path.join(temp_dir, "metadata.xml")
             logging.debug("Temporary file: %s", metadata_path)
-            metadata_xml = generate_metadata(username, name, slug, authors)
+            metadata_xml = generate_metadata(
+                username, name, authors, external_id=slug, create_origin=create_origin
+            )
             logging.debug("Metadata xml generated: %s", metadata_xml)
             with open(metadata_path, "w") as f:
                 f.write(metadata_xml)
@@ -224,10 +239,11 @@ def client_command_parse_input(
             # TODO: this is a multipart deposit, we might want to check that
             # metadata are deposited at some point
             pass
-    elif name or authors:
+    elif name or authors or create_origin:
         raise InputError(
-            "Using --metadata flag is incompatible with both "
-            "--author and --name (Those are used to generate one metadata file)."
+            "Using --metadata flag is incompatible with "
+            "--author and --name and --create-origin (those are used to generate one "
+            "metadata file)."
         )
 
     if not archive and not metadata:
@@ -325,8 +341,16 @@ def output_format_decorator(f):
 @click.option(
     "--slug",
     help=(
-        "(Optional) External system information identifier. "
+        "(Deprecated) (Optional) External system information identifier. "
         "If not provided, it will be generated"
+    ),
+)
+@click.option(
+    "--create-origin",
+    help=(
+        "(Optional) Origin url to attach information to. To be used alongside "
+        "--name and --author. This will be generated alongside the metadata to "
+        "provide to the deposit server."
     ),
 )
 @click.option(
@@ -372,6 +396,7 @@ def upload(
     metadata_deposit: bool,
     collection: Optional[str],
     slug: Optional[str],
+    create_origin: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -403,6 +428,20 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
             DeprecationWarning,
         )
 
+    if slug:
+        if create_origin and slug != create_origin:
+            raise InputError(
+                '"--slug" flag has been deprecated in favor of "--create-origin" flag. '
+                "You mentioned both with different values, please only "
+                'use "--create-origin".'
+            )
+
+        warnings.warn(
+            '"--slug" flag has been deprecated in favor of "--create-origin" flag. '
+            'Please, start using "--create-origin" instead of "--slug"',
+            DeprecationWarning,
+        )
+
     url = _url(url)
 
     client = PublicApiDepositClient(url=url, auth=(username, password))
@@ -416,6 +455,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 metadata,
                 collection,
                 slug,
+                create_origin,
                 partial,
                 deposit_id,
                 swhid,
@@ -429,7 +469,13 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
         if verbose:
             logger.info("Parsed configuration: %s", config)
 
-        keys = ["archive", "collection", "in_progress", "metadata", "slug"]
+        keys = [
+            "archive",
+            "collection",
+            "in_progress",
+            "metadata",
+            "slug",
+        ]
         if config["deposit_id"]:
             keys += ["deposit_id", "replace", "swhid"]
             data = client.deposit_update(**_subdict(config, keys))

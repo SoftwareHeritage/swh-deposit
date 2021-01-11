@@ -16,12 +16,7 @@ import yaml
 
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.cli import deposit as cli
-from swh.deposit.cli.client import (
-    InputError,
-    _collection,
-    _url,
-    generate_metadata,
-)
+from swh.deposit.cli.client import InputError, _collection, _url, generate_metadata
 from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
@@ -101,6 +96,37 @@ def test_cli_collection_ko_because_downtime():
         _collection(mock_client)
 
 
+def test_cli_upload_conflictual_flags(
+    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+):
+    """Post metadata-only deposit through cli with invalid swhid raises
+
+    """
+    api_url_basename = "deposit.test.metadataonly"
+    metadata = atom_dataset["entry-data-minimal"]
+    metadata_path = os.path.join(tmp_path, "entry-data-minimal.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata)
+
+    with pytest.raises(InputError, match="both with different values"):
+        # fmt: off
+        cli_runner.invoke(
+            cli,
+            [
+                "upload",
+                "--url", f"https://{api_url_basename}/1",
+                "--username", TEST_USER["username"],
+                "--password", TEST_USER["password"],
+                "--metadata", metadata_path,
+                "--slug", "some-slug",  # deprecated flag
+                "--create-origin", "some-other-slug",  # conflictual value, so raise
+                "--format", "json",
+            ],
+            catch_exceptions=False,
+        )
+        # fmt: on
+
+
 def test_cli_deposit_with_server_down_for_maintenance(
     sample_archive, caplog, client_mock_api_down, slug, patched_tmp_path, cli_runner
 ):
@@ -139,7 +165,11 @@ def test_cli_client_generate_metadata_ok(slug):
 
     """
     actual_metadata_xml = generate_metadata(
-        "deposit-client", "project-name", "external-id", authors=["some", "authors"]
+        "deposit-client",
+        "project-name",
+        authors=["some", "authors"],
+        external_id="external-id",
+        create_origin="origin-url",
     )
 
     actual_metadata = dict(parse_xml(actual_metadata_xml))
@@ -152,6 +182,33 @@ def test_cli_client_generate_metadata_ok(slug):
         OrderedDict([("codemeta:name", "some")]),
         OrderedDict([("codemeta:name", "authors")]),
     ]
+    assert actual_metadata["swh:create_origin"]["swh:origin"]["@url"] == "origin-url"
+
+    checks_ok, detail = check_metadata(actual_metadata)
+
+    assert checks_ok is True
+    assert detail is None
+
+
+def test_cli_client_generate_metadata_ok2(slug):
+    """Generated metadata is well formed and pass service side metadata checks
+
+    """
+    actual_metadata_xml = generate_metadata(
+        "deposit-client", "project-name", authors=["some", "authors"],
+    )
+
+    actual_metadata = dict(parse_xml(actual_metadata_xml))
+    assert actual_metadata["atom:author"] == "deposit-client"
+    assert actual_metadata["atom:title"] == "project-name"
+    assert actual_metadata["atom:updated"] is not None
+    assert actual_metadata["codemeta:name"] == "project-name"
+    assert actual_metadata["codemeta:author"] == [
+        OrderedDict([("codemeta:name", "some")]),
+        OrderedDict([("codemeta:name", "authors")]),
+    ]
+    assert actual_metadata.get("codemeta:identifier") is None
+    assert actual_metadata.get("swh:create_origin") is None
 
     checks_ok, detail = check_metadata(actual_metadata)
 
@@ -310,8 +367,9 @@ def test_cli_validation_metadata(
             logging.ERROR,
             (
                 "Problem during parsing options: "
-                "Using --metadata flag is incompatible with both "
-                "--author and --name (Those are used to generate one metadata file)."
+                "Using --metadata flag is incompatible with --author "
+                "and --name and --create-origin (those are used to generate "
+                "one metadata file)."
             ),
         )
         assert expected_error_log_record in caplog.record_tuples
