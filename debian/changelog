@@ -1,3 +1,16 @@
+swh-deposit (0.9.2-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.9.2     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-01-14 12:42:12
+    +0100)
+  * Upstream changes:     - v0.9.2     - Make <swh:add_to_origin> set
+    Deposit.origin_url + disable aggressive deprecation warning     -
+    test_collection_reuse_slug: Assert Deposit.origin_url is set.     -
+    cli: Drop dead code     - user-manual: Add deposit metadata update
+    scenario     - docs: Explicit the new deposit creation
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 14 Jan 2021 11:46:11 +0000
+
 swh-deposit (0.9.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.9.1     - (tagged by Antoine R. Dumont
