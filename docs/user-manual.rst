@@ -394,7 +394,22 @@ changed to ``deposited``:
 Update deposit
 --------------
 
-* replace deposit:
+* Update deposit metadata:
+
+  - only possible if the deposit status is ``done``, ``--deposit-id <id>`` and
+    ``--swhid <swhid>`` are provided
+
+  - by using the ``--metadata`` flag, a path to an xml file
+
+.. code:: console
+
+    $ swh deposit upload \
+      --username name --password secret \
+      --deposit-id 11 \
+      --swhid swh:1:dir:2ddb1f0122c57c8479c28ba2fc973d18508e6420 \
+      --metadata ../deposit-swh.update-metadata.xml
+
+* Replace deposit:
 
   - only possible if the deposit status is ``partial`` and
     ``--deposit-id <id>`` is provided
@@ -413,7 +428,7 @@ Update deposit
                         --archive updated-je-suis-gpl.tgz \
                         --replace
 
-* update a loaded deposit with a new version:
+* Update a loaded deposit with a new version (this creates a new deposit):
 
   - by using the external-id with the ``--slug`` argument, you will
     link the new deposit with its parent deposit:
@@ -422,8 +437,7 @@ Update deposit
 
   $ swh deposit upload --username name --password secret \
                        --archive je-suis-gpl-v2.tgz \
-                       --slug 'je-suis-gpl' \
-
+                       --slug 'je-suis-gpl'
 
 
 Check the deposit's status

@@ -21,13 +21,21 @@ from swh.deposit.cli.client import (
     _collection,
     _url,
     generate_metadata,
-    generate_slug,
 )
 from swh.deposit.client import MaintenanceError, PublicApiDepositClient
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
 
 from ..conftest import TEST_USER
+
+
+def generate_slug() -> str:
+    """Generate a slug (sample purposes).
+
+    """
+    import uuid
+
+    return str(uuid.uuid4())
 
 
 @pytest.fixture

@@ -51,6 +51,7 @@ def test_add_deposit_with_add_to_origin(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_add_to_origin_conflict(
@@ -133,7 +134,7 @@ def test_add_deposit_with_add_to_origin_and_external_identifier(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert b"&lt;external_identifier&gt; is deprecated." in response.content
+    assert b"&lt;external_identifier&gt; is deprecated" in response.content
 
 
 def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(

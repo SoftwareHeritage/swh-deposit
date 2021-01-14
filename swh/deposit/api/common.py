@@ -836,6 +836,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 .order_by("-id")[0:1]
                 .get()
             )
+            deposit.origin_url = origin_url
 
         if "atom:external_identifier" in metadata:
             # Deprecated tag.
@@ -846,12 +847,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 raise DepositError(
                     BAD_REQUEST,
                     "<external_identifier> is deprecated, you should only use "
-                    "<swh:create_origin> from now on.",
-                )
-
-            if deposit.parent:
-                raise DepositError(
-                    BAD_REQUEST, "<external_identifier> is deprecated.",
+                    "<swh:create_origin> and <swh:add_to_origin> from now on.",
                 )
 
             if headers.slug and metadata["atom:external_identifier"] != headers.slug:
