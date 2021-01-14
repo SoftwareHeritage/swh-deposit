@@ -72,6 +72,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert new_deposit != deposit
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
@@ -103,6 +104,7 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert new_deposit != deposit
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
@@ -142,6 +144,7 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_external_id_conflict_no_parent(
@@ -186,6 +189,7 @@ def test_add_deposit_external_id_conflict_no_parent(
     new_deposit = Deposit.objects.get(pk=deposit_id)
 
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_external_id_conflict_with_parent(
@@ -240,3 +244,4 @@ def test_add_deposit_external_id_conflict_with_parent(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
