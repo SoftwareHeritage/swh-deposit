@@ -212,6 +212,36 @@ def test_post_deposit_atom_no_origin_url_nor_slug_header(
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
 
+def test_post_deposit_atom_with_slug_and_external_identifier(
+    authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
+):
+    """Even though <external_identifier> is deprecated, it should still be
+    allowed when it matches the slug, so that we don't break existing clients
+
+    """
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    slug = str(uuid.uuid4())
+
+    # when
+    response = post_atom(
+        authenticated_client,
+        url,
+        data=atom_dataset["error-with-external-identifier"] % slug,
+        HTTP_IN_PROGRESS="false",
+        HTTP_SLUG=slug,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == deposit_collection
+    assert deposit.origin_url == deposit_user.provider_url + slug
+    assert deposit.status == DEPOSIT_STATUS_DEPOSITED
+
+
 def test_post_deposit_atom_with_mismatched_slug_and_external_identifier(
     authenticated_client, deposit_collection, atom_dataset
 ):

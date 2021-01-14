@@ -72,6 +72,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert new_deposit != deposit
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
@@ -103,6 +104,7 @@ def test_add_deposit_when_failed_makes_new_deposit_with_no_parent(
     new_deposit = Deposit.objects.get(pk=deposit_id)
     assert new_deposit != deposit
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
@@ -142,6 +144,47 @@ def test_add_deposit_when_done_makes_new_deposit_with_parent_old_one(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
+
+
+def test_add_deposit_with_external_identifier(
+    authenticated_client,
+    deposit_collection,
+    completed_deposit,
+    atom_dataset,
+    deposit_user,
+):
+    """Even though <external_identifier> is deprecated, it should still be
+    allowed when it matches the slug, so that we don't break existing clients
+
+    """
+    # given multiple deposit already loaded
+    deposit = completed_deposit
+    assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
+    origin_url = deposit_user.provider_url + deposit.external_id
+
+    # adding a new deposit with the same external id as a completed deposit
+    # creates the parenting chain
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=atom_dataset["error-with-external-identifier"] % deposit.external_id,
+        HTTP_SLUG=deposit.external_id,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(BytesIO(response.content))
+    deposit_id = response_content["swh:deposit_id"]
+
+    assert deposit_id != deposit.id
+
+    new_deposit = Deposit.objects.get(pk=deposit_id)
+    assert deposit.collection == new_deposit.collection
+    assert deposit.origin_url == origin_url
+
+    assert new_deposit != deposit
+    assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_external_id_conflict_no_parent(
@@ -186,6 +229,7 @@ def test_add_deposit_external_id_conflict_no_parent(
     new_deposit = Deposit.objects.get(pk=deposit_id)
 
     assert new_deposit.parent is None
+    assert new_deposit.origin_url == origin_url
 
 
 def test_add_deposit_external_id_conflict_with_parent(
@@ -240,3 +284,4 @@ def test_add_deposit_external_id_conflict_with_parent(
 
     assert new_deposit != deposit
     assert new_deposit.parent == deposit
+    assert new_deposit.origin_url == origin_url
