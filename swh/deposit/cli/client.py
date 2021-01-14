@@ -52,15 +52,6 @@ def trap_and_report_exceptions():
         sys.exit(1)
 
 
-def generate_slug() -> str:
-    """Generate a slug (sample purposes).
-
-    """
-    import uuid
-
-    return str(uuid.uuid4())
-
-
 def _url(url: str) -> str:
     """Force the /1 api version at the end of the url (avoiding confusing
        issues without it).
