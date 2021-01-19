@@ -853,8 +853,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             if headers.slug and metadata["atom:external_identifier"] != headers.slug:
                 raise DepositError(
                     BAD_REQUEST,
-                    "The 'external_identifier' tag is deprecated, "
-                    "the Slug header should be used instead.",
+                    "The <external_identifier> tag and Slug header are deprecated, "
+                    "<swh:create_origin> or <swh:add_to_origin> "
+                    "should be used instead.",
                 )
 
     def _empty_post(
