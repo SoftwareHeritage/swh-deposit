@@ -127,8 +127,8 @@ def generate_metadata(
         document["atom:entry"][
             "@xmlns:swh"
         ] = "https://www.softwareheritage.org/schema/2018/deposit"
-        document["atom:entry"]["swh:create_origin"] = {
-            "swh:origin": {"@url": create_origin}
+        document["atom:entry"]["swh:deposit"] = {
+            "swh:create_origin": {"swh:origin": {"@url": create_origin}}
         }
 
     logging.debug("Atom entry dict to generate as xml: %s", document)
@@ -250,6 +250,20 @@ def client_command_parse_input(
         raise InputError(
             "Please provide an actionable command. See --help for more information"
         )
+
+    if metadata:
+        from swh.deposit.utils import parse_xml
+
+        metadata_raw = open(metadata, "r").read()
+        metadata_dict = parse_xml(metadata_raw).get("swh:deposit", {})
+        if (
+            "swh:create_origin" not in metadata_dict
+            and "swh:add_to_origin" not in metadata_dict
+        ):
+            logger.warning(
+                "The metadata file provided should contain "
+                '"<swh:create_origin>" or "<swh:add_to_origin>" tag',
+            )
 
     if replace and not deposit_id:
         raise InputError("To update an existing deposit, you must provide its id")

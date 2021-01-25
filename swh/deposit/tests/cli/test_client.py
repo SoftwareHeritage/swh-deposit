@@ -182,7 +182,10 @@ def test_cli_client_generate_metadata_ok(slug):
         OrderedDict([("codemeta:name", "some")]),
         OrderedDict([("codemeta:name", "authors")]),
     ]
-    assert actual_metadata["swh:create_origin"]["swh:origin"]["@url"] == "origin-url"
+    assert (
+        actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
+        == "origin-url"
+    )
 
     checks_ok, detail = check_metadata(actual_metadata)
 
@@ -208,7 +211,7 @@ def test_cli_client_generate_metadata_ok2(slug):
         OrderedDict([("codemeta:name", "authors")]),
     ]
     assert actual_metadata.get("codemeta:identifier") is None
-    assert actual_metadata.get("swh:create_origin") is None
+    assert actual_metadata.get("swh:deposit") is None
 
     checks_ok, detail = check_metadata(actual_metadata)
 
@@ -216,8 +219,8 @@ def test_cli_client_generate_metadata_ok2(slug):
     assert detail is None
 
 
-def test_cli_single_minimal_deposit(
-    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner
+def test_cli_single_minimal_deposit_with_slug(
+    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner, caplog,
 ):
     """ This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
@@ -259,6 +262,72 @@ def test_cli_single_minimal_deposit(
         assert actual_metadata["codemeta:author"] == OrderedDict(
             [("codemeta:name", "Jane Doe")]
         )
+
+    count_warnings = 0
+    for (_, log_level, _) in caplog.record_tuples:
+        count_warnings += 1 if log_level == logging.WARNING else 0
+
+    assert (
+        count_warnings == 1
+    ), "We should have 1 warning as we are using slug instead of create_origin"
+
+
+def test_cli_single_minimal_deposit_with_create_origin(
+    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner, caplog,
+):
+    """ This ensure a single deposit upload through the cli is fine, cf.
+    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
+    """  # noqa
+
+    metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
+    origin = slug
+
+    # fmt: off
+    result = cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--name", "test-project",
+            "--archive", sample_archive["path"],
+            "--author", "Jane Doe",
+            "--create-origin", origin,
+            "--format", "json",
+        ],
+    )
+    # fmt: on
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output) == {
+        "deposit_id": "615",
+        "deposit_status": "partial",
+        "deposit_status_detail": None,
+        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+    }
+
+    with open(metadata_path) as fd:
+        actual_metadata = dict(parse_xml(fd.read()))
+        assert actual_metadata["atom:author"] == TEST_USER["username"]
+        assert actual_metadata["codemeta:name"] == "test-project"
+        assert actual_metadata["atom:title"] == "test-project"
+        assert actual_metadata["atom:updated"] is not None
+        assert (
+            actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
+            == origin
+        )
+        assert actual_metadata["codemeta:author"] == OrderedDict(
+            [("codemeta:name", "Jane Doe")]
+        )
+
+    count_warnings = 0
+    for (_, log_level, _) in caplog.record_tuples:
+        count_warnings += 1 if log_level == logging.WARNING else 0
+
+    assert (
+        count_warnings == 0
+    ), "We should have no warning as we are using create_origin"
 
 
 def test_cli_validation_metadata(
@@ -805,3 +874,44 @@ def test_cli_metadata_only_deposit_no_swhid(
             catch_exceptions=False,
         )
         # fmt: on
+
+
+@pytest.mark.parametrize(
+    "metadata_entry_key", ["entry-data-with-add-to-origin", "entry-only-create-origin"]
+)
+def test_cli_deposit_warning_missing_origin(
+    sample_archive,
+    metadata_entry_key,
+    tmp_path,
+    atom_dataset,
+    caplog,
+    cli_runner,
+    requests_mock_datadir,
+):
+    """Deposit cli should log warning when the provided metadata xml is missing origins
+
+    """
+    # For the next deposit, no warning should be logged as either <swh:create_origin> or
+    # <swh:origin_to_add> are provided
+
+    metadata_raw = atom_dataset[metadata_entry_key] % "some-url"
+    metadata_path = os.path.join(tmp_path, "metadata-with-origin-tag-to-deposit.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata_raw)
+
+    # fmt: off
+    cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+        ],
+    )
+    # fmt: on
+
+    for (_, log_level, _) in caplog.record_tuples:
+        # all messages are info or below messages so everything is fine
+        assert log_level < logging.WARNING
