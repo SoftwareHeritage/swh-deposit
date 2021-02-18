@@ -18,13 +18,14 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.authentication import BaseAuthentication, BasicAuthentication
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import Deposit
 from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
@@ -169,8 +170,13 @@ class AuthenticatedAPIView(APIView):
 
     """
 
-    authentication_classes: Sequence[Type[BaseAuthentication]] = (BasicAuthentication,)
-    permission_classes: Sequence[Type[BasePermission]] = (IsAuthenticated,)
+    authentication_classes: Sequence[Type[BaseAuthentication]] = (
+        KeycloakBasicAuthentication,
+    )
+    permission_classes: Sequence[Type[BasePermission]] = (
+        IsAuthenticated,
+        HasDepositPermission,
+    )
 
 
 class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):

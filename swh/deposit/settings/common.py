@@ -103,9 +103,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("swh.deposit.auth.KeycloakBasicAuthentication",),
     "EXCEPTION_HANDLER": "swh.deposit.exception.custom_exception_handler",
 }
 
@@ -113,3 +111,5 @@ FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.MemoryFileUploadHandler",
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
 ]
+
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache",}}

@@ -1,4 +1,4 @@
-# Copyright (C) 2020 The Software Heritage developers
+# Copyright (C) 2020-2021 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -43,7 +43,7 @@ def test_custom_exception_handler_default_behavior_maintained(mocker):
     fake_response = Response(
         exception=fake_exception, status=fake_exception.status_code
     )
-    mock_exception_handler = mocker.patch("swh.deposit.exception.exception_handler")
+    mock_exception_handler = mocker.patch("rest_framework.views.exception_handler")
     mock_exception_handler.return_value = fake_response
 
     response = custom_exception_handler(fake_exception, {})

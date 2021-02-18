@@ -1,4 +1,4 @@
-# Copyright (C) 2020  The Software Heritage developers
+# Copyright (C) 2020-2021 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -8,7 +8,6 @@ from typing import Dict, Optional
 from django.db.utils import OperationalError
 from django.http import HttpResponse
 from rest_framework.exceptions import APIException
-from rest_framework.views import exception_handler
 
 
 def custom_exception_handler(
@@ -17,6 +16,8 @@ def custom_exception_handler(
     """Custom deposit exception handler to ensure consistent xml output
 
     """
+    from rest_framework.views import exception_handler
+
     # drf's default exception handler first, to get the standard error response
     response = exception_handler(exc, context)
 
