@@ -283,29 +283,23 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
 
 
 @pytest.mark.parametrize(
-    "invalid_swhid,error_msg",
+    "invalid_swhid",
     [
-        ("swh:1:cnt:31b5c8cc985d190b5a7ef4878128ebfdc235", "Unexpected length"),
-        (
-            "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:rev:0175049fc45055a3824a1675ac06e3711619a55a",  # noqa
-            "visit qualifier should be a core SWHID with type",
-        ),
-        (
-            "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;anchor=swh:1:cnt:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
-            "anchor qualifier should be a core SWHID with type one of",
-        ),
-        (
-            "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:snp:b5f505b005435fa5c4fa4c279792bd7b17167c04",  # noqa
-            "anchor=swh:1:snp",
-        ),
+        # incorrect length
+        "swh:1:cnt:31b5c8cc985d190b5a7ef4878128ebfdc235"  # noqa
+        # visit qualifier should be a core SWHID with type,
+        "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:rev:0175049fc45055a3824a1675ac06e3711619a55a",  # noqa
+        # anchor qualifier should be a core SWHID with type one of
+        "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;anchor=swh:1:cnt:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
+        "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:snp:b5f505b005435fa5c4fa4c279792bd7b17167c04"  # noqa
     ],
 )
-def test_parse_swh_reference_invalid_swhid(invalid_swhid, error_msg, xml_with_swhid):
+def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
     """Unparsable swhid should raise
 
     """
     xml_invalid_swhid = xml_with_swhid.format(swhid=invalid_swhid)
     metadata = utils.parse_xml(xml_invalid_swhid)
 
-    with pytest.raises(ValidationError, match=error_msg):
+    with pytest.raises(ValidationError):
         utils.parse_swh_reference(metadata)

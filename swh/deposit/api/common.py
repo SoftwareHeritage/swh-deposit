@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -853,8 +853,9 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             if headers.slug and metadata["atom:external_identifier"] != headers.slug:
                 raise DepositError(
                     BAD_REQUEST,
-                    "The 'external_identifier' tag is deprecated, "
-                    "the Slug header should be used instead.",
+                    "The <external_identifier> tag and Slug header are deprecated, "
+                    "<swh:create_origin> or <swh:add_to_origin> "
+                    "should be used instead.",
                 )
 
     def _empty_post(
@@ -1014,7 +1015,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
         if content_type == "swh/generator":
             with content as path:
                 return FileResponse(
-                    open(path, "rb"), status=status, content_type="application/zip"
+                    open(path, "rb"), status=status, content_type="application/tar"
                 )
         if content_type == "application/json":
             return HttpResponse(
