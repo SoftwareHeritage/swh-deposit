@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -8,7 +8,7 @@
 from io import BytesIO
 import uuid
 
-from django.urls import reverse
+from django.urls import reverse_lazy as reverse
 import pytest
 from rest_framework import status
 
@@ -123,7 +123,9 @@ def test_post_deposit_binary_upload_ok(
     assert int(response_content["atom:deposit_id"]) == deposit.id
     assert response_content["atom:deposit_status"] == deposit.status
 
-    edit_iri = reverse("edit_iri", args=[deposit_collection.name, deposit.id])
+    from django.urls import reverse as reverse_strict
+
+    edit_iri = reverse_strict("edit_iri", args=[deposit_collection.name, deposit.id])
 
     assert response._headers["location"] == (
         "Location",
