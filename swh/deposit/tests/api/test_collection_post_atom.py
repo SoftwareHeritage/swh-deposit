@@ -261,7 +261,10 @@ def test_post_deposit_atom_with_mismatched_slug_and_external_identifier(
         HTTP_SLUG="something",
     )
 
-    assert b"The &#39;external_identifier&#39; tag is deprecated" in response.content
+    assert (
+        b"The &lt;external_identifier&gt; tag and Slug header are deprecated"
+        in response.content
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 

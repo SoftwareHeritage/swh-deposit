@@ -7,8 +7,11 @@
 
 """
 
+from typing import Sequence, Union
+
 from django.conf.urls import include, url
 from django.shortcuts import render
+from django.urls import URLPattern, URLResolver
 from django.views.generic.base import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -21,11 +24,12 @@ def default_view(req):
     return render(req, "homepage.html")
 
 
-urlpatterns = [
-    url(r"^favicon\.ico$", favicon_view),
-    url(r"^1/", include("swh.deposit.api.urls")),
-    url(r"^1/private/", include("swh.deposit.api.private.urls")),
-    url(r"^$", default_view, name="home"),
-]
-
-urlpatterns = format_suffix_patterns(urlpatterns)  # type: ignore
+urlpatterns: Sequence[Union[URLPattern, URLResolver]]
+urlpatterns = format_suffix_patterns(
+    [
+        url(r"^favicon\.ico$", favicon_view),
+        url(r"^1/", include("swh.deposit.api.urls")),
+        url(r"^1/private/", include("swh.deposit.api.private.urls")),
+        url(r"^$", default_view, name="home"),
+    ]
+)
