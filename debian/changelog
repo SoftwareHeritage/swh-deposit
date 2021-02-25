@@ -1,3 +1,17 @@
+swh-deposit (0.10.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.10.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-02-25 15:52:55
+    +0100)
+  * Upstream changes:     - v0.10.0     - Aggregate deposit archives
+    into a temporary tarball instead of a zip     - Fix swh.deposit.urls
+    typing     - deposit.cli: Warn users when missing origin tags are
+    detected     - Stop recommending the Slug header as the alternative
+    to <external_identifier>.     - deposit.client.cli: Expose --create-
+    origin flag and deprecate --slug     - test: Fix failing test
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 25 Feb 2021 14:58:13 +0000
+
 swh-deposit (0.9.2-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.9.2     - (tagged by Antoine R. Dumont
