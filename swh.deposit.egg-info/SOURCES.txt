@@ -198,6 +198,7 @@ swh/deposit/tests/cli/__init__.py
 swh/deposit/tests/cli/conftest.py
 swh/deposit/tests/cli/test_admin.py
 swh/deposit/tests/cli/test_client.py
+swh/deposit/tests/data/archives/single-artifact-package.tar.gz
 swh/deposit/tests/data/atom/codemeta-sample.xml
 swh/deposit/tests/data/atom/entry-data-badly-formatted.xml
 swh/deposit/tests/data/atom/entry-data-deposit-binary.xml
