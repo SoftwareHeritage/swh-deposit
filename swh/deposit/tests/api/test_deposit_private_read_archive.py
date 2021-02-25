@@ -6,7 +6,7 @@
 from os.path import exists, join
 import tarfile
 
-from django.urls import reverse
+from django.urls import reverse_lazy as reverse
 from rest_framework import status
 
 from swh.deposit.api.private.deposit_read import aggregate_tarballs
