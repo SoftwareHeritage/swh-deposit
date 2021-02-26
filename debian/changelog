@@ -1,3 +1,13 @@
+swh-deposit (0.10.2-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.10.2     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-02-26 12:08:20
+    +0100)
+  * Upstream changes:     - v0.10.2     - deposit.urls: Retro-
+    compatibility fix about import and type conflict
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 26 Feb 2021 11:14:00 +0000
+
 swh-deposit (0.10.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.10.1     - (tagged by Antoine R. Dumont
