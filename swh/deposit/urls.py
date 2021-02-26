@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,14 +6,23 @@
 """SWH's main deposit URL Configuration
 
 """
+from __future__ import annotations
 
 from typing import Sequence, Union
 
 from django.conf.urls import include, url
 from django.shortcuts import render
-from django.urls import URLPattern, URLResolver
 from django.views.generic.base import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns
+
+try:
+    from django.urls import URLPattern, URLResolver
+except ImportError:
+    # retro-compatibility workaround, django 1.11.29 [1] does not expose the previous
+    # module, so we fallback to no typing for such version.
+    # [1] django debian stable version: 1:1.11.29-1~deb10u1
+    pass
+
 
 favicon_view = RedirectView.as_view(
     url="/static/img/icons/swh-logo-32x32.png", permanent=True
