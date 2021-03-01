@@ -15,7 +15,7 @@ from django.db import migrations
 from swh.core import config
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
-from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, parse_swhid, swhid
+from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.storage import get_storage as get_storage_client
 from swh.storage.algos.snapshot import snapshot_id_get_from_revision
 
@@ -68,7 +68,7 @@ def get_storage() -> Optional[Any]:
     return swh_storage
 
 
-def migrate_deposit_swhid_context_not_null(apps, schema_editor):
+def migrate_deposit_swhid_context_not_null(apps, schema_editor) -> None:
     """Migrate deposit SWHIDs to the new format.
 
     Migrate deposit SWHIDs to the new format. Only deposit with status done and
@@ -84,13 +84,13 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=False
     ):
-        obj_dir = parse_swhid(deposit.swh_id_context)
-        assert obj_dir.object_type == DIRECTORY
+        obj_dir = QualifiedSWHID.from_string(deposit.swh_id_context)
+        assert obj_dir.object_type == ObjectType.DIRECTORY
 
-        obj_rev = parse_swhid(deposit.swh_anchor_id)
-        assert obj_rev.object_type == REVISION
+        obj_rev = CoreSWHID.from_string(deposit.swh_anchor_id)
+        assert obj_rev.object_type == ObjectType.REVISION
 
-        if set(obj_dir.metadata.keys()) != {"origin"}:
+        if set(obj_dir.qualifiers()) != {"origin"}:
             # Assuming the migration is already done for that deposit
             logger.warning(
                 "Deposit id %s: Migration already done, skipping", deposit.id
@@ -100,7 +100,9 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         # Starting migration
 
         dir_id = obj_dir.object_id
-        origin = obj_dir.metadata["origin"]
+        origin = obj_dir.origin
+
+        assert origin
 
         check_origin = storage.origin_get([origin])[0]
         if not check_origin:
@@ -125,15 +127,15 @@ def migrate_deposit_swhid_context_not_null(apps, schema_editor):
         old_swh_anchor_id_context = deposit.swh_anchor_id_context
 
         # Update
-        deposit.swh_id_context = swhid(
-            DIRECTORY,
-            dir_id,
-            metadata={
-                "origin": origin,
-                "visit": swhid(SNAPSHOT, snp_id.hex()),
-                "anchor": swhid(REVISION, rev_id),
-                "path": "/",
-            },
+        deposit.swh_id_context = QualifiedSWHID(
+            object_type=ObjectType.DIRECTORY,
+            object_id=dir_id,
+            origin=origin,
+            visit=CoreSWHID(object_type=ObjectType.SNAPSHOT, object_id=snp_id),
+            anchor=CoreSWHID(
+                object_type=ObjectType.REVISION, object_id=hash_to_bytes(rev_id)
+            ),
+            path=b"/",
         )
 
         # Ensure only deposit.swh_id_context changed
@@ -211,7 +213,7 @@ def resolve_origin(deposit_id: int, provider_url: str, external_id: str) -> str:
     return map_origin.get(key, f"{provider_url.rstrip('/')}/{external_id}")
 
 
-def migrate_deposit_swhid_context_null(apps, schema_editor):
+def migrate_deposit_swhid_context_null(apps, schema_editor) -> None:
     """Migrate deposit SWHIDs to the new format.
 
     Migrate deposit whose swh_id_context is not set (initial deposits not migrated at
@@ -229,8 +231,8 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
     for deposit in Deposit.objects.filter(
         status=DEPOSIT_STATUS_LOAD_SUCCESS, swh_id_context__isnull=True
     ):
-        obj_rev = parse_swhid(deposit.swh_id)
-        if obj_rev.object_type == DIRECTORY:
+        obj_rev = CoreSWHID.from_string(deposit.swh_id)
+        if obj_rev.object_type == ObjectType.DIRECTORY:
             # Assuming the migration is already done for that deposit
             logger.warning(
                 "Deposit id %s: Migration already done, skipping", deposit.id
@@ -238,7 +240,7 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
             continue
 
         # Ensuring Migration not done
-        assert obj_rev.object_type == REVISION
+        assert obj_rev.object_type == ObjectType.REVISION
 
         assert deposit.swh_id is not None
         assert deposit.swh_id_context is None
@@ -280,21 +282,25 @@ def migrate_deposit_swhid_context_null(apps, schema_editor):
             continue
 
         # New SWHIDs ids
-        deposit.swh_id = swhid(DIRECTORY, dir_id)
-        deposit.swh_id_context = swhid(
-            DIRECTORY,
-            dir_id,
-            metadata={
-                "origin": origin,
-                "visit": swhid(SNAPSHOT, snp_id.hex()),
-                "anchor": swhid(REVISION, rev_id),
-                "path": "/",
-            },
+        deposit.swh_id = CoreSWHID(
+            object_type=ObjectType.DIRECTORY, object_id=hash_to_bytes(dir_id)
+        )
+        deposit.swh_id_context = QualifiedSWHID(
+            object_type=ObjectType.DIRECTORY,
+            object_id=dir_id,
+            origin=origin,
+            visit=CoreSWHID(object_type=ObjectType.SNAPSHOT, object_id=snp_id),
+            anchor=CoreSWHID(object_type=ObjectType.REVISION, object_id=rev_id_bytes),
+            path=b"/",
         )
         # Realign the remaining deposit SWHIDs fields
-        deposit.swh_anchor_id = swhid(REVISION, rev_id)
-        deposit.swh_anchor_id_context = swhid(
-            REVISION, rev_id, metadata={"origin": origin,}
+        deposit.swh_anchor_id = str(
+            CoreSWHID(object_type=ObjectType.REVISION, object_id=rev_id_bytes)
+        )
+        deposit.swh_anchor_id_context = str(
+            QualifiedSWHID(
+                object_type=ObjectType.REVISION, object_id=rev_id_bytes, origin=origin
+            )
         )
 
         # Ensure only deposit.swh_id_context changed

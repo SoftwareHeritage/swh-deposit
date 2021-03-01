@@ -22,13 +22,13 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
-from swh.deposit.utils import compute_metadata_context
-from swh.model.identifiers import SWHID, parse_swhid
+from swh.deposit.utils import compute_metadata_context, extended_swhid_from_qualified
+from swh.model.identifiers import QualifiedSWHID
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
     MetadataFetcher,
-    MetadataTargetType,
+    Origin,
     RawExtrinsicMetadata,
 )
 from swh.storage.interface import PagedResult
@@ -452,63 +452,28 @@ def test_deposit_metadata_fails_functional_checks(
 
 
 @pytest.mark.parametrize(
-    "swhid,target_type",
+    "swhid",
     [
-        (
-            "swh:1:cnt:01b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.CONTENT,
-        ),
-        (
-            "swh:1:dir:11b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.DIRECTORY,
-        ),
-        (
-            "swh:1:rev:21b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.REVISION,
-        ),
-        (
-            "swh:1:rel:31b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.RELEASE,
-        ),
-        (
-            "swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.SNAPSHOT,
-        ),
-        (
-            "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
-            MetadataTargetType.CONTENT,
-        ),
-        (
-            "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;origin=https://inria.halpreprod.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:rev:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
-            MetadataTargetType.DIRECTORY,
-        ),
-        (
-            "swh:1:rev:71b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
-            MetadataTargetType.REVISION,
-        ),
-        (
-            "swh:1:rel:81b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
-            MetadataTargetType.RELEASE,
-        ),
-        (
-            "swh:1:snp:91b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
-            MetadataTargetType.SNAPSHOT,
-        ),
+        "swh:1:cnt:01b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:dir:11b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:rev:21b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:rel:31b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;origin=https://inria.halpreprod.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:rev:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
+        "swh:1:rev:71b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:rel:81b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:snp:91b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
     ],
 )
 def test_deposit_metadata_swhid(
-    swhid,
-    target_type,
-    authenticated_client,
-    deposit_collection,
-    atom_dataset,
-    swh_storage,
+    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
 ):
     """Posting a swhid reference is stored on raw extrinsic metadata storage
 
     """
-    swhid_reference = parse_swhid(swhid)
-    swhid_core = attr.evolve(swhid_reference, metadata={})
+    swhid_reference = QualifiedSWHID.from_string(swhid)
+    swhid_target = extended_swhid_from_qualified(swhid_reference)
 
     xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
     deposit_client = authenticated_client.deposit_client
@@ -525,8 +490,7 @@ def test_deposit_metadata_swhid(
     # Ensure the deposit is finalized
     deposit_id = int(response_content["swh:deposit_id"])
     deposit = Deposit.objects.get(pk=deposit_id)
-    assert isinstance(swhid_core, SWHID)
-    assert deposit.swhid == str(swhid_core)
+    assert deposit.swhid == str(swhid_target)
     assert deposit.swhid_context == str(swhid_reference)
     assert deposit.complete_date == deposit.reception_date
     assert deposit.complete_date is not None
@@ -557,19 +521,18 @@ def test_deposit_metadata_swhid(
     assert actual_fetcher == metadata_fetcher
 
     page_results = swh_storage.raw_extrinsic_metadata_get(
-        target_type, swhid_core, metadata_authority
+        swhid_target, metadata_authority
     )
     discovery_date = page_results.results[0].discovery_date
 
     assert len(page_results.results) == 1
     assert page_results.next_page_token is None
 
-    object_type, metadata_context = compute_metadata_context(swhid_reference)
+    metadata_context = compute_metadata_context(swhid_reference)
     assert page_results == PagedResult(
         results=[
             RawExtrinsicMetadata(
-                type=object_type,
-                target=swhid_core,
+                target=swhid_target,
                 discovery_date=discovery_date,
                 authority=attr.evolve(metadata_authority, metadata=None),
                 fetcher=attr.evolve(metadata_fetcher, metadata=None),
@@ -593,6 +556,7 @@ def test_deposit_metadata_origin(
 
     """
     xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
+    origin_swhid = Origin(url).swhid()
     deposit_client = authenticated_client.deposit_client
     response = post_atom(
         authenticated_client,
@@ -637,7 +601,7 @@ def test_deposit_metadata_origin(
     assert actual_fetcher == metadata_fetcher
 
     page_results = swh_storage.raw_extrinsic_metadata_get(
-        MetadataTargetType.ORIGIN, url, metadata_authority
+        origin_swhid, metadata_authority
     )
     discovery_date = page_results.results[0].discovery_date
 
@@ -647,8 +611,7 @@ def test_deposit_metadata_origin(
     assert page_results == PagedResult(
         results=[
             RawExtrinsicMetadata(
-                type=MetadataTargetType.ORIGIN,
-                target=url,
+                target=origin_swhid,
                 discovery_date=discovery_date,
                 authority=attr.evolve(metadata_authority, metadata=None),
                 fetcher=attr.evolve(metadata_fetcher, metadata=None),
