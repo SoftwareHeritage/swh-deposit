@@ -16,7 +16,6 @@ from swh.deposit.config import (
     PRIVATE_PUT_DEPOSIT,
 )
 from swh.deposit.models import Deposit
-from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
 
 PRIVATE_PUT_DEPOSIT_NC = PRIVATE_PUT_DEPOSIT + "-nc"
 
@@ -50,13 +49,13 @@ def test_update_deposit_status_success_with_info(
         "origin_url": origin_url,
     }
     for url in private_check_url_endpoints(deposit_collection, deposit):
-        dir_id = swhid(DIRECTORY, directory_id)
-        rev_id = swhid(REVISION, revision_id)
-        snp_id = swhid(SNAPSHOT, snapshot_id)
-
         expected_swhid = "swh:1:dir:%s" % directory_id
         expected_swhid_context = (
-            f"{dir_id};origin={origin_url};" + f"visit={snp_id};anchor={rev_id};path=/"
+            f"{expected_swhid}"
+            f";origin={origin_url}"
+            f";visit=swh:1:snp:{snapshot_id}"
+            f";anchor=swh:1:rev:{revision_id}"
+            f";path=/"
         )
 
         response = authenticated_client.put(

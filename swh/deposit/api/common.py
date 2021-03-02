@@ -27,11 +27,12 @@ from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.models import Deposit
 from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
-from swh.model.identifiers import SWHID, ValidationError
+from swh.model.identifiers import ExtendedSWHID, QualifiedSWHID, ValidationError
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
     MetadataFetcher,
+    Origin,
     RawExtrinsicMetadata,
 )
 from swh.scheduler.utils import create_oneshot_task_dict
@@ -67,7 +68,7 @@ from ..errors import (
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_xml
-from ..utils import parse_swh_reference
+from ..utils import extended_swhid_from_qualified, parse_swh_reference
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -608,11 +609,11 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
     def _store_metadata_deposit(
         self,
         deposit: Deposit,
-        swhid_reference: Union[str, SWHID],
+        swhid_reference: Union[str, QualifiedSWHID],
         metadata: Dict,
         raw_metadata: bytes,
         deposit_origin: Optional[str] = None,
-    ) -> Tuple[Union[SWHID, str], Union[SWHID, str], Deposit, DepositRequest]:
+    ) -> Tuple[ExtendedSWHID, Deposit, DepositRequest]:
         """When all user inputs pass the checks, this associates the raw_metadata to the
            swhid_reference in the raw extrinsic metadata storage. In case of any issues,
            a bad request response is returned to the user with the details.
@@ -636,7 +637,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             (e.g. functionally invalid metadata, ...)
 
         Returns:
-            Tuple of core swhid, swhid context, deposit and deposit request
+            Tuple of target swhid, deposit, and deposit request
 
         """
         metadata_ok, error_details = check_metadata(metadata)
@@ -669,20 +670,20 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         # actually add the metadata to the completed deposit
         deposit_request = self._deposit_request_put(deposit, deposit_request_data)
 
-        object_type, metadata_context = compute_metadata_context(swhid_reference)
-        if deposit_origin:  # metadata deposit update on completed deposit
-            metadata_context["origin"] = deposit_origin
-
-        swhid_core: Union[str, SWHID]
+        target_swhid: ExtendedSWHID  # origin URL or CoreSWHID
         if isinstance(swhid_reference, str):
-            swhid_core = swhid_reference
+            target_swhid = Origin(swhid_reference).swhid()
+            metadata_context = {}
         else:
-            swhid_core = attr.evolve(swhid_reference, metadata={})
+            metadata_context = compute_metadata_context(swhid_reference)
+            if deposit_origin:  # metadata deposit update on completed deposit
+                metadata_context["origin"] = deposit_origin
+
+            target_swhid = extended_swhid_from_qualified(swhid_reference)
 
         # store that metadata to the metadata storage
         metadata_object = RawExtrinsicMetadata(
-            type=object_type,
-            target=swhid_core,  # core swhid or origin
+            target=target_swhid,  # core swhid or origin
             discovery_date=deposit_request.date,
             authority=metadata_authority,
             fetcher=metadata_fetcher,
@@ -696,7 +697,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         self.storage_metadata.metadata_fetcher_add([metadata_fetcher])
         self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
 
-        return (swhid_core, swhid_reference, deposit, deposit_request)
+        return (target_swhid, deposit, deposit_request)
 
     def _atom_entry(
         self,
@@ -752,13 +753,13 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         # Determine if we are in the metadata-only deposit case
         try:
-            swhid = parse_swh_reference(metadata)
+            swhid_ref = parse_swh_reference(metadata)
         except ValidationError as e:
             raise DepositError(
                 PARSING_ERROR, "Invalid SWHID reference", str(e),
             )
 
-        if swhid is not None and (
+        if swhid_ref is not None and (
             deposit.origin_url or deposit.parent or deposit.external_id
         ):
             raise DepositError(
@@ -768,15 +769,15 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
                 "code deposits, only one may be used on a given deposit.",
             )
 
-        if swhid is not None:
+        if swhid_ref is not None:
             deposit.save()  # We need a deposit id
-            swhid, swhid_ref, depo, depo_request = self._store_metadata_deposit(
-                deposit, swhid, metadata, raw_metadata
+            target_swhid, depo, depo_request = self._store_metadata_deposit(
+                deposit, swhid_ref, metadata, raw_metadata
             )
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
-            if isinstance(swhid_ref, SWHID):
-                deposit.swhid = str(swhid)
+            if isinstance(swhid_ref, QualifiedSWHID):
+                deposit.swhid = str(extended_swhid_from_qualified(swhid_ref))
                 deposit.swhid_context = str(swhid_ref)
             deposit.complete_date = depo_request.date
             deposit.reception_date = depo_request.date

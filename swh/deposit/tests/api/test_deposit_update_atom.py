@@ -23,12 +23,11 @@ from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom, put_atom
 from swh.model.hashutil import hash_to_bytes
-from swh.model.identifiers import parse_swhid, swhid
+from swh.model.identifiers import CoreSWHID, ExtendedSWHID, ObjectType
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
     MetadataFetcher,
-    MetadataTargetType,
     RawExtrinsicMetadata,
 )
 from swh.storage.interface import PagedResult
@@ -319,8 +318,8 @@ def test_put_update_metadata_done_deposit_nominal(
        Response: 204
 
     """
-    deposit_swhid = parse_swhid(complete_deposit.swhid)
-    assert deposit_swhid.object_type == "directory"
+    deposit_swhid = CoreSWHID.from_string(complete_deposit.swhid)
+    assert deposit_swhid.object_type == ObjectType.DIRECTORY
     directory_id = hash_to_bytes(deposit_swhid.object_id)
 
     # directory targeted by the complete_deposit does not exist in the storage
@@ -333,7 +332,7 @@ def test_put_update_metadata_done_deposit_nominal(
     assert list(swh_storage.directory_missing([existing_directory.id])) == []
 
     # and patch one complete deposit swhid so it targets said reference
-    complete_deposit.swhid = swhid("directory", existing_directory.id)
+    complete_deposit.swhid = str(existing_directory.swhid())
     complete_deposit.save()
 
     actual_existing_requests_archive = DepositRequest.objects.filter(
@@ -394,14 +393,13 @@ def test_put_update_metadata_done_deposit_nominal(
     )
     assert actual_fetcher == metadata_fetcher
 
-    directory_swhid = parse_swhid(complete_deposit.swhid)
+    directory_swhid = ExtendedSWHID.from_string(complete_deposit.swhid)
     page_results = swh_storage.raw_extrinsic_metadata_get(
-        MetadataTargetType.DIRECTORY, directory_swhid, metadata_authority
+        directory_swhid, metadata_authority
     )
     assert page_results == PagedResult(
         results=[
             RawExtrinsicMetadata(
-                type=MetadataTargetType.DIRECTORY,
                 target=directory_swhid,
                 discovery_date=request_meta1.date,
                 authority=attr.evolve(metadata_authority, metadata=None),

@@ -5,7 +5,8 @@
 
 from rest_framework.parsers import JSONParser
 
-from swh.model.identifiers import DIRECTORY, REVISION, SNAPSHOT, swhid
+from swh.model.hashutil import hash_to_bytes
+from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
 
 from . import APIPrivateView
 from ...errors import BAD_REQUEST, DepositError
@@ -85,21 +86,28 @@ class APIUpdateStatus(APIPrivateView, APIPut):
             origin_url = data["origin_url"]
             directory_id = data["directory_id"]
             revision_id = data["revision_id"]
-            dir_id = swhid(DIRECTORY, directory_id)
-            snp_id = swhid(SNAPSHOT, data["snapshot_id"])
-            rev_id = swhid(REVISION, revision_id)
+            dir_id = CoreSWHID(
+                object_type=ObjectType.DIRECTORY, object_id=hash_to_bytes(directory_id)
+            )
+            snp_id = CoreSWHID(
+                object_type=ObjectType.SNAPSHOT,
+                object_id=hash_to_bytes(data["snapshot_id"]),
+            )
+            rev_id = CoreSWHID(
+                object_type=ObjectType.REVISION, object_id=hash_to_bytes(revision_id)
+            )
 
-            deposit.swhid = dir_id
+            deposit.swhid = str(dir_id)
             # new id with contextual information
-            deposit.swhid_context = swhid(
-                DIRECTORY,
-                directory_id,
-                metadata={
-                    "origin": origin_url,
-                    "visit": snp_id,
-                    "anchor": rev_id,
-                    "path": "/",
-                },
+            deposit.swhid_context = str(
+                QualifiedSWHID(
+                    object_type=ObjectType.DIRECTORY,
+                    object_id=hash_to_bytes(directory_id),
+                    origin=origin_url,
+                    visit=snp_id,
+                    anchor=rev_id,
+                    path="/",
+                )
             )
         else:  # rejected
             deposit.status = status

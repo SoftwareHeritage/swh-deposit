@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Union
 from unittest.mock import patch
 
 import pytest
@@ -11,8 +10,7 @@ import pytest
 from swh.deposit import utils
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import SWHID, parse_swhid
-from swh.model.model import MetadataTargetType
+from swh.model.identifiers import CoreSWHID, QualifiedSWHID
 
 
 @pytest.fixture
@@ -163,59 +161,43 @@ def test_normalize_date_doing_irrelevant_stuff(mock_normalize):
 
 
 @pytest.mark.parametrize(
-    "swhid_or_origin,expected_type,expected_metadata_context",
+    "swhid,expected_metadata_context",
     [
-        ("https://something", MetadataTargetType.ORIGIN, {"origin": None}),
-        (
-            "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49",
-            MetadataTargetType.CONTENT,
-            {"origin": None},
-        ),
+        ("swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49", {"origin": None},),
         (
             "swh:1:snp:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=http://blah",
-            MetadataTargetType.SNAPSHOT,
             {"origin": "http://blah", "path": None},
         ),
         (
             "swh:1:dir:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;path=/path",
-            MetadataTargetType.DIRECTORY,
             {"origin": None, "path": b"/path"},
         ),
         (
             "swh:1:rev:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;visit=swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",  # noqa
-            MetadataTargetType.REVISION,
             {
                 "origin": None,
                 "path": None,
-                "snapshot": parse_swhid(
+                "snapshot": CoreSWHID.from_string(
                     "swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49"
                 ),
             },
         ),
         (
             "swh:1:rel:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;anchor=swh:1:dir:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",  # noqa
-            MetadataTargetType.RELEASE,
             {
                 "origin": None,
                 "path": None,
-                "directory": parse_swhid(
+                "directory": CoreSWHID.from_string(
                     "swh:1:dir:41b5c8cc985d190b5a7ef4878128ebfdc2358f49"
                 ),
             },
         ),
     ],
 )
-def test_compute_metadata_context(
-    swhid_or_origin: Union[str, SWHID], expected_type, expected_metadata_context
-):
-    if expected_type != MetadataTargetType.ORIGIN:
-        assert isinstance(swhid_or_origin, str)
-        swhid_or_origin = parse_swhid(swhid_or_origin)
-
-    object_type, metadata_context = utils.compute_metadata_context(swhid_or_origin)
-
-    assert object_type == expected_type
-    assert metadata_context == expected_metadata_context
+def test_compute_metadata_context(swhid: str, expected_metadata_context):
+    assert expected_metadata_context == utils.compute_metadata_context(
+        QualifiedSWHID.from_string(swhid)
+    )
 
 
 def test_parse_swh_reference_origin(xml_with_origin_reference):
@@ -278,7 +260,7 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
     actual_swhid = utils.parse_swh_reference(metadata)
     assert actual_swhid is not None
 
-    expected_swhid = parse_swhid(swhid)
+    expected_swhid = QualifiedSWHID.from_string(swhid)
     assert actual_swhid == expected_swhid
 
 
@@ -291,7 +273,7 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
         "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:rev:0175049fc45055a3824a1675ac06e3711619a55a",  # noqa
         # anchor qualifier should be a core SWHID with type one of
         "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;anchor=swh:1:cnt:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
-        "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:snp:b5f505b005435fa5c4fa4c279792bd7b17167c04"  # noqa
+        "swh:1:rev:c4993c872593e960dc84e4430dbbfbc34fd706d0;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:snp:b5f505b005435fa5c4fa4c279792bd7b17167c04",  # noqa
     ],
 )
 def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
