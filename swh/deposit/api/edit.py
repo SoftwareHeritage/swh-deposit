@@ -6,7 +6,7 @@
 from rest_framework.request import Request
 
 from swh.deposit.models import Deposit
-from swh.model.identifiers import parse_swhid
+from swh.model.identifiers import QualifiedSWHID
 
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import BAD_REQUEST, DepositError, ParserError
@@ -125,8 +125,12 @@ class EditAPI(APIPut, APIDelete):
                 "If the body is empty, there is no metadata.",
             )
 
-        _, _, deposit, deposit_request = self._store_metadata_deposit(
-            deposit, parse_swhid(swhid), metadata, raw_metadata, deposit.origin_url,
+        _, deposit, deposit_request = self._store_metadata_deposit(
+            deposit,
+            QualifiedSWHID.from_string(swhid),
+            metadata,
+            raw_metadata,
+            deposit.origin_url,
         )
 
     def process_delete(self, req, collection_name: str, deposit: Deposit) -> None:

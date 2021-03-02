@@ -5,22 +5,18 @@
 
 import logging
 from types import GeneratorType
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Union
 
 import iso8601
 import xmltodict
 
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import (
-    DIRECTORY,
-    RELEASE,
-    REVISION,
-    SNAPSHOT,
-    SWHID,
+    ExtendedSWHID,
+    ObjectType,
+    QualifiedSWHID,
     normalize_timestamp,
-    parse_swhid,
 )
-from swh.model.model import MetadataTargetType
 
 logger = logging.getLogger(__name__)
 
@@ -120,44 +116,36 @@ def normalize_date(date):
     return normalize_timestamp(date)
 
 
-def compute_metadata_context(
-    swhid_reference: Union[SWHID, str]
-) -> Tuple[MetadataTargetType, Dict[str, Any]]:
+def compute_metadata_context(swhid_reference: QualifiedSWHID) -> Dict[str, Any]:
     """Given a SWHID object, determine the context as a dict.
-
-    The parse_swhid calls within are not expected to raise (because they should have
-    been caught early on).
 
     """
     metadata_context: Dict[str, Any] = {"origin": None}
-    if isinstance(swhid_reference, SWHID):
-        object_type = MetadataTargetType(swhid_reference.object_type)
-        assert object_type != MetadataTargetType.ORIGIN
+    if swhid_reference.qualifiers():
+        metadata_context = {
+            "origin": swhid_reference.origin,
+            "path": swhid_reference.path,
+        }
+        snapshot = swhid_reference.visit
+        if snapshot:
+            metadata_context["snapshot"] = snapshot
 
-        if swhid_reference.metadata:
-            path = swhid_reference.metadata.get("path")
-            metadata_context = {
-                "origin": swhid_reference.metadata.get("origin"),
-                "path": path.encode() if path else None,
-            }
-            snapshot = swhid_reference.metadata.get("visit")
-            if snapshot:
-                metadata_context["snapshot"] = parse_swhid(snapshot)
+        anchor = swhid_reference.anchor
+        if anchor:
+            metadata_context[anchor.object_type.name.lower()] = anchor
 
-            anchor = swhid_reference.metadata.get("anchor")
-            if anchor:
-                anchor_swhid = parse_swhid(anchor)
-                metadata_context[anchor_swhid.object_type] = anchor_swhid
-    else:
-        object_type = MetadataTargetType.ORIGIN
-
-    return object_type, metadata_context
+    return metadata_context
 
 
-ALLOWED_QUALIFIERS_NODE_TYPE = (SNAPSHOT, REVISION, RELEASE, DIRECTORY)
+ALLOWED_QUALIFIERS_NODE_TYPE = (
+    ObjectType.SNAPSHOT,
+    ObjectType.REVISION,
+    ObjectType.RELEASE,
+    ObjectType.DIRECTORY,
+)
 
 
-def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
+def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]:
     """Parse swh reference within the metadata dict (or origin) reference if found, None
     otherwise.
 
@@ -182,9 +170,6 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
         Either swhid or origin reference if any. None otherwise.
 
     """  # noqa
-    visit_swhid = None
-    anchor_swhid = None
-
     swh_deposit = metadata.get("swh:deposit")
     if not swh_deposit:
         return None
@@ -206,32 +191,31 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
     swhid = swh_object.get("@swhid")
     if not swhid:
         return None
-    swhid_reference = parse_swhid(swhid)
+    swhid_reference = QualifiedSWHID.from_string(swhid)
 
-    if swhid_reference.metadata:
-        anchor = swhid_reference.metadata.get("anchor")
+    if swhid_reference.qualifiers():
+        anchor = swhid_reference.anchor
         if anchor:
-            anchor_swhid = parse_swhid(anchor)
-            if anchor_swhid.object_type not in ALLOWED_QUALIFIERS_NODE_TYPE:
+            if anchor.object_type not in ALLOWED_QUALIFIERS_NODE_TYPE:
                 error_msg = (
                     "anchor qualifier should be a core SWHID with type one of "
-                    f" {', '.join(ALLOWED_QUALIFIERS_NODE_TYPE)}"
+                    f"{', '.join(t.name.lower() for t in ALLOWED_QUALIFIERS_NODE_TYPE)}"
                 )
                 raise ValidationError(error_msg)
 
-        visit = swhid_reference.metadata.get("visit")
+        visit = swhid_reference.visit
         if visit:
-            visit_swhid = parse_swhid(visit)
-            if visit_swhid.object_type != SNAPSHOT:
+            if visit.object_type != ObjectType.SNAPSHOT:
                 raise ValidationError(
-                    f"visit qualifier should be a core SWHID with type {SNAPSHOT}"
+                    f"visit qualifier should be a core SWHID with type snp, "
+                    f"not {visit.object_type.value}"
                 )
 
         if (
-            visit_swhid
-            and anchor_swhid
-            and visit_swhid.object_type == SNAPSHOT
-            and anchor_swhid.object_type == SNAPSHOT
+            visit
+            and anchor
+            and visit.object_type == ObjectType.SNAPSHOT
+            and anchor.object_type == ObjectType.SNAPSHOT
         ):
             logger.warn(
                 "SWHID use of both anchor and visit targeting "
@@ -242,3 +226,9 @@ def parse_swh_reference(metadata: Dict) -> Optional[Union[str, SWHID]]:
             )
 
     return swhid_reference
+
+
+def extended_swhid_from_qualified(swhid: QualifiedSWHID) -> ExtendedSWHID:
+    """Used to get the target of a metadata object from a <swh:reference>,
+    as the latter uses a QualifiedSWHID."""
+    return ExtendedSWHID.from_string(str(swhid).split(";")[0])
