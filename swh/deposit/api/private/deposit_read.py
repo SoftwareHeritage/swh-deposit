@@ -14,6 +14,7 @@ from rest_framework import status
 from swh.core import tarball
 from swh.deposit.utils import normalize_date
 from swh.model import identifiers
+from swh.model.hashutil import hash_to_hex
 from swh.model.model import MetadataAuthorityType
 
 from . import APIPrivateView, DepositReadMixin
@@ -163,8 +164,8 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         if deposit.parent:
             parent_swhid = deposit.parent.swhid
             assert parent_swhid is not None
-            swhid = identifiers.parse_swhid(parent_swhid)
-            parent_revision = swhid.object_id
+            swhid = identifiers.CoreSWHID.from_string(parent_swhid)
+            parent_revision = hash_to_hex(swhid.object_id)
             parents = [parent_revision]
         else:
             parents = []
