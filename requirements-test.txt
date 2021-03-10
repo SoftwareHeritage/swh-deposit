@@ -7,3 +7,4 @@ pytest-postgresql >= 2.1.0
 requests_mock
 django-stubs
 djangorestframework-stubs >= 1.4
+django-test-migrations
