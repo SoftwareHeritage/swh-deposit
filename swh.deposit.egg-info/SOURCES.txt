@@ -256,3 +256,5 @@ swh/deposit/tests/loader/data/https_deposit.softwareheritage.org/1_private_test_
 swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_check
 swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_metadata
 swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_raw
+swh/deposit/tests_migration/__init__.py
+swh/deposit/tests_migration/test_migrations.py
