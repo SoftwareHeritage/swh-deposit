@@ -104,6 +104,7 @@ class APIConfig:
             "version": __version__,
             "configuration": {"sword_version": "2"},
         }
+        self.storage: StorageInterface = get_storage(**self.config["storage"])
         self.storage_metadata: StorageInterface = get_storage(
             **self.config["storage_metadata"]
         )

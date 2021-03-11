@@ -27,7 +27,12 @@ from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.models import Deposit
 from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
-from swh.model.identifiers import ExtendedSWHID, QualifiedSWHID, ValidationError
+from swh.model.identifiers import (
+    ExtendedObjectType,
+    ExtendedSWHID,
+    QualifiedSWHID,
+    ValidationError,
+)
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
@@ -681,7 +686,8 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
             target_swhid = extended_swhid_from_qualified(swhid_reference)
 
-        # store that metadata to the metadata storage
+        self._check_swhid_in_archive(target_swhid)
+
         metadata_object = RawExtrinsicMetadata(
             target=target_swhid,  # core swhid or origin
             discovery_date=deposit_request.date,
@@ -698,6 +704,48 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
         self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
 
         return (target_swhid, deposit, deposit_request)
+
+    def _check_swhid_in_archive(self, target_swhid: ExtendedSWHID) -> None:
+        """Check the target object already exists in the archive,
+        and raises a BAD_REQUEST if it does not."""
+        if target_swhid.object_type in (ExtendedObjectType.CONTENT,):
+            if list(
+                self.storage.content_missing_per_sha1_git([target_swhid.object_id])
+            ):
+                raise DepositError(
+                    BAD_REQUEST,
+                    f"Cannot load metadata on {target_swhid}, this content "
+                    f"object does not exist in the archive (yet?).",
+                )
+        elif target_swhid.object_type in (
+            ExtendedObjectType.DIRECTORY,
+            ExtendedObjectType.REVISION,
+            ExtendedObjectType.RELEASE,
+            ExtendedObjectType.SNAPSHOT,
+        ):
+            target_type_name = target_swhid.object_type.name.lower()
+            method = getattr(self.storage, target_type_name + "_missing")
+            if list(method([target_swhid.object_id])):
+                raise DepositError(
+                    BAD_REQUEST,
+                    f"Cannot load metadata on {target_swhid}, this {target_type_name} "
+                    f"object does not exist in the archive (yet?).",
+                )
+        elif target_swhid.object_type in (ExtendedObjectType.ORIGIN,):
+            if None in list(self.storage.origin_get_by_sha1([target_swhid.object_id])):
+                raise DepositError(
+                    BAD_REQUEST,
+                    "Cannot load metadata on origin, it is not (yet?) known to the "
+                    "archive.",
+                )
+        else:
+            # This should not happen, because target_swhid is generated from either
+            # a core swhid or an origin URL.
+            # Let's just check it again so the "switch" is exhaustive.
+            raise ValueError(
+                f"_check_swhid_in_archive expected core SWHID or origin SWHID, "
+                f"but got {target_swhid}."
+            )
 
     def _atom_entry(
         self,

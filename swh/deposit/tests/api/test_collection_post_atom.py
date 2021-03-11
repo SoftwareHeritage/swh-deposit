@@ -7,6 +7,7 @@
 
 from io import BytesIO
 import uuid
+import warnings
 
 import attr
 from django.urls import reverse_lazy as reverse
@@ -23,7 +24,14 @@ from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
 from swh.deposit.utils import compute_metadata_context, extended_swhid_from_qualified
-from swh.model.identifiers import QualifiedSWHID
+from swh.model.hypothesis_strategies import (
+    directories,
+    present_contents,
+    releases,
+    revisions,
+    snapshots,
+)
+from swh.model.identifiers import ObjectType, QualifiedSWHID
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
@@ -32,6 +40,30 @@ from swh.model.model import (
     RawExtrinsicMetadata,
 )
 from swh.storage.interface import PagedResult
+
+
+def _insert_object(swh_storage, swhid):
+    """Insert an object with the given swhid in the archive"""
+    if swhid.object_type == ObjectType.CONTENT:
+        with warnings.catch_warnings():
+            # hypothesis doesn't like us using .example(), but we know what we're doing
+            warnings.simplefilter("ignore")
+            obj = present_contents().example()
+        swh_storage.content_add([attr.evolve(obj, sha1_git=swhid.object_id)])
+    else:
+        object_type_name = swhid.object_type.name.lower()
+        strategy = {
+            "directory": directories,
+            "revision": revisions,
+            "release": releases,
+            "snapshot": snapshots,
+        }[object_type_name]
+        method = getattr(swh_storage, object_type_name + "_add")
+        with warnings.catch_warnings():
+            # hypothesis doesn't like us using .example(), but we know what we're doing
+            warnings.simplefilter("ignore")
+            obj = strategy().example()
+        method([attr.evolve(obj, id=swhid.object_id)])
 
 
 def test_post_deposit_atom_201_even_with_decimal(
@@ -478,13 +510,15 @@ def test_deposit_metadata_swhid(
     xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
     deposit_client = authenticated_client.deposit_client
 
+    _insert_object(swh_storage, swhid_reference)
+
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
         data=xml_data,
     )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     response_content = parse_xml(BytesIO(response.content))
 
     # Ensure the deposit is finalized
@@ -558,13 +592,14 @@ def test_deposit_metadata_origin(
     xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     origin_swhid = Origin(url).swhid()
     deposit_client = authenticated_client.deposit_client
+    swh_storage.origin_add([Origin(url)])
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
         data=xml_data,
     )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     response_content = parse_xml(BytesIO(response.content))
     # Ensure the deposit is finalized
     deposit_id = int(response_content["swh:deposit_id"])
@@ -622,3 +657,89 @@ def test_deposit_metadata_origin(
         next_page_token=None,
     )
     assert deposit.complete_date == discovery_date
+
+
+@pytest.mark.parametrize(
+    "swhid",
+    [
+        "swh:1:cnt:01b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:dir:11b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:rev:21b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:rel:31b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:snp:41b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:dir:c4993c872593e960dc84e4430dbbfbc34fd706d0;origin=https://inria.halpreprod.archives-ouvertes.fr/hal-01243573;visit=swh:1:snp:0175049fc45055a3824a1675ac06e3711619a55a;anchor=swh:1:rev:b5f505b005435fa5c4fa4c279792bd7b17167c04;path=/",  # noqa
+        "swh:1:rev:71b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:rel:81b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+        "swh:1:snp:91b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=h://g.c/o/repo",
+    ],
+)
+def test_deposit_metadata_unknown_swhid(
+    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+):
+    """Posting a swhid reference is rejected if the referenced object is unknown
+
+    """
+    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=xml_data,
+    )
+
+    assert (
+        response.status_code == status.HTTP_400_BAD_REQUEST
+    ), response.content.decode()
+    response_content = parse_xml(BytesIO(response.content))
+    assert "object does not exist" in response_content["sword:error"]["atom:summary"]
+
+
+@pytest.mark.parametrize(
+    "swhid",
+    [
+        "swh:1:ori:01b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+        "swh:1:emd:11b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+    ],
+)
+def test_deposit_metadata_extended_swhid(
+    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+):
+    """Posting a swhid reference is rejected if the referenced SWHID is
+    for an extended object type
+
+    """
+    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=xml_data,
+    )
+
+    assert (
+        response.status_code == status.HTTP_400_BAD_REQUEST
+    ), response.content.decode()
+    response_content = parse_xml(BytesIO(response.content))
+    assert "Invalid SWHID reference" in response_content["sword:error"]["atom:summary"]
+
+
+def test_deposit_metadata_unknown_origin(
+    authenticated_client, deposit_collection, atom_dataset, swh_storage,
+):
+    """Posting a swhid reference is stored on raw extrinsic metadata storage
+
+    """
+    url = "https://gitlab.org/user/repo"
+    xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=xml_data,
+    )
+
+    assert (
+        response.status_code == status.HTTP_400_BAD_REQUEST
+    ), response.content.decode()
+    response_content = parse_xml(BytesIO(response.content))
+    assert "known to the archive" in response_content["sword:error"]["atom:summary"]
