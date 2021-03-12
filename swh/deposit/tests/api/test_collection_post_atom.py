@@ -557,7 +557,6 @@ def test_deposit_metadata_swhid(
     page_results = swh_storage.raw_extrinsic_metadata_get(
         swhid_target, metadata_authority
     )
-    discovery_date = page_results.results[0].discovery_date
 
     assert len(page_results.results) == 1
     assert page_results.next_page_token is None
@@ -567,7 +566,7 @@ def test_deposit_metadata_swhid(
         results=[
             RawExtrinsicMetadata(
                 target=swhid_target,
-                discovery_date=discovery_date,
+                discovery_date=deposit.complete_date,
                 authority=attr.evolve(metadata_authority, metadata=None),
                 fetcher=attr.evolve(metadata_fetcher, metadata=None),
                 format="sword-v2-atom-codemeta",
@@ -577,7 +576,6 @@ def test_deposit_metadata_swhid(
         ],
         next_page_token=None,
     )
-    assert deposit.complete_date == discovery_date
 
 
 @pytest.mark.parametrize(
@@ -638,7 +636,6 @@ def test_deposit_metadata_origin(
     page_results = swh_storage.raw_extrinsic_metadata_get(
         origin_swhid, metadata_authority
     )
-    discovery_date = page_results.results[0].discovery_date
 
     assert len(page_results.results) == 1
     assert page_results.next_page_token is None
@@ -647,7 +644,7 @@ def test_deposit_metadata_origin(
         results=[
             RawExtrinsicMetadata(
                 target=origin_swhid,
-                discovery_date=discovery_date,
+                discovery_date=deposit.complete_date,
                 authority=attr.evolve(metadata_authority, metadata=None),
                 fetcher=attr.evolve(metadata_fetcher, metadata=None),
                 format="sword-v2-atom-codemeta",
@@ -656,7 +653,6 @@ def test_deposit_metadata_origin(
         ],
         next_page_token=None,
     )
-    assert deposit.complete_date == discovery_date
 
 
 @pytest.mark.parametrize(
