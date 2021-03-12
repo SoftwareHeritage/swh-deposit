@@ -14,6 +14,7 @@ import attr
 from django.core.files.uploadedfile import UploadedFile
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -36,7 +37,6 @@ from swh.model.identifiers import (
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
-    MetadataFetcher,
     Origin,
     RawExtrinsicMetadata,
 )
@@ -660,11 +660,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             metadata={"name": deposit.client.last_name},
         )
 
-        metadata_fetcher = MetadataFetcher(
-            name=self.tool["name"],
-            version=self.tool["version"],
-            metadata=self.tool["configuration"],
-        )
+        metadata_fetcher = self.swh_deposit_fetcher()
 
         # replace metadata within the deposit backend
         deposit_request_data = {
@@ -688,6 +684,7 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
 
         self._check_swhid_in_archive(target_swhid)
 
+        # metadata deposited by the client
         metadata_object = RawExtrinsicMetadata(
             target=target_swhid,  # core swhid or origin
             discovery_date=deposit_request.date,
@@ -698,10 +695,30 @@ class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
             **metadata_context,
         )
 
+        # metadata on the metadata object
+        swh_deposit_authority = self.swh_deposit_authority()
+        swh_deposit_fetcher = self.swh_deposit_fetcher()
+        metametadata_object = RawExtrinsicMetadata(
+            target=metadata_object.swhid(),
+            discovery_date=deposit_request.date,
+            authority=swh_deposit_authority,
+            fetcher=swh_deposit_fetcher,
+            format="xml-deposit-info",
+            metadata=render_to_string(
+                "deposit/deposit_info.xml", context={"deposit": deposit}
+            ).encode(),
+        )
+
         # write to metadata storage
-        self.storage_metadata.metadata_authority_add([metadata_authority])
-        self.storage_metadata.metadata_fetcher_add([metadata_fetcher])
-        self.storage_metadata.raw_extrinsic_metadata_add([metadata_object])
+        self.storage_metadata.metadata_authority_add(
+            [metadata_authority, swh_deposit_authority]
+        )
+        self.storage_metadata.metadata_fetcher_add(
+            [metadata_fetcher, swh_deposit_fetcher]
+        )
+        self.storage_metadata.raw_extrinsic_metadata_add(
+            [metadata_object, metametadata_object]
+        )
 
         return (target_swhid, deposit, deposit_request)
 

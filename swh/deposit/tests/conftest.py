@@ -90,6 +90,7 @@ def deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "scheduler": {"cls": "local", **swh_scheduler_config,},
         "storage": swh_storage_backend_config,
         "storage_metadata": swh_storage_backend_config,
+        "swh_authority_url": "http://deposit.softwareheritage.example/",
     }
 
 

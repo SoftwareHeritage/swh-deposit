@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from swh.core import config
 from swh.deposit import __version__
+from swh.model.model import MetadataAuthority, MetadataAuthorityType, MetadataFetcher
 from swh.scheduler import get_scheduler
 from swh.scheduler.interface import SchedulerInterface
 from swh.storage import get_storage
@@ -107,4 +108,18 @@ class APIConfig:
         self.storage: StorageInterface = get_storage(**self.config["storage"])
         self.storage_metadata: StorageInterface = get_storage(
             **self.config["storage_metadata"]
+        )
+
+    def swh_deposit_authority(self):
+        return MetadataAuthority(
+            type=MetadataAuthorityType.REGISTRY,
+            url=self.config["swh_authority_url"],
+            metadata={},
+        )
+
+    def swh_deposit_fetcher(self):
+        return MetadataFetcher(
+            name=self.tool["name"],
+            version=self.tool["version"],
+            metadata=self.tool["configuration"],
         )

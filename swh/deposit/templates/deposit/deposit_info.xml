@@ -1,0 +1,5 @@
+<deposit xmlns="https://www.softwareheritage.org/schema/2018/deposit">
+    <deposit_id>{{ deposit.id }}</deposit_id>
+    <deposit_client>{{ deposit.client.provider_url }}</deposit_client>
+    <deposit_collection>{{ deposit.collection.name }}</deposit_collection>
+</deposit>

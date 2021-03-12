@@ -6,6 +6,7 @@
 """Tests the handling of the Atom content when doing a POST Col-IRI."""
 
 from io import BytesIO
+import textwrap
 import uuid
 import warnings
 
@@ -64,6 +65,43 @@ def _insert_object(swh_storage, swhid):
             warnings.simplefilter("ignore")
             obj = strategy().example()
         method([attr.evolve(obj, id=swhid.object_id)])
+
+
+def _assert_deposit_info_on_metadata(
+    swh_storage, metadata_swhid, deposit, metadata_fetcher
+):
+    swh_authority = MetadataAuthority(
+        MetadataAuthorityType.REGISTRY,
+        "http://deposit.softwareheritage.example/",
+        metadata=None,
+    )
+    page_results = swh_storage.raw_extrinsic_metadata_get(metadata_swhid, swh_authority)
+
+    assert len(page_results.results) == 1
+    assert page_results.next_page_token is None
+
+    expected_xml_data = textwrap.dedent(
+        f"""\
+        <deposit xmlns="https://www.softwareheritage.org/schema/2018/deposit">
+            <deposit_id>{deposit.id}</deposit_id>
+            <deposit_client>https://hal-test.archives-ouvertes.fr/</deposit_client>
+            <deposit_collection>test</deposit_collection>
+        </deposit>
+        """
+    )
+    assert page_results == PagedResult(
+        results=[
+            RawExtrinsicMetadata(
+                target=metadata_swhid,
+                discovery_date=deposit.complete_date,
+                authority=swh_authority,
+                fetcher=attr.evolve(metadata_fetcher, metadata=None),
+                format="xml-deposit-info",
+                metadata=expected_xml_data.encode(),
+            )
+        ],
+        next_page_token=None,
+    )
 
 
 def test_post_deposit_atom_201_even_with_decimal(
@@ -554,6 +592,8 @@ def test_deposit_metadata_swhid(
     )
     assert actual_fetcher == metadata_fetcher
 
+    # Get the deposited metadata object and check it:
+
     page_results = swh_storage.raw_extrinsic_metadata_get(
         swhid_target, metadata_authority
     )
@@ -562,19 +602,20 @@ def test_deposit_metadata_swhid(
     assert page_results.next_page_token is None
 
     metadata_context = compute_metadata_context(swhid_reference)
-    assert page_results == PagedResult(
-        results=[
-            RawExtrinsicMetadata(
-                target=swhid_target,
-                discovery_date=deposit.complete_date,
-                authority=attr.evolve(metadata_authority, metadata=None),
-                fetcher=attr.evolve(metadata_fetcher, metadata=None),
-                format="sword-v2-atom-codemeta",
-                metadata=xml_data.encode(),
-                **metadata_context,
-            )
-        ],
-        next_page_token=None,
+    metadata = RawExtrinsicMetadata(
+        target=swhid_target,
+        discovery_date=deposit.complete_date,
+        authority=attr.evolve(metadata_authority, metadata=None),
+        fetcher=attr.evolve(metadata_fetcher, metadata=None),
+        format="sword-v2-atom-codemeta",
+        metadata=xml_data.encode(),
+        **metadata_context,
+    )
+    assert page_results == PagedResult(results=[metadata], next_page_token=None,)
+
+    # Get metadata about the deposited metadata object and check it:
+    _assert_deposit_info_on_metadata(
+        swh_storage, metadata.swhid(), deposit, metadata_fetcher
     )
 
 
@@ -633,6 +674,8 @@ def test_deposit_metadata_origin(
     )
     assert actual_fetcher == metadata_fetcher
 
+    # Get the deposited metadata object and check it:
+
     page_results = swh_storage.raw_extrinsic_metadata_get(
         origin_swhid, metadata_authority
     )
@@ -640,18 +683,19 @@ def test_deposit_metadata_origin(
     assert len(page_results.results) == 1
     assert page_results.next_page_token is None
 
-    assert page_results == PagedResult(
-        results=[
-            RawExtrinsicMetadata(
-                target=origin_swhid,
-                discovery_date=deposit.complete_date,
-                authority=attr.evolve(metadata_authority, metadata=None),
-                fetcher=attr.evolve(metadata_fetcher, metadata=None),
-                format="sword-v2-atom-codemeta",
-                metadata=xml_data.encode(),
-            )
-        ],
-        next_page_token=None,
+    metadata = RawExtrinsicMetadata(
+        target=origin_swhid,
+        discovery_date=deposit.complete_date,
+        authority=attr.evolve(metadata_authority, metadata=None),
+        fetcher=attr.evolve(metadata_fetcher, metadata=None),
+        format="sword-v2-atom-codemeta",
+        metadata=xml_data.encode(),
+    )
+    assert page_results == PagedResult(results=[metadata], next_page_token=None,)
+
+    # Get metadata about the deposited metadata object and check it:
+    _assert_deposit_info_on_metadata(
+        swh_storage, metadata.swhid(), deposit, metadata_fetcher
     )
 
 
