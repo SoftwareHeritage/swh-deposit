@@ -1,3 +1,15 @@
+swh-deposit (0.12.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.12.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-03-16 09:28:08
+    +0100)
+  * Upstream changes:     - v0.12.0     - Add deposit info to objects
+    added to swh-storage from metadata-only deposits     - tests:
+    Simplify discovery_date comparison.     - Check a SWHID exists in
+    the archive before accepting a metadata-only deposit
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 16 Mar 2021 08:32:08 +0000
+
 swh-deposit (0.11.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.11.1     - (tagged by Antoine R. Dumont
