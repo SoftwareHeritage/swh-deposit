@@ -157,6 +157,7 @@ swh/deposit/templates/homepage.html
 swh/deposit/templates/layout.html
 swh/deposit/templates/deposit/__init__.py
 swh/deposit/templates/deposit/content.xml
+swh/deposit/templates/deposit/deposit_info.xml
 swh/deposit/templates/deposit/deposit_receipt.xml
 swh/deposit/templates/deposit/error.xml
 swh/deposit/templates/deposit/service_document.xml
