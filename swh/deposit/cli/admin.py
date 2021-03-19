@@ -120,6 +120,8 @@ def user_create(
         user.save()
         action_done = "created"
 
+    if password:
+        user.set_password(password)
     user.collections = [collection_.id]
     user.first_name = firstname
     user.last_name = lastname

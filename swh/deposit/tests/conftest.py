@@ -58,7 +58,7 @@ COLLECTION = "test"
 
 TEST_USER = {
     "username": USERNAME,
-    "password": "",
+    "password": "pass",
     "email": EMAIL,
     "provider_url": "https://hal-test.archives-ouvertes.fr/",
     "domain": "archives-ouvertes.fr/",
@@ -127,8 +127,8 @@ def requests_mock_datadir(datadir, requests_mock_datadir):
     return requests_mock_datadir
 
 
-@pytest.fixture()
-def deposit_config(swh_scheduler_config, swh_storage_backend_config):
+@pytest.fixture
+def common_deposit_config(swh_scheduler_config, swh_storage_backend_config):
     return {
         "max_upload_size": 500,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
@@ -137,6 +137,14 @@ def deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "storage": swh_storage_backend_config,
         "storage_metadata": swh_storage_backend_config,
         "swh_authority_url": "http://deposit.softwareheritage.example/",
+    }
+
+
+@pytest.fixture()
+def deposit_config(common_deposit_config):
+    return {
+        **common_deposit_config,
+        "authentication_provider": "keycloak",
         "keycloak": {
             "server_url": KEYCLOAK_SERVER_URL,
             "realm_name": KEYCLOAK_REALM_NAME,
@@ -247,15 +255,23 @@ def _create_deposit_user(
 ) -> "DepositClient":
     """Create/Return the test_user "test"
 
+    For basic authentication, this will save a password.
+    This is not required for keycloak authentication scheme.
+
     """
     from swh.deposit.models import DepositClient
 
     user_data_d = deepcopy(user_data)
     user_data_d.pop("collection", None)
+    passwd = user_data_d.pop("password", None)
     user, _ = DepositClient.objects.get_or_create(  # type: ignore
         username=user_data_d["username"],
         defaults={**user_data_d, "collections": [collection.id]},
     )
+    if passwd:
+        user.set_password(passwd)
+        user.save()
+
     return user
 
 
@@ -309,20 +325,29 @@ def unauthorized_client(anonymous_client, mock_keycloakopenidconnect_ko):
     return anonymous_client
 
 
-def _create_authenticated_client(client, user):
+def _create_authenticated_client(client, user, password=None):
     """Return a client whose credentials will be proposed to the deposit server.
 
     This also patched the client instance to keep a reference on the associated
     deposit_user.
 
     """
-    _token = "%s:%s" % (user.username, "irrelevant-in-test-context")
+    if not password:
+        password = "irrelevant-if-not-set"
+    _token = "%s:%s" % (user.username, password)
     token = base64.b64encode(_token.encode("utf-8"))
     authorization = "Basic %s" % token.decode("utf-8")
     client.credentials(HTTP_AUTHORIZATION=authorization)
     client.deposit_client = user
     yield client
     client.logout()
+
+
+@pytest.fixture
+def basic_authenticated_client(anonymous_client, deposit_user):
+    yield from _create_authenticated_client(
+        anonymous_client, deposit_user, password=TEST_USER["password"]
+    )
 
 
 @pytest.fixture

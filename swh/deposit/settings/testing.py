@@ -40,3 +40,7 @@ MEDIA_ROOT = "/tmp/swh-deposit/test/uploads/"
 FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.MemoryFileUploadHandler",
 ]
+
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "swh.deposit.exception.custom_exception_handler",
+}

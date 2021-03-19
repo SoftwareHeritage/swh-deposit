@@ -48,7 +48,7 @@ def test_service_document_with_http_accept_header(authenticated_client):
 
 
 def check_response(response, username):
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK, f"Response: {response.content}"
     assert (
         response.content.decode("utf-8")
         == """<?xml version="1.0" ?>

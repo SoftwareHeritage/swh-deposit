@@ -12,12 +12,16 @@ from swh.deposit.api.common import (
     APIBase,
 )
 from swh.deposit.config import COL_IRI
-from swh.deposit.models import DepositCollection
+from swh.deposit.models import DepositClient, DepositCollection
 
 
 class ServiceDocumentAPI(APIBase):
     def get(self, request, *args, **kwargs):
-        client = request.user
+        if isinstance(request.user, DepositClient):
+            client = request.user
+        else:
+            client = DepositClient.objects.get(username=request.user)
+
         collections = {}
         for col_id in client.collections:
             col = DepositCollection.objects.get(pk=col_id)
