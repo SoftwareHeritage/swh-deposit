@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,7 +7,6 @@
 
 """
 
-from abc import ABCMeta, abstractmethod
 import hashlib
 import logging
 import os
@@ -253,7 +252,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         raise ValueError(msg)
 
 
-class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
+class BaseDepositClient(BaseApiDepositClient):
     """Base Deposit client to access the public api.
 
     """
@@ -265,23 +264,20 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
         self.error_msg = error_msg
         self.empty_result = empty_result
 
-    @abstractmethod
     def compute_url(self, *args, **kwargs):
         """Compute api url endpoint to query."""
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def compute_method(self, *args, **kwargs):
         """Http method to use on the url"""
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def parse_result_ok(self, xml_content):
         """Given an xml result from the api endpoint, parse it and returns a
            dict.
 
         """
-        pass
+        raise NotImplementedError
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         """Compute some more information given the inputs (e.g http headers,
@@ -301,10 +297,11 @@ class BaseDepositClient(BaseApiDepositClient, metaclass=ABCMeta):
 
         """
         data = parse_xml(xml_content)
+        sword_error = data["sword:error"]
         return {
-            "summary": data["summary"],
-            "detail": data["detail"],
-            "sword:verboseDescription": data["sword:verboseDescription"],
+            "summary": sword_error["atom:summary"],
+            "detail": sword_error.get("detail", ""),
+            "sword:verboseDescription": sword_error.get("sword:verboseDescription", ""),
         }
 
     def do_execute(self, method, url, info):
