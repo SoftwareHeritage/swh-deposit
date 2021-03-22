@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -40,3 +40,7 @@ MEDIA_ROOT = "/tmp/swh-deposit/test/uploads/"
 FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.MemoryFileUploadHandler",
 ]
+
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "swh.deposit.exception.custom_exception_handler",
+}
