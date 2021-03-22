@@ -35,7 +35,6 @@ RAW_METADATA_KEY = "raw-metadata"
 ARCHIVE_TYPE = "archive"
 METADATA_TYPE = "metadata"
 
-
 AUTHORIZED_PLATFORMS = ["development", "production", "testing"]
 
 DEPOSIT_STATUS_REJECTED = "rejected"

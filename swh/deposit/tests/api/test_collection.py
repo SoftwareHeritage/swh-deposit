@@ -13,13 +13,21 @@ from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_REJECTED
 from swh.deposit.parsers import parse_xml
 
 
-def test_deposit_post_will_fail_with_401(client):
+def test_deposit_post_will_fail_with_401(unauthorized_client):
     """Without authentication, endpoint refuses access with 401 response
 
     """
     url = reverse(COL_IRI, args=["hal"])
-    response = client.post(url)
+    response = unauthorized_client.post(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_deposit_post_insufficient_permission(insufficient_perm_client):
+    """With connection ok but insufficient permission, endpoint refuses access"""
+    url = reverse(COL_IRI, args=["hal"])
+    response = insufficient_perm_client.post(url)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert b"permission" in response.content
 
 
 def test_access_to_another_user_collection_is_forbidden(

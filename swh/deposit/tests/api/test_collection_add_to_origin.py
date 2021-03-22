@@ -13,7 +13,7 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
 
-from ..conftest import create_deposit
+from ..conftest import internal_create_deposit
 
 
 def test_add_deposit_with_add_to_origin(
@@ -56,7 +56,6 @@ def test_add_deposit_with_add_to_origin(
 
 def test_add_deposit_add_to_origin_conflict(
     authenticated_client,
-    another_authenticated_client,
     deposit_collection,
     deposit_another_collection,
     atom_dataset,
@@ -72,10 +71,9 @@ def test_add_deposit_add_to_origin_conflict(
     origin_url = deposit_another_user.provider_url + external_id
 
     # create a deposit for that other user, with the same slug
-    create_deposit(
-        another_authenticated_client,
-        deposit_another_collection.name,
-        sample_archive,
+    internal_create_deposit(
+        deposit_another_user,
+        deposit_another_collection,
         external_id,
         DEPOSIT_STATUS_LOAD_SUCCESS,
     )

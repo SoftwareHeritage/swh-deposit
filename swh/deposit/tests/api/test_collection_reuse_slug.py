@@ -19,7 +19,7 @@ from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
 
-from ..conftest import create_deposit
+from ..conftest import internal_create_deposit
 
 
 def test_act_on_deposit_rejected_is_not_permitted(
@@ -189,12 +189,11 @@ def test_add_deposit_with_external_identifier(
 
 def test_add_deposit_external_id_conflict_no_parent(
     authenticated_client,
-    another_authenticated_client,
     deposit_collection,
     deposit_another_collection,
     atom_dataset,
-    sample_archive,
     deposit_user,
+    deposit_another_user,
 ):
     """Posting a deposit with an external_id conflicting with an external_id
     of a different client does not create a parent relationship
@@ -204,10 +203,9 @@ def test_add_deposit_external_id_conflict_no_parent(
     origin_url = deposit_user.provider_url + external_id
 
     # create a deposit for that other user, with the same slug
-    other_deposit = create_deposit(
-        another_authenticated_client,
-        deposit_another_collection.name,
-        sample_archive,
+    other_deposit = internal_create_deposit(
+        deposit_another_user,
+        deposit_another_collection,
         external_id,
         DEPOSIT_STATUS_LOAD_SUCCESS,
     )
@@ -234,13 +232,12 @@ def test_add_deposit_external_id_conflict_no_parent(
 
 def test_add_deposit_external_id_conflict_with_parent(
     authenticated_client,
-    another_authenticated_client,
     deposit_collection,
     deposit_another_collection,
     completed_deposit,
     atom_dataset,
-    sample_archive,
     deposit_user,
+    deposit_another_user,
 ):
     """Posting a deposit with an external_id conflicting with an external_id
     of a different client creates a parent relationship with the deposit
@@ -255,10 +252,9 @@ def test_add_deposit_external_id_conflict_with_parent(
     origin_url = deposit_user.provider_url + deposit.external_id
 
     # create a deposit for that other user, with the same slug
-    other_deposit = create_deposit(
-        another_authenticated_client,
-        deposit_another_collection.name,
-        sample_archive,
+    other_deposit = internal_create_deposit(
+        deposit_another_user,
+        deposit_another_collection,
         deposit.external_id,
         DEPOSIT_STATUS_LOAD_SUCCESS,
     )

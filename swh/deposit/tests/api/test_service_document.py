@@ -27,16 +27,16 @@ def test_service_document_no_auth_with_http_auth_should_not_break(client):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_service_document(authenticated_client, deposit_user):
+def test_service_document(authenticated_client):
     """With authentication, service document list user's collection
 
     """
     url = reverse(SD_IRI)
     response = authenticated_client.get(url)
-    check_response(response, deposit_user.username)
+    check_response(response, authenticated_client.deposit_client.username)
 
 
-def test_service_document_with_http_accept_header(authenticated_client, deposit_user):
+def test_service_document_with_http_accept_header(authenticated_client):
     """With authentication, with browser, sd list user's collection
 
     """
@@ -44,11 +44,11 @@ def test_service_document_with_http_accept_header(authenticated_client, deposit_
     response = authenticated_client.get(
         url, HTTP_ACCEPT="text/html,application/xml;q=9,*/*,q=8"
     )
-    check_response(response, deposit_user.username)
+    check_response(response, authenticated_client.deposit_client.username)
 
 
 def check_response(response, username):
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK, f"Response: {response.content}"
     assert (
         response.content.decode("utf-8")
         == """<?xml version="1.0" ?>

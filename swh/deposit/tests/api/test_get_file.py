@@ -14,7 +14,7 @@ from swh.deposit.parsers import parse_xml
 
 
 def test_api_deposit_content_nominal(
-    client, complete_deposit, partial_deposit_only_metadata
+    authenticated_client, complete_deposit, partial_deposit_only_metadata
 ):
     """Retrieve information on deposit should return 200 response
 
@@ -28,14 +28,16 @@ def test_api_deposit_content_nominal(
         }
 
         url = reverse(CONT_FILE_IRI, args=[deposit.collection.name, deposit.id])
-        response = client.get(url)
+        response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         actual_deposit = dict(parse_xml(response.content))
         del actual_deposit["swh:deposit_date"]
         assert set(actual_deposit.items()) >= set(expected_deposit.items())
 
 
-def test_api_deposit_content_unknown(client, complete_deposit, deposit_collection):
+def test_api_deposit_content_unknown(
+    authenticated_client, complete_deposit, deposit_collection
+):
     """Retrieve information on unknown deposit or collection should return 404
 
     """
@@ -47,5 +49,5 @@ def test_api_deposit_content_unknown(client, complete_deposit, deposit_collectio
         (complete_deposit.collection.name, complete_deposit.id + 10),
     ]:
         url = reverse(CONT_FILE_IRI, args=[collection, deposit_id])
-        response = client.get(url)
+        response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_404_NOT_FOUND

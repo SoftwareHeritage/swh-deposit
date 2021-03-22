@@ -73,7 +73,7 @@ def _create_collection(name: str) -> DepositCollection:
 
 @user.command("create")
 @click.option("--username", required=True, help="User's name")
-@click.option("--password", required=True, help="Desired user's password (plain).")
+@click.option("--password", help="(Deprecated) Desired user password (plain).")
 @click.option("--firstname", default="", help="User's first name")
 @click.option("--lastname", default="", help="User's last name")
 @click.option("--email", default="", help="User's email")
@@ -113,15 +113,15 @@ def user_create(
     try:
         user = DepositClient.objects.get(username=username)  # type: ignore
         click.echo(f"Update user '{username}'.")
-        user.set_password(password)
         action_done = "updated"
     except DepositClient.DoesNotExist:
         click.echo(f"Create user '{username}'.")
-        user = DepositClient.objects.create_user(  # type: ignore
-            username=username, password=password
-        )
+        user = DepositClient(username=username)
+        user.save()
         action_done = "created"
 
+    if password:
+        user.set_password(password)
     user.collections = [collection_.id]
     user.first_name = firstname
     user.last_name = lastname
