@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -8,7 +8,7 @@ import os
 from swh.core import config
 
 from .common import *  # noqa
-from .common import ALLOWED_HOSTS
+from .common import ALLOWED_HOSTS, CACHES
 
 ALLOWED_HOSTS += ["deposit.softwareheritage.org"]
 # Setup support for proxy headers
@@ -41,7 +41,7 @@ conf = config.load_named_config(config_file)
 if not conf:
     raise ValueError("Production: configuration %s does not exist." % (config_file,))
 
-for key in ("scheduler", "private"):
+for key in ("scheduler", "private", "authentication_provider"):
     if not conf.get(key):
         raise ValueError(
             "Production: invalid configuration; missing %s config entry." % (key,)
@@ -91,3 +91,20 @@ DATABASES = {
 
 # https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-MEDIA_ROOT
 MEDIA_ROOT = private_conf.get("media_root")
+
+# Default authentication is http basic
+authentication = conf["authentication_provider"]
+
+# With the following, we delegate the authentication mechanism to keycloak
+if authentication == "keycloak":
+    # Optional cache server
+    server_cache = conf.get("cache_uri")
+    if server_cache:
+        CACHES.update(
+            {
+                "default": {
+                    "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+                    "LOCATION": server_cache,
+                }
+            }
+        )

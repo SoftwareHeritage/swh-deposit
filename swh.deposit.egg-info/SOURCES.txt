@@ -166,12 +166,14 @@ swh/deposit/templates/rest_framework/api.html
 swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
 swh/deposit/tests/conftest.py
+swh/deposit/tests/test_backend.py
 swh/deposit/tests/test_common.py
 swh/deposit/tests/test_gunicorn_config.py
 swh/deposit/tests/test_init.py
 swh/deposit/tests/test_utils.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/conftest.py
+swh/deposit/tests/api/test_basic_auth.py
 swh/deposit/tests/api/test_checks.py
 swh/deposit/tests/api/test_collection.py
 swh/deposit/tests/api/test_collection_add_to_origin.py

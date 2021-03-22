@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -8,11 +8,14 @@
 #    python3 -m manage inspectdb
 
 import datetime
+from typing import Optional
 
 from django.contrib.auth.models import User, UserManager
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
 from django.utils.timezone import now
+
+from swh.auth.django.models import OIDCUser
 
 from .config import (
     ARCHIVE_TYPE,
@@ -92,6 +95,7 @@ class DepositClient(User):
 
     provider_url = models.TextField(null=False)
     domain = models.TextField(null=False)
+    oidc_user: Optional[OIDCUser] = None
 
     class Meta:
         db_table = "deposit_client"
@@ -122,7 +126,7 @@ class Deposit(models.Model):
     # collection concerned by the deposit
     collection = models.ForeignKey("DepositCollection", models.DO_NOTHING)
     # Deprecated: Deposit's external identifier
-    external_id = models.TextField()
+    external_id = models.TextField(null=True)
     # URL of the origin of this deposit, null if this is a metadata-only deposit
     origin_url = models.TextField(null=True)
     # Deposit client

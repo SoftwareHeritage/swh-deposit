@@ -4,11 +4,12 @@
 # See top-level LICENSE file for more information
 
 import base64
+from copy import deepcopy
 from functools import partial
 from io import BytesIO
 import os
 import re
-from typing import Mapping
+from typing import TYPE_CHECKING, Dict, Mapping
 
 from django.test.utils import setup_databases  # type: ignore
 from django.urls import reverse_lazy as reverse
@@ -19,8 +20,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 import yaml
 
+from swh.auth.pytest_plugin import keycloak_mock_factory
 from swh.core.config import read
 from swh.core.pytest_plugin import get_response_cb
+from swh.deposit.auth import DEPOSIT_PERMISSION
 from swh.deposit.config import (
     COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
@@ -42,28 +45,71 @@ from swh.model.hashutil import hash_to_bytes
 from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.scheduler import get_scheduler
 
+if TYPE_CHECKING:
+    from swh.deposit.models import Deposit, DepositClient, DepositCollection
+
+
 # mypy is asked to ignore the import statement above because setup_databases
 # is not part of the d.t.utils.__all__ variable.
 
+USERNAME = "test"
+EMAIL = "test@example.org"
+COLLECTION = "test"
 
 TEST_USER = {
-    "username": "test",
-    "password": "password",
-    "email": "test@example.org",
+    "username": USERNAME,
+    "password": "pass",
+    "email": EMAIL,
     "provider_url": "https://hal-test.archives-ouvertes.fr/",
     "domain": "archives-ouvertes.fr/",
-    "collection": {"name": "test"},
+    "collection": {"name": COLLECTION},
 }
 
+USER_INFO = {
+    "name": USERNAME,
+    "email": EMAIL,
+    "email_verified": False,
+    "family_name": "",
+    "given_name": "",
+    "groups": [],
+    "preferred_username": USERNAME,
+    "sub": "ffffffff-bbbb-4444-aaaa-14f61e6b7200",
+}
 
-ANOTHER_TEST_USER = {
-    "username": "test2",
-    "password": "password2",
-    "email": "test@example2.org",
+USERNAME2 = "test2"
+EMAIL2 = "test@example.org"
+COLLECTION2 = "another-collection"
+
+TEST_USER2 = {
+    "username": USERNAME2,
+    "password": "",
+    "email": EMAIL2,
     "provider_url": "https://hal-test.archives-ouvertes.example/",
     "domain": "archives-ouvertes.example/",
-    "collection": {"name": "another-collection"},
+    "collection": {"name": COLLECTION2},
 }
+
+KEYCLOAK_SERVER_URL = "https://auth.swh.org/SWHTest"
+KEYCLOAK_REALM_NAME = "SWHTest"
+CLIENT_ID = "swh-deposit"
+
+
+keycloak_mock_auth_success = keycloak_mock_factory(
+    server_url=KEYCLOAK_SERVER_URL,
+    realm_name=KEYCLOAK_REALM_NAME,
+    client_id=CLIENT_ID,
+    auth_success=True,
+    user_info=USER_INFO,
+    user_permissions=[DEPOSIT_PERMISSION],
+)
+
+
+keycloak_mock_auth_failure = keycloak_mock_factory(
+    server_url=KEYCLOAK_SERVER_URL,
+    realm_name=KEYCLOAK_REALM_NAME,
+    client_id=CLIENT_ID,
+    auth_success=False,
+)
 
 
 def pytest_configure():
@@ -81,8 +127,8 @@ def requests_mock_datadir(datadir, requests_mock_datadir):
     return requests_mock_datadir
 
 
-@pytest.fixture()
-def deposit_config(swh_scheduler_config, swh_storage_backend_config):
+@pytest.fixture
+def common_deposit_config(swh_scheduler_config, swh_storage_backend_config):
     return {
         "max_upload_size": 500,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
@@ -91,6 +137,18 @@ def deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "storage": swh_storage_backend_config,
         "storage_metadata": swh_storage_backend_config,
         "swh_authority_url": "http://deposit.softwareheritage.example/",
+    }
+
+
+@pytest.fixture()
+def deposit_config(common_deposit_config):
+    return {
+        **common_deposit_config,
+        "authentication_provider": "keycloak",
+        "keycloak": {
+            "server_url": KEYCLOAK_SERVER_URL,
+            "realm_name": KEYCLOAK_REALM_NAME,
+        },
     }
 
 
@@ -180,7 +238,7 @@ def create_deposit_collection(collection_name: str):
     return collection
 
 
-def deposit_collection_factory(collection_name=TEST_USER["collection"]["name"]):
+def deposit_collection_factory(collection_name):
     @pytest.fixture
     def _deposit_collection(db, collection_name=collection_name):
         return create_deposit_collection(collection_name)
@@ -188,57 +246,95 @@ def deposit_collection_factory(collection_name=TEST_USER["collection"]["name"]):
     return _deposit_collection
 
 
-deposit_collection = deposit_collection_factory()
-deposit_another_collection = deposit_collection_factory("another-collection")
+deposit_collection = deposit_collection_factory(COLLECTION)
+deposit_another_collection = deposit_collection_factory(COLLECTION2)
 
 
-def _create_deposit_user(db, collection, user_data):
+def _create_deposit_user(
+    collection: "DepositCollection", user_data: Dict
+) -> "DepositClient":
     """Create/Return the test_user "test"
+
+    For basic authentication, this will save a password.
+    This is not required for keycloak authentication scheme.
 
     """
     from swh.deposit.models import DepositClient
 
-    try:
-        user = DepositClient._default_manager.get(username=user_data["username"])
-    except DepositClient.DoesNotExist:
-        user = DepositClient._default_manager.create_user(
-            username=user_data["username"],
-            email=user_data["email"],
-            password=user_data["password"],
-            provider_url=user_data["provider_url"],
-            domain=user_data["domain"],
-        )
-        user.collections = [collection.id]
+    user_data_d = deepcopy(user_data)
+    user_data_d.pop("collection", None)
+    passwd = user_data_d.pop("password", None)
+    user, _ = DepositClient.objects.get_or_create(  # type: ignore
+        username=user_data_d["username"],
+        defaults={**user_data_d, "collections": [collection.id]},
+    )
+    if passwd:
+        user.set_password(passwd)
         user.save()
+
     return user
 
 
 @pytest.fixture
 def deposit_user(db, deposit_collection):
-    return _create_deposit_user(db, deposit_collection, TEST_USER)
+    return _create_deposit_user(deposit_collection, TEST_USER)
 
 
 @pytest.fixture
 def deposit_another_user(db, deposit_another_collection):
-    return _create_deposit_user(db, deposit_another_collection, ANOTHER_TEST_USER)
+    return _create_deposit_user(deposit_another_collection, TEST_USER2)
 
 
 @pytest.fixture
-def client():
-    """Override pytest-django one which does not work for djangorestframework.
+def anonymous_client():
+    """Create an anonymous client (no credentials during queries to the deposit)
 
     """
     return APIClient()  # <- drf's client
 
 
-def _create_authenticated_client(client, user, user_data):
-    """Returned a logged client
+def mock_keycloakopenidconnect(mocker, keycloak_mock):
+    """Mock swh.deposit.auth.KeycloakOpenIDConnect to return the keycloak_mock
+
+    """
+    mock = mocker.patch("swh.deposit.auth.KeycloakOpenIDConnect")
+    mock.from_configfile.return_value = keycloak_mock
+    return mock
+
+
+@pytest.fixture
+def mock_keycloakopenidconnect_ok(mocker, keycloak_mock_auth_success):
+    """Mock keycloak so it always accepts connection for user with the right
+       permissions
+
+    """
+    return mock_keycloakopenidconnect(mocker, keycloak_mock_auth_success)
+
+
+@pytest.fixture
+def mock_keycloakopenidconnect_ko(mocker, keycloak_mock_auth_failure):
+    """Mock keycloak so it always refuses connections."""
+    return mock_keycloakopenidconnect(mocker, keycloak_mock_auth_failure)
+
+
+@pytest.fixture
+def unauthorized_client(anonymous_client, mock_keycloakopenidconnect_ko):
+    """Create an unauthorized client (will see their authentication fail)
+
+    """
+    return anonymous_client
+
+
+def _create_authenticated_client(client, user, password=None):
+    """Return a client whose credentials will be proposed to the deposit server.
 
     This also patched the client instance to keep a reference on the associated
     deposit_user.
 
     """
-    _token = "%s:%s" % (user.username, user_data["password"])
+    if not password:
+        password = "irrelevant-if-not-set"
+    _token = "%s:%s" % (user.username, password)
     token = base64.b64encode(_token.encode("utf-8"))
     authorization = "Basic %s" % token.decode("utf-8")
     client.credentials(HTTP_AUTHORIZATION=authorization)
@@ -248,16 +344,28 @@ def _create_authenticated_client(client, user, user_data):
 
 
 @pytest.fixture
-def authenticated_client(client, deposit_user):
-    yield from _create_authenticated_client(client, deposit_user, TEST_USER)
+def basic_authenticated_client(anonymous_client, deposit_user):
+    yield from _create_authenticated_client(
+        anonymous_client, deposit_user, password=TEST_USER["password"]
+    )
 
 
 @pytest.fixture
-def another_authenticated_client(deposit_another_user):
-    client = APIClient()
-    yield from _create_authenticated_client(
-        client, deposit_another_user, ANOTHER_TEST_USER
-    )
+def authenticated_client(mock_keycloakopenidconnect_ok, anonymous_client, deposit_user):
+    yield from _create_authenticated_client(anonymous_client, deposit_user)
+
+
+@pytest.fixture
+def insufficient_perm_client(
+    mocker, keycloak_mock_auth_success, anonymous_client, deposit_user
+):
+    """keycloak accepts connection but client returned has no deposit permission, so access
+       is not allowed.
+
+    """
+    keycloak_mock_auth_success.user_permissions = []
+    mock_keycloakopenidconnect(mocker, keycloak_mock_auth_success)
+    yield from _create_authenticated_client(anonymous_client, deposit_user)
 
 
 @pytest.fixture
@@ -295,8 +403,26 @@ def atom_dataset(datadir) -> Mapping[str, str]:
     return data
 
 
+def internal_create_deposit(
+    client: "DepositClient",
+    collection: "DepositCollection",
+    external_id: str,
+    status: str,
+) -> "Deposit":
+    """Create a deposit for a given collection with internal tool
+
+    """
+    from swh.deposit.models import Deposit
+
+    deposit = Deposit(
+        client=client, external_id=external_id, status=status, collection=collection
+    )
+    deposit.save()
+    return deposit
+
+
 def create_deposit(
-    authenticated_client,
+    client,
     collection_name: str,
     sample_archive,
     external_id: str,
@@ -309,7 +435,7 @@ def create_deposit(
     url = reverse(COL_IRI, args=[collection_name])
     # when
     response = post_archive(
-        authenticated_client,
+        client,
         url,
         sample_archive,
         HTTP_SLUG=external_id,

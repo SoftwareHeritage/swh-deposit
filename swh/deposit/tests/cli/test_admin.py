@@ -179,7 +179,9 @@ User '{user_name}' created.
     assert user.is_active is True
     second_password = user.password
     assert second_password is not None
-    assert second_password != first_password, "Password should have changed"
+    # For the transition period, we can choose either basic or keycloak so we need to be
+    # able to still define a password (basic), so there it's updated.
+    assert second_password != first_password, "Password changed"
     assert user.domain == "domain"
     assert user.provider_url == "http://some-provider.org"
     assert user.email == "user@org.org"

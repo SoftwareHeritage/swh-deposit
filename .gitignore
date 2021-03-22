@@ -23,3 +23,4 @@ db.sqlite3
 *.tar.lzma
 .tox/
 .mypy_cache/
+.hypothesis/

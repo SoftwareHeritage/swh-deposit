@@ -25,6 +25,7 @@ from rest_framework.views import APIView
 
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import Deposit
 from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
@@ -159,26 +160,38 @@ def check_client_origin(client: DepositClient, origin_url: str):
     if not origin_url.startswith(provider_url):
         raise DepositError(
             FORBIDDEN,
-            f"Cannot create origin {origin_url}, it must start with " f"{provider_url}",
+            f"Cannot create origin {origin_url}, it must start with {provider_url}",
         )
 
 
-class AuthenticatedAPIView(APIView):
-    """Mixin intended as a based API view to enforce the basic
-       authentication check
-
-    """
-
-    authentication_classes: Sequence[Type[BaseAuthentication]] = (BasicAuthentication,)
-    permission_classes: Sequence[Type[BasePermission]] = (IsAuthenticated,)
-
-
-class APIBase(APIConfig, AuthenticatedAPIView, metaclass=ABCMeta):
+class APIBase(APIConfig, APIView, metaclass=ABCMeta):
     """Base deposit request class sharing multiple common behaviors.
 
     """
 
     _client: Optional[DepositClient] = None
+
+    def __init__(self):
+        super().__init__()
+        auth_provider = self.config.get("authentication_provider")
+        if auth_provider == "basic":
+            self.authentication_classes: Sequence[Type[BaseAuthentication]] = (
+                BasicAuthentication,
+            )
+            self.permission_classes: Sequence[Type[BasePermission]] = (IsAuthenticated,)
+        elif auth_provider == "keycloak":
+            self.authentication_classes: Sequence[Type[BaseAuthentication]] = (
+                KeycloakBasicAuthentication,
+            )
+            self.permission_classes: Sequence[Type[BasePermission]] = (
+                IsAuthenticated,
+                HasDepositPermission,
+            )
+        else:
+            raise ValueError(
+                "Configuration key 'authentication_provider' should be provided with"
+                f"either 'basic' or 'keycloak' value not {auth_provider!r}."
+            )
 
     def _read_headers(self, request: Request) -> ParsedRequestHeaders:
         """Read and unify the necessary headers from the request (those are
