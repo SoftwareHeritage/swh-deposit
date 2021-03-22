@@ -286,7 +286,7 @@ class BaseDepositClient(BaseApiDepositClient):
         """
         return {}
 
-    def parse_result_error(self, xml_content):
+    def parse_result_error(self, xml_content: bytes) -> Dict:
         """Given an error response in xml, parse it into a dict.
 
         Returns:
@@ -384,6 +384,10 @@ class ServiceDocumentDepositClient(BaseDepositClient):
 
         """
         return parse_xml(xml_content)
+
+    def parse_result_error(self, xml_content: bytes) -> Dict:
+        result = super().parse_result_error(xml_content)
+        return {"error": result["summary"]}
 
 
 class StatusDepositClient(BaseDepositClient):

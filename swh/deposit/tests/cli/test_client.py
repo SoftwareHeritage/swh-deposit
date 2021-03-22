@@ -21,6 +21,7 @@ from swh.deposit.client import (
     BaseDepositClient,
     MaintenanceError,
     PublicApiDepositClient,
+    ServiceDocumentDepositClient,
 )
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
@@ -941,3 +942,17 @@ def test_cli_failure_should_be_parseable(atom_dataset, mocker):
         "detail": "",
         "sword:verboseDescription": verbose_description,
     }
+
+
+def test_cli_service_document_failure(atom_dataset, mocker):
+    """Ensure service document failures are properly served
+
+    """
+    summary = "Invalid user credentials"
+    error_xml = atom_dataset["error-cli"].format(summary=summary, verboseDescription="")
+
+    api_call = ServiceDocumentDepositClient(url="https://somewhere.org/")
+
+    actual_error = api_call.parse_result_error(error_xml)
+
+    assert actual_error == {"error": summary}
