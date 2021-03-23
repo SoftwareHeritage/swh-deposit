@@ -1,3 +1,9 @@
+swh-deposit (0.13.1-1~swh2) unstable-swh; urgency=medium
+
+  * Fix runtime dependency
+
+ -- Antoine R. Dumont (@ardumont) <ardumont@softwareheritage.org>  Tue, 23 Mar 2021 14:18:01 +0100
+
 swh-deposit (0.13.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.13.1     - (tagged by Antoine R. Dumont
