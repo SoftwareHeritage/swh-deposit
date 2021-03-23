@@ -1,3 +1,15 @@
+swh-deposit (0.13.1-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.13.1     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-03-23 11:34:02
+    +0100)
+  * Upstream changes:     - v0.13.1     - deposit.auth: Adjust
+    authentication error message     - deposit.cli: Fix service document
+    error when failing to retrieve it     - deposit.cli: Fix cli parsing
+    issue when xml error is returned by server
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 23 Mar 2021 10:40:03 +0000
+
 swh-deposit (0.13.0-1~swh2) unstable-swh; urgency=medium
 
   * Fix build time dependency release
