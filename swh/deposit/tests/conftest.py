@@ -317,14 +317,6 @@ def mock_keycloakopenidconnect_ko(mocker, keycloak_mock_auth_failure):
     return mock_keycloakopenidconnect(mocker, keycloak_mock_auth_failure)
 
 
-@pytest.fixture
-def unauthorized_client(anonymous_client, mock_keycloakopenidconnect_ko):
-    """Create an unauthorized client (will see their authentication fail)
-
-    """
-    return anonymous_client
-
-
 def _create_authenticated_client(client, user, password=None):
     """Return a client whose credentials will be proposed to the deposit server.
 
@@ -352,6 +344,14 @@ def basic_authenticated_client(anonymous_client, deposit_user):
 
 @pytest.fixture
 def authenticated_client(mock_keycloakopenidconnect_ok, anonymous_client, deposit_user):
+    yield from _create_authenticated_client(anonymous_client, deposit_user)
+
+
+@pytest.fixture
+def unauthorized_client(mock_keycloakopenidconnect_ko, anonymous_client, deposit_user):
+    """Create an unauthorized client (will see their authentication fail)
+
+    """
     yield from _create_authenticated_client(anonymous_client, deposit_user)
 
 
