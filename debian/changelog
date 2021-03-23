@@ -1,8 +1,12 @@
-swh-deposit (0.13.1-1~swh2~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.13.2-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.13.2     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-03-23 17:52:22
+    +0100)
+  * Upstream changes:     - v0.13.2     - deposit.auth: Fix
+    authentication failure corner case
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 23 Mar 2021 13:25:46 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 23 Mar 2021 16:57:49 +0000
 
 swh-deposit (0.13.1-1~swh2) unstable-swh; urgency=medium
 

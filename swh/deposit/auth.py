@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import json
 import logging
 from typing import Optional
 
@@ -17,7 +16,11 @@ from sentry_sdk import capture_exception
 
 from swh.auth.django.models import OIDCUser
 from swh.auth.django.utils import oidc_user_from_profile
-from swh.auth.keycloak import KeycloakError, KeycloakOpenIDConnect
+from swh.auth.keycloak import (
+    KeycloakError,
+    KeycloakOpenIDConnect,
+    keycloak_error_message,
+)
 from swh.deposit.models import DepositClient
 
 from .errors import UNAUTHORIZED, make_error_response
@@ -148,8 +151,7 @@ class KeycloakBasicAuthentication(BasicAuthentication):
                 oidc_profile = self.client.login(user_id, password)
             except KeycloakError as e:
                 logger.debug("KeycloakError: e: %s", e)
-                msg_dict = json.loads(e.error_message.decode())
-                error_msg = f"{msg_dict['error']}: {msg_dict['error_description']}"
+                error_msg = keycloak_error_message(e)
                 raise AuthenticationFailed(error_msg)
 
             oidc_user = oidc_user_from_profile(self.client, oidc_profile)

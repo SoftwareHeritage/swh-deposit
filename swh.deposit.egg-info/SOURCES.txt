@@ -195,6 +195,7 @@ swh/deposit/tests/api/test_deposit_update_atom.py
 swh/deposit/tests/api/test_deposit_update_binary.py
 swh/deposit/tests/api/test_exception.py
 swh/deposit/tests/api/test_get_file.py
+swh/deposit/tests/api/test_keycloak_auth.py
 swh/deposit/tests/api/test_parsers.py
 swh/deposit/tests/api/test_service_document.py
 swh/deposit/tests/cli/__init__.py
