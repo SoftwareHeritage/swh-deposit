@@ -13,7 +13,7 @@ swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0
 swh.model>=0.3.8
-swh.auth[django]>=0.3.6
+swh.auth[django]>=0.3.8
 
 [testing]
 pytest
@@ -33,4 +33,4 @@ swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0
 swh.model>=0.3.8
-swh.auth[django]>=0.3.6
+swh.auth[django]>=0.3.8
