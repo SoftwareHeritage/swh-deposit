@@ -1,4 +1,4 @@
-# Copyright (C) 2020 The Software Heritage developers
+# Copyright (C) 2020-2021 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -17,7 +17,12 @@ import yaml
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _collection, _url, generate_metadata
-from swh.deposit.client import MaintenanceError, PublicApiDepositClient
+from swh.deposit.client import (
+    BaseDepositClient,
+    MaintenanceError,
+    PublicApiDepositClient,
+    ServiceDocumentDepositClient,
+)
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
 
@@ -915,3 +920,39 @@ def test_cli_deposit_warning_missing_origin(
     for (_, log_level, _) in caplog.record_tuples:
         # all messages are info or below messages so everything is fine
         assert log_level < logging.WARNING
+
+
+def test_cli_failure_should_be_parseable(atom_dataset, mocker):
+    summary = "Cannot load metadata"
+    verbose_description = (
+        "Cannot load metadata on swh:1:dir:0eda267e7d3c2e37b3f6a78e542b16190ac4574e, "
+        "this directory object does not exist in the archive (yet?)."
+    )
+
+    error_xml = atom_dataset["error-cli"].format(
+        summary=summary, verboseDescription=verbose_description
+    )
+
+    api_call = BaseDepositClient(url="https://somewhere.org/")
+
+    actual_error = api_call.parse_result_error(error_xml)
+
+    assert actual_error == {
+        "summary": summary,
+        "detail": "",
+        "sword:verboseDescription": verbose_description,
+    }
+
+
+def test_cli_service_document_failure(atom_dataset, mocker):
+    """Ensure service document failures are properly served
+
+    """
+    summary = "Invalid user credentials"
+    error_xml = atom_dataset["error-cli"].format(summary=summary, verboseDescription="")
+
+    api_call = ServiceDocumentDepositClient(url="https://somewhere.org/")
+
+    actual_error = api_call.parse_result_error(error_xml)
+
+    assert actual_error == {"error": summary}
