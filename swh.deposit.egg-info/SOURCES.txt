@@ -223,6 +223,7 @@ swh/deposit/tests/data/atom/entry-data2.xml
 swh/deposit/tests/data/atom/entry-data3.xml
 swh/deposit/tests/data/atom/entry-only-create-origin.xml
 swh/deposit/tests/data/atom/entry-update-in-place.xml
+swh/deposit/tests/data/atom/error-cli.xml
 swh/deposit/tests/data/atom/error-with-decimal.xml
 swh/deposit/tests/data/atom/error-with-external-identifier-and-create-origin.xml
 swh/deposit/tests/data/atom/error-with-external-identifier.xml
