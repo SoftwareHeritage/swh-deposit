@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sword:error xmlns="http://www.w3.org/2005/Atom"
+             xmlns:sword="http://purl.org/net/sword/terms/">
+    <summary>{summary}</summary>
+    <sword:treatment>processing failed</sword:treatment>
+    <sword:verboseDescription>
+        {verboseDescription}
+    </sword:verboseDescription>
+</sword:error>

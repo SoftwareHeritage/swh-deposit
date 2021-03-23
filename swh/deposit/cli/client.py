@@ -142,7 +142,8 @@ def _collection(client: PublicApiDepositClient) -> str:
     # retrieve user's collection
     sd_content = client.service_document()
     if "error" in sd_content:
-        raise InputError("Service document retrieval: %s" % (sd_content["error"],))
+        msg = sd_content["error"]
+        raise InputError(f"Service document retrieval: {msg}")
     collection = sd_content["app:service"]["app:workspace"]["app:collection"][
         "sword:name"
     ]
