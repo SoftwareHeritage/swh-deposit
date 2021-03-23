@@ -1,8 +1,8 @@
-swh-deposit (0.13.1-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.13.1-1~swh2) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * Fix runtime dependency
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 23 Mar 2021 10:41:57 +0000
+ -- Antoine R. Dumont (@ardumont) <ardumont@softwareheritage.org>  Tue, 23 Mar 2021 14:18:01 +0100
 
 swh-deposit (0.13.1-1~swh1) unstable-swh; urgency=medium
 
