@@ -122,15 +122,22 @@ class KeycloakBasicAuthentication(BasicAuthentication):
             )
         return self._client
 
+    def _cache_key(self, user_id: str) -> str:
+        """Internal key to use to store user id token.
+
+        """
+        return f"oidc_user_{self.client.realm_name}_{self.client.client_id}_{user_id}"
+
     def get_user(self, user_id: str) -> Optional[OIDCUser]:
         """Retrieve user from cache if any.
 
         """
-        oidc_profile = cache.get(f"oidc_user_{user_id}")
+        oidc_profile = cache.get(self._cache_key(user_id))
         if oidc_profile:
             try:
                 return oidc_user_from_profile(self.client, oidc_profile)
             except Exception as e:
+                logger.warning("Error during cache token retrieval: %s", e)
                 capture_exception(e)
         return None
 
@@ -173,7 +180,7 @@ class KeycloakBasicAuthentication(BasicAuthentication):
         if ttl:
             # cache the oidc_profile user while it's valid
             cache.set(
-                f"oidc_user_{user_id}", oidc_profile, timeout=max(0, ttl),
+                self._cache_key(user_id), oidc_profile, timeout=max(0, ttl),
             )
 
         return (deposit_client, None)
