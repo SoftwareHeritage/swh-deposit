@@ -131,6 +131,7 @@ class KeycloakBasicAuthentication(BasicAuthentication):
             try:
                 return oidc_user_from_profile(self.client, oidc_profile)
             except Exception as e:
+                logger.warning("Error during cache token retrieval: %s", e)
                 capture_exception(e)
         return None
 
