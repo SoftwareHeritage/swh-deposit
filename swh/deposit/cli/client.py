@@ -87,12 +87,14 @@ def generate_metadata(
     mandatory.
 
     Therefore, we generate the following mandatory fields:
-    - http://www.w3.org/2005/Atom#updated
-    - http://www.w3.org/2005/Atom#author
-    - http://www.w3.org/2005/Atom#title
-    - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#name (yes, in addition to
-      http://www.w3.org/2005/Atom#title, even if they have somewhat the same meaning)
-    - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#author
+
+        - http://www.w3.org/2005/Atom#updated
+        - http://www.w3.org/2005/Atom#author
+        - http://www.w3.org/2005/Atom#title
+        - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#name (yes, in addition to
+          http://www.w3.org/2005/Atom#title, even if they have somewhat the same
+          meaning)
+        - https://doi.org/10.5063/SCHEMA/CODEMETA-2.0#author
 
     Args:
         deposit_client: Deposit client username,
