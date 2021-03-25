@@ -53,6 +53,10 @@ Note: swh.deposit.fixtures.deposit\_data is packaged.
 Add client and collection
 -------------------------
 
+The deposit can now be configured to use either the 1. django basic authentication
+framework or the 2. swh keycloak instance. If the server uses 2., the password is
+managed by keycloak so the option `--password`` is ignored.
+
 .. code:: shell
 
     swh deposit admin \
@@ -64,8 +68,8 @@ Add client and collection
         --password <to-define>
 
 This adds a user ``<client-name>`` which can access the collection
-``<collection-name>``. The password will be used for the authentication
-access to the deposit api.
+``<collection-name>``. The password will be used for checking the authentication access
+to the deposit api (if 1. is used).
 
 Note:
   - If the collection does not exist, it is created alongside
