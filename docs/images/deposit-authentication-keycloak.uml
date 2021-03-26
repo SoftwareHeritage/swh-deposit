@@ -1,0 +1,30 @@
+@startuml
+participant CLIENT as "SWORD client\n(eg. HAL)"
+participant DEPOSIT as "swh-deposit"
+participant AUTH_BACKEND as "keycloak"
+
+activate CLIENT
+  activate DEPOSIT
+    activate AUTH_BACKEND
+
+      CLIENT ->> DEPOSIT: GET /1/<service-document>/
+
+      DEPOSIT ->> AUTH_BACKEND: forwards authentication to keycloak
+      alt credentials mismatch or inexistent user
+        AUTH_BACKEND ->> DEPOSIT: return 401, Unauthorized
+        DEPOSIT -->> CLIENT: return 401, Unauthorized
+      else credentials ok
+        AUTH_BACKEND ->> DEPOSIT: return oidc_profile
+        DEPOSIT ->> DEPOSIT: decodes oidc_profile, checks deposit user permissions
+
+        alt no permission matches 'swh.deposit.api'
+          DEPOSIT -->> CLIENT: return 401, Unauthorized
+        else at least one permission matches 'swh.deposit.api'
+          DEPOSIT -->> CLIENT: return 200, <service-document>
+        end
+
+      end
+    deactivate CLIENT
+  deactivate DEPOSIT
+deactivate AUTH_BACKEND
+@enduml
