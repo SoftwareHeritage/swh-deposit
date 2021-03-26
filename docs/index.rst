@@ -23,3 +23,4 @@ Reference Documentation
 
    cli
    /apidoc/swh.deposit
+   authentication.rst
