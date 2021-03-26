@@ -7,7 +7,7 @@ LICENSE
 MANIFEST.in
 Makefile
 Makefile.local
-README.md
+README.rst
 conftest.py
 mypy.ini
 pyproject.toml
@@ -35,6 +35,8 @@ bin/update-deposit-with-another-archive.sh
 bin/update-status.sh
 docs/.gitignore
 docs/Makefile
+docs/README.rst
+docs/authentication.rst
 docs/cli.rst
 docs/conf.py
 docs/dev-info.rst
@@ -53,6 +55,8 @@ docs/endpoints/update-media.rst
 docs/endpoints/update-metadata.rst
 docs/images/.gitignore
 docs/images/Makefile
+docs/images/deposit-authentication-basic.uml
+docs/images/deposit-authentication-keycloak.uml
 docs/images/deposit-create-chart.uml
 docs/images/deposit-delete-chart.uml
 docs/images/deposit-update-chart.uml

@@ -1,8 +1,16 @@
-swh-deposit (0.13.3-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.13.4-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.13.4     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-03-26 18:02:42
+    +0100)
+  * Upstream changes:     - v0.13.4     - docs: Add a reference
+    authentication page to explain auth schemes     - docs/sys-info:
+    Update deployment documentation     - docs/sys-info: Update
+    information and rework sentence phrasing     - docs: Unify READMEs
+    in the documentation and the source code     - cli.client: Fix
+    sphinx indentation warning
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 24 Mar 2021 15:56:27 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 26 Mar 2021 17:07:13 +0000
 
 swh-deposit (0.13.3-1~swh1) unstable-swh; urgency=medium
 

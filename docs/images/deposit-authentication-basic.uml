@@ -1,0 +1,23 @@
+@startuml
+participant CLIENT as "SWORD client\n(eg. HAL)"
+participant DEPOSIT as "swh-deposit"
+participant AUTH_BACKEND as "deposit storage"
+
+activate CLIENT
+  activate DEPOSIT
+    activate AUTH_BACKEND
+
+      CLIENT ->> DEPOSIT: GET /1/<service-document>/
+
+      DEPOSIT ->> AUTH_BACKEND: check authentication
+      alt credentials mismatch or inexistent user
+        AUTH_BACKEND ->> DEPOSIT: return ko
+        DEPOSIT -->> CLIENT: return 401, Unauthorized
+      else credentials ok
+        AUTH_BACKEND ->> DEPOSIT: return deposit_client
+        DEPOSIT -->> CLIENT: return 200, <service-document>
+      end
+    deactivate CLIENT
+  deactivate DEPOSIT
+deactivate AUTH_BACKEND
+@enduml
