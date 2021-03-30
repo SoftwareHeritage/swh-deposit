@@ -1,11 +1,27 @@
 .. _swh-deposit-deployment:
 
-Deployment of the swh-deposit
-=============================
+Deployment
+==========
 
-The debian package is created and uploaded to the swh debian repository. Once the
-package is installed, some further actions may be required in regards to the database
-backend.
+The deposit is architectured around 3 parts:
+
+  - server: a django application exposing an xml api, discussing with a postgresql
+    backend (and optionally a keycloak instance)
+
+  - worker(s): 1 worker service dedicated to check the deposit archive and metadata are
+    correct (the checker), another worker service dedicated to actually ingest the
+    deposit into the swh archive.
+
+  - client: a python sčript `swh deposit` command line interface.
+
+All those are packaged in 3 separated debian packages, created and uploaded to the swh
+debian repository. The deposit server and workers configuration are managed by puppet
+(cf. puppet-environment/swh-site, puppet-environment/swh-role,
+puppet-environment/swh-profile)
+
+In the following document, we will focus on the server actions that may be needed once
+the server is installed or upgraded.
+
 
 Prepare the database setup (existence, connection, etc...).
 -----------------------------------------------------------
@@ -13,9 +29,6 @@ Prepare the database setup (existence, connection, etc...).
 This is defined through the packaged module ``swh.deposit.settings.production`` and the
 expected **/etc/softwareheritage/deposit/server.yml** configuration file.
 
-The expected configuration files are deployed through our puppet manifest (cf.
-puppet-environment/swh-site, puppet-environment/swh-role,
-puppet-environment/swh-profile)
 
 Environment (production/staging)
 --------------------------------
@@ -29,33 +42,25 @@ configured.
 
     export SWH_CONFIG_FILENAME=/etc/softwareheritage/deposit/server.yml
 
-Migrate/bootstrap the db schema
--------------------------------
+
+Migrate the db schema
+---------------------
+
+The debian package may integrate some new schema modifications. To run them:
 
 .. code:: shell
 
     sudo django-admin migrate --settings=swh.deposit.settings.production
 
-Load minimum defaults data
---------------------------
-
-When boostraping the db schema, some default values may be needed:
-
-.. code:: shell
-
-    sudo django-admin loaddata \
-      --settings=swh.deposit.settings.production deposit_data
-
-This adds the minimal 'hal' collection
-
-Note: swh.deposit.fixtures.deposit\_data is packaged.
 
 Add client and collection
 -------------------------
 
-The deposit can now be configured to use either the 1. django basic authentication
-framework or the 2. swh keycloak instance. If the server uses 2., the password is
-managed by keycloak so the option `--password`` is ignored.
+The deposit can be configured to use either the 1. django basic authentication framework
+or the 2. swh keycloak instance. If the server uses 2., the password is managed by
+keycloak so the option `--password`` is ignored.
+
+* basic
 
 .. code:: shell
 
@@ -75,8 +80,12 @@ Note:
   - If the collection does not exist, it is created alongside
   - The password, if required, is passed as plain text but stored encrypted
 
+
 Reschedule a deposit
 ---------------------
+
+If for some reason, the loading failed, after fixing and deploying the new deposit
+loader, you can reschedule the impacted deposit through:
 
 .. code:: shell
 
@@ -94,6 +103,7 @@ This will:
 - reset the deposit's status to 'verified' (prior to any loading but after the checks
   which are fine) and removes the different archives' identifiers (swh-id, ...)
 - trigger back the loading task through the scheduler
+
 
 Integration checks
 ------------------
