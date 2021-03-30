@@ -96,7 +96,7 @@ This will:
 - trigger back the loading task through the scheduler
 
 Integration checks
-==================
+------------------
 
 There exists icinga checks running periodically on `staging`_ and `production`_
 instances. If any problem arises, expect those to notify the #swh-sysadm irc channel.
