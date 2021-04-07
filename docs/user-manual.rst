@@ -340,7 +340,7 @@ In this case, the deposit is created by several requests, uploading objects
 piece by piece. The steps to create a multisteps deposit:
 
 1. Create an partial deposit
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""
 
 First use the ``--partial`` argument to declare there is more to come
 
@@ -352,7 +352,7 @@ First use the ``--partial`` argument to declare there is more to come
 
 
 2. Add content or metadata to the deposit
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""""""""""""""""""""""""
 
 Continue the deposit by using the ``--deposit-id`` argument given as a response
 for the first step. You can continue adding content or metadata while you use
@@ -378,7 +378,7 @@ To only add metadata to the deposit:
 
 
 3. Finalize deposit
-~~~~~~~~~~~~~~~~~~~
+"""""""""""""""""""
 
 On your last addition (same command as before), by not declaring it
 ``--partial``, the deposit will be considered completed. Its status will be

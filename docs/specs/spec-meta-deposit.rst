@@ -1,10 +1,10 @@
 .. _spec-metadata-deposit:
 
 The metadata-only deposit
-^^^^^^^^^^^^^^^^^^^^^^^^^
+=========================
 
 Goal
-====
+----
 
 A client may wish to deposit only metadata about an origin or object already
 present in the Software Heritage archive.
@@ -14,7 +14,7 @@ provided and the data transferred to Software Heritage is only
 the metadata about an object in the archive.
 
 Requirements
-============
+------------
 
 1. Create a metadata-only deposit through a :ref:`POST request<API-create-deposit>`
 2. It is composed of ONLY one Atom XML document
@@ -35,7 +35,7 @@ Requirements
 .. _qualifiers: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#qualifiers
 
 A complete metadata example
-===========================
+---------------------------
 The reference element is included in the metadata xml atomEntry under the
 swh namespace:
 
@@ -72,14 +72,14 @@ swh namespace:
   </entry>
 
 References
-==========
+----------
 
 The metadata reference can be either on:
 - an origin
 - a graph object (core SWHID with or without qualifiers)
 
 Origins
--------
+^^^^^^^
 
 The metadata may be on an origin, identified by the origin's URL:
 
@@ -92,7 +92,7 @@ The metadata may be on an origin, identified by the origin's URL:
   </swh:deposit>
 
 Graph objects
--------------
+^^^^^^^^^^^^^
 
 It may also reference an object in the `SWH graph <data-model>`: contents,
 directories, revisions, releases, and snapshots:
@@ -129,7 +129,7 @@ cannot store metadata at a finer level than entire contents).
 
 
 Loading procedure
-=================
+-----------------
 
 In this case, the metadata-deposit will be injected as a metadata entry of
 the relevant object, with the information about the contributor of the deposit.

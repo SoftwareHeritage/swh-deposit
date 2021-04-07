@@ -54,7 +54,7 @@ Examples
 --------
 
 Using only Atom
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 .. code:: xml
 
@@ -73,7 +73,7 @@ Using only Atom
     </entry>
 
 Using Atom with CodeMeta
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: xml
 
@@ -138,7 +138,7 @@ Using Atom with CodeMeta
         </entry>
 
 Using Atom with DublinCore and CodeMeta (multi-schema entry)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: xml
 
