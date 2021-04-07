@@ -210,7 +210,7 @@ All deposits must include:
 We also highly recommend their CodeMeta equivalent, and any other relevant
 metadata, but this is not enforced.
 
-.. _metatadata-only-deposit
+.. _metatadata-only-deposit:
 
 Metadata-only deposit
 ---------------------
@@ -269,6 +269,16 @@ And to describe an object:
 
 For details on the semantics, see the
 :ref:`metadata deposit specification <spec-metadata-deposit>`
+
+
+Schema
+------
+
+Here is an XML schema to summarize the syntax described in this document:
+
+.. literalinclude:: swh.xsd
+   :language: xml
+
 
 
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html

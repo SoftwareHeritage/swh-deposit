@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             targetNamespace="https://www.softwareheritage.org/schema/2018/deposit"
             xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
@@ -45,7 +45,7 @@
   <!-- references an origin by URL -->
   <xsd:element name="origin">
     <xsd:complexType>
-    <xsd:attribute type="xsd:string" name="url"/>
+      <xsd:attribute type="xsd:string" name="url"/>
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
