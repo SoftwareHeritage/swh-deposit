@@ -113,8 +113,8 @@ Scenario: pushing a deposit via the SWORDv2_ protocol (nominal scenario):
    :alt:
 
 
-Updating an existing deposit
-""""""""""""""""""""""""""""
+Deposit update
+--------------
 
 6. Client updates existing deposit through the *update uris* (one or more POST
    or PUT requests to either the *edit-media iri* or *edit iri*).
@@ -143,7 +143,7 @@ deposit's content (returned after the deposit finished loading).
 
 
 Schema representation
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 
 Scenario: updating a deposit via SWORDv2_ protocol:
 
@@ -151,8 +151,8 @@ Scenario: updating a deposit via SWORDv2_ protocol:
    :alt:
 
 
-Deleting deposit (or associated archive, or associated metadata)
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Deposit deletion (or associated archive, or associated metadata)
+----------------------------------------------------------------
 
 7. Deposit deletion is possible as long as the deposit is still in ``partial``
    state.
@@ -171,13 +171,13 @@ Scenario: deleting a deposit via SWORDv2_ protocol:
 
 
 Client asks for operation status
-""""""""""""""""""""""""""""""""
+--------------------------------
 
 8. Operation status can be read through a GET query to the *state iri*.
 
 
 Server: Triggering deposit checks
-"""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the status ``deposited`` is reached for a deposit, checks for the
 associated archive(s) and metadata will be triggered. If those checks
@@ -186,7 +186,7 @@ there. Otherwise, the status is changed to ``verified``.
 
 
 Server: Triggering deposit load
-"""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the status ``verified`` is reached for a deposit, loading the
 deposit with its associated metadata will be triggered.
