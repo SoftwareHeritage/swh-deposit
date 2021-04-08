@@ -154,7 +154,7 @@ Release artifact
 
 .. warning::
 
-   This part of the specification is not implemented yet, only releases are
+   This part of the specification is not implemented yet, only revisions are
    currently being created.
 
 The content is deposited with a set of descriptive metadata in the CodeMeta

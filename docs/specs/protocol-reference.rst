@@ -1,7 +1,7 @@
 .. _deposit-protocol:
 
 Protocol reference
-~~~~~~~~~~~~~~~~~~
+==================
 
 The swh-deposit protocol is an extension SWORDv2_ protocol, and the
 swh-deposit client and server should work with any other SWORDv2-compliant
@@ -17,10 +17,10 @@ XML namespace, denoted using the ``swhdeposit`` prefix in this section.
 
 
 Origin creation with the ``<swhdeposit:create_origin>`` tag
-===========================================================
+-----------------------------------------------------------
 
 Motivation
-----------
+^^^^^^^^^^
 
 This is the main extension we define.
 This tag is used after a deposit is completed, to load it in the Software Heritage
@@ -33,7 +33,7 @@ but not for the push approach used by SWORD, as SWORD clients do not intrinsical
 have an URL.
 
 Usage
------
+^^^^^
 
 Instead, clients are expected to provide the origin URL themselves, by adding
 a tag in the Atom entry they submit to the server, like this:
@@ -59,7 +59,7 @@ This will create an origin in the Software Heritage archive, that will point to
 the source code artifacts of this deposit.
 
 Semantics of origin URLs
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Origin URLs must be unique to an origin, ie. to a software project.
 The exact definition of a "software project" is left to the clients of the deposit.
@@ -80,7 +80,7 @@ they will not be able to submit deposits to origins whose URL starts with
 ``https://example.org/foo/``.
 
 Fallbacks
----------
+^^^^^^^^^
 
 If the ``<swhdeposit:create_origin>`` is not provided (either because they are generic
 SWORDv2 implementations or old implementations of an swh-deposit client), the server
@@ -93,7 +93,7 @@ recommend relying on it, as it usually creates origins URL that are not meaningf
 
 
 Adding releases to an origin, with the ``<swhdeposit:add_to_origin>`` tag
-=========================================================================
+-------------------------------------------------------------------------
 
 When depositing a source code artifact for an origin (ie. software project) that
 was already deposited before, clients should not use ``<swhdeposit:create_origin>``,
@@ -128,10 +128,10 @@ If the origin does not exist, it will error.
 
 
 Metadata
-========
+--------
 
 Format
-------
+^^^^^^
 
 While the SWORDv2 specification recommends the use of DublinCore_,
 we prefer the CodeMeta_ vocabulary, as we already use it in other components
@@ -200,7 +200,7 @@ Or, equivalently:
 .. _mandatory-attributes:
 
 Mandatory attributes
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 All deposits must include:
 
@@ -210,10 +210,10 @@ All deposits must include:
 We also highly recommend their CodeMeta equivalent, and any other relevant
 metadata, but this is not enforced.
 
-.. _metatadata-only-deposit
+.. _metatadata-only-deposit:
 
 Metadata-only deposit
-=====================
+---------------------
 
 The swh-deposit server can also be without a source code artifact, but only
 to provide metadata that describes an arbitrary origin or object in
@@ -269,6 +269,16 @@ And to describe an object:
 
 For details on the semantics, see the
 :ref:`metadata deposit specification <spec-metadata-deposit>`
+
+
+Schema
+------
+
+Here is an XML schema to summarize the syntax described in this document:
+
+.. literalinclude:: swh.xsd
+   :language: xml
+
 
 
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
