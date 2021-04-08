@@ -11,8 +11,8 @@ Basic
 -----
 
 The first implementation uses `basic authentication
-<https://tools.ietf.org/html/rfc7617>`_. The deposit storage backend has the
-responsibility to check the authentication credentials sent by the deposit client. If
+<https://tools.ietf.org/html/rfc7617>`_. The deposit server checks
+the authentication credentials sent by the deposit client using its own database. If
 authorized, the deposit client is allowed to continue its deposit. Otherwise, a 401
 response is returned to the client.
 
