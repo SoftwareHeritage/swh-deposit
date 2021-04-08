@@ -1,7 +1,7 @@
-.. _swh-deposit-dev:
+.. _swh-deposit-dev-env:
 
-Hacking on swh-deposit
-======================
+Running swh-deposit locally
+===========================
 
 There are multiple modes to run and test the server locally:
 

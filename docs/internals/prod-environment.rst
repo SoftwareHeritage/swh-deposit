@@ -1,7 +1,7 @@
-.. _swh-deposit-deployment:
+.. _swh-deposit-prod-env:
 
-Deployment
-==========
+Production deployment
+=====================
 
 The deposit is architectured around 3 parts:
 
@@ -12,7 +12,7 @@ The deposit is architectured around 3 parts:
     correct (the checker), another worker service dedicated to actually ingest the
     deposit into the swh archive.
 
-  - client: a python sčript `swh deposit` command line interface.
+  - client: a python script `swh deposit` command line interface.
 
 All those are packaged in 3 separated debian packages, created and uploaded to the swh
 debian repository. The deposit server and workers configuration are managed by puppet

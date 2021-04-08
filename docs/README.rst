@@ -61,9 +61,9 @@ in `swh.deposit` if you want to do upload deposits using HTTP requests.
 Read the :ref:`metadata` chapter to get more details on what metadata are supported when
 doing a deposit.
 
-See :ref:`swh-deposit-dev` if you want to hack the code of the `swh.deposit` module.
+See :ref:`swh-deposit-dev-env` if you want to hack the code of the `swh.deposit` module.
 
-See :ref:`swh-deposit-deployment` if you want to deploy your own copy of the
+See :ref:`swh-deposit-prod-env` if you want to deploy your own copy of the
 `swh.deposit` stack.
 
 
