@@ -6,13 +6,9 @@
    :maxdepth: 2
    :caption: Contents:
 
-   user-manual
-   metadata
-   spec-api
-   dev-info
-   sys-info
+   api/index
+   internals/index
    specs/index
-   tests/tests_HAL.rst
 
 
 Reference Documentation
@@ -23,4 +19,3 @@ Reference Documentation
 
    cli
    /apidoc/swh.deposit
-   authentication.rst

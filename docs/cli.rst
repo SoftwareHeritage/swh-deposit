@@ -17,6 +17,8 @@ Administration utilities
   :prog: swh deposit admin
   :nested: full
 
+.. _swh-deposit-cli-client:
+
 Deposit client tools
 --------------------
 
