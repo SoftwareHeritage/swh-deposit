@@ -2,10 +2,12 @@
   participant CLIENT as "SWORD client\n(eg. HAL)"
   participant DEPOSIT as "swh-deposit"
   participant DEPOSIT_DATABASE as "deposit database"
+  participant SCHEDULER as "swh-scheduler"
 
   activate CLIENT
   activate DEPOSIT
   activate DEPOSIT_DATABASE
+  activate SCHEDULER
 
   CLIENT ->> DEPOSIT: GET /1/<service-document>/
 
@@ -21,6 +23,8 @@
 
   DEPOSIT ->> DEPOSIT_DATABASE: create new deposit
   DEPOSIT_DATABASE -->> DEPOSIT: return deposit_id
+
+  DEPOSIT ->> SCHEDULER: schedule load for <deposit_id>
 
   DEPOSIT -->> CLIENT: return 201, <deposit receipt>
 @enduml

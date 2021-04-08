@@ -95,7 +95,10 @@ From client's deposit repository server to SWH's repository server:
    b. Server stores information received (metadata or software archive source
       code or both).
 
-4. The server notifies the client it acknowledged the client's request. An
+4. The server creates a loading task and submits it to the
+   :ref:`Job Scheduler <swh-scheduler>`
+
+5. The server notifies the client it acknowledged the client's request. An
    ``http 201 Created`` response with a deposit receipt in the body response is
    sent back. That deposit receipt will hold the necessary information to
    eventually complete the deposit later on if it was incomplete (also known as
@@ -113,7 +116,7 @@ Scenario: pushing a deposit via the SWORDv2_ protocol (nominal scenario):
 Updating an existing deposit
 """"""""""""""""""""""""""""
 
-5. Client updates existing deposit through the *update uris* (one or more POST
+6. Client updates existing deposit through the *update uris* (one or more POST
    or PUT requests to either the *edit-media iri* or *edit iri*).
 
   1. Server validates the client's input or returns detailed error if any
@@ -151,7 +154,7 @@ Scenario: updating a deposit via SWORDv2_ protocol:
 Deleting deposit (or associated archive, or associated metadata)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-6. Deposit deletion is possible as long as the deposit is still in ``partial``
+7. Deposit deletion is possible as long as the deposit is still in ``partial``
    state.
 
   1. Server validates the client's input or returns detailed error if any
@@ -170,7 +173,7 @@ Scenario: deleting a deposit via SWORDv2_ protocol:
 Client asks for operation status
 """"""""""""""""""""""""""""""""
 
-7. Operation status can be read through a GET query to the *state iri*.
+8. Operation status can be read through a GET query to the *state iri*.
 
 
 Server: Triggering deposit checks

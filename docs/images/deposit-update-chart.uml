@@ -2,10 +2,12 @@
   participant CLIENT as "SWORD client\n(eg. HAL)"
   participant DEPOSIT as "swh-deposit"
   participant DEPOSIT_DATABASE as "deposit database"
+  participant SCHEDULER as "swh-scheduler"
 
   activate CLIENT
   activate DEPOSIT
   activate DEPOSIT_DATABASE
+  activate SCHEDULER
 
   CLIENT ->> DEPOSIT: POST /1/<collection-name>/\nHEADER In-Progress: true
 
@@ -27,6 +29,7 @@
     alt HEADER: In-Progress = true
       DEPOSIT ->> DEPOSIT_DATABASE: add-or-replace-data-and-update-status('partial')
     else HEADER: In-Progress = false
+      DEPOSIT ->> SCHEDULER: schedule load for <deposit_id>
       DEPOSIT ->> DEPOSIT_DATABASE: add-or-replace-data-and-update-status('deposited')
     end
     DEPOSIT_DATABASE -->> DEPOSIT: return ok
