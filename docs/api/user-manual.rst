@@ -1,4 +1,4 @@
-.. _user-manual:
+.. _deposit-user-manual:
 
 User Manual
 ===========

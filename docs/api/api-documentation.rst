@@ -1,4 +1,4 @@
-.. _swh-api-specifications:
+.. _deposit-api-specifications:
 
 API Documentation
 =================

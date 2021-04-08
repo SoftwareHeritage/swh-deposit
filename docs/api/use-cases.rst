@@ -1,3 +1,5 @@
+.. _deposit-use-cases:
+
 Use cases
 =========
 

@@ -52,10 +52,10 @@ asking SWH to archive a repository using the `save code now
 - the deposit API uses the `SWORD v2`_ API, thus requires some tooling to send deposits
   to SWH. These tools are provided with this repository.
 
-See the :ref:`user-manual` page for more details on how to use the deposit client
+See the :ref:`deposit-user-manual` page for more details on how to use the deposit client
 command line tools to push a deposit in the SWH Archive.
 
-See the :ref:`swh-api-specifications` reference pages of the SWORDv2 API implementation
+See the :ref:`deposit-api-specifications` reference pages of the SWORDv2 API implementation
 in `swh.deposit` if you want to do upload deposits using HTTP requests.
 
 Read the :ref:`metadata` chapter to get more details on what metadata are supported when
