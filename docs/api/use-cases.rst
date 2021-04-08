@@ -134,14 +134,7 @@ the limit size imposed by swh repository deposit).
 The content of a deposit can only be updated while it is in the ``partial``
 state; this causes the content to be **replaced** (the old version is discarded).
 
-Its metadata, however, can also be updated while in the ``done`` state;
-which adds a new version of the metadata in the SWH archive,
-**in addition to** the old one(s).
-In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
-in the ``partial`` state, but only to ``deposited``.
-As a failsafe, to avoid accidentally updating the wrong deposit, this requires
-the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
-deposit's content (returned after the deposit finished loading).
+Its metadata, however, can also be updated while in the ``done`` state; see below.
 
 
 Schema representation
@@ -217,5 +210,20 @@ When this is all done, the loaders notify the deposit server, which sets
 the deposit status to ``done``.
 
 This can then be polled by deposit clients, using the *state iri*.
+
+
+Deposit metadata updates
+------------------------
+
+We saw earlier that a deposit can only be updated when in ``partial`` state.
+
+This is one exception to this rule: its metadata can be updated while in the
+``done`` state; which adds a new version of the metadata in the SWH archive,
+**in addition to** the old one(s).
+In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
+in the ``partial`` state, but only to ``deposited``.
+As a failsafe, to avoid accidentally updating the wrong deposit, this requires
+the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
+deposit's content (returned after the deposit finished loading).
 
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
