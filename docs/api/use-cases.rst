@@ -175,7 +175,18 @@ Scenario: deleting a deposit via SWORDv2_ protocol:
 Client asks for operation status
 --------------------------------
 
-8. Operation status can be read through a GET query to the *state iri*.
+At any time during the next step, operation status can be read through
+a GET query to the *state iri*.
+
+
+Deposit loading
+---------------
+
+In one of the previous steps, when a deposit was created or loaded without
+``In-Progress: true``, the deposit server created a load task and submitted it
+to :ref:`swh-scheduler <swh-scheduler>`.
+
+This triggers the following steps:
 
 
 Server: Triggering deposit checks
@@ -197,5 +208,14 @@ The loading will result on status update, either ``done`` or ``failed``
 (depending on the loading's status).
 
 This is described in the :ref:`loading specifications document <swh-loading-specs>`.
+
+
+Completing the deposit
+----------------------
+
+When this is all done, the loaders notify the deposit server, which sets
+the deposit status to ``done``.
+
+This can then be polled by deposit clients, using the *state iri*.
 
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
