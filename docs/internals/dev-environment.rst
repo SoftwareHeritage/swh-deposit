@@ -1,7 +1,7 @@
-.. _swh-deposit-dev:
+.. _swh-deposit-dev-env:
 
-Hacking on swh-deposit
-======================
+Running swh-deposit locally
+===========================
 
 There are multiple modes to run and test the server locally:
 
@@ -22,14 +22,14 @@ db is expected to be called swh-deposit-dev.
 To simplify the use, the following makefile targets can be used:
 
 schema
-~~~~~~
+^^^^^^
 
 .. code:: shell
 
     make db-create db-prepare db-migrate
 
 data
-~~~~
+^^^^
 
 Once the db is created, you need some data to be injected (request
 types, client, collection, etc...):
@@ -65,7 +65,7 @@ Add the following to ``../private-data.yaml``:
         url: https://hal.inria.fr
 
 drop
-~~~~
+^^^^
 
 For information, you can drop the db:
 
@@ -80,7 +80,7 @@ Development-like environment needs one configuration file to work
 properly.
 
 Configuration
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 **``{/etc/softwareheritage | ~/.config/swh | ~/.swh}``/deposit/server.yml**:
 
@@ -101,7 +101,7 @@ Configuration
     max_upload_size: 20971520
 
 Run
-~~~
+^^^
 
 Run the local server, using the default configuration file:
 
@@ -118,7 +118,7 @@ configuration file to work properly.
 This is more close to what's actually running in production.
 
 Configuration
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 This expects the same file describes in the previous chapter. Plus, an
 additional private section file containing private information that is
@@ -147,7 +147,7 @@ A production configuration file would look like:
         password: user-password
 
 Run
-~~~
+^^^
 
 .. code:: shell
 
