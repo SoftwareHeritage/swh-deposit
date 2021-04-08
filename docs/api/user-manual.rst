@@ -159,7 +159,7 @@ You can push a deposit with:
 
 Overall, a deposit can be a in series of steps as follow:
 
-.. figure:: images/status.svg
+.. figure:: ../images/status.svg
    :alt:
 
 The important things to notice for now is that it can be:

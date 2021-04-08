@@ -48,6 +48,8 @@ done
 failed
    Loading failed.
 
+.. figure:: ../images/status.svg
+   :alt:
 
 This document describes the possible scenarios for creating or updating a
 deposit.
