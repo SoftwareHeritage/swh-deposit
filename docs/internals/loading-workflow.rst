@@ -1,7 +1,7 @@
 Loading workflow
 ================
 
-This section complements the :ref:`deposit-use-case` documentation,
+This section complements the :ref:`deposit-use-cases` documentation,
 by detailing how deposits are handled internally after clients deposited them.
 
 Reception

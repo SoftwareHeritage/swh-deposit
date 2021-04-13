@@ -16,7 +16,7 @@ the authentication credentials sent by the deposit client using its own database
 authorized, the deposit client is allowed to continue its deposit. Otherwise, a 401
 response is returned to the client.
 
-.. figure:: images/deposit-authentication-basic.svg
+.. figure:: ../images/deposit-authentication-basic.svg
    :alt: Basic Authentication
 
 
@@ -38,7 +38,7 @@ permission "swh.deposit.api". If they do, they can post their deposits.
 If any issue arises during one of the authentication check, the client receives a 401
 response (unauthorized).
 
-.. figure:: images/deposit-authentication-keycloak.svg
+.. figure:: ../images/deposit-authentication-keycloak.svg
    :alt: Keycloak Authentication
 
 .. _keycloak: https://www.keycloak.org/

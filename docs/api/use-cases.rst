@@ -238,7 +238,7 @@ Instead, they describe an existing :term:`software artifact` present in the
 archive.
 
 This use case is triggered by a ``<reference>`` tag in the Atom document,
-see the :ref:`protocol reference <metatadata-only-deposit>` for details.
+see the :ref:`protocol reference <metadata-only-deposit>` for details.
 
 In the current implementation, these deposits are loaded (or rejected)
 immediately after a request without ``In-Progress: true`` is made,

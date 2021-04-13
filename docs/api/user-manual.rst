@@ -64,7 +64,7 @@ packaging system. For example, on a Debian system:
 
    $ sudo apt install jq
 
-.. _prepare_deposit
+.. _prepare-deposit:
 
 Prepare a deposit
 -----------------
@@ -292,7 +292,7 @@ Ensure this metadata file also declares a :ref:`SWHID reference
 
 .. code:: xml
 
-   <entry ...
+   <entry xmlns="..."
           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
           >
 

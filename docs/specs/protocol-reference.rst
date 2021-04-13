@@ -157,7 +157,7 @@ For example, this CodeMeta document:
             "email": "foo@example.org"
          },
          {
-            "name": Author 2"
+            "name": "Author 2"
          }
       ]
    }
@@ -210,7 +210,7 @@ All deposits must include:
 We also highly recommend their CodeMeta equivalent, and any other relevant
 metadata, but this is not enforced.
 
-.. _metatadata-only-deposit:
+.. _metadata-only-deposit:
 
 Metadata-only deposit
 ---------------------
