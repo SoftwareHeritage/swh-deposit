@@ -226,4 +226,21 @@ As a failsafe, to avoid accidentally updating the wrong deposit, this requires
 the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
 deposit's content (returned after the deposit finished loading).
 
+
+Metadata-only deposit
+---------------------
+
+Finally, as an extension to the SWORD protocol, swh-deposit allows a special
+type of deposit: metadata-only deposits.
+Unlike regular deposit (described above), they do not have a code archive.
+Instead, they describe an existing :term:`software artifact` present in the
+archive.
+
+This use case is triggered by a ``<reference>`` tag in the Atom document,
+see the :ref:`protocol reference <metatadata-only-deposit>` for details.
+
+In the current implementation, these deposits are loaded (or rejected)
+immediately after a request without ``In-Progress: true`` is made,
+ie. they skip the ``loading`` state. This may change in a future version.
+
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
