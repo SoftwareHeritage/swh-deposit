@@ -226,6 +226,7 @@ As a failsafe, to avoid accidentally updating the wrong deposit, this requires
 the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
 deposit's content (returned after the deposit finished loading).
 
+.. _use-case-metadata-only-deposit:
 
 Metadata-only deposit
 ---------------------
