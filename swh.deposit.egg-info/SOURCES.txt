@@ -62,10 +62,14 @@ docs/images/deposit-authentication-keycloak.uml
 docs/images/deposit-create-chart.uml
 docs/images/deposit-delete-chart.uml
 docs/images/deposit-update-chart.uml
+docs/images/deposit-workflow-checking.uml
+docs/images/deposit-workflow-loading.uml
+docs/images/deposit-workflow-reception.uml
 docs/images/status.uml
 docs/internals/authentication.rst
 docs/internals/dev-environment.rst
 docs/internals/index.rst
+docs/internals/loading-workflow.rst
 docs/internals/prod-environment.rst
 docs/specs/blueprint.rst
 docs/specs/index.rst

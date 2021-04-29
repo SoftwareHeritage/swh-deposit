@@ -1,0 +1,44 @@
+@startuml
+  participant DEPOSIT as "deposit API"
+  participant DEPOSIT_DATABASE as "deposit DB"
+  participant LOADER_TASK as "loader task"
+  participant STORAGE as "swh-storage"
+  participant CELERY as "celery"
+  participant SCHEDULER as "swh-scheduler"
+
+  activate DEPOSIT
+  activate DEPOSIT_DATABASE
+  activate STORAGE
+  activate CELERY
+  activate SCHEDULER
+
+  SCHEDULER ->> CELERY: new "load-deposit"\ntask available
+  CELERY ->> LOADER_TASK: start task
+  activate LOADER_TASK
+
+  LOADER_TASK ->> DEPOSIT: GET /{collection}/{deposit_id}/raw/
+
+  DEPOSIT ->> DEPOSIT_DATABASE: get deposit requests
+  DEPOSIT_DATABASE ->> DEPOSIT: deposit requests
+
+  loop for each request
+    DEPOSIT ->> DEPOSIT_DATABASE: get archive
+    DEPOSIT_DATABASE ->> DEPOSIT: archive content
+    DEPOSIT ->> DEPOSIT: aggregate
+  end
+
+  DEPOSIT ->> LOADER_TASK: tarball
+
+  LOADER_TASK ->> LOADER_TASK: unpack on disk
+
+  loop
+    LOADER_TASK ->> LOADER_TASK: load objects
+    LOADER_TASK ->> STORAGE: store objects
+  end
+
+  LOADER_TASK -> DEPOSIT: PUT /{collection}/{deposit_id}/status
+  DEPOSIT ->> DEPOSIT_DATABASE: mark deposit as "done"
+  LOADER_TASK ->> CELERY: done
+  deactivate LOADER_TASK
+  CELERY ->> SCHEDULER: done
+@enduml

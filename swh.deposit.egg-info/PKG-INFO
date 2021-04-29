@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: swh.deposit
-Version: 0.13.5
+Version: 0.13.6
 Summary: Software Heritage Deposit Server
 Home-page: https://forge.softwareheritage.org/source/swh-deposit/
 Author: Software Heritage developers
@@ -70,8 +70,8 @@ Description: Software Heritage - Deposit
         See the :ref:`deposit-api-specifications` reference pages of the SWORDv2 API implementation
         in `swh.deposit` if you want to do upload deposits using HTTP requests.
         
-        Read the :ref:`metadata` chapter to get more details on what metadata are supported when
-        doing a deposit.
+        Read the :ref:`deposit-metadata` chapter to get more details on what metadata
+        are supported when doing a deposit.
         
         See :ref:`swh-deposit-dev-env` if you want to hack the code of the `swh.deposit` module.
         

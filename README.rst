@@ -58,8 +58,8 @@ command line tools to push a deposit in the SWH Archive.
 See the :ref:`deposit-api-specifications` reference pages of the SWORDv2 API implementation
 in `swh.deposit` if you want to do upload deposits using HTTP requests.
 
-Read the :ref:`metadata` chapter to get more details on what metadata are supported when
-doing a deposit.
+Read the :ref:`deposit-metadata` chapter to get more details on what metadata
+are supported when doing a deposit.
 
 See :ref:`swh-deposit-dev-env` if you want to hack the code of the `swh.deposit` module.
 

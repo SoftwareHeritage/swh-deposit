@@ -58,17 +58,13 @@ The API endpoints are rooted at https://deposit.softwareheritage.org/1/.
 Data is sent and received as XML (as specified in the SWORD 2.0
 specification).
 
-.. include:: endpoints/service-document.rst
-
-.. include:: endpoints/collection.rst
-
-.. include:: endpoints/update-media.rst
-
-.. include:: endpoints/update-metadata.rst
-
-.. include:: endpoints/status.rst
-
-.. include:: endpoints/content.rst
+.. toctree::
+   ../endpoints/service-document.rst
+   ../endpoints/collection.rst
+   ../endpoints/update-media.rst
+   ../endpoints/update-metadata.rst
+   ../endpoints/status.rst
+   ../endpoints/content.rst
 
 
 Possible errors:

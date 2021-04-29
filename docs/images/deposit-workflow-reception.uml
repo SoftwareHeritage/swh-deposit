@@ -1,0 +1,37 @@
+@startuml
+  participant CLIENT as "SWORD client"
+  participant DEPOSIT as "deposit API"
+  participant DEPOSIT_DATABASE as "deposit DB"
+  participant STORAGE as "swh-storage"
+  participant SCHEDULER as "swh-scheduler"
+
+  activate CLIENT
+  activate DEPOSIT
+  activate DEPOSIT_DATABASE
+  activate STORAGE
+  activate SCHEDULER
+
+  CLIENT ->> DEPOSIT: Atom and/or archive
+  DEPOSIT ->> DEPOSIT_DATABASE: create new deposit
+  DEPOSIT_DATABASE -->> DEPOSIT: return deposit_id
+  DEPOSIT ->> DEPOSIT_DATABASE: record deposit request
+
+  loop while the previous request has "In-Progress: true"
+      DEPOSIT ->> CLIENT: deposit receipt\n("partial")
+      CLIENT ->> DEPOSIT: Atom and/or archive
+      DEPOSIT ->> DEPOSIT_DATABASE: record deposit request
+  end
+
+
+  alt if metadata-only
+      DEPOSIT ->> STORAGE: target exists?
+      STORAGE ->> DEPOSIT: true
+      DEPOSIT ->> STORAGE: insert metadata
+      DEPOSIT ->> DEPOSIT_DATABASE: mark deposit as "done"
+  else
+      DEPOSIT ->> SCHEDULER: schedule checks
+      DEPOSIT ->> DEPOSIT_DATABASE: mark deposit as "loading"
+  end
+
+  DEPOSIT ->> CLIENT: deposit receipt\n("done" or "loading")
+@enduml

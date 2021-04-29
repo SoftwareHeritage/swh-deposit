@@ -30,6 +30,6 @@ Deposit client tools
   :prog: swh deposit
   :nested: full
 
-.. click:: swh.deposit.cli.client:metadata-only
+.. click:: swh.deposit.cli.client:metadata_only
   :prog: swh deposit
   :nested: full

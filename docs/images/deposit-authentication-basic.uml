@@ -1,7 +1,7 @@
 @startuml
 participant CLIENT as "SWORD client\n(eg. HAL)"
 participant DEPOSIT as "swh-deposit"
-participant AUTH_BACKEND as "deposit storage"
+participant AUTH_BACKEND as "deposit database"
 
 activate CLIENT
   activate DEPOSIT
