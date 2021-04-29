@@ -40,6 +40,7 @@ class Dbversion(models.Model):
 
     class Meta:
         db_table = "dbversion"
+        app_label = "deposit"
 
     def __str__(self):
         return str(
@@ -99,6 +100,7 @@ class DepositClient(User):
 
     class Meta:
         db_table = "deposit_client"
+        app_label = "deposit"
 
     def __str__(self):
         return str(
@@ -148,6 +150,7 @@ class Deposit(models.Model):
 
     class Meta:
         db_table = "deposit"
+        app_label = "deposit"
 
     def __str__(self):
         d = {
@@ -209,6 +212,7 @@ class DepositRequest(models.Model):
 
     class Meta:
         db_table = "deposit_request"
+        app_label = "deposit"
 
     def __str__(self):
         meta = None
@@ -238,6 +242,7 @@ class DepositCollection(models.Model):
 
     class Meta:
         db_table = "deposit_collection"
+        app_label = "deposit"
 
     def __str__(self):
         return str({"id": self.id, "name": self.name})

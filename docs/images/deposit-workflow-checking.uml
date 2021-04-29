@@ -1,0 +1,34 @@
+@startuml
+  participant DEPOSIT as "deposit API"
+  participant DEPOSIT_DATABASE as "deposit DB"
+  participant CHECKER_TASK as "checker task"
+  participant CELERY as "celery"
+  participant SCHEDULER as "swh-scheduler"
+
+  activate DEPOSIT
+  activate DEPOSIT_DATABASE
+  activate CELERY
+  activate SCHEDULER
+
+  SCHEDULER ->> CELERY: new "check-deposit"\ntask available
+  CELERY ->> CHECKER_TASK: start task
+  activate CHECKER_TASK
+
+  CHECKER_TASK ->> DEPOSIT: GET /{collection}/{deposit_id}/check/
+
+  DEPOSIT ->> DEPOSIT_DATABASE: get deposit requests
+  DEPOSIT_DATABASE ->> DEPOSIT: deposit requests
+
+  loop for each request
+    DEPOSIT ->> DEPOSIT_DATABASE: get archive
+    DEPOSIT_DATABASE ->> DEPOSIT: archive content
+    DEPOSIT ->> DEPOSIT: check archive in the request
+  end
+
+  DEPOSIT ->> DEPOSIT_DATABASE: mark deposit as "verified"
+  DEPOSIT ->> SCHEDULER: schedule load
+  DEPOSIT ->> CHECKER_TASK: done
+  CHECKER_TASK ->> CELERY: done
+  deactivate CHECKER_TASK
+  CELERY ->> SCHEDULER: done
+@enduml

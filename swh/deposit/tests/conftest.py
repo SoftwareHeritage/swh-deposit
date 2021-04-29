@@ -100,7 +100,7 @@ keycloak_mock_auth_success = keycloak_mock_factory(
     client_id=CLIENT_ID,
     auth_success=True,
     user_info=USER_INFO,
-    user_permissions=[DEPOSIT_PERMISSION],
+    client_permissions=[DEPOSIT_PERMISSION],
 )
 
 
@@ -363,7 +363,7 @@ def insufficient_perm_client(
        is not allowed.
 
     """
-    keycloak_mock_auth_success.user_permissions = []
+    keycloak_mock_auth_success.client_permissions = []
     mock_keycloakopenidconnect(mocker, keycloak_mock_auth_success)
     yield from _create_authenticated_client(anonymous_client, deposit_user)
 
