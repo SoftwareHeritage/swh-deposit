@@ -64,7 +64,7 @@ packaging system. For example, on a Debian system:
 
    $ sudo apt install jq
 
-.. _prepare_deposit
+.. _prepare-deposit:
 
 Prepare a deposit
 -----------------
@@ -159,7 +159,7 @@ You can push a deposit with:
 
 Overall, a deposit can be a in series of steps as follow:
 
-.. figure:: images/status.svg
+.. figure:: ../images/status.svg
    :alt:
 
 The important things to notice for now is that it can be:
@@ -292,7 +292,7 @@ Ensure this metadata file also declares a :ref:`SWHID reference
 
 .. code:: xml
 
-   <entry ...
+   <entry xmlns="..."
           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
           >
 

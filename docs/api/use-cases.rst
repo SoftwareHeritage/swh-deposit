@@ -48,6 +48,8 @@ done
 failed
    Loading failed.
 
+.. figure:: ../images/status.svg
+   :alt:
 
 This document describes the possible scenarios for creating or updating a
 deposit.
@@ -95,7 +97,10 @@ From client's deposit repository server to SWH's repository server:
    b. Server stores information received (metadata or software archive source
       code or both).
 
-4. The server notifies the client it acknowledged the client's request. An
+4. The server creates a loading task and submits it to the
+   :ref:`Job Scheduler <swh-scheduler>`
+
+5. The server notifies the client it acknowledged the client's request. An
    ``http 201 Created`` response with a deposit receipt in the body response is
    sent back. That deposit receipt will hold the necessary information to
    eventually complete the deposit later on if it was incomplete (also known as
@@ -110,10 +115,10 @@ Scenario: pushing a deposit via the SWORDv2_ protocol (nominal scenario):
    :alt:
 
 
-Updating an existing deposit
-""""""""""""""""""""""""""""
+Deposit update
+--------------
 
-5. Client updates existing deposit through the *update uris* (one or more POST
+6. Client updates existing deposit through the *update uris* (one or more POST
    or PUT requests to either the *edit-media iri* or *edit iri*).
 
   1. Server validates the client's input or returns detailed error if any
@@ -129,18 +134,11 @@ the limit size imposed by swh repository deposit).
 The content of a deposit can only be updated while it is in the ``partial``
 state; this causes the content to be **replaced** (the old version is discarded).
 
-Its metadata, however, can also be updated while in the ``done`` state;
-which adds a new version of the metadata in the SWH archive,
-**in addition to** the old one(s).
-In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
-in the ``partial`` state, but only to ``deposited``.
-As a failsafe, to avoid accidentally updating the wrong deposit, this requires
-the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
-deposit's content (returned after the deposit finished loading).
+Its metadata, however, can also be updated while in the ``done`` state; see below.
 
 
 Schema representation
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 
 Scenario: updating a deposit via SWORDv2_ protocol:
 
@@ -148,10 +146,10 @@ Scenario: updating a deposit via SWORDv2_ protocol:
    :alt:
 
 
-Deleting deposit (or associated archive, or associated metadata)
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Deposit deletion (or associated archive, or associated metadata)
+----------------------------------------------------------------
 
-6. Deposit deletion is possible as long as the deposit is still in ``partial``
+7. Deposit deletion is possible as long as the deposit is still in ``partial``
    state.
 
   1. Server validates the client's input or returns detailed error if any
@@ -168,13 +166,24 @@ Scenario: deleting a deposit via SWORDv2_ protocol:
 
 
 Client asks for operation status
-""""""""""""""""""""""""""""""""
+--------------------------------
 
-7. Operation status can be read through a GET query to the *state iri*.
+At any time during the next step, operation status can be read through
+a GET query to the *state iri*.
+
+
+Deposit loading
+---------------
+
+In one of the previous steps, when a deposit was created or loaded without
+``In-Progress: true``, the deposit server created a load task and submitted it
+to :ref:`swh-scheduler <swh-scheduler>`.
+
+This triggers the following steps:
 
 
 Server: Triggering deposit checks
-"""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the status ``deposited`` is reached for a deposit, checks for the
 associated archive(s) and metadata will be triggered. If those checks
@@ -183,7 +192,7 @@ there. Otherwise, the status is changed to ``verified``.
 
 
 Server: Triggering deposit load
-"""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the status ``verified`` is reached for a deposit, loading the
 deposit with its associated metadata will be triggered.
@@ -192,5 +201,47 @@ The loading will result on status update, either ``done`` or ``failed``
 (depending on the loading's status).
 
 This is described in the :ref:`loading specifications document <swh-loading-specs>`.
+
+
+Completing the deposit
+----------------------
+
+When this is all done, the loaders notify the deposit server, which sets
+the deposit status to ``done``.
+
+This can then be polled by deposit clients, using the *state iri*.
+
+
+Deposit metadata updates
+------------------------
+
+We saw earlier that a deposit can only be updated when in ``partial`` state.
+
+This is one exception to this rule: its metadata can be updated while in the
+``done`` state; which adds a new version of the metadata in the SWH archive,
+**in addition to** the old one(s).
+In this state, ``In-Progress`` is not allowed, so the deposit cannot go back
+in the ``partial`` state, but only to ``deposited``.
+As a failsafe, to avoid accidentally updating the wrong deposit, this requires
+the ``X-Check-SWHID`` HTTP header to be set to the value of the SWHID of the
+deposit's content (returned after the deposit finished loading).
+
+.. _use-case-metadata-only-deposit:
+
+Metadata-only deposit
+---------------------
+
+Finally, as an extension to the SWORD protocol, swh-deposit allows a special
+type of deposit: metadata-only deposits.
+Unlike regular deposit (described above), they do not have a code archive.
+Instead, they describe an existing :term:`software artifact` present in the
+archive.
+
+This use case is triggered by a ``<reference>`` tag in the Atom document,
+see the :ref:`protocol reference <metadata-only-deposit>` for details.
+
+In the current implementation, these deposits are loaded (or rejected)
+immediately after a request without ``In-Progress: true`` is made,
+ie. they skip the ``loading`` state. This may change in a future version.
 
 .. _SWORDv2: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html

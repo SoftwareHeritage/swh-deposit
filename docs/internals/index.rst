@@ -12,3 +12,4 @@ and how to run it (either in production or locally for development).
    dev-environment
    prod-environment
    authentication
+   loading-workflow
