@@ -668,9 +668,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         metadata_authority = MetadataAuthority(
-            type=MetadataAuthorityType.DEPOSIT_CLIENT,
-            url=deposit.client.provider_url,
-            metadata={"name": deposit.client.last_name},
+            type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit.client.provider_url,
         )
 
         metadata_fetcher = self.swh_deposit_fetcher()
