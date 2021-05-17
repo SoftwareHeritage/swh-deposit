@@ -1047,23 +1047,17 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
 
     def get(
-        self, request: Request, collection_name: str, deposit_id: int
+        self, request: Request, *args, **kwargs
     ) -> Union[HttpResponse, FileResponse]:
         return self._basic_not_allowed_method(request, "GET")
 
-    def post(
-        self, request: Request, collection_name: str, deposit_id: Optional[int] = None
-    ) -> HttpResponse:
+    def post(self, request: Request, *args, **kwargs) -> HttpResponse:
         return self._basic_not_allowed_method(request, "POST")
 
-    def put(
-        self, request: Request, collection_name: str, deposit_id: int
-    ) -> HttpResponse:
+    def put(self, request: Request, *args, **kwargs) -> HttpResponse:
         return self._basic_not_allowed_method(request, "PUT")
 
-    def delete(
-        self, request: Request, collection_name: str, deposit_id: Optional[int] = None
-    ) -> HttpResponse:
+    def delete(self, request: Request, *args, **kwargs) -> HttpResponse:
         return self._basic_not_allowed_method(request, "DELETE")
 
 
@@ -1072,7 +1066,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
     """
 
-    def get(
+    def get(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: int
     ) -> Union[HttpResponse, FileResponse]:
         """Endpoint to create/add resources to deposit.
@@ -1118,7 +1112,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
 
     """
 
-    def post(
+    def post(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
     ) -> HttpResponse:
         """Endpoint to create/add resources to deposit.
@@ -1201,7 +1195,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
 
     """
 
-    def put(
+    def put(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: int
     ) -> HttpResponse:
         """Endpoint to update deposit resources.
@@ -1243,7 +1237,7 @@ class APIDelete(APIBase, metaclass=ABCMeta):
 
     """
 
-    def delete(
+    def delete(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
     ) -> HttpResponse:
         """Endpoint to delete some deposit's resources (archives, deposit).
