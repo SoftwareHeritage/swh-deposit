@@ -44,6 +44,18 @@ def test_access_to_another_user_collection_is_forbidden(
     assert msg in response.content.decode("utf-8")
 
 
+def test_put_on_col_iri_not_supported(authenticated_client, deposit_collection):
+    """Delete on col iri should return a 405 response
+
+    """
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+    response = authenticated_client.put(url)
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+    assert "PUT method is not supported on this endpoint" in response.content.decode(
+        "utf-8"
+    )
+
+
 def test_delete_on_col_iri_not_supported(authenticated_client, deposit_collection):
     """Delete on col iri should return a 405 response
 
