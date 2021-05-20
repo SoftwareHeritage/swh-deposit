@@ -71,9 +71,7 @@ def _assert_deposit_info_on_metadata(
     swh_storage, metadata_swhid, deposit, metadata_fetcher
 ):
     swh_authority = MetadataAuthority(
-        MetadataAuthorityType.REGISTRY,
-        "http://deposit.softwareheritage.example/",
-        metadata=None,
+        MetadataAuthorityType.REGISTRY, "http://deposit.softwareheritage.example/",
     )
     page_results = swh_storage.raw_extrinsic_metadata_get(metadata_swhid, swh_authority)
 
@@ -95,7 +93,7 @@ def _assert_deposit_info_on_metadata(
                 target=metadata_swhid,
                 discovery_date=deposit.complete_date,
                 authority=swh_authority,
-                fetcher=attr.evolve(metadata_fetcher, metadata=None),
+                fetcher=metadata_fetcher,
                 format="xml-deposit-info",
                 metadata=expected_xml_data.encode(),
             )
@@ -570,9 +568,7 @@ def test_deposit_metadata_swhid(
 
     # Ensure metadata stored in the metadata storage is consistent
     metadata_authority = MetadataAuthority(
-        type=MetadataAuthorityType.DEPOSIT_CLIENT,
-        url=deposit_client.provider_url,
-        metadata={"name": deposit_client.last_name},
+        type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit_client.provider_url,
     )
 
     actual_authority = swh_storage.metadata_authority_get(
@@ -582,9 +578,7 @@ def test_deposit_metadata_swhid(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"],
-        version=config.tool["version"],
-        metadata=config.tool["configuration"],
+        name=config.tool["name"], version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -605,8 +599,8 @@ def test_deposit_metadata_swhid(
     metadata = RawExtrinsicMetadata(
         target=swhid_target,
         discovery_date=deposit.complete_date,
-        authority=attr.evolve(metadata_authority, metadata=None),
-        fetcher=attr.evolve(metadata_fetcher, metadata=None),
+        authority=metadata_authority,
+        fetcher=metadata_fetcher,
         format="sword-v2-atom-codemeta",
         metadata=xml_data.encode(),
         **metadata_context,
@@ -652,9 +646,7 @@ def test_deposit_metadata_origin(
 
     # Ensure metadata stored in the metadata storage is consistent
     metadata_authority = MetadataAuthority(
-        type=MetadataAuthorityType.DEPOSIT_CLIENT,
-        url=deposit_client.provider_url,
-        metadata={"name": deposit_client.last_name},
+        type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit_client.provider_url,
     )
 
     actual_authority = swh_storage.metadata_authority_get(
@@ -664,9 +656,7 @@ def test_deposit_metadata_origin(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"],
-        version=config.tool["version"],
-        metadata=config.tool["configuration"],
+        name=config.tool["name"], version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -686,8 +676,8 @@ def test_deposit_metadata_origin(
     metadata = RawExtrinsicMetadata(
         target=origin_swhid,
         discovery_date=deposit.complete_date,
-        authority=attr.evolve(metadata_authority, metadata=None),
-        fetcher=attr.evolve(metadata_fetcher, metadata=None),
+        authority=metadata_authority,
+        fetcher=metadata_fetcher,
         format="sword-v2-atom-codemeta",
         metadata=xml_data.encode(),
     )

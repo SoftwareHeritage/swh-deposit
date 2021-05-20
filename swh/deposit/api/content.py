@@ -20,7 +20,9 @@ class ContentAPI(APIBase):
 
     """
 
-    def get(self, req, collection_name: str, deposit_id: int) -> HttpResponse:
+    def get(  # type: ignore
+        self, req, collection_name: str, deposit_id: int
+    ) -> HttpResponse:
         deposit = get_deposit_by_id(deposit_id, collection_name)
 
         self.checks(req, collection_name, deposit)
