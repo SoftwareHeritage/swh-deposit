@@ -5,7 +5,6 @@
 
 from io import BytesIO
 
-import attr
 from django.urls import reverse_lazy as reverse
 import pytest
 from rest_framework import status
@@ -373,7 +372,6 @@ def test_put_update_metadata_done_deposit_nominal(
     metadata_authority = MetadataAuthority(
         type=MetadataAuthorityType.DEPOSIT_CLIENT,
         url=complete_deposit.client.provider_url,
-        metadata={"name": complete_deposit.client.last_name},
     )
 
     actual_authority = swh_storage.metadata_authority_get(
@@ -383,9 +381,7 @@ def test_put_update_metadata_done_deposit_nominal(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"],
-        version=config.tool["version"],
-        metadata=config.tool["configuration"],
+        name=config.tool["name"], version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -402,8 +398,8 @@ def test_put_update_metadata_done_deposit_nominal(
             RawExtrinsicMetadata(
                 target=directory_swhid,
                 discovery_date=request_meta1.date,
-                authority=attr.evolve(metadata_authority, metadata=None),
-                fetcher=attr.evolve(metadata_fetcher, metadata=None),
+                authority=metadata_authority,
+                fetcher=metadata_fetcher,
                 format="sword-v2-atom-codemeta",
                 metadata=raw_metadata1.encode(),
                 origin=complete_deposit.origin_url,
