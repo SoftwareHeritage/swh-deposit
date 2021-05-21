@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,8 +10,18 @@
 from django.conf.urls import url
 from django.shortcuts import render
 
-from ..config import COL_IRI, CONT_FILE_IRI, EDIT_IRI, EM_IRI, SD_IRI, SE_IRI, STATE_IRI
+from ..config import (
+    COL_IRI,
+    COLLECTION_LIST,
+    CONT_FILE_IRI,
+    EDIT_IRI,
+    EM_IRI,
+    SD_IRI,
+    SE_IRI,
+    STATE_IRI,
+)
 from .collection import CollectionAPI
+from .collection_list import CollectionListAPI
 from .content import ContentAPI
 from .edit import EditAPI
 from .edit_media import EditMediaAPI
@@ -73,4 +83,9 @@ urlpatterns = [
     ),  # specification is not clear about
     # File-IRI, we assume it's the same as
     # the Cont-IRI one
+    url(
+        r"^(?P<collection_name>[^/]+)/list/$",
+        CollectionListAPI.as_view(),
+        name=COLLECTION_LIST,
+    ),
 ]
