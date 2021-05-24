@@ -645,7 +645,7 @@ def test_cli_multisteps_deposit(
 
 
 @pytest.mark.parametrize(
-    "output_format,callable_fn",
+    "output_format,parser_fn",
     [
         ("json", json.loads),
         ("yaml", yaml.safe_load),
@@ -656,7 +656,7 @@ def test_cli_multisteps_deposit(
     ],
 )
 def test_cli_deposit_status_with_output_format(
-    output_format, callable_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
+    output_format, parser_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
 ):
     """Check deposit status cli with all possible output formats (json, yaml, logging).
 
@@ -697,7 +697,7 @@ def test_cli_deposit_status_with_output_format(
     else:
         result_output = result.output
 
-    actual_deposit = callable_fn(result_output)
+    actual_deposit = parser_fn(result_output)
     assert actual_deposit == expected_deposit_status
 
 
@@ -956,3 +956,78 @@ def test_cli_service_document_failure(atom_dataset, mocker):
     actual_error = api_call.parse_result_error(error_xml)
 
     assert actual_error == {"error": summary}
+
+
+@pytest.mark.parametrize(
+    "output_format,parser_fn",
+    [
+        ("json", json.loads),
+        ("yaml", yaml.safe_load),
+        (
+            "logging",
+            ast.literal_eval,
+        ),  # not enough though, the caplog fixture is needed
+    ],
+)
+def test_cli_deposit_collection_list(
+    output_format, parser_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
+):
+    """Check deposit status cli with all possible output formats (json, yaml, logging).
+
+    """
+    api_url_basename = "deposit.test.list"
+
+    expected_deposits = {
+        "count": "3",
+        "deposits": [
+            {
+                "external_id": "check-deposit-2020-10-09T13:10:00.000000",
+                "id": "1031",
+                "status": "rejected",
+                "status_detail": "Deposit without archive",
+            },
+            {
+                "external_id": "check-deposit-2020-10-10T13:20:00.000000",
+                "id": "1032",
+                "status": "rejected",
+                "status_detail": "Deposit without archive",
+            },
+            {
+                "complete_date": "2020-10-08T13:52:34.509655",
+                "external_id": "check-deposit-2020-10-08T13:52:34.509655",
+                "id": "1033",
+                "reception_date": "2020-10-08T13:50:30",
+                "status": "done",
+                "status_detail": "The deposit has been successfully loaded into "
+                "the Software Heritage archive",
+                "swhid": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea",
+                "swhid_context": "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/",  # noqa
+            },
+        ],
+    }
+
+    # fmt: off
+    result = cli_runner.invoke(
+        cli,
+        [
+            "list",
+            "--url", f"https://{api_url_basename}/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--page", 1,
+            "--page-size", 10,
+            "--format", output_format,
+        ],
+    )
+    # fmt: on
+    assert result.exit_code == 0, f"unexpected output: {result.output}"
+
+    if output_format == "logging":
+        assert len(caplog.record_tuples) == 1
+        # format: (<module>, <log-level>, <log-msg>)
+        _, _, result_output = caplog.record_tuples[0]
+    else:
+        result_output = result.output
+
+    actual_deposit = parser_fn(result_output)
+    assert actual_deposit == expected_deposits
