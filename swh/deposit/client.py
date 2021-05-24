@@ -16,6 +16,7 @@ import warnings
 
 import requests
 from requests import Response
+from requests.utils import parse_header_links
 
 from swh.core.config import load_from_envvar
 from swh.deposit import __version__ as swh_deposit_version
@@ -273,7 +274,9 @@ class BaseDepositClient(BaseApiDepositClient):
         """Http method to use on the url"""
         raise NotImplementedError
 
-    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Given an xml result from the api endpoint, parse it and returns a
            dict.
 
@@ -305,15 +308,18 @@ class BaseDepositClient(BaseApiDepositClient):
             "sword:verboseDescription": sword_error.get("sword:verboseDescription", ""),
         }
 
-    def do_execute(self, method: str, url: str, info: Dict) -> Response:
+    def do_execute(self, method: str, url: str, info: Dict, **kwargs) -> Response:
         """Execute the http query to url using method and info information.
 
-        By default, execute a simple query to url with the http
-        method.  Override this in daughter class to improve the
-        default behavior if needed.
+        By default, execute a simple query to url with the http method. Override this in
+        subclass to improve the default behavior if needed.
 
         """
-        return self.do(method, url)
+        return self.do(method, url, **kwargs)
+
+    def compute_params(self, **kwargs) -> Dict[str, Any]:
+        """Determine the params out of the kwargs"""
+        return {}
 
     def execute(self, *args, **kwargs) -> Dict[str, Any]:
         """Main endpoint to prepare and execute the http query to the api.
@@ -328,9 +334,10 @@ class BaseDepositClient(BaseApiDepositClient):
         url = self.compute_url(*args, **kwargs)
         method = self.compute_method(*args, **kwargs)
         info = self.compute_information(*args, **kwargs)
+        params = self.compute_params(**kwargs)
 
         try:
-            response = self.do_execute(method, url, info)
+            response = self.do_execute(method, url, info, params=params)
         except Exception as e:
             msg = self.error_msg % (url, e)
             result = self.empty_result
@@ -343,7 +350,8 @@ class BaseDepositClient(BaseApiDepositClient):
                 if int(response.status_code) == 204:  # 204 returns no body
                     return {"status": response.status_code}
                 else:
-                    return self.parse_result_ok(response.text)
+                    headers = dict(response.headers) if response.headers else None
+                    return self.parse_result_ok(response.text, headers)
             else:
                 error = self.parse_result_error(response.text)
                 empty = self.empty_result
@@ -380,7 +388,9 @@ class ServiceDocumentDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "get"
 
-    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Parse service document's success response.
 
         """
@@ -415,7 +425,9 @@ class StatusDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "get"
 
-    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -429,6 +441,72 @@ class StatusDepositClient(BaseDepositClient):
             "deposit_external_id",
         ]
         return {key: data.get("swh:" + key) for key in keys}
+
+
+class CollectionListDepositClient(BaseDepositClient):
+    """List a collection of deposits (owned by a user)
+
+    """
+
+    def __init__(self, config=None, url=None, auth=None):
+        super().__init__(
+            url=url,
+            auth=auth,
+            config=config,
+            error_msg="List deposits failure at %s: %s",
+            empty_result={},
+        )
+
+    def compute_url(self, collection, **kwargs):
+        return f"/{collection}/"
+
+    def compute_method(self, *args, **kwargs):
+        return "get"
+
+    def compute_params(self, **kwargs) -> Dict[str, Any]:
+        """Transmit pagination params if values provided are not None
+        (e.g. page, page_size)
+
+        """
+        return {k: v for k, v in kwargs.items() if v is not None}
+
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Given an xml content as string, returns a deposit dict.
+
+        """
+        link_header = headers.get("Link", "") if headers else ""
+        links = parse_header_links(link_header)
+        data = parse_xml(xml_content)["atom:feed"]
+        total_result = data.get("swh:count", 0)
+        keys = [
+            "id",
+            "reception_date",
+            "complete_date",
+            "external_id",
+            "swhid",
+            "status",
+            "status_detail",
+            "swhid_context",
+            "origin_url",
+        ]
+        entries_ = data.get("atom:entry", [])
+        entries = [entries_] if isinstance(entries_, dict) else entries_
+        deposits_d = [
+            {
+                key: deposit.get(f"swh:{key}")
+                for key in keys
+                if deposit.get(f"swh:{key}") is not None
+            }
+            for deposit in entries
+        ]
+
+        return {
+            "count": total_result,
+            "deposits": deposits_d,
+            **{entry["rel"]: entry["url"] for entry in links},
+        }
 
 
 class BaseCreateDepositClient(BaseDepositClient):
@@ -451,7 +529,9 @@ class BaseCreateDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "post"
 
-    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -467,7 +547,7 @@ class BaseCreateDepositClient(BaseDepositClient):
     def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
         return info
 
-    def do_execute(self, method, url, info):
+    def do_execute(self, method, url, info, **kwargs):
         with open(info["filepath"], "rb") as f:
             return self.do(method, url, data=f, headers=info["headers"])
 
@@ -559,7 +639,9 @@ class CreateMetadataOnlyDepositClient(BaseCreateDepositClient):
             "filepath": kwargs["metadata_path"],
         }
 
-    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
+    def parse_result_ok(
+        self, xml_content: str, headers: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -608,7 +690,7 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
         files, headers = self._multipart_info(info, info_meta)
         return {"files": files, "headers": headers}
 
-    def do_execute(self, method, url, info):
+    def do_execute(self, method, url, info, **kwargs):
         return self.do(method, url, files=info["files"], headers=info["headers"])
 
 
@@ -633,6 +715,17 @@ class PublicApiDepositClient(BaseApiDepositClient):
         """Retrieve status information on a deposit."""
         return StatusDepositClient(url=self.base_url, auth=self.auth).execute(
             collection, deposit_id
+        )
+
+    def deposit_list(
+        self,
+        collection: str,
+        page: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ):
+        """List deposits from the collection"""
+        return CollectionListDepositClient(url=self.base_url, auth=self.auth).execute(
+            collection, page=page, page_size=page_size
         )
 
     def deposit_create(
