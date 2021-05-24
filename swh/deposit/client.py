@@ -15,6 +15,7 @@ from urllib.parse import urljoin
 import warnings
 
 import requests
+from requests import Response
 
 from swh.core.config import load_from_envvar
 from swh.deposit import __version__ as swh_deposit_version
@@ -157,7 +158,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
 
     """
 
-    def archive_get(self, archive_update_url, archive):
+    def archive_get(self, archive_update_url: str, archive: str) -> Optional[str]:
         """Retrieve the archive from the deposit to a local directory.
 
         Args:
@@ -172,10 +173,10 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             Or None if any problem arose.
 
         """
-        r = self.do("get", archive_update_url, stream=True)
-        if r.ok:
+        response = self.do("get", archive_update_url, stream=True)
+        if response.ok:
             with open(archive, "wb") as f:
-                for chunk in r.iter_content():
+                for chunk in response.iter_content():
                     f.write(chunk)
 
             return archive
@@ -272,7 +273,7 @@ class BaseDepositClient(BaseApiDepositClient):
         """Http method to use on the url"""
         raise NotImplementedError
 
-    def parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
         """Given an xml result from the api endpoint, parse it and returns a
            dict.
 
@@ -286,7 +287,7 @@ class BaseDepositClient(BaseApiDepositClient):
         """
         return {}
 
-    def parse_result_error(self, xml_content: bytes) -> Dict:
+    def parse_result_error(self, xml_content: str) -> Dict[str, Any]:
         """Given an error response in xml, parse it into a dict.
 
         Returns:
@@ -304,7 +305,7 @@ class BaseDepositClient(BaseApiDepositClient):
             "sword:verboseDescription": sword_error.get("sword:verboseDescription", ""),
         }
 
-    def do_execute(self, method, url, info):
+    def do_execute(self, method: str, url: str, info: Dict) -> Response:
         """Execute the http query to url using method and info information.
 
         By default, execute a simple query to url with the http
@@ -329,32 +330,32 @@ class BaseDepositClient(BaseApiDepositClient):
         info = self.compute_information(*args, **kwargs)
 
         try:
-            r = self.do_execute(method, url, info)
+            response = self.do_execute(method, url, info)
         except Exception as e:
             msg = self.error_msg % (url, e)
-            r = self.empty_result
-            r.update(
+            result = self.empty_result
+            result.update(
                 {"error": msg,}
             )
-            return r
+            return result
         else:
-            if r.ok:
-                if int(r.status_code) == 204:  # 204 returns no body
-                    return {"status": r.status_code}
+            if response.ok:
+                if int(response.status_code) == 204:  # 204 returns no body
+                    return {"status": response.status_code}
                 else:
-                    return self.parse_result_ok(r.text)
+                    return self.parse_result_ok(response.text)
             else:
-                error = self.parse_result_error(r.text)
+                error = self.parse_result_error(response.text)
                 empty = self.empty_result
                 error.update(empty)
-                if r.status_code == 503:
+                if response.status_code == 503:
                     summary = error.get("summary")
                     detail = error.get("sword:verboseDescription")
                     # Maintenance error
                     if summary and detail:
                         raise MaintenanceError(f"{summary}: {detail}")
                 error.update(
-                    {"status": r.status_code,}
+                    {"status": response.status_code,}
                 )
                 return error
 
@@ -379,13 +380,13 @@ class ServiceDocumentDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "get"
 
-    def parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
         """Parse service document's success response.
 
         """
         return parse_xml(xml_content)
 
-    def parse_result_error(self, xml_content: bytes) -> Dict:
+    def parse_result_error(self, xml_content: str) -> Dict[str, Any]:
         result = super().parse_result_error(xml_content)
         return {"error": result["summary"]}
 
@@ -414,7 +415,7 @@ class StatusDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "get"
 
-    def parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -450,7 +451,7 @@ class BaseCreateDepositClient(BaseDepositClient):
     def compute_method(self, *args, **kwargs):
         return "post"
 
-    def parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -558,7 +559,7 @@ class CreateMetadataOnlyDepositClient(BaseCreateDepositClient):
             "filepath": kwargs["metadata_path"],
         }
 
-    def parse_result_ok(self, xml_content):
+    def parse_result_ok(self, xml_content: str) -> Dict[str, Any]:
         """Given an xml content as string, returns a deposit dict.
 
         """
@@ -674,11 +675,11 @@ class PublicApiDepositClient(BaseApiDepositClient):
         swhid: Optional[str] = None,
     ):
         """Update (add/replace) existing deposit (archive, metadata, both)."""
-        r = self.deposit_status(collection, deposit_id)
-        if "error" in r:
-            return r
+        response = self.deposit_status(collection, deposit_id)
+        if "error" in response:
+            return response
 
-        status = r["deposit_status"]
+        status = response["deposit_status"]
         if swhid is None and status != "partial":
             return {
                 "error": "You can only act on deposit with status 'partial'",
@@ -694,7 +695,9 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 "deposit_id": deposit_id,
             }
         if archive and not metadata:
-            r = UpdateArchiveDepositClient(url=self.base_url, auth=self.auth).execute(
+            result = UpdateArchiveDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(
                 collection,
                 in_progress,
                 slug,
@@ -703,7 +706,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 replace=replace,
             )
         elif not archive and metadata and swhid is None:
-            r = UpdateMetadataOnPartialDepositClient(
+            result = UpdateMetadataOnPartialDepositClient(
                 url=self.base_url, auth=self.auth
             ).execute(
                 collection,
@@ -714,7 +717,7 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 replace=replace,
             )
         elif not archive and metadata and swhid is not None:
-            r = UpdateMetadataOnDoneDepositClient(
+            result = UpdateMetadataOnDoneDepositClient(
                 url=self.base_url, auth=self.auth
             ).execute(
                 collection,
@@ -725,7 +728,9 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 swhid=swhid,
             )
         else:
-            r = UpdateMultipartDepositClient(url=self.base_url, auth=self.auth).execute(
+            result = UpdateMultipartDepositClient(
+                url=self.base_url, auth=self.auth
+            ).execute(
                 collection,
                 in_progress,
                 slug,
@@ -735,8 +740,8 @@ class PublicApiDepositClient(BaseApiDepositClient):
                 replace=replace,
             )
 
-        if "error" in r:
-            return r
+        if "error" in result:
+            return result
         return self.deposit_status(collection, deposit_id)
 
     def deposit_metadata_only(
