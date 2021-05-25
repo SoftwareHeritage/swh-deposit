@@ -1,18 +1,16 @@
-<entry xmlns="http://www.w3.org/2005/Atom"
+<feed xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/terms/"
        xmlns:dcterms="http://purl.org/dc/terms/"
        xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit"
        >
   <sd:count>{{ count }}</sd:count>
-  <sd:deposits>
-    {% for deposit in results %}
-    <sd:deposit>
-      {% for key, value in deposit.items %}
-        {% if value is not None %}
-        <sd:{{ key }}>{{ value }}</sd:{{ key }}>
-        {% endif %}
-      {% endfor %}
-    </sd:deposit>
+  {% for deposit in results %}
+  <entry>
+    {% for key, value in deposit.items %}
+      {% if value is not None %}
+      <sd:{{ key }}>{{ value }}</sd:{{ key }}>
+      {% endif %}
+    {% endfor %}
+  </entry>
   {% endfor %}
-  </sd:deposits>
-</entry>
+</feed>

@@ -64,7 +64,7 @@ def test_deposit_collection_list_nominal(
     response = authenticated_client.get(f"{url}?page_size=1")
     assert response.status_code == status.HTTP_200_OK
 
-    data = parse_xml(BytesIO(response.content))
+    data = parse_xml(BytesIO(response.content))["atom:feed"]
     assert (
         data["swh:count"] == "2"
     )  # total result of 2 deposits if consuming all results
@@ -75,7 +75,7 @@ def test_deposit_collection_list_nominal(
     assert header_link[0]["rel"] == "next"
 
     # only one deposit in the response
-    deposit = data["swh:deposits"]["swh:deposit"]  # dict as only 1 value (a-la js)
+    deposit = data["atom:entry"]  # dict as only 1 value (a-la js)
     assert isinstance(deposit, dict)
     assert deposit["swh:id"] == deposit_id
     assert deposit["swh:status"] == DEPOSIT_STATUS_PARTIAL
@@ -84,7 +84,7 @@ def test_deposit_collection_list_nominal(
     response2 = authenticated_client.get(expected_next)
 
     assert response2.status_code == status.HTTP_200_OK
-    data2 = parse_xml(BytesIO(response2.content))
+    data2 = parse_xml(BytesIO(response2.content))["atom:feed"]
     assert data2["swh:count"] == "2"  # still total of 2 deposits across all results
 
     expected_previous = f"{url}?page_size=1"
@@ -94,7 +94,7 @@ def test_deposit_collection_list_nominal(
     assert header_link2[0]["rel"] == "previous"
 
     # only 1 deposit in the response
-    deposit2 = data2["swh:deposits"]["swh:deposit"]  # dict as only 1 value (a-la js)
+    deposit2 = data2["atom:entry"]  # dict as only 1 value (a-la js)
     assert isinstance(deposit2, dict)
     assert deposit2["swh:id"] == deposit_id2
     assert deposit2["swh:status"] == DEPOSIT_STATUS_DEPOSITED
@@ -102,9 +102,9 @@ def test_deposit_collection_list_nominal(
     # Retrieve every deposit in one query (no page_size parameter)
     response3 = authenticated_client.get(url)
     assert response3.status_code == status.HTTP_200_OK
-    data3 = parse_xml(BytesIO(response3.content))
+    data3 = parse_xml(BytesIO(response3.content))["atom:feed"]
     assert data3["swh:count"] == "2"  # total result of 2 deposits across all results
-    deposits3 = data3["swh:deposits"]["swh:deposit"]  # list here
+    deposits3 = data3["atom:entry"]  # list here
     assert isinstance(deposits3, list)
     assert len(deposits3) == 2
     header_link3 = parse_header_links(response3._headers["Link"])
