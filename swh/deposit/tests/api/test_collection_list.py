@@ -9,11 +9,7 @@ from django.urls import reverse_lazy as reverse
 from requests.utils import parse_header_links
 from rest_framework import status
 
-from swh.deposit.config import (
-    COLLECTION_LIST,
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_PARTIAL,
-)
+from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL
 from swh.deposit.models import DepositCollection
 from swh.deposit.parsers import parse_xml
 
@@ -22,7 +18,7 @@ def test_deposit_collection_list_is_auth_protected(anonymous_client):
     """Deposit list should require authentication
 
     """
-    url = reverse(COLLECTION_LIST, args=("test",))
+    url = reverse(COL_IRI, args=("test",))
     response = anonymous_client.get(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert b"protected by basic authentication" in response.content
@@ -40,7 +36,7 @@ def test_deposit_collection_list_collection_access_restricted_to_user_coll(
     coll2 = deposit_another_collection
     assert coll.name != coll2.name
     # but does not have access to that coll2 collection
-    url = reverse(COLLECTION_LIST, args=(coll2.name,))
+    url = reverse(COL_IRI, args=(coll2.name,))
     response = authenticated_client.get(url)
     # so it gets rejected access to the listing of that coll2 collection
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -64,7 +60,7 @@ def test_deposit_collection_list_nominal(
     deposit_id2 = str(deposited_deposit.id)
     coll = partial_deposit.collection
     # requesting the listing of the deposit for the user's collection
-    url = reverse(COLLECTION_LIST, args=(coll.name,))
+    url = reverse(COL_IRI, args=(coll.name,))
     response = authenticated_client.get(f"{url}?page_size=1")
     assert response.status_code == status.HTTP_200_OK
 
