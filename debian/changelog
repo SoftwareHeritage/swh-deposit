@@ -1,8 +1,15 @@
-swh-deposit (0.13.7-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.14.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.14.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-05-25 15:42:12
+    +0200)
+  * Upstream changes:     - v0.14.0     - server: Open a paginated list
+    user deposits endpoint     - client: Open `swh deposit list` cli to
+    allow user to list their deposits     - swh/deposit/client: Add more
+    coverage and types     - tests: Rename test_deposit_list.py to
+    test_deposit_private_list.py
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 20 May 2021 13:46:22 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 25 May 2021 13:54:40 +0000
 
 swh-deposit (0.13.7-1~swh1) unstable-swh; urgency=medium
 

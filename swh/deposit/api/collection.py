@@ -5,7 +5,9 @@
 
 from typing import Optional, Tuple
 
+from django.shortcuts import render
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_IRI
 from ..models import Deposit
@@ -22,14 +24,15 @@ from .common import (
     Receipt,
     get_collection_by_name,
 )
+from .utils import DefaultPagination, DepositSerializer
 
 
-class CollectionAPI(APIPost):
+class CollectionAPI(ListAPIView, APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
     What's known as 'Col-IRI' in the sword specification.
 
-    HTTP verbs supported: POST
+    HTTP verbs supported: GET and POST
 
     """
 
@@ -39,6 +42,43 @@ class CollectionAPI(APIPost):
         SWHFileUploadTarParser,
         SWHAtomEntryParser,
     )
+
+    serializer_class = DepositSerializer
+    pagination_class = DefaultPagination
+
+    def get(self, request, *args, **kwargs):
+        """List the user's collection if the user has access to said collection.
+
+        """
+        self.checks(request, kwargs["collection_name"])
+        paginated_result = super().get(request, *args, **kwargs)
+        data = paginated_result.data
+        # Build pagination link headers
+        links = []
+        for link_name in ["next", "previous"]:
+            link = data.get(link_name)
+            if link is None:
+                continue
+            links.append(f'<{link}>; rel="{link_name}"')
+        response = render(
+            request,
+            "deposit/collection_list.xml",
+            context={
+                "count": data["count"],
+                "results": [dict(d) for d in data["results"]],
+            },
+            content_type="application/xml",
+            status=status.HTTP_200_OK,
+        )
+        response._headers["Link"] = ",".join(links)
+        return response
+
+    def get_queryset(self):
+        """List the deposits for the authenticated user (pagination is handled by the
+        `pagination_class` class attribute).
+
+        """
+        return Deposit.objects.filter(client=self.request.user.id).order_by("id")
 
     def process_post(
         self,

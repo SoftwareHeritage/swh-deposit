@@ -112,6 +112,7 @@ swh/deposit/api/service_document.py
 swh/deposit/api/state.py
 swh/deposit/api/sword_edit.py
 swh/deposit/api/urls.py
+swh/deposit/api/utils.py
 swh/deposit/api/private/__init__.py
 swh/deposit/api/private/deposit_check.py
 swh/deposit/api/private/deposit_list.py
@@ -168,6 +169,7 @@ swh/deposit/templates/api.html
 swh/deposit/templates/homepage.html
 swh/deposit/templates/layout.html
 swh/deposit/templates/deposit/__init__.py
+swh/deposit/templates/deposit/collection_list.xml
 swh/deposit/templates/deposit/content.xml
 swh/deposit/templates/deposit/deposit_info.xml
 swh/deposit/templates/deposit/deposit_receipt.xml
@@ -179,6 +181,7 @@ swh/deposit/tests/__init__.py
 swh/deposit/tests/common.py
 swh/deposit/tests/conftest.py
 swh/deposit/tests/test_backend.py
+swh/deposit/tests/test_client_module.py
 swh/deposit/tests/test_common.py
 swh/deposit/tests/test_gunicorn_config.py
 swh/deposit/tests/test_init.py
@@ -189,14 +192,15 @@ swh/deposit/tests/api/test_basic_auth.py
 swh/deposit/tests/api/test_checks.py
 swh/deposit/tests/api/test_collection.py
 swh/deposit/tests/api/test_collection_add_to_origin.py
+swh/deposit/tests/api/test_collection_list.py
 swh/deposit/tests/api/test_collection_post_atom.py
 swh/deposit/tests/api/test_collection_post_binary.py
 swh/deposit/tests/api/test_collection_post_multipart.py
 swh/deposit/tests/api/test_collection_reuse_slug.py
 swh/deposit/tests/api/test_converters.py
 swh/deposit/tests/api/test_delete.py
-swh/deposit/tests/api/test_deposit_list.py
 swh/deposit/tests/api/test_deposit_private_check.py
+swh/deposit/tests/api/test_deposit_private_list.py
 swh/deposit/tests/api/test_deposit_private_read_archive.py
 swh/deposit/tests/api/test_deposit_private_read_metadata.py
 swh/deposit/tests/api/test_deposit_private_update_status.py
@@ -234,6 +238,9 @@ swh/deposit/tests/data/atom/entry-data0.xml
 swh/deposit/tests/data/atom/entry-data1.xml
 swh/deposit/tests/data/atom/entry-data2.xml
 swh/deposit/tests/data/atom/entry-data3.xml
+swh/deposit/tests/data/atom/entry-list-deposits-page1.xml
+swh/deposit/tests/data/atom/entry-list-deposits-page2.xml
+swh/deposit/tests/data/atom/entry-list-deposits.xml
 swh/deposit/tests/data/atom/entry-only-create-origin.xml
 swh/deposit/tests/data/atom/entry-update-in-place.xml
 swh/deposit/tests/data/atom/error-cli.xml
@@ -244,6 +251,8 @@ swh/deposit/tests/data/atom/error-with-reference-and-create-origin.xml
 swh/deposit/tests/data/atom/metadata.xml
 swh/deposit/tests/data/https_deposit.swh.test/1_servicedocument
 swh/deposit/tests/data/https_deposit.swh.test/1_test
+swh/deposit/tests/data/https_deposit.test.list/1_servicedocument
+swh/deposit/tests/data/https_deposit.test.list/1_test,page=1,page_size=10
 swh/deposit/tests/data/https_deposit.test.metadata/1_servicedocument
 swh/deposit/tests/data/https_deposit.test.metadata/1_test
 swh/deposit/tests/data/https_deposit.test.metadata/1_test_666_media
