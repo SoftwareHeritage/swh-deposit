@@ -1,0 +1,16 @@
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:sword="http://purl.org/net/sword/terms/"
+      xmlns:dcterms="http://purl.org/dc/terms/"
+      xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit">
+  <sd:count>3</sd:count>
+  <entry>
+    <sd:id>1033</sd:id>
+    <sd:reception_date>2020-10-08T13:50:30</sd:reception_date>
+    <sd:complete_date>2020-10-08T13:52:34.509655</sd:complete_date>
+    <sd:status>done</sd:status>
+    <sd:status_detail>The deposit has been successfully loaded into the Software Heritage archive</sd:status_detail>
+    <sd:swhid>swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea</sd:swhid>
+    <sd:swhid_context>swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea;origin=https://www.softwareheritage.org/check-deposit-2020-10-08T13:52:34.509655;visit=swh:1:snp:c477c6ef51833127b13a86ece7d75e5b3cc4e93d;anchor=swh:1:rev:f26f3960c175f15f6e24200171d446b86f6f7230;path=/</sd:swhid_context>
+    <sd:external_id>check-deposit-2020-10-08T13:52:34.509655</sd:external_id>
+  </entry>
+</feed>

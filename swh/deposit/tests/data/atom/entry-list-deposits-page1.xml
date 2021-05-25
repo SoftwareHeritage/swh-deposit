@@ -1,0 +1,18 @@
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:sword="http://purl.org/net/sword/terms/"
+      xmlns:dcterms="http://purl.org/dc/terms/"
+      xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit">
+  <sd:count>3</sd:count>
+  <entry>
+    <sd:id>1031</sd:id>
+    <sd:status>rejected</sd:status>
+    <sd:status_detail>Deposit without archive</sd:status_detail>
+    <sd:external_id>check-deposit-2020-10-09T13:10:00.000000</sd:external_id>
+  </entry>
+  <entry>
+    <sd:id>1032</sd:id>
+    <sd:status>rejected</sd:status>
+    <sd:status_detail>Deposit without archive</sd:status_detail>
+    <sd:external_id>check-deposit-2020-10-10T13:20:00.000000</sd:external_id>
+  </entry>
+</feed>

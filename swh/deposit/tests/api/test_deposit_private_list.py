@@ -36,16 +36,13 @@ def test_deposit_list(partial_deposit, deposited_deposit, authenticated_client):
     deposit_id = partial_deposit.id
     deposit_id2 = deposited_deposit.id
 
-    # NOTE: does not work as documented
-    # https://docs.djangoproject.com/en/1.11/ref/urlresolvers/#django.core.urlresolvers.reverse  # noqa
-    # url = reverse(PRIVATE_LIST_DEPOSITS, kwargs={'page_size': 1})
     main_url = reverse(PRIVATE_LIST_DEPOSITS)
     url = "%s?page_size=1" % main_url
     response = authenticated_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["count"] == 2  # 2 deposits
+    assert data["count"] == 2  # total result of 2 deposits if consuming all results
     expected_next = f"{main_url}?page=2&page_size=1"
     assert data["next"].endswith(expected_next) is True
     assert data["previous"] is None
@@ -62,7 +59,7 @@ def test_deposit_list(partial_deposit, deposited_deposit, authenticated_client):
     assert response2.status_code == status.HTTP_200_OK
     data2 = response2.json()
 
-    assert data2["count"] == 2  # still 2 deposits
+    assert data["count"] == 2  # total result of 2 deposits if consuming all results
     assert data2["next"] is None
 
     expected_previous = f"{main_url}?page_size=1"
