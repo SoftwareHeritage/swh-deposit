@@ -232,7 +232,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             )
             assert deposit_request.raw_metadata == data_atom_entry
 
-    replace_metadata_uri = response._headers["location"][1]
+    replace_metadata_uri = response["location"]
     response = authenticated_client.put(
         replace_metadata_uri,
         content_type="application/atom+xml;type=entry",

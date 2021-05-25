@@ -127,10 +127,7 @@ def test_post_deposit_binary_upload_ok(
 
     edit_iri = reverse_strict("edit_iri", args=[deposit_collection.name, deposit.id])
 
-    assert response._headers["location"] == (
-        "Location",
-        "http://testserver" + edit_iri,
-    )
+    assert response["location"] == f"http://testserver{edit_iri}"
 
 
 def test_post_deposit_binary_failure_unsupported_packaging_header(
