@@ -1,41 +1,15 @@
-# Copyright (C) 2018-2020  The Software Heritage developers
+# Copyright (C) 2018-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 
-from rest_framework import serializers
-from rest_framework.fields import _UnvalidatedField
 from rest_framework.generics import ListAPIView
-from rest_framework.pagination import PageNumberPagination
+
+from swh.deposit.api.utils import DefaultPagination, DepositSerializer
 
 from . import APIPrivateView
 from ...models import Deposit
-from ..converters import convert_status_detail
-
-
-class DefaultPagination(PageNumberPagination):
-    page_size = 100
-    page_size_query_param = "page_size"
-
-
-class StatusDetailField(_UnvalidatedField):
-    """status_detail field is a dict, we want a simple message instead.
-       So, we reuse the convert_status_detail from deposit_status
-       endpoint to that effect.
-
-    """
-
-    def to_representation(self, value):
-        return convert_status_detail(value)
-
-
-class DepositSerializer(serializers.ModelSerializer):
-    status_detail = StatusDetailField()
-
-    class Meta:
-        model = Deposit
-        fields = "__all__"
 
 
 class APIList(ListAPIView, APIPrivateView):
@@ -55,7 +29,6 @@ class APIList(ListAPIView, APIPrivateView):
             # sql injection: A priori, nothing to worry about, django does it for
             # queryset
             # https://docs.djangoproject.com/en/3.0/topics/security/#sql-injection-protection  # noqa
-            # https://docs.djangoproject.com/en/2.2/topics/security/#sql-injection-protection  # noqa
             deposits = (
                 Deposit.objects.all()
                 .exclude(external_id__startswith=exclude_like)

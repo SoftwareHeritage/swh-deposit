@@ -516,7 +516,7 @@ def status(ctx, url, username, password, deposit_id, output_format):
     url = _url(url)
     logger.debug("Status deposit")
     with trap_and_report_exceptions():
-        client = PublicApiDepositClient(url=url, auth=(username, password))
+        client = PublicApiDepositClient(url=_url(url), auth=(username, password))
         collection = _collection(client)
 
     print_result(
@@ -571,5 +571,31 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
         client = PublicApiDepositClient(url=_url(url), auth=(username, password))
         collection = _collection(client)
         result = client.deposit_metadata_only(collection, metadata_path)
+
+    print_result(result, output_format)
+
+
+@deposit.command("list")
+@credentials_decorator
+@output_format_decorator
+@click.option(
+    "--page", default=1, help="Page number when requesting more information",
+)
+@click.option(
+    "--page-size", default=100, help="Page number when requesting more information",
+)
+@click.pass_context
+def deposit_list(ctx, url, username, password, output_format, page, page_size):
+    """Deposit metadata only upload
+
+    """
+    from swh.deposit.client import PublicApiDepositClient
+
+    url = _url(url)
+    logger.debug("List deposits for user %s", username)
+    with trap_and_report_exceptions():
+        client = PublicApiDepositClient(url=_url(url), auth=(username, password))
+        collection = _collection(client)
+        result = client.deposit_list(collection, page=page, page_size=page_size)
 
     print_result(result, output_format)

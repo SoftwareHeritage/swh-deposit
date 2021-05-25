@@ -238,3 +238,16 @@ def extended_swhid_from_qualified(swhid: QualifiedSWHID) -> ExtendedSWHID:
     """Used to get the target of a metadata object from a <swh:reference>,
     as the latter uses a QualifiedSWHID."""
     return ExtendedSWHID.from_string(str(swhid).split(";")[0])
+
+
+def to_header_link(link: str, link_name: str) -> str:
+    """Build a single header link.
+
+    >>> link_next = to_header_link("next-url", "next")
+    >>> link_next
+    '<next-url>; rel="next"'
+    >>> ','.join([link_next, to_header_link("prev-url", "prev")])
+    '<next-url>; rel="next",<prev-url>; rel="prev"'
+
+    """
+    return f'<{link}>; rel="{link_name}"'
