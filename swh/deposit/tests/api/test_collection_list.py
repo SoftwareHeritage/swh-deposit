@@ -68,7 +68,7 @@ def test_deposit_collection_list_nominal(
     assert (
         data["swh:count"] == "2"
     )  # total result of 2 deposits if consuming all results
-    header_link = parse_header_links(response._headers["Link"])
+    header_link = parse_header_links(response["Link"])
     assert len(header_link) == 1  # only 1 next link
     expected_next = f"{url}?page=2&page_size=1"
     assert header_link[0]["url"].endswith(expected_next)
@@ -88,7 +88,7 @@ def test_deposit_collection_list_nominal(
     assert data2["swh:count"] == "2"  # still total of 2 deposits across all results
 
     expected_previous = f"{url}?page_size=1"
-    header_link2 = parse_header_links(response2._headers["Link"])
+    header_link2 = parse_header_links(response2["Link"])
     assert len(header_link2) == 1  # only 1 previous link
     assert header_link2[0]["url"].endswith(expected_previous)
     assert header_link2[0]["rel"] == "previous"
@@ -107,7 +107,7 @@ def test_deposit_collection_list_nominal(
     deposits3 = data3["atom:entry"]  # list here
     assert isinstance(deposits3, list)
     assert len(deposits3) == 2
-    header_link3 = parse_header_links(response3._headers["Link"])
+    header_link3 = parse_header_links(response3["Link"])
     assert header_link3 == []  # no pagination as all results received in one round
     assert deposit in deposits3
     assert deposit2 in deposits3

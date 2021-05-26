@@ -70,7 +70,7 @@ class CollectionAPI(ListAPIView, APIPost):
             content_type="application/xml",
             status=status.HTTP_200_OK,
         )
-        response._headers["Link"] = ",".join(links)
+        response["Link"] = ",".join(links)
         return response
 
     def get_queryset(self):

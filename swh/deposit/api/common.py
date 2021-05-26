@@ -1167,7 +1167,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
             content_type="application/xml",
             status=status,
         )
-        response._headers["location"] = "Location", iris[iri_key]  # type: ignore
+        response["Location"] = iris[iri_key]
         return response
 
     @abstractmethod
