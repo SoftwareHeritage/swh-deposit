@@ -59,7 +59,7 @@ def test_read_metadata(
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/json"
+        assert response["content-type"] == "application/json"
         actual_data = response.json()
         assert actual_data == {
             "origin": {
@@ -132,7 +132,7 @@ def test_read_metadata_revision_with_parent(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/json"
+        assert response["content-type"] == "application/json"
         actual_data = response.json()
         assert actual_data == {
             "origin": {
@@ -207,7 +207,7 @@ def test_read_metadata_3(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/json"
+        assert response["content-type"] == "application/json"
         actual_data = response.json()
         assert actual_data == {
             "origin": {
@@ -268,7 +268,7 @@ def test_read_metadata_4(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/json"
+        assert response["content-type"] == "application/json"
         actual_data = response.json()
 
         assert actual_data == {
@@ -337,7 +337,7 @@ def test_read_metadata_5(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/json"
+        assert response["content-type"] == "application/json"
         actual_data = response.json()
 
         assert actual_data == {

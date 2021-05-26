@@ -40,7 +40,7 @@ def test_access_to_existing_deposit_with_one_archive(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/tar"
+        assert response["content-type"] == "application/tar"
 
         # write the response stream in a temporary archive
         archive_path = join(tmp_path, f"archive_{i}.tar")
@@ -85,7 +85,7 @@ def test_access_to_existing_deposit_with_multiple_archives(
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response._headers["content-type"][1] == "application/tar"
+        assert response["content-type"] == "application/tar"
         # write the response stream in a temporary archive
         archive_path = join(tmp_path, f"archive_{i}.tar")
         with open(archive_path, "wb") as f:
