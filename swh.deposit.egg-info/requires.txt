@@ -6,8 +6,9 @@ swh.core[http]>=0.4
 swh.model>=1.0.0
 
 [server]
-Django<3
+django<3
 djangorestframework
+psycopg2<2.9
 setuptools
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
@@ -27,8 +28,11 @@ requests_mock
 django-stubs
 djangorestframework-stubs>=1.4
 django-test-migrations
-Django<3
+types-requests
+types-pyyaml
+django<3
 djangorestframework
+psycopg2<2.9
 setuptools
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
