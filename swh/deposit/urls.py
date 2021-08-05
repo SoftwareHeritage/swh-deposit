@@ -29,7 +29,7 @@ favicon_view = RedirectView.as_view(
 )
 
 
-def default_view(req):
+def default_view(req, format=None):
     return render(req, "homepage.html")
 
 
