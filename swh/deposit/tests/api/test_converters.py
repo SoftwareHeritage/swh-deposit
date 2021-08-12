@@ -48,12 +48,15 @@ def test_convert_status_detail_2():
             {"summary": "Invalid archive", "fields": ["2"],},
             {"summary": "Unsupported archive", "fields": ["1"],},
         ],
+        "loading": ["error1", "error 2"],
     }
 
     expected_status_detail = """- Mandatory fields missing (name)
 - Invalid archive (2)
 - Unsupported archive (1)
 - At least one compatible url field. Failed (testurl)
+- error1
+- error 2
 """
 
     actual_status_detail = convert_status_detail(status_detail)

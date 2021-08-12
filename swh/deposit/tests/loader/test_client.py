@@ -213,7 +213,10 @@ def test_status_update(mocker):
 
     deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
     deposit_client.status_update(
-        "/update/status", DEPOSIT_STATUS_LOAD_SUCCESS, revision_id="some-revision-id",
+        "/update/status",
+        DEPOSIT_STATUS_LOAD_SUCCESS,
+        revision_id="some-revision-id",
+        status_detail="foo bar",
     )
 
     mocked_put.assert_called_once_with(
@@ -221,6 +224,7 @@ def test_status_update(mocker):
         "https://nowhere.org/update/status",
         json={
             "status": DEPOSIT_STATUS_LOAD_SUCCESS,
+            "status_detail": "foo bar",
             "revision_id": "some-revision-id",
         },
     )
