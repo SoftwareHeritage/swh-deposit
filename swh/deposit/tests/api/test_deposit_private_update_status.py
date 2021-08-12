@@ -36,6 +36,7 @@ def test_update_deposit_status_success_with_info(
     """
     deposit = ready_deposit_verified
     expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
+    status_detail = "it works!"
     origin_url = "something"
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
     revision_id = "47dc6b4636c7f6cba0df83e3d5490bf4334d987e"
@@ -43,6 +44,7 @@ def test_update_deposit_status_success_with_info(
 
     full_body_info = {
         "status": DEPOSIT_STATUS_LOAD_SUCCESS,
+        "status_detail": status_detail,
         "revision_id": revision_id,
         "directory_id": directory_id,
         "snapshot_id": snapshot_id,
@@ -66,6 +68,7 @@ def test_update_deposit_status_success_with_info(
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == expected_status
+        assert deposit.status_detail == status_detail
         assert deposit.swhid == expected_swhid
         assert deposit.swhid_context == expected_swhid_context
 

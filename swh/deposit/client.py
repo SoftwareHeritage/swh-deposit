@@ -212,6 +212,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         self,
         update_status_url,
         status,
+        status_detail=None,
         revision_id=None,
         directory_id=None,
         origin_url=None,
@@ -233,6 +234,8 @@ class PrivateApiDepositClient(BaseApiDepositClient):
             payload["directory_id"] = directory_id
         if origin_url:
             payload["origin_url"] = origin_url
+        if status_detail:
+            payload["status_detail"] = status_detail
 
         self.do("put", update_status_url, json=payload)
 

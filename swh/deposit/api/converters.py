@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018  The Software Heritage developers
+# Copyright (C) 2017-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -21,7 +21,11 @@ def convert_status_detail(status_detail):
         'archive': [{
             'summary': "summary-string",
             'fields': [impacted-fields-list],
-        }]
+        }],
+        'loading': [
+            'error 1',
+            'error 2',
+        ],
       }
 
     Args:
@@ -51,6 +55,10 @@ def convert_status_detail(status_detail):
     _detail = status_detail.get("url")
     if _detail:
         msg.append("- %s%s\n" % (_detail["summary"], _str_fields(_detail)))
+
+    _detail = status_detail.get("loading")
+    if _detail:
+        msg.extend(f"- {error}\n" for error in _detail)
 
     if not msg:
         return None
