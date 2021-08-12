@@ -1,8 +1,12 @@
-swh-deposit (0.14.2-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.14.3-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.14.3     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2021-08-12 12:20:51 +0200)
+  * Upstream changes:     - v0.14.3     - * Fix TypeError when accessing
+    the API root     - * deposit_update_status: Add support for updating
+    status_detail
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 22 Jun 2021 11:10:21 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 12 Aug 2021 10:26:17 +0000
 
 swh-deposit (0.14.2-1~swh1) unstable-swh; urgency=medium
 
