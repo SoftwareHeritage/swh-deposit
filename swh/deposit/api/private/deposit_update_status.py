@@ -112,4 +112,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
         else:  # rejected
             deposit.status = status
 
+        if "status_detail" in data:
+            deposit.status_detail = data["status_detail"]
+
         deposit.save()
