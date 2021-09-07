@@ -586,7 +586,7 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
 )
 @click.pass_context
 def deposit_list(ctx, url, username, password, output_format, page, page_size):
-    """Deposit metadata only upload
+    """Client deposit listing
 
     """
     from swh.deposit.client import PublicApiDepositClient
