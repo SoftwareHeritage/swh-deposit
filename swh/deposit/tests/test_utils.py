@@ -8,7 +8,7 @@ import pytest
 from swh.deposit import utils
 from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import CoreSWHID, QualifiedSWHID
+from swh.model.swhids import CoreSWHID, QualifiedSWHID
 
 
 @pytest.fixture

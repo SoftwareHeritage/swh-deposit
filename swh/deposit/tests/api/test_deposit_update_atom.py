@@ -22,13 +22,13 @@ from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom, put_atom
 from swh.model.hashutil import hash_to_bytes
-from swh.model.identifiers import CoreSWHID, ExtendedSWHID, ObjectType
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
     MetadataFetcher,
     RawExtrinsicMetadata,
 )
+from swh.model.swhids import CoreSWHID, ExtendedSWHID, ObjectType
 from swh.storage.interface import PagedResult
 
 

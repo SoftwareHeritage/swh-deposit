@@ -15,7 +15,7 @@ from django.db import migrations
 from swh.core import config
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
-from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
+from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.storage import get_storage as get_storage_client
 from swh.storage.algos.snapshot import snapshot_id_get_from_revision
 
