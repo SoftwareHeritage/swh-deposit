@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from unittest.mock import patch
-
 import pytest
 
 from swh.deposit import utils
@@ -115,49 +113,40 @@ def test_merge_raise():
     assert utils.merge(d0) == d0
 
 
-@patch("swh.deposit.utils.normalize_timestamp", side_effect=lambda x: x)
-def test_normalize_date_0(mock_normalize):
+def test_normalize_date_0():
     """When date is a list, choose the first date and normalize it
-
-    Note: We do not test swh.model.identifiers which is already tested
-    in swh.model
-
     """
     actual_date = utils.normalize_date(["2017-10-12", "date1"])
 
-    expected_date = "2017-10-12 00:00:00+00:00"
+    assert actual_date == {
+        "timestamp": {"microseconds": 0, "seconds": 1507766400},
+        "negative_utc": False,
+        "offset": 0,
+    }
 
-    assert str(actual_date) == expected_date
 
-
-@patch("swh.deposit.utils.normalize_timestamp", side_effect=lambda x: x)
-def test_normalize_date_1(mock_normalize):
+def test_normalize_date_1():
     """Providing a date in a reasonable format, everything is fine
-
-    Note: We do not test swh.model.identifiers which is already tested
-    in swh.model
-
     """
     actual_date = utils.normalize_date("2018-06-11 17:02:02")
 
-    expected_date = "2018-06-11 17:02:02+00:00"
+    assert actual_date == {
+        "timestamp": {"microseconds": 0, "seconds": 1528736522},
+        "negative_utc": False,
+        "offset": 0,
+    }
 
-    assert str(actual_date) == expected_date
 
-
-@patch("swh.deposit.utils.normalize_timestamp", side_effect=lambda x: x)
-def test_normalize_date_doing_irrelevant_stuff(mock_normalize):
+def test_normalize_date_doing_irrelevant_stuff():
     """Providing a date with only the year results in a reasonable date
-
-    Note: We do not test swh.model.identifiers which is already tested
-    in swh.model
-
     """
     actual_date = utils.normalize_date("2017")
 
-    expected_date = "2017-01-01 00:00:00+00:00"
-
-    assert str(actual_date) == expected_date
+    assert actual_date == {
+        "timestamp": {"seconds": 1483228800, "microseconds": 0},
+        "offset": 0,
+        "negative_utc": False,
+    }
 
 
 @pytest.mark.parametrize(
