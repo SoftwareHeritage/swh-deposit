@@ -9,9 +9,12 @@ from rest_framework import status
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.config import (
     DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_LOAD_SUCCESS,
     DEPOSIT_STATUS_PARTIAL,
     PRIVATE_LIST_DEPOSITS,
 )
+from swh.deposit.models import DepositClient
+from swh.deposit.tests.conftest import internal_create_deposit
 
 STATUS_DETAIL = {
     "url": {
@@ -95,3 +98,33 @@ def test_deposit_list_exclude(partial_deposit, deposited_deposit, authenticated_
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["count"] == 2
+
+
+def test_deposit_list_for_username(
+    authenticated_client,
+    deposit_another_collection,
+    completed_deposit,
+    deposit_user,
+    deposit_another_user,
+):
+
+    # create a new deposit with a user different from deposit_user,
+    # the one that created completed_deposit
+    internal_create_deposit(
+        client=deposit_another_user,
+        collection=deposit_another_collection,
+        external_id="external-id-bar",
+        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+    )
+
+    for user in (deposit_user, deposit_another_user):
+        # check deposit filtering by username
+        url = f"{reverse(PRIVATE_LIST_DEPOSITS)}?username={user.username}"
+        json_response = authenticated_client.get(url).json()
+
+        assert len(json_response["results"]) == 1
+
+        deposit_client = DepositClient.objects.all().get(
+            id=json_response["results"][0]["client"]
+        )
+        assert deposit_client.username == user.username
