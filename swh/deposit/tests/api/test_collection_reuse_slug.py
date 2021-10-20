@@ -7,6 +7,7 @@ from io import BytesIO
 
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
+import xmltodict
 
 from swh.deposit.config import (
     COL_IRI,
@@ -35,10 +36,10 @@ def test_act_on_deposit_rejected_is_not_permitted(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    msg = "You can only act on deposit with status &#39;%s&#39;" % (
-        DEPOSIT_STATUS_PARTIAL,
+    assert (
+        xmltodict.parse(response.content)["sword:error"]["summary"]
+        == f"You can only act on deposit with status '{DEPOSIT_STATUS_PARTIAL}'"
     )
-    assert msg in response.content.decode("utf-8")
 
 
 def test_add_deposit_when_partial_makes_new_deposit(

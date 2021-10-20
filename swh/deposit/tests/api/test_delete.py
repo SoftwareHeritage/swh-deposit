@@ -8,6 +8,7 @@ from typing import Dict, Mapping
 
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
+import xmltodict
 
 from swh.deposit.config import (
     ARCHIVE_KEY,
@@ -82,7 +83,8 @@ def test_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        b"You can only act on deposit with status &#39;partial&#39;" in response.content
+        xmltodict.parse(response.content)["sword:error"]["summary"]
+        == "You can only act on deposit with status 'partial'"
     )
 
     deposit = Deposit.objects.get(pk=deposit.id)
@@ -124,7 +126,8 @@ def test_delete_on_edit_iri_cannot_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        b"You can only act on deposit with status &#39;partial&#39;" in response.content
+        xmltodict.parse(response.content)["sword:error"]["summary"]
+        == "You can only act on deposit with status 'partial'"
     )
 
     deposit = Deposit.objects.get(pk=deposit.id)

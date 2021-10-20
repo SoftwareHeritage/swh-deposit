@@ -1,8 +1,15 @@
-swh-deposit (0.14.3-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.15.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.15.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2021-10-20 15:06:52
+    +0200)
+  * Upstream changes:     - v0.15.0     - api/private/deposit_list:
+    Allow filtering deposits per client username     - Rename imports of
+    swh.model.identifiers to fix deprecation warnings.     - tests:
+    Improvements and refactoring + Add Django 3 support     - docs: Fix
+    swh deposit list description
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 12 Aug 2021 10:28:19 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 20 Oct 2021 13:11:42 +0000
 
 swh-deposit (0.14.3-1~swh1) unstable-swh; urgency=medium
 

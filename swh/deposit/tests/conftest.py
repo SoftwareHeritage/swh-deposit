@@ -42,7 +42,7 @@ from swh.deposit.tests.common import (
     post_atom,
 )
 from swh.model.hashutil import hash_to_bytes
-from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
+from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.scheduler import get_scheduler
 
 if TYPE_CHECKING:

@@ -6,7 +6,7 @@
 from rest_framework.parsers import JSONParser
 
 from swh.model.hashutil import hash_to_bytes
-from swh.model.identifiers import CoreSWHID, ObjectType, QualifiedSWHID
+from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
 from . import APIPrivateView
 from ...errors import BAD_REQUEST, DepositError
