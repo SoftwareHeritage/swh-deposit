@@ -6,7 +6,7 @@
 from rest_framework.request import Request
 
 from swh.deposit.models import Deposit
-from swh.model.identifiers import QualifiedSWHID
+from swh.model.swhids import QualifiedSWHID
 
 from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
 from ..errors import BAD_REQUEST, DepositError, ParserError

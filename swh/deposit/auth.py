@@ -80,8 +80,8 @@ class WrapBasicAuthenticationResponseMiddleware:
         response = self.get_response(request)
 
         if response.status_code is status.HTTP_401_UNAUTHORIZED:
-            content_type = response._headers.get("content-type")
-            if content_type == ("Content-Type", "application/json"):
+            content_type = response.get("content-type")
+            if content_type == "application/json":
                 return convert_response(request, response.content)
 
         return response

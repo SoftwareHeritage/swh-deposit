@@ -3,10 +3,10 @@ xmltodict
 iso8601
 requests
 swh.core[http]>=0.4
-swh.model>=1.0.0
+swh.model>=3.0.0
 
 [server]
-django<3
+django<4,>=2
 djangorestframework
 psycopg2<2.9
 setuptools
@@ -30,7 +30,7 @@ djangorestframework-stubs>=1.4
 django-test-migrations
 types-requests
 types-pyyaml
-django<3
+django<4,>=2
 djangorestframework
 psycopg2<2.9
 setuptools

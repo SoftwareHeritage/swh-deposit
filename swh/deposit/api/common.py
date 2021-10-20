@@ -29,17 +29,17 @@ from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import Deposit
 from swh.deposit.utils import compute_metadata_context
 from swh.model import hashutil
-from swh.model.identifiers import (
-    ExtendedObjectType,
-    ExtendedSWHID,
-    QualifiedSWHID,
-    ValidationError,
-)
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
     Origin,
     RawExtrinsicMetadata,
+)
+from swh.model.swhids import (
+    ExtendedObjectType,
+    ExtendedSWHID,
+    QualifiedSWHID,
+    ValidationError,
 )
 from swh.scheduler.utils import create_oneshot_task_dict
 

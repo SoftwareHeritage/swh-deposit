@@ -11,12 +11,8 @@ import iso8601
 import xmltodict
 
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import (
-    ExtendedSWHID,
-    ObjectType,
-    QualifiedSWHID,
-    normalize_timestamp,
-)
+from swh.model.model import TimestampWithTimezone
+from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +98,7 @@ def normalize_date(date):
     dateutil.parser.parse to extract a datetime.
 
     Then normalize it through
-    swh.model.identifiers.normalize_timestamp.
+    :class:`swh.model.model.TimestampWithTimezone`
 
     Returns
         The swh date object
@@ -113,7 +109,7 @@ def normalize_date(date):
     if isinstance(date, str):
         date = iso8601.parse_date(date)
 
-    return normalize_timestamp(date)
+    return TimestampWithTimezone.from_dict(date).to_dict()
 
 
 def compute_metadata_context(swhid_reference: QualifiedSWHID) -> Dict[str, Any]:
