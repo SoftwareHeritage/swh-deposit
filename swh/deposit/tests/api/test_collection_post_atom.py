@@ -32,7 +32,6 @@ from swh.model.hypothesis_strategies import (
     revisions,
     snapshots,
 )
-from swh.model.identifiers import ObjectType, QualifiedSWHID
 from swh.model.model import (
     MetadataAuthority,
     MetadataAuthorityType,
@@ -40,6 +39,7 @@ from swh.model.model import (
     Origin,
     RawExtrinsicMetadata,
 )
+from swh.model.swhids import ObjectType, QualifiedSWHID
 from swh.storage.interface import PagedResult
 
 

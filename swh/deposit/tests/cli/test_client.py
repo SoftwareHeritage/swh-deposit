@@ -751,7 +751,7 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     """Update new metadata with swhid on other deposit status is not possible
     """
     api_url_basename = "deposit.test.updateswhid"
-    deposit_id = 321
+    deposit_id = "321"
 
     # fmt: off
     result = cli_runner.invoke(
@@ -774,9 +774,9 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     assert "error" in actual_result
     assert actual_result == {
         "error": "You can only update metadata on deposit with status 'done'",
-        "detail": "The deposit 321 has status 'partial'",
+        "detail": f"The deposit {deposit_id} has status 'partial'",
         "deposit_status": "partial",
-        "deposit_id": 321,
+        "deposit_id": deposit_id,
     }
 
 
