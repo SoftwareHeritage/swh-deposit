@@ -39,13 +39,13 @@ def test_update_deposit_status_success_with_info(
     status_detail = "it works!"
     origin_url = "something"
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
-    revision_id = "47dc6b4636c7f6cba0df83e3d5490bf4334d987e"
+    release_id = "47dc6b4636c7f6cba0df83e3d5490bf4334d987e"
     snapshot_id = "68c0d26104d47e278dd6be07ed61fafb561d0d20"
 
     full_body_info = {
         "status": DEPOSIT_STATUS_LOAD_SUCCESS,
         "status_detail": status_detail,
-        "revision_id": revision_id,
+        "release_id": release_id,
         "directory_id": directory_id,
         "snapshot_id": snapshot_id,
         "origin_url": origin_url,
@@ -56,7 +56,7 @@ def test_update_deposit_status_success_with_info(
             f"{expected_swhid}"
             f";origin={origin_url}"
             f";visit=swh:1:snp:{snapshot_id}"
-            f";anchor=swh:1:rev:{revision_id}"
+            f";anchor=swh:1:rel:{release_id}"
             f";path=/"
         )
 
@@ -115,13 +115,13 @@ def test_update_deposit_status_success_with_incomplete_data(
 
     origin_url = "something"
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
-    revision_id = "47dc6b4636c7f6cba0df83e3d5490bf4334d987e"
+    release_id = "47dc6b4636c7f6cba0df83e3d5490bf4334d987e"
     snapshot_id = "68c0d26104d47e278dd6be07ed61fafb561d0d20"
 
     new_status = DEPOSIT_STATUS_LOAD_SUCCESS
     full_body_info = {
         "status": new_status,
-        "revision_id": revision_id,
+        "release_id": release_id,
         "directory_id": directory_id,
         "snapshot_id": snapshot_id,
         "origin_url": origin_url,

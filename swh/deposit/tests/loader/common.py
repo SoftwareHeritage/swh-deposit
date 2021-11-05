@@ -43,13 +43,13 @@ class SWHDepositTestClient(PrivateApiDepositClient):
         self,
         update_status_url,
         status,
-        revision_id=None,
+        release_id=None,
         directory_id=None,
         origin_url=None,
     ):
         payload = {"status": status}
-        if revision_id:
-            payload["revision_id"] = revision_id
+        if release_id:
+            payload["release_id"] = release_id
         if directory_id:
             payload["directory_id"] = directory_id
         if origin_url:

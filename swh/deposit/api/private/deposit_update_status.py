@@ -13,7 +13,7 @@ from ...errors import BAD_REQUEST, DepositError
 from ...models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS, Deposit
 from ..common import APIPut, ParsedRequestHeaders
 
-MANDATORY_KEYS = ["origin_url", "revision_id", "directory_id", "snapshot_id"]
+MANDATORY_KEYS = ["origin_url", "release_id", "directory_id", "snapshot_id"]
 
 
 class APIUpdateStatus(APIPrivateView, APIPut):
@@ -85,7 +85,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
         if status == DEPOSIT_STATUS_LOAD_SUCCESS:
             origin_url = data["origin_url"]
             directory_id = data["directory_id"]
-            revision_id = data["revision_id"]
+            release_id = data["release_id"]
             dir_id = CoreSWHID(
                 object_type=ObjectType.DIRECTORY, object_id=hash_to_bytes(directory_id)
             )
@@ -93,8 +93,8 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                 object_type=ObjectType.SNAPSHOT,
                 object_id=hash_to_bytes(data["snapshot_id"]),
             )
-            rev_id = CoreSWHID(
-                object_type=ObjectType.REVISION, object_id=hash_to_bytes(revision_id)
+            rel_id = CoreSWHID(
+                object_type=ObjectType.RELEASE, object_id=hash_to_bytes(release_id)
             )
 
             deposit.swhid = str(dir_id)
@@ -105,7 +105,7 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                     object_id=hash_to_bytes(directory_id),
                     origin=origin_url,
                     visit=snp_id,
-                    anchor=rev_id,
+                    anchor=rel_id,
                     path="/",
                 )
             )
