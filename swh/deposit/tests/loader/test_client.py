@@ -215,7 +215,7 @@ def test_status_update(mocker):
     deposit_client.status_update(
         "/update/status",
         DEPOSIT_STATUS_LOAD_SUCCESS,
-        revision_id="some-revision-id",
+        release_id="some-release-id",
         status_detail="foo bar",
     )
 
@@ -225,12 +225,12 @@ def test_status_update(mocker):
         json={
             "status": DEPOSIT_STATUS_LOAD_SUCCESS,
             "status_detail": "foo bar",
-            "revision_id": "some-revision-id",
+            "release_id": "some-release-id",
         },
     )
 
 
-def test_status_update_with_no_revision_id(mocker):
+def test_status_update_with_no_release_id(mocker):
     """Reading metadata can fail for some reasons
 
     """
