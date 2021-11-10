@@ -213,7 +213,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         update_status_url,
         status,
         status_detail=None,
-        revision_id=None,
+        release_id=None,
         directory_id=None,
         origin_url=None,
     ):
@@ -222,14 +222,14 @@ class PrivateApiDepositClient(BaseApiDepositClient):
         Args:
             update_status_url (str): the full deposit's archive
             status (str): The status to update the deposit with
-            revision_id (str/None): the revision's identifier to update to
+            release_id (str/None): the release's identifier to update to
             directory_id (str/None): the directory's identifier to update to
             origin_url (str/None): deposit's associated origin url
 
         """
         payload = {"status": status}
-        if revision_id:
-            payload["revision_id"] = revision_id
+        if release_id:
+            payload["release_id"] = release_id
         if directory_id:
             payload["directory_id"] = directory_id
         if origin_url:

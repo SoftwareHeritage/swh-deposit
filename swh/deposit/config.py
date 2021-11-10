@@ -44,7 +44,7 @@ DEPOSIT_STATUS_VERIFIED = "verified"
 DEPOSIT_STATUS_LOAD_SUCCESS = "done"
 DEPOSIT_STATUS_LOAD_FAILURE = "failed"
 
-# Revision author for deposit
+# Release author for deposit
 SWH_PERSON = {
     "name": "Software Heritage",
     "fullname": "Software Heritage",

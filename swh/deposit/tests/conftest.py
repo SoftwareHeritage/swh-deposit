@@ -586,7 +586,7 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
     )
     origin = "https://hal.archives-ouvertes.fr/hal-01727745"
     directory_id = "42a13fc721c8716ff695d0d62fc851d641f3a12b"
-    revision_id = hash_to_bytes("548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10")
+    release_id = hash_to_bytes("548b3c0a2bb43e1fca191e24b5803ff6b3bc7c10")
     snapshot_id = hash_to_bytes("e5e82d064a9c3df7464223042e0c55d72ccff7f0")
     deposit.swhid = f"swh:1:dir:{directory_id}"
     deposit.swhid_context = str(
@@ -595,7 +595,7 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
             object_id=hash_to_bytes(directory_id),
             origin=origin,
             visit=CoreSWHID(object_type=ObjectType.SNAPSHOT, object_id=snapshot_id),
-            anchor=CoreSWHID(object_type=ObjectType.REVISION, object_id=revision_id),
+            anchor=CoreSWHID(object_type=ObjectType.RELEASE, object_id=release_id),
             path=b"/",
         )
     )

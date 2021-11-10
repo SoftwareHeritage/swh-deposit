@@ -1,8 +1,11 @@
-swh-deposit (0.15.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.16.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.16.0     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2021-11-10 14:24:46 +0100)
+  * Upstream changes:     - v0.16.0     - * Use release instead of
+    revision as anchor in SWHID context instead.
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 20 Oct 2021 13:14:02 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 10 Nov 2021 13:40:28 +0000
 
 swh-deposit (0.15.0-1~swh1) unstable-swh; urgency=medium
 
