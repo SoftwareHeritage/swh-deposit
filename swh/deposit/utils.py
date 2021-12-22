@@ -109,7 +109,15 @@ def normalize_date(date):
     if isinstance(date, str):
         date = iso8601.parse_date(date)
 
-    return TimestampWithTimezone.from_dict(date).to_dict()
+    d = TimestampWithTimezone.from_dict(date).to_dict()
+
+    # Workaround while we migrate from storing offsets as (int, bool) to bytes.
+    # When the migration is done, remove this pop().
+    # offset_bytes will also need to be converted to a string (which is fine because
+    # it is always a well-formed offset)
+    d.pop("offset_bytes", None)
+
+    return d
 
 
 def compute_metadata_context(swhid_reference: QualifiedSWHID) -> Dict[str, Any]:
