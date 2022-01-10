@@ -96,6 +96,7 @@ def test_read_metadata(
                 "id": deposit.id,
                 "collection": "test",
                 "revision_parents": [],
+                "release_notes": "This is the release of October 7th, 2017.",
             },
         }
 
@@ -169,6 +170,7 @@ def test_read_metadata_revision_with_parent(
                 "id": deposit.id,
                 "collection": "test",
                 "revision_parents": [rev_id],
+                "release_notes": "This is the release of October 7th, 2017.",
             },
         }
 
@@ -244,6 +246,7 @@ def test_read_metadata_3(
                 "id": deposit.id,
                 "collection": deposit_collection.name,
                 "revision_parents": [],
+                "release_notes": "This is the release of October 7th, 2017.",
             },
         }
 
@@ -303,6 +306,7 @@ def test_read_metadata_4(
                 "id": deposit.id,
                 "collection": deposit_collection.name,
                 "revision_parents": [],
+                "release_notes": None,
             },
         }
 
@@ -375,6 +379,7 @@ def test_read_metadata_5(
                 "id": deposit.id,
                 "collection": deposit_collection.name,
                 "revision_parents": [],
+                "release_notes": None,
             },
         }
 
@@ -396,3 +401,71 @@ def test_access_to_nonexisting_deposit_returns_404_response(
         assert response.status_code == status.HTTP_404_NOT_FOUND
         msg = "Deposit %s does not exist" % unknown_id
         assert msg in response.content.decode("utf-8")
+
+
+def test_read_metadata_multiple_release_notes(
+    authenticated_client, deposit_collection, partial_deposit, atom_dataset
+):
+    """Private metadata read api to existing deposit should return metadata
+
+    """
+    deposit = partial_deposit
+    deposit.external_id = "some-external-id"
+    deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
+    deposit.save()
+
+    metadata_xml_atoms = [
+        atom_dataset[atom_key] for atom_key in ["entry-data-multiple-release-notes"]
+    ]
+    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
+    for atom_xml in metadata_xml_atoms:
+        deposit = update_deposit_with_metadata(
+            authenticated_client, deposit_collection, deposit, atom_xml,
+        )
+
+    for url in private_get_raw_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response["content-type"] == "application/json"
+        actual_data = response.json()
+        assert actual_data == {
+            "origin": {
+                "type": "deposit",
+                "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
+            },
+            "metadata_raw": metadata_xml_atoms,
+            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "provider": {
+                "metadata": {},
+                "provider_name": "",
+                "provider_type": "deposit_client",
+                "provider_url": "https://hal-test.archives-ouvertes.fr/",
+            },
+            "tool": {
+                "configuration": {"sword_version": "2"},
+                "name": "swh-deposit",
+                "version": __version__,
+            },
+            "deposit": {
+                "author": SWH_PERSON,
+                "committer": SWH_PERSON,
+                "committer_date": {
+                    "negative_utc": False,
+                    "offset": 0,
+                    "timestamp": {"microseconds": 0, "seconds": 1507389428},
+                },
+                "author_date": {
+                    "negative_utc": False,
+                    "offset": 0,
+                    "timestamp": {"microseconds": 0, "seconds": 1507389428},
+                },
+                "client": "test",
+                "id": deposit.id,
+                "collection": "test",
+                "revision_parents": [],
+                "release_notes": (
+                    "This is the release of October 7th, 2017.\n\n"
+                    "It fixes some bugs."
+                ),
+            },
+        }
