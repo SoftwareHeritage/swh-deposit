@@ -170,6 +170,12 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             parents = []
 
+        release_notes = metadata.get("codemeta:releaseNotes")
+        if isinstance(release_notes, list):
+            release_notes = "\n\n".join(release_notes)
+        if not release_notes:
+            release_notes = None
+
         return {
             "origin": {"type": "deposit", "url": deposit.origin_url},
             "provider": {
@@ -190,6 +196,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
                 "committer": SWH_PERSON,
                 "committer_date": commit_date,
                 "revision_parents": parents,
+                "release_notes": release_notes,
             },
         }
 

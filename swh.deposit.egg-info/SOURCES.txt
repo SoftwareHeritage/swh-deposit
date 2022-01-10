@@ -226,6 +226,7 @@ swh/deposit/tests/data/atom/entry-data-empty-body.xml
 swh/deposit/tests/data/atom/entry-data-fail-metadata-functional-checks.xml
 swh/deposit/tests/data/atom/entry-data-ko.xml
 swh/deposit/tests/data/atom/entry-data-minimal.xml
+swh/deposit/tests/data/atom/entry-data-multiple-release-notes.xml
 swh/deposit/tests/data/atom/entry-data-no-origin-url.xml
 swh/deposit/tests/data/atom/entry-data-parsing-error-prone.xml
 swh/deposit/tests/data/atom/entry-data-with-add-to-origin.xml
