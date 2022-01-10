@@ -1,3 +1,12 @@
+swh-deposit (0.16.2-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.16.2     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2022-01-10 18:36:16 +0100)
+  * Upstream changes:     - v0.16.2     - * Add releases notes to
+    metadata returned by api/private/deposit_read.py
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 10 Jan 2022 17:40:12 +0000
+
 swh-deposit (0.16.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.16.1     - (tagged by Nicolas Dandrimont
