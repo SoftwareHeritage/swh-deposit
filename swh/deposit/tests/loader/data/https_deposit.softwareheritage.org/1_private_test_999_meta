@@ -40,7 +40,6 @@
           "email": "robot@softwareheritage.org"
         },
         "committer_date": {
-            "negative_utc": "false",
             "offset": 0,
             "timestamp": {
                 "microseconds": 0,
@@ -48,7 +47,6 @@
             }
         },
         "date": {
-            "negative_utc": "false",
             "offset": 0,
             "timestamp": {"microseconds": 0, "seconds": 1507389428}
         },
