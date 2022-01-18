@@ -807,8 +807,18 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             - 415 (unsupported media type) if a wrong media type is provided
 
         """
+        metadata_stream = request.data
+        empty_atom_entry_summary = "Empty body request is not supported."
+        empty_atom_entry_desc = (
+            "Atom entry request is about non-empty metadata deposit."
+        )
+        if not metadata_stream:
+            raise DepositError(
+                BAD_REQUEST, empty_atom_entry_summary, empty_atom_entry_desc
+            )
+
         try:
-            raw_metadata, metadata = self._read_metadata(request.data)
+            raw_metadata, metadata = self._read_metadata(metadata_stream)
         except ParserError:
             raise DepositError(
                 BAD_REQUEST,
@@ -819,10 +829,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         if metadata is None:
             raise DepositError(
-                BAD_REQUEST,
-                "Empty body request is not supported",
-                "Atom entry deposit is supposed to send for metadata. "
-                "If the body is empty, there is no metadata.",
+                BAD_REQUEST, empty_atom_entry_summary, empty_atom_entry_desc
             )
 
         self._set_deposit_origin_from_metadata(deposit, metadata, headers)

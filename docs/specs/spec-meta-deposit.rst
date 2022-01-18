@@ -28,11 +28,8 @@ Requirements
    - revision
    - directory
    - content
-7. The SWHID MAY be a `core identifier`_ with or without `qualifiers`_
+7. The SWHID MAY be a :ref:`core identifier <swhids-core>` with or without :ref:`qualifiers <swhids-qualifiers>`
 8. The SWHID MUST NOT reference a fragment of code with the classifier `lines`
-
-.. _core identifier: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#core-identifiers
-.. _qualifiers: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#qualifiers
 
 A complete metadata example
 ---------------------------

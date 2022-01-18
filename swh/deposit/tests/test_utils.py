@@ -120,7 +120,6 @@ def test_normalize_date_0():
 
     assert actual_date == {
         "timestamp": {"microseconds": 0, "seconds": 1507766400},
-        "negative_utc": False,
         "offset": 0,
     }
 
@@ -132,7 +131,6 @@ def test_normalize_date_1():
 
     assert actual_date == {
         "timestamp": {"microseconds": 0, "seconds": 1528736522},
-        "negative_utc": False,
         "offset": 0,
     }
 
@@ -145,7 +143,6 @@ def test_normalize_date_doing_irrelevant_stuff():
     assert actual_date == {
         "timestamp": {"seconds": 1483228800, "microseconds": 0},
         "offset": 0,
-        "negative_utc": False,
     }
 
 
