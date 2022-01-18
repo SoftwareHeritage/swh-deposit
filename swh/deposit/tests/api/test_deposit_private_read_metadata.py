@@ -83,12 +83,10 @@ def test_read_metadata(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
@@ -157,12 +155,10 @@ def test_read_metadata_revision_with_parent(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
@@ -233,12 +229,10 @@ def test_read_metadata_3(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 120,
                     "timestamp": {"microseconds": 0, "seconds": 1493820527},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
@@ -293,12 +287,10 @@ def test_read_metadata_4(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1459900800},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1459900800},
                 },
@@ -366,12 +358,10 @@ def test_read_metadata_5(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 120,
                     "timestamp": {"microseconds": 0, "seconds": 1493820527},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 120,
                     "timestamp": {"microseconds": 0, "seconds": 1428332927},
                 },
@@ -450,12 +440,10 @@ def test_read_metadata_multiple_release_notes(
                 "author": SWH_PERSON,
                 "committer": SWH_PERSON,
                 "committer_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
                 "author_date": {
-                    "negative_utc": False,
                     "offset": 0,
                     "timestamp": {"microseconds": 0, "seconds": 1507389428},
                 },
