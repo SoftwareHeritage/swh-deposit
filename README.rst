@@ -38,8 +38,8 @@ This unique identifier can then be used to `reference the source code
 retrieve it using the :ref:`vault <swh-vault>` feature of the SWH Archive platform.
 
 The differences between a piece of code uploaded using the deposit rather than simply
-asking SWH to archive a repository using the `save code now
-<https://archive.softwareheritage.org/save/>`_ feature are:
+asking SWH to archive a repository using the :swh_web:`save code now <save/>` feature
+are:
 
 - a deposited artifact is provided from one of the SWH partners which is regarded as a
   trusted authority,

@@ -78,7 +78,7 @@ would result in:
 Visits
 ~~~~~~
 
-We identify with a visit each deposit push of the same `external_id`.
+We identify with a visit each deposit push of the same origin.
 Here in the example below, two snapshots are identified by two different visits.
 
 For examples:
@@ -339,7 +339,6 @@ A release contains one date:
                 "codemeta:softwareVersion": "1.0.1",
                 "codemeta:url": "https://hal.archives-ouvertes.fr/hal-02140606",
                 "codemeta:version": "2",
-                "external_identifier": "hal-02140606",
                 "id": "hal-02140606",
                 "original_artifact": [
                     {
