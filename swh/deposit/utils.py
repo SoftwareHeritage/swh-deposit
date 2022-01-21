@@ -113,7 +113,7 @@ def normalize_date(date):
 
     return {
         "timestamp": tstz.timestamp.to_dict(),
-        "offset": tstz.offset,
+        "offset": tstz.offset_minutes(),
     }
 
 
