@@ -5,7 +5,7 @@ Create deposit
 
 .. http:post:: /1/(str:collection-name)/
 
-    Create deposit in a collection which name is `collection-name`.
+    Create deposit in a collection which name is ``collection-name``.
 
     The client sends a deposit request to a specific collection with:
 
@@ -81,7 +81,7 @@ Create deposit
     :reqheader Content-Disposition: attachment; filename=[filename]; the filename
       parameter must be text (ascii); for the metadata file set name parameter
       to 'atom'.
-    :reqheader In-progress: `true` if not final; `false` when final request.
+    :reqheader In-progress: ``true`` if not final; ``false`` when final request.
     :statuscode 201: success for deposit on POST
     :statuscode 401: Unauthorized
     :statuscode 404: access to an unknown collection

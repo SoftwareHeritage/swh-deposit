@@ -4,7 +4,7 @@ User Manual
 ===========
 
 This is a guide for how to prepare and push a software deposit with
-the `swh deposit` commands.
+the ``swh deposit`` commands.
 
 
 Requirements
@@ -20,7 +20,7 @@ For testing purpose, a test instance `is available
 <https://deposit.staging.swh.network>`_ [#f1]_ and will be used in the examples below.
 
 Once you have an account, you should get a set of access credentials as a
-`login` and a `password` (identified as ``<name>`` and ``<pass>`` in the
+``login`` and a ``password`` (identified as ``<name>`` and ``<pass>`` in the
 remaining of this document). A deposit account also comes with a "provider URL"
 which is used by SWH to build the :term:`Origin URL<origin>` of deposits
 created using this account.
@@ -29,7 +29,7 @@ created using this account.
 Installation
 ------------
 
-To install the `swh.deposit` command line tools, you need a working Python 3.7+
+To install the ``swh.deposit`` command line tools, you need a working Python 3.7+
 environment. It is strongly recommended you use a `virtualenv
 <https://virtualenv.pypa.io/en/stable/>`_ for this.
 
@@ -73,8 +73,8 @@ Prepare a deposit
 
   - zip: common zip archive (no multi-disk zip files).
   - tar: tar archive without compression or optionally any of the
-         following compression algorithm gzip (`.tar.gz`, `.tgz`), bzip2
-         (`.tar.bz2`) , or lzma (`.tar.lzma`)
+         following compression algorithm gzip (``.tar.gz``, ``.tgz``), bzip2
+         (``.tar.bz2``) , or lzma (``.tar.lzma``)
 
 * (Optional) prepare a metadata file (more details :ref:`deposit-metadata`):
 
@@ -187,8 +187,8 @@ failed:
   loading is a failure
 
 
-When you push a deposit, it is either in the `deposited` state or in the
-`partial` state if you asked for a partial upload.
+When you push a deposit, it is either in the ``deposited`` state or in the
+``partial`` state if you asked for a partial upload.
 
 
 
@@ -207,7 +207,7 @@ For this, we need to provide the:
 * archive's path (example: ``--archive path/to/archive-name.tgz``)
 * metadata file path (example: ``--metadata path/to/metadata.xml``)
 
-to the `swh deposit upload` command.
+to the ``swh deposit upload`` command.
 
 
 
@@ -241,14 +241,14 @@ area)!
 
 The returned value is a JSON dict, in which you will notably find the deposit
 id (needed to check for its status later on) and the current status, which
-should be `deposited` if no error has occurred.
+should be ``deposited`` if no error has occurred.
 
 Note: As the deposit is in ``deposited`` status, you can no longer
 update the deposit after this query. It will be answered with a 403
 (Forbidden) answer.
 
 If something went wrong, an equivalent response will be given with the
-`error` and `detail` keys explaining the issue, e.g.:
+``error`` and ``detail`` keys explaining the issue, e.g.:
 
 .. code:: console
 
@@ -262,8 +262,8 @@ If something went wrong, an equivalent response will be given with the
    }
 
 
-Once the deposit has been done, you can check its status using the `swh deposit
-status` command:
+Once the deposit has been done, you can check its status using the ``swh deposit
+status`` command:
 
 .. code:: console
 
@@ -313,7 +313,7 @@ For this, we then need to provide the following information:
 * arguments: ``--username 'name' --password 'pass'`` as credentials
 * metadata file path (example: ``--metadata path/to/metadata.xml``)
 
-to the `swh deposit metadata-only` command.
+to the ``swh deposit metadata-only`` command.
 
 
 Example:
