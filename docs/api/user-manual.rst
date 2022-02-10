@@ -223,7 +223,7 @@ deposit:
    belenios-1.12.zip  metadata.xml deposit
    (deposit)$ swh deposit upload --username <name> --password <secret> \
                   --url https://deposit.staging.swh.network/1 \
-                  --slug belenios-01243065 \
+                  --create-origin http://has.archives-ouvertes.fr/test-01243065 \
                   --archive belenios.zip \
                   --metadata metadata.xml \
                   --format json | jq
@@ -431,14 +431,14 @@ Update deposit
 
 * Update a loaded deposit with a new version (this creates a new deposit):
 
-  - by using the external-id with the ``--slug`` argument, you will
-    link the new deposit with its parent deposit:
+  - by using ``--add-to-origin`` with an origin URL previously created with
+    ``--create-origin``, you will link the new deposit with its parent deposit:
 
 .. code:: console
 
   $ swh deposit upload --username name --password secret \
                        --archive je-suis-gpl-v2.tgz \
-                       --slug 'je-suis-gpl'
+                       --add-to-origin 'http://example.org/je-suis-gpl'
 
 
 Check the deposit's status
