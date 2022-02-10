@@ -131,7 +131,8 @@ file could be:
    (deposit)$
 
 Please read the :ref:`deposit-metadata` page for a more detailed view on the
-metadata file formats and semantics.
+metadata file formats and semantics. and :ref:`deposit-create_origin` for
+a description of the ``<swh:create_origin>`` tag.
 
 
 Push a deposit

@@ -15,6 +15,7 @@ works much better with these extensions.
 All these tags are in the ``https://www.softwareheritage.org/schema/2018/deposit``
 XML namespace, denoted using the ``swhdeposit`` prefix in this section.
 
+.. _deposit-create_origin:
 
 Origin creation with the ``<swhdeposit:create_origin>`` tag
 -----------------------------------------------------------
@@ -91,6 +92,7 @@ If the ``Slug`` header is missing, the server generates one randomly.
 This fallback is provided for compliance with SWORDv2_ clients, but we do not
 recommend relying on it, as it usually creates origins URL that are not meaningful.
 
+.. _deposit-add_to_origin:
 
 Adding releases to an origin, with the ``<swhdeposit:add_to_origin>`` tag
 -------------------------------------------------------------------------
