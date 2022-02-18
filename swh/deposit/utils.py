@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 The Software Heritage developers
+# Copyright (C) 2018-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -25,6 +25,7 @@ def parse_xml(stream, encoding="utf-8"):
         "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
         "http://purl.org/net/sword/terms/": "sword",
         "https://www.softwareheritage.org/schema/2018/deposit": "swh",
+        "https://schema.org/": "schema",
     }
 
     data = xmltodict.parse(
@@ -144,6 +145,42 @@ ALLOWED_QUALIFIERS_NODE_TYPE = (
     ObjectType.RELEASE,
     ObjectType.DIRECTORY,
 )
+
+
+def parse_swh_metadata_provenance(
+    metadata: Dict,
+) -> Optional[Union[QualifiedSWHID, str]]:
+    """Parse swh metadata-provenance within the metadata dict reference if found, None
+    otherwise.
+
+    .. code-block:: xml
+
+         <swh:deposit>
+           <swh:metadata-provenance>
+             <schema:url>https://url.org/metadata/url</schema:url>
+           </swh:metadata-provenance>
+         </swh:deposit>
+
+    Args:
+        metadata: result of parsing an Atom document with :func:`parse_xml`
+
+    Raises:
+        ValidationError in case of invalid xml
+
+    Returns:
+        Either the metadata provenance url if any or None otherwise
+
+    """
+
+    swh_deposit = metadata.get("swh:deposit")
+    if not swh_deposit:
+        return None
+
+    swh_metadata_provenance = swh_deposit.get("swh:metadata-provenance")
+    if not swh_metadata_provenance:
+        return None
+
+    return swh_metadata_provenance.get("schema:url")
 
 
 def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]:

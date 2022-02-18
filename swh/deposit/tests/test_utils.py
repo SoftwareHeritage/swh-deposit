@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020  The Software Heritage developers
+# Copyright (C) 2018-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -196,11 +196,12 @@ def test_parse_swh_reference_origin(xml_with_origin_reference):
 
 
 @pytest.fixture
-def xml_with_empty_reference():
+def xml_swh_deposit_template():
     xml_data = """<?xml version="1.0"?>
-  <entry xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+  <entry xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+         xmlns:schema="https://schema.org/">
       <swh:deposit>
-        {swh_reference}
+        {swh_deposit}
       </swh:deposit>
   </entry>
     """
@@ -216,8 +217,8 @@ def xml_with_empty_reference():
         """<swh:reference><swh:object swhid="" /></swh:reference>""",
     ],
 )
-def test_parse_swh_reference_empty(xml_with_empty_reference, xml_ref):
-    xml_body = xml_with_empty_reference.format(swh_reference=xml_ref)
+def test_parse_swh_reference_empty(xml_swh_deposit_template, xml_ref):
+    xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
     metadata = utils.parse_xml(xml_body)
 
     assert utils.parse_swh_reference(metadata) is None
@@ -271,3 +272,32 @@ def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
 
     with pytest.raises(ValidationError):
         utils.parse_swh_reference(metadata)
+
+
+@pytest.mark.parametrize(
+    "xml_ref",
+    [
+        "",
+        "<swh:metadata-provenance></swh:metadata-provenance>",
+        "<swh:metadata-provenance><schema:url /></swh:metadata-provenance>",
+    ],
+)
+def test_parse_swh_metatada_provenance_empty(xml_swh_deposit_template, xml_ref):
+    xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
+    metadata = utils.parse_xml(xml_body)
+
+    assert utils.parse_swh_metadata_provenance(metadata) is None
+
+
+@pytest.fixture
+def xml_with_metadata_provenance(atom_dataset):
+    return atom_dataset["entry-data-with-metadata-provenance"]
+
+
+def test_parse_swh_metadata_provenance2(xml_with_metadata_provenance):
+    xml_data = xml_with_metadata_provenance.format(url="https://url.org/metadata/url")
+    metadata = utils.parse_xml(xml_data)
+
+    actual_url = utils.parse_swh_metadata_provenance(metadata)
+
+    assert actual_url == "https://url.org/metadata/url"
