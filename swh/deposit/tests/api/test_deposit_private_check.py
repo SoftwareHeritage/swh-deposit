@@ -59,6 +59,14 @@ def test_deposit_ok(
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_VERIFIED
 
+        # Deposit is ok but it's missing suggested fields in its metadata detected by
+        # the checks
+        status_detail = deposit.status_detail["metadata"]
+        assert len(status_detail) == 1
+        suggested = status_detail[0]
+        assert suggested["summary"] == SUGGESTED_FIELDS_MISSING
+        assert set(suggested["fields"]) == set([METADATA_PROVENANCE_KEY])
+
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
 

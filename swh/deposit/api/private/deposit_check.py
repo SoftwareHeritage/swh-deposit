@@ -54,7 +54,7 @@ def known_archive_format(filename):
 
 
 class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
-    """Dedicated class to read a deposit's raw archives content.
+    """Dedicated class to trigger the deposit checks on deposit archives and metadata.
 
     Only GET is supported.
 
@@ -67,7 +67,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             The deposit to check archives for
 
         Returns
-            tuple (status, error_detail): True, None if all archives
+            tuple (status, details): True, None if all archives
             are ok, (False, <detailed-error>) otherwise.
 
         """
@@ -133,8 +133,13 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
     def process_get(
         self, req: Request, collection_name: str, deposit: Deposit
     ) -> Tuple[int, Dict, str]:
-        """Build a unique tarball from the multiple received and stream that
-           content to the client.
+        """Trigger the checks on the deposit archives and then on the deposit metadata.
+        If any problems (or warnings) are raised, the deposit status and status detail
+        are updated accordingly. If all checks are ok, the deposit status is updated to
+        the 'verified' status (details updated with warning if any) and a loading task
+        is scheduled for the deposit to be ingested. Otherwise, the deposit is marked as
+        'rejected' with the error details. A json response is returned to the caller
+        with the deposit checks.
 
         Args:
             req: Client request
@@ -142,45 +147,44 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             deposit: Deposit concerned by the reading
 
         Returns:
-            Tuple status, stream of content, content-type
+            Tuple (status, json response, content-type)
 
         """
         metadata, _ = self._metadata_get(deposit)
-        problems: Dict = {}
+        details_dict: Dict = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
-        archives_status, error_detail = self._check_deposit_archives(deposit)
-        if not archives_status:
-            assert error_detail is not None
-            problems.update(error_detail)
+        archives_status_ok, details = self._check_deposit_archives(deposit)
+        if not archives_status_ok:
+            assert details is not None
+            details_dict.update(details)
 
-        metadata_status, error_detail = check_metadata(metadata)
-        if not metadata_status:
-            assert error_detail is not None
-            problems.update(error_detail)
+        metadata_status_ok, details = check_metadata(metadata)
+        # Ensure in case of error, we do have the rejection details
+        assert metadata_status_ok or (not metadata_status_ok and details is not None)
+        # we can have warnings even if checks are ok (e.g. missing suggested field)
+        details_dict.update(details or {})
 
-        deposit_status = archives_status and metadata_status
+        deposit_status_ok = archives_status_ok and metadata_status_ok
+        # if any details_dict arose, the deposit is rejected
+        deposit.status = (
+            DEPOSIT_STATUS_VERIFIED if deposit_status_ok else DEPOSIT_STATUS_REJECTED
+        )
+        response: Dict = {
+            "status": deposit.status,
+        }
+        if details_dict:
+            deposit.status_detail = details_dict
+            response["details"] = details_dict
 
-        # if any problems arose, the deposit is rejected
-        if not deposit_status:
-            deposit.status = DEPOSIT_STATUS_REJECTED
-            deposit.status_detail = problems
-            response = {
-                "status": deposit.status,
-                "details": deposit.status_detail,
-            }
-        else:
-            deposit.status = DEPOSIT_STATUS_VERIFIED
-            response = {
-                "status": deposit.status,
-            }
-            if not deposit.load_task_id and self.config["checks"]:
-                url = deposit.origin_url
-                task = create_oneshot_task_dict(
-                    "load-deposit", url=url, deposit_id=deposit.id, retries_left=3
-                )
-                load_task_id = self.scheduler.create_tasks([task])[0]["id"]
-                deposit.load_task_id = load_task_id
+        # Deposit ok, then we schedule the deposit loading task (if not already done)
+        if deposit_status_ok and not deposit.load_task_id and self.config["checks"]:
+            url = deposit.origin_url
+            task = create_oneshot_task_dict(
+                "load-deposit", url=url, deposit_id=deposit.id, retries_left=3
+            )
+            load_task_id = self.scheduler.create_tasks([task])[0]["id"]
+            deposit.load_task_id = load_task_id
 
         deposit.save()
 
