@@ -144,7 +144,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
                 **origin** (Dict): Information about the origin
 
-                **metadata_raw** (List[str]): List of raw metadata received for the
+                **metadata_raw** (str): List of raw metadata received for the
                   deposit
 
                 **metadata_dict** (Dict): Deposit aggregated metadata into one dict

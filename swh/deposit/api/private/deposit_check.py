@@ -72,6 +72,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
 
         """
         requests = list(self._deposit_requests(deposit, request_type=ARCHIVE_TYPE))
+        requests.reverse()
         if len(requests) == 0:  # no associated archive is refused
             return False, {"archive": [{"summary": MANDATORY_ARCHIVE_MISSING,}]}
 

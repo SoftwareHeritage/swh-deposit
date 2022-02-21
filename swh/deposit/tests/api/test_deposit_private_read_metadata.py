@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,7 +6,7 @@
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
 
-from swh.deposit import __version__, utils
+from swh.deposit import __version__
 from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SE_IRI, SWH_PERSON
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
@@ -47,14 +47,10 @@ def test_read_metadata(
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
-    metadata_xml_atoms = [
-        atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
-    ]
-    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
-    for atom_xml in metadata_xml_atoms:
-        deposit = update_deposit_with_metadata(
-            authenticated_client, deposit_collection, deposit, atom_xml,
-        )
+    metadata_xml_raw = atom_dataset["entry-data2"]
+    deposit = update_deposit_with_metadata(
+        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+    )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -66,8 +62,8 @@ def test_read_metadata(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_atoms,
-            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "metadata_raw": metadata_xml_raw,
+            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -109,14 +105,10 @@ def test_read_metadata_revision_with_parent(
     deposit.external_id = "some-external-id"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
-    metadata_xml_atoms = [
-        atom_dataset[atom_key] for atom_key in ["entry-data2", "entry-data3"]
-    ]
-    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
-    for atom_xml in metadata_xml_atoms:
-        deposit = update_deposit_with_metadata(
-            authenticated_client, deposit_collection, deposit, atom_xml,
-        )
+    metadata_xml_raw = atom_dataset["entry-data2"]
+    deposit = update_deposit_with_metadata(
+        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+    )
 
     rev_id = "da78a9d4cf1d5d29873693fd496142e3a18c20fa"
     swhid = "swh:1:rev:%s" % rev_id
@@ -138,8 +130,8 @@ def test_read_metadata_revision_with_parent(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_atoms,
-            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "metadata_raw": metadata_xml_raw,
+            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -182,24 +174,10 @@ def test_read_metadata_3(
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
-    # add metadata to the deposit with datePublished and dateCreated
-    codemeta_entry_data = (
-        atom_dataset["metadata"]
-        % """
-  <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
-  <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
-"""
+    metadata_xml_raw = atom_dataset["entry-data3"]
+    update_deposit_with_metadata(
+        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
     )
-    metadata_xml_atoms = [
-        atom_dataset["entry-data2"],
-        atom_dataset["entry-data3"],
-        codemeta_entry_data,
-    ]
-    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
-    for atom_xml in metadata_xml_atoms:
-        update_deposit_with_metadata(
-            authenticated_client, deposit_collection, deposit, atom_xml,
-        )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -212,8 +190,8 @@ def test_read_metadata_3(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
-            "metadata_raw": metadata_xml_atoms,
-            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "metadata_raw": metadata_xml_raw,
+            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -270,7 +248,7 @@ def test_read_metadata_4(
 
         assert actual_data == {
             "origin": {"type": "deposit", "url": None,},
-            "metadata_raw": [codemeta_entry_data],
+            "metadata_raw": codemeta_entry_data,
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
@@ -341,7 +319,7 @@ def test_read_metadata_5(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
-            "metadata_raw": [codemeta_entry_data],
+            "metadata_raw": codemeta_entry_data,
             "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
@@ -404,14 +382,10 @@ def test_read_metadata_multiple_release_notes(
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
 
-    metadata_xml_atoms = [
-        atom_dataset[atom_key] for atom_key in ["entry-data-multiple-release-notes"]
-    ]
-    metadata_xml_raws = [parse_xml(xml) for xml in metadata_xml_atoms]
-    for atom_xml in metadata_xml_atoms:
-        deposit = update_deposit_with_metadata(
-            authenticated_client, deposit_collection, deposit, atom_xml,
-        )
+    metadata_xml_raw = atom_dataset["entry-data-multiple-release-notes"]
+    deposit = update_deposit_with_metadata(
+        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+    )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -423,8 +397,8 @@ def test_read_metadata_multiple_release_notes(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_atoms,
-            "metadata_dict": utils.merge(*metadata_xml_raws),
+            "metadata_raw": metadata_xml_raw,
+            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
