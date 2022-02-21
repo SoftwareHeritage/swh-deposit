@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -74,6 +74,7 @@ def generate_metadata(
     authors: List[str],
     external_id: Optional[str] = None,
     create_origin: Optional[str] = None,
+    metadata_provenance_url: Optional[str] = None,
 ) -> str:
     """Generate sword compliant xml metadata with the minimum required metadata.
 
@@ -101,6 +102,7 @@ def generate_metadata(
         name: Software name
         authors: List of author names
         create_origin: Origin concerned by the deposit
+        metadata_provenance_url: Provenance metadata url
 
     Returns:
         metadata xml string
@@ -113,6 +115,7 @@ def generate_metadata(
         "atom:entry": {
             "@xmlns:atom": "http://www.w3.org/2005/Atom",
             "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+            "@xmlns:schema": "http://schema.org/",
             "atom:updated": datetime.now(tz=timezone.utc),  # mandatory, cf. docstring
             "atom:author": deposit_client,  # mandatory, cf. docstring
             "atom:title": name,  # mandatory, cf. docstring
@@ -125,13 +128,24 @@ def generate_metadata(
     if external_id:
         document["atom:entry"]["codemeta:identifier"] = external_id
 
-    if create_origin:
+    swh_deposit_dict: Dict = {}
+    if create_origin or metadata_provenance_url:
         document["atom:entry"][
             "@xmlns:swh"
         ] = "https://www.softwareheritage.org/schema/2018/deposit"
-        document["atom:entry"]["swh:deposit"] = {
-            "swh:create_origin": {"swh:origin": {"@url": create_origin}}
-        }
+
+    if create_origin:
+        swh_deposit_dict.update(
+            {"swh:create_origin": {"swh:origin": {"@url": create_origin}}}
+        )
+
+    if metadata_provenance_url:
+        swh_deposit_dict.update(
+            {"swh:metadata-provenance": {"schema:url": metadata_provenance_url}}
+        )
+
+    if swh_deposit_dict:
+        document["atom:entry"]["swh:deposit"] = swh_deposit_dict
 
     logging.debug("Atom entry dict to generate as xml: %s", document)
     return xmltodict.unparse(document, pretty=True)
@@ -160,6 +174,7 @@ def client_command_parse_input(
     collection: Optional[str],
     slug: Optional[str],
     create_origin: Optional[str],
+    metadata_provenance_url: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -204,6 +219,7 @@ def client_command_parse_input(
             "metadata": the metadata file to deposit
             "collection": the user's collection under which to put the deposit
             "create_origin": the origin concerned by the deposit
+            "metadata_provenance_url": the metadata provenance url
             "in_progress": if the deposit is partial or not
             "url": deposit's server main entry point
             "deposit_id": optional deposit identifier
@@ -215,7 +231,12 @@ def client_command_parse_input(
             metadata_path = os.path.join(temp_dir, "metadata.xml")
             logging.debug("Temporary file: %s", metadata_path)
             metadata_xml = generate_metadata(
-                username, name, authors, external_id=slug, create_origin=create_origin
+                username,
+                name,
+                authors,
+                external_id=slug,
+                create_origin=create_origin,
+                metadata_provenance_url=metadata_provenance_url,
             )
             logging.debug("Metadata xml generated: %s", metadata_xml)
             with open(metadata_path, "w") as f:
@@ -255,17 +276,26 @@ def client_command_parse_input(
         )
 
     if metadata:
-        from swh.deposit.utils import parse_xml
+        from swh.deposit.utils import parse_swh_metadata_provenance, parse_xml
 
         metadata_raw = open(metadata, "r").read()
-        metadata_dict = parse_xml(metadata_raw).get("swh:deposit", {})
+        metadata_dict = parse_xml(metadata_raw)
+        metadata_swh = metadata_dict.get("swh:deposit", {})
         if (
-            "swh:create_origin" not in metadata_dict
-            and "swh:add_to_origin" not in metadata_dict
+            "swh:create_origin" not in metadata_swh
+            and "swh:add_to_origin" not in metadata_swh
         ):
             logger.warning(
                 "The metadata file provided should contain "
                 '"<swh:create_origin>" or "<swh:add_to_origin>" tag',
+            )
+
+        meta_prov_url = parse_swh_metadata_provenance(metadata_dict)
+
+        if not meta_prov_url:
+            logger.warning(
+                "The metadata file provided should contain "
+                '"<swh:metadata-provenance>" tag'
             )
 
     if replace and not deposit_id:
@@ -371,6 +401,13 @@ def output_format_decorator(f):
     ),
 )
 @click.option(
+    "--metadata-provenance-url",
+    help=(
+        "(Optional) Provenance metadata url to indicate from where the metadata is "
+        "coming from."
+    ),
+)
+@click.option(
     "--partial/--no-partial",
     default=False,
     help=(
@@ -414,6 +451,7 @@ def upload(
     collection: Optional[str],
     slug: Optional[str],
     create_origin: Optional[str],
+    metadata_provenance_url: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -473,6 +511,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 collection,
                 slug,
                 create_origin,
+                metadata_provenance_url,
                 partial,
                 deposit_id,
                 swhid,

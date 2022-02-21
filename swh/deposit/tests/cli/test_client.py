@@ -179,6 +179,7 @@ def test_cli_client_generate_metadata_ok(slug):
         authors=["some", "authors"],
         external_id="external-id",
         create_origin="origin-url",
+        metadata_provenance_url="meta-prov-url",
     )
 
     actual_metadata = dict(parse_xml(actual_metadata_xml))
@@ -195,16 +196,15 @@ def test_cli_client_generate_metadata_ok(slug):
         actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
         == "origin-url"
     )
+    assert (
+        actual_metadata["swh:deposit"]["swh:metadata-provenance"]["schema:url"]
+        == "meta-prov-url"
+    )
 
     checks_ok, detail = check_metadata(actual_metadata)
 
     assert checks_ok is True
-    # FIXME: Open the flag to suggest the provenance metadata url in the cli
-    assert detail == {
-        "metadata": [
-            {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
-        ]
-    }
+    assert detail is None
 
 
 def test_cli_client_generate_metadata_ok2(slug):
@@ -230,7 +230,6 @@ def test_cli_client_generate_metadata_ok2(slug):
     checks_ok, detail = check_metadata(actual_metadata)
 
     assert checks_ok is True
-    # FIXME: Open the flag to suggest the provenance metadata url in the cli
     assert detail == {
         "metadata": [
             {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
@@ -256,6 +255,7 @@ def test_cli_single_minimal_deposit_with_slug(
             "--password", TEST_USER["password"],
             "--name", "test-project",
             "--archive", sample_archive["path"],
+            "--metadata-provenance-url", "meta-prov-url",
             "--author", "Jane Doe",
             "--slug", slug,
             "--format", "json",
@@ -313,6 +313,7 @@ def test_cli_single_minimal_deposit_with_create_origin(
             "--archive", sample_archive["path"],
             "--author", "Jane Doe",
             "--create-origin", origin,
+            "--metadata-provenance-url", "meta-prov-url",
             "--format", "json",
         ],
     )
@@ -335,6 +336,10 @@ def test_cli_single_minimal_deposit_with_create_origin(
         assert (
             actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
             == origin
+        )
+        assert (
+            actual_metadata["swh:deposit"]["swh:metadata-provenance"]["schema:url"]
+            == "meta-prov-url"
         )
         assert actual_metadata["codemeta:author"] == OrderedDict(
             [("codemeta:name", "Jane Doe")]
@@ -899,7 +904,6 @@ def test_cli_metadata_only_deposit_no_swhid(
     "metadata_entry_key", ["entry-data-with-add-to-origin", "entry-only-create-origin"]
 )
 def test_cli_deposit_warning_missing_origin(
-    sample_archive,
     metadata_entry_key,
     tmp_path,
     atom_dataset,
@@ -907,11 +911,12 @@ def test_cli_deposit_warning_missing_origin(
     cli_runner,
     requests_mock_datadir,
 ):
-    """Deposit cli should log warning when the provided metadata xml is missing origins
+    """Deposit cli should warn when provided metadata xml is missing 'origins' tags
 
     """
     # For the next deposit, no warning should be logged as either <swh:create_origin> or
-    # <swh:origin_to_add> are provided
+    # <swh:origin_to_add> are provided, and <swh:metadata-provenance-url> is always
+    # provided.
 
     metadata_raw = atom_dataset[metadata_entry_key] % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-origin-tag-to-deposit.xml")
@@ -934,6 +939,37 @@ def test_cli_deposit_warning_missing_origin(
     for (_, log_level, _) in caplog.record_tuples:
         # all messages are info or below messages so everything is fine
         assert log_level < logging.WARNING
+
+
+def test_cli_deposit_warning_missing_provenance_url(
+    tmp_path, atom_dataset, caplog, cli_runner, requests_mock_datadir,
+):
+    """Deposit cli should warn when no metadata provenance is provided
+
+    """
+    atom_template = atom_dataset["entry-data-with-add-to-origin-no-prov"]
+    metadata_raw = atom_template % "some-url"
+    metadata_path = os.path.join(tmp_path, "metadata-with-missing-prov-url.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata_raw)
+
+    # fmt: off
+    cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+        ],
+    )
+    # fmt: on
+
+    count_warnings = sum(
+        1 for (_, log_level, _) in caplog.record_tuples if log_level == logging.WARNING
+    )
+    assert count_warnings == 1
 
 
 def test_cli_failure_should_be_parseable(atom_dataset, mocker):
