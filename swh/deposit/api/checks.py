@@ -15,10 +15,11 @@ Suggested fields:
 """
 
 from typing import Dict, Optional, Tuple
+from xml.etree import ElementTree
 
 import iso8601
 
-from swh.deposit.utils import normalize_date, parse_swh_metadata_provenance
+from swh.deposit.utils import NAMESPACES, normalize_date, parse_swh_metadata_provenance
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
 INVALID_DATE_FORMAT = "Invalid date format"
@@ -27,7 +28,7 @@ SUGGESTED_FIELDS_MISSING = "Suggested fields are missing"
 METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 
 
-def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
+def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]:
     """Check metadata for mandatory field presence and date format.
 
     Args:
@@ -47,9 +48,9 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
         ("atom:author", "codemeta:author"): False,
     }
 
-    for field, value in metadata.items():
-        for possible_names in alternate_fields:
-            if field in possible_names:
+    for possible_names in alternate_fields:
+        for possible_name in possible_names:
+            if metadata.find(possible_name, namespaces=NAMESPACES) is not None:
                 alternate_fields[possible_names] = True
                 continue
 
@@ -68,18 +69,17 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
 
     fields = []
 
-    commit_date = metadata.get("codemeta:datePublished")
-    author_date = metadata.get("codemeta:dateCreated")
-
-    if commit_date:
+    for commit_date in metadata.findall(
+        "codemeta:datePublished", namespaces=NAMESPACES
+    ):
         try:
-            normalize_date(commit_date)
+            normalize_date(commit_date.text)
         except iso8601.iso8601.ParseError:
             fields.append("codemeta:datePublished")
 
-    if author_date:
+    for author_date in metadata.findall("codemeta:dateCreated", namespaces=NAMESPACES):
         try:
-            normalize_date(author_date)
+            normalize_date(author_date.text)
         except iso8601.iso8601.ParseError:
             fields.append("codemeta:dateCreated")
 

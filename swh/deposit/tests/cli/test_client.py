@@ -10,6 +10,7 @@ import json
 import logging
 import os
 from unittest.mock import MagicMock
+from xml.etree import ElementTree
 
 import pytest
 import yaml
@@ -201,7 +202,7 @@ def test_cli_client_generate_metadata_ok(slug):
         == "meta-prov-url"
     )
 
-    checks_ok, detail = check_metadata(actual_metadata)
+    checks_ok, detail = check_metadata(ElementTree.fromstring(actual_metadata_xml))
 
     assert checks_ok is True
     assert detail is None
@@ -227,7 +228,7 @@ def test_cli_client_generate_metadata_ok2(slug):
     assert actual_metadata.get("codemeta:identifier") is None
     assert actual_metadata.get("swh:deposit") is None
 
-    checks_ok, detail = check_metadata(actual_metadata)
+    checks_ok, detail = check_metadata(ElementTree.fromstring(actual_metadata_xml))
 
     assert checks_ok is True
     assert detail == {

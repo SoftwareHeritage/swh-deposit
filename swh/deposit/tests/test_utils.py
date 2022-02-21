@@ -3,10 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from xml.etree import ElementTree
+
 import pytest
 
 from swh.deposit import utils
-from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
 from swh.model.swhids import CoreSWHID, QualifiedSWHID
 
@@ -103,7 +104,7 @@ def test_compute_metadata_context(swhid: str, expected_metadata_context):
 def test_parse_swh_reference_origin(xml_with_origin_reference):
     url = "https://url"
     xml_data = xml_with_origin_reference.format(url=url)
-    metadata = parse_xml(xml_data)
+    metadata = ElementTree.fromstring(xml_data)
 
     actual_origin = utils.parse_swh_reference(metadata)
     assert actual_origin == url
@@ -133,7 +134,7 @@ def xml_swh_deposit_template():
 )
 def test_parse_swh_reference_empty(xml_swh_deposit_template, xml_ref):
     xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
-    metadata = utils.parse_xml(xml_body)
+    metadata = ElementTree.fromstring(xml_body)
 
     assert utils.parse_swh_reference(metadata) is None
 
@@ -156,7 +157,7 @@ def xml_with_swhid(atom_dataset):
 )
 def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
     xml_data = xml_with_swhid.format(swhid=swhid)
-    metadata = utils.parse_xml(xml_data)
+    metadata = ElementTree.fromstring(xml_data)
 
     actual_swhid = utils.parse_swh_reference(metadata)
     assert actual_swhid is not None
@@ -182,7 +183,7 @@ def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
 
     """
     xml_invalid_swhid = xml_with_swhid.format(swhid=invalid_swhid)
-    metadata = utils.parse_xml(xml_invalid_swhid)
+    metadata = ElementTree.fromstring(xml_invalid_swhid)
 
     with pytest.raises(ValidationError):
         utils.parse_swh_reference(metadata)
@@ -198,7 +199,7 @@ def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
 )
 def test_parse_swh_metatada_provenance_empty(xml_swh_deposit_template, xml_ref):
     xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
-    metadata = utils.parse_xml(xml_body)
+    metadata = ElementTree.fromstring(xml_body)
 
     assert utils.parse_swh_metadata_provenance(metadata) is None
 
@@ -210,7 +211,7 @@ def xml_with_metadata_provenance(atom_dataset):
 
 def test_parse_swh_metadata_provenance2(xml_with_metadata_provenance):
     xml_data = xml_with_metadata_provenance.format(url="https://url.org/metadata/url")
-    metadata = utils.parse_xml(xml_data)
+    metadata = ElementTree.fromstring(xml_data)
 
     actual_url = utils.parse_swh_metadata_provenance(metadata)
 

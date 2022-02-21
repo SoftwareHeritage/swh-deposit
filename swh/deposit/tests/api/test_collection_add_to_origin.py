@@ -39,7 +39,7 @@ def test_add_deposit_with_add_to_origin(
         data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
     )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = response_content["swh:deposit_id"]
 
@@ -105,7 +105,7 @@ def test_add_deposit_add_to_wrong_origin(
         data=atom_dataset["entry-data0"] % origin_url,
     )
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_403_FORBIDDEN, response.content.decode()
     assert b"must start with" in response.content
 
 

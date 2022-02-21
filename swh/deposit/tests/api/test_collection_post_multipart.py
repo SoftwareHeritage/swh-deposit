@@ -42,7 +42,6 @@ def test_post_deposit_multipart(
         HTTP_IN_PROGRESS="false",
     )
 
-    print(response.content.decode())
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(BytesIO(response.content))
     deposit_id = response_content["swh:deposit_id"]

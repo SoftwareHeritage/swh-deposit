@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 The Software Heritage developers
+# Copyright (C) 2017-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,12 +7,13 @@ from contextlib import contextmanager
 import os
 import shutil
 import tempfile
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
+from xml.etree import ElementTree
 
 from rest_framework import status
 
 from swh.core import tarball
-from swh.deposit.utils import normalize_date
+from swh.deposit.utils import NAMESPACES, normalize_date
 from swh.model.hashutil import hash_to_hex
 from swh.model.model import MetadataAuthorityType
 from swh.model.swhids import CoreSWHID
@@ -20,6 +21,7 @@ from swh.model.swhids import CoreSWHID
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
+from ...utils import parse_xml
 from ..common import APIGet
 
 
@@ -105,31 +107,33 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
     """
 
-    def _normalize_dates(self, deposit, metadata):
+    def _parse_dates(
+        self, deposit: Deposit, metadata: ElementTree.Element
+    ) -> Tuple[dict, dict]:
         """Normalize the date to use as a tuple of author date, committer date
            from the incoming metadata.
-
-        Args:
-            deposit (Deposit): Deposit model representation
-            metadata (Dict): Metadata dict representation
 
         Returns:
             Tuple of author date, committer date. Those dates are
             swh normalized.
 
         """
-        commit_date = metadata.get("codemeta:datePublished")
-        author_date = metadata.get("codemeta:dateCreated")
+        commit_date_elt = metadata.find("codemeta:datePublished", namespaces=NAMESPACES)
+        author_date_elt = metadata.find("codemeta:dateCreated", namespaces=NAMESPACES)
 
-        if author_date and commit_date:
-            pass
-        elif commit_date:
-            author_date = commit_date
-        elif author_date:
-            commit_date = author_date
+        author_date: Any
+        commit_date: Any
+
+        if author_date_elt is None and commit_date_elt is None:
+            author_date = commit_date = deposit.complete_date
+        elif commit_date_elt is None:
+            author_date = commit_date = author_date_elt.text  # type: ignore
+        elif author_date_elt is None:
+            author_date = commit_date = commit_date_elt.text
         else:
-            author_date = deposit.complete_date
-            commit_date = deposit.complete_date
+            author_date = author_date_elt.text
+            commit_date = commit_date_elt.text
+
         return (normalize_date(author_date), normalize_date(commit_date))
 
     def metadata_read(self, deposit: Deposit) -> Dict[str, Any]:
@@ -158,8 +162,14 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
                   (author_date, committer_date, etc...)
 
         """
-        metadata, raw_metadata = self._metadata_get(deposit)
-        author_date, commit_date = self._normalize_dates(deposit, metadata)
+        raw_metadata = self._metadata_get(deposit)
+        author_date: Optional[dict]
+        commit_date: Optional[dict]
+        if raw_metadata:
+            metadata_tree = ElementTree.fromstring(raw_metadata)
+            author_date, commit_date = self._parse_dates(deposit, metadata_tree)
+        else:
+            author_date = commit_date = None
 
         if deposit.parent:
             parent_swhid = deposit.parent.swhid
@@ -170,10 +180,15 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             parents = []
 
-        release_notes = metadata.get("codemeta:releaseNotes")
-        if isinstance(release_notes, list):
-            release_notes = "\n\n".join(release_notes)
-        if not release_notes:
+        release_notes_elements = metadata_tree.findall(
+            "codemeta:releaseNotes", namespaces=NAMESPACES
+        )
+        release_notes: Optional[str]
+        if release_notes_elements:
+            release_notes = "\n\n".join(
+                element.text for element in release_notes_elements if element.text
+            )
+        else:
             release_notes = None
 
         return {
@@ -186,7 +201,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             },
             "tool": self.tool,
             "metadata_raw": raw_metadata,
-            "metadata_dict": metadata,
+            "metadata_dict": parse_xml(raw_metadata),
             "deposit": {
                 "id": deposit.id,
                 "client": deposit.client.username,

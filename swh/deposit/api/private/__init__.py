@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional
 
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -36,24 +36,20 @@ class DepositReadMixin:
         for deposit_request in deposit_requests:
             yield deposit_request
 
-    def _metadata_get(self, deposit: Deposit) -> Tuple[Dict[str, Any], Optional[bytes]]:
-        """Given a deposit, retrieve all metadata requests into one Dict and returns both that
-           aggregated metadata dict and the list of raw_metdadata.
+    def _metadata_get(self, deposit: Deposit) -> Optional[bytes]:
+        """Retrieve the last non-empty raw metadata object for that deposit, if any
 
         Args:
             deposit: The deposit instance to extract metadata from
-
-        Returns:
-            Tuple of last metadata dict and last raw_metadata
 
         """
         for deposit_request in self._deposit_requests(
             deposit, request_type=METADATA_TYPE
         ):
             if deposit_request.raw_metadata is not None:
-                return (deposit_request.metadata, deposit_request.raw_metadata)
+                return deposit_request.raw_metadata
 
-        return ({}, None)
+        return None
 
 
 class APIPrivateView(APIConfig, APIView):

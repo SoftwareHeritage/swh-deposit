@@ -5,6 +5,7 @@
 
 import logging
 from typing import Any, Dict, Optional, Union
+from xml.etree import ElementTree
 
 import iso8601
 import xmltodict
@@ -16,21 +17,22 @@ from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
 logger = logging.getLogger(__name__)
 
 
-def parse_xml(stream, encoding="utf-8"):
-    namespaces = {
-        "http://www.w3.org/2005/Atom": "atom",
-        "http://www.w3.org/2007/app": "app",
-        "http://purl.org/dc/terms/": "dc",
-        "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
-        "http://purl.org/net/sword/terms/": "sword",
-        "https://www.softwareheritage.org/schema/2018/deposit": "swh",
-        "http://schema.org/": "schema",
-    }
+NAMESPACES = {
+    "atom": "http://www.w3.org/2005/Atom",
+    "app": "http://www.w3.org/2007/app",
+    "dc": "http://purl.org/dc/terms/",
+    "codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+    "sword": "http://purl.org/net/sword/terms/",
+    "swh": "https://www.softwareheritage.org/schema/2018/deposit",
+    "schema": "http://schema.org/",
+}
 
+
+def parse_xml(stream, encoding="utf-8"):
     data = xmltodict.parse(
         stream,
         encoding=encoding,
-        namespaces=namespaces,
+        namespaces={uri: prefix for (prefix, uri) in NAMESPACES.items()},
         process_namespaces=True,
         dict_constructor=dict,
     )
@@ -98,7 +100,7 @@ ALLOWED_QUALIFIERS_NODE_TYPE = (
 
 
 def parse_swh_metadata_provenance(
-    metadata: Dict,
+    metadata: ElementTree.Element,
 ) -> Optional[Union[QualifiedSWHID, str]]:
     """Parse swh metadata-provenance within the metadata dict reference if found, None
     otherwise.
@@ -121,19 +123,17 @@ def parse_swh_metadata_provenance(
         Either the metadata provenance url if any or None otherwise
 
     """
-
-    swh_deposit = metadata.get("swh:deposit")
-    if not swh_deposit:
-        return None
-
-    swh_metadata_provenance = swh_deposit.get("swh:metadata-provenance")
-    if not swh_metadata_provenance:
-        return None
-
-    return swh_metadata_provenance.get("schema:url")
+    url_element = metadata.find(
+        "swh:deposit/swh:metadata-provenance/schema:url", namespaces=NAMESPACES
+    )
+    if url_element is not None:
+        return url_element.text
+    return None
 
 
-def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]:
+def parse_swh_reference(
+    metadata: ElementTree.Element,
+) -> Optional[Union[QualifiedSWHID, str]]:
     """Parse swh reference within the metadata dict (or origin) reference if found,
     None otherwise.
 
@@ -155,7 +155,7 @@ def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]
        </swh:deposit>
 
     Args:
-        metadata: result of parsing an Atom document with :func:`parse_xml`
+        metadata: result of parsing an Atom document
 
     Raises:
         ValidationError in case the swhid referenced (if any) is invalid
@@ -164,27 +164,21 @@ def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]
         Either swhid or origin reference if any. None otherwise.
 
     """  # noqa
-    swh_deposit = metadata.get("swh:deposit")
-    if not swh_deposit:
+    ref_origin = metadata.find(
+        "swh:deposit/swh:reference/swh:origin[@url]", namespaces=NAMESPACES
+    )
+    if ref_origin is not None:
+        return ref_origin.attrib["url"]
+
+    ref_object = metadata.find(
+        "swh:deposit/swh:reference/swh:object[@swhid]", namespaces=NAMESPACES
+    )
+    if ref_object is None:
         return None
-
-    swh_reference = swh_deposit.get("swh:reference")
-    if not swh_reference:
-        return None
-
-    swh_origin = swh_reference.get("swh:origin")
-    if swh_origin:
-        url = swh_origin.get("@url")
-        if url:
-            return url
-
-    swh_object = swh_reference.get("swh:object")
-    if not swh_object:
-        return None
-
-    swhid = swh_object.get("@swhid")
+    swhid = ref_object.attrib["swhid"]
     if not swhid:
         return None
+
     swhid_reference = QualifiedSWHID.from_string(swhid)
 
     if swhid_reference.qualifiers():

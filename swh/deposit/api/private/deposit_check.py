@@ -8,6 +8,7 @@ import re
 from shutil import get_unpack_formats
 import tarfile
 from typing import Dict, Optional, Tuple
+from xml.etree import ElementTree
 import zipfile
 
 from rest_framework import status
@@ -151,7 +152,7 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             Tuple (status, json response, content-type)
 
         """
-        metadata, _ = self._metadata_get(deposit)
+        raw_metadata = self._metadata_get(deposit)
         details_dict: Dict = {}
         # will check each deposit's associated request (both of type
         # archive and metadata) for errors
@@ -160,11 +161,18 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             assert details is not None
             details_dict.update(details)
 
-        metadata_status_ok, details = check_metadata(metadata)
-        # Ensure in case of error, we do have the rejection details
-        assert metadata_status_ok or (not metadata_status_ok and details is not None)
-        # we can have warnings even if checks are ok (e.g. missing suggested field)
-        details_dict.update(details or {})
+        if raw_metadata is None:
+            metadata_status_ok = False
+            details_dict["metadata"] = [{"summary": "Missing Atom document"}]
+        else:
+            metadata_tree = ElementTree.fromstring(raw_metadata)
+            metadata_status_ok, details = check_metadata(metadata_tree)
+            # Ensure in case of error, we do have the rejection details
+            assert metadata_status_ok or (
+                not metadata_status_ok and details is not None
+            )
+            # we can have warnings even if checks are ok (e.g. missing suggested field)
+            details_dict.update(details or {})
 
         deposit_status_ok = archives_status_ok and metadata_status_ok
         # if any details_dict arose, the deposit is rejected

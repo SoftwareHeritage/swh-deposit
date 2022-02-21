@@ -276,6 +276,8 @@ def client_command_parse_input(
         )
 
     if metadata:
+        from xml.etree import ElementTree
+
         from swh.deposit.utils import parse_swh_metadata_provenance, parse_xml
 
         metadata_raw = open(metadata, "r").read()
@@ -290,7 +292,9 @@ def client_command_parse_input(
                 '"<swh:create_origin>" or "<swh:add_to_origin>" tag',
             )
 
-        meta_prov_url = parse_swh_metadata_provenance(metadata_dict)
+        meta_prov_url = parse_swh_metadata_provenance(
+            ElementTree.fromstring(metadata_raw)
+        )
 
         if not meta_prov_url:
             logger.warning(
@@ -595,13 +599,15 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
     """Deposit metadata only upload
 
     """
+    from xml.etree import ElementTree
+
     from swh.deposit.client import PublicApiDepositClient
-    from swh.deposit.utils import parse_swh_reference, parse_xml
+    from swh.deposit.utils import parse_swh_reference
 
     # Parse to check for a swhid presence within the metadata file
     with open(metadata_path, "r") as f:
         metadata_raw = f.read()
-    actual_swhid = parse_swh_reference(parse_xml(metadata_raw))
+    actual_swhid = parse_swh_reference(ElementTree.fromstring(metadata_raw))
 
     if not actual_swhid:
         raise InputError("A SWHID must be provided for a metadata-only deposit")
