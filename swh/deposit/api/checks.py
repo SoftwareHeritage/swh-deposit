@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,16 +9,22 @@ Mandatory fields:
 - 'author'
 - 'name' or 'title'
 
+Suggested fields:
+- metadata-provenance
+
 """
 
 from typing import Dict, Optional, Tuple
 
 import iso8601
 
-from swh.deposit.utils import normalize_date
+from swh.deposit.utils import normalize_date, parse_swh_metadata_provenance
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
 INVALID_DATE_FORMAT = "Invalid date format"
+
+SUGGESTED_FIELDS_MISSING = "Suggested fields are missing"
+METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 
 
 def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
@@ -28,10 +34,13 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
         metadata: Metadata dictionary to check
 
     Returns:
-        tuple (status, error_detail): True, None if metadata are
-          ok (False, <detailed-error>) otherwise.
+        tuple (status, error_detail):
+          - (True, None) if metadata are ok and suggested fields are also present
+          - (True, <detailed-error>) if metadata are ok but some suggestions are missing
+          - (False, <detailed-error>) otherwise.
 
     """
+    suggested_fields = []
     # at least one value per couple below is mandatory
     alternate_fields = {
         ("atom:name", "atom:title", "codemeta:name"): False,
@@ -46,9 +55,16 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
 
     mandatory_result = [" or ".join(k) for k, v in alternate_fields.items() if not v]
 
+    # provenance metadata is optional
+    provenance_meta = parse_swh_metadata_provenance(metadata)
+    if provenance_meta is None:
+        suggested_fields = [
+            {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
+        ]
+
     if mandatory_result:
         detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
-        return False, {"metadata": detail}
+        return False, {"metadata": detail + suggested_fields}
 
     fields = []
 
@@ -69,6 +85,8 @@ def check_metadata(metadata: Dict) -> Tuple[bool, Optional[Dict]]:
 
     if fields:
         detail = [{"summary": INVALID_DATE_FORMAT, "fields": fields}]
-        return False, {"metadata": detail}
+        return False, {"metadata": detail + suggested_fields}
 
+    if suggested_fields:  # it's fine but warn about missing suggested fields
+        return True, {"metadata": suggested_fields}
     return True, None

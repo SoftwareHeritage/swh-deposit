@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 The Software Heritage developers
+# Copyright (C) 2020-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,7 +14,11 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 
-from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.checks import (
+    METADATA_PROVENANCE_KEY,
+    SUGGESTED_FIELDS_MISSING,
+    check_metadata,
+)
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _collection, _url, generate_metadata
 from swh.deposit.client import (
@@ -195,7 +199,12 @@ def test_cli_client_generate_metadata_ok(slug):
     checks_ok, detail = check_metadata(actual_metadata)
 
     assert checks_ok is True
-    assert detail is None
+    # FIXME: Open the flag to suggest the provenance metadata url in the cli
+    assert detail == {
+        "metadata": [
+            {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
+        ]
+    }
 
 
 def test_cli_client_generate_metadata_ok2(slug):
@@ -221,7 +230,12 @@ def test_cli_client_generate_metadata_ok2(slug):
     checks_ok, detail = check_metadata(actual_metadata)
 
     assert checks_ok is True
-    assert detail is None
+    # FIXME: Open the flag to suggest the provenance metadata url in the cli
+    assert detail == {
+        "metadata": [
+            {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
+        ]
+    }
 
 
 def test_cli_single_minimal_deposit_with_slug(

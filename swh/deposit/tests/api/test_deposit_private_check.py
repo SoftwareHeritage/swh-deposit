@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,7 +7,11 @@ from django.urls import reverse_lazy as reverse
 import pytest
 from rest_framework import status
 
-from swh.deposit.api.checks import MANDATORY_FIELDS_MISSING
+from swh.deposit.api.checks import (
+    MANDATORY_FIELDS_MISSING,
+    METADATA_PROVENANCE_KEY,
+    SUGGESTED_FIELDS_MISSING,
+)
 from swh.deposit.api.private.deposit_check import (
     MANDATORY_ARCHIVE_INVALID,
     MANDATORY_ARCHIVE_MISSING,
@@ -130,7 +134,7 @@ def test_deposit_ko_unsupported_tarball(
         assert len(details["archive"]) == 1
         assert details["archive"][0]["summary"] == MANDATORY_ARCHIVE_UNSUPPORTED
         # metadata check failure
-        assert len(details["metadata"]) == 1
+        assert len(details["metadata"]) == 2
         mandatory = details["metadata"][0]
         assert mandatory["summary"] == MANDATORY_FIELDS_MISSING
         assert set(mandatory["fields"]) == set(
@@ -139,6 +143,9 @@ def test_deposit_ko_unsupported_tarball(
                 "atom:name or atom:title or codemeta:name",
             ]
         )
+        suggested = details["metadata"][1]
+        assert suggested["summary"] == SUGGESTED_FIELDS_MISSING
+        assert set(suggested["fields"]) == set([METADATA_PROVENANCE_KEY])
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_REJECTED
