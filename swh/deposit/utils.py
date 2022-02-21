@@ -24,7 +24,7 @@ def parse_xml(stream, encoding="utf-8"):
         "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
         "http://purl.org/net/sword/terms/": "sword",
         "https://www.softwareheritage.org/schema/2018/deposit": "swh",
-        "https://schema.org/": "schema",
+        "http://schema.org/": "schema",
     }
 
     data = xmltodict.parse(

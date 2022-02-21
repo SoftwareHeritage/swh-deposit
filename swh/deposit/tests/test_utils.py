@@ -113,7 +113,7 @@ def test_parse_swh_reference_origin(xml_with_origin_reference):
 def xml_swh_deposit_template():
     xml_data = """<?xml version="1.0"?>
   <entry xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
-         xmlns:schema="https://schema.org/">
+         xmlns:schema="http://schema.org/">
       <swh:deposit>
         {swh_deposit}
       </swh:deposit>

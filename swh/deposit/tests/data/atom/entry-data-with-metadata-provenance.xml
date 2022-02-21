@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
-       xmlns:schema="https://schema.org/"
+       xmlns:schema="http://schema.org/"
        xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
     <title>Awesome stuff</title>
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
