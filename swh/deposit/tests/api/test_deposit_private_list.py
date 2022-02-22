@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,12 +7,7 @@ from django.urls import reverse_lazy as reverse
 from rest_framework import status
 
 from swh.deposit.api.converters import convert_status_detail
-from swh.deposit.config import (
-    DEPOSIT_STATUS_DEPOSITED,
-    DEPOSIT_STATUS_LOAD_SUCCESS,
-    DEPOSIT_STATUS_PARTIAL,
-    PRIVATE_LIST_DEPOSITS,
-)
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS, PRIVATE_LIST_DEPOSITS
 from swh.deposit.models import DepositClient
 from swh.deposit.tests.conftest import internal_create_deposit
 
@@ -29,49 +24,84 @@ STATUS_DETAIL = {
 }
 
 
-def test_deposit_list(partial_deposit, deposited_deposit, authenticated_client):
+def test_deposit_list(
+    partial_deposit_with_metadata,
+    partial_deposit_only_metadata,
+    partial_deposit,
+    authenticated_client,
+):
     """Deposit list api should return all deposits in a paginated way
 
     """
-    partial_deposit.status_detail = STATUS_DETAIL
-    partial_deposit.save()
-
-    deposit_id = partial_deposit.id
-    deposit_id2 = deposited_deposit.id
+    partial_deposit_with_metadata.status_detail = STATUS_DETAIL
+    partial_deposit_with_metadata.save()
+    deposit1 = partial_deposit_with_metadata
+    deposit2 = partial_deposit_only_metadata
+    deposit3 = partial_deposit
 
     main_url = reverse(PRIVATE_LIST_DEPOSITS)
-    url = "%s?page_size=1" % main_url
+    url = f"{main_url}?page_size=1"
     response = authenticated_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["count"] == 2  # total result of 2 deposits if consuming all results
-    expected_next = f"{main_url}?page=2&page_size=1"
-    assert data["next"].endswith(expected_next) is True
-    assert data["previous"] is None
-    assert len(data["results"]) == 1  # page of size 1
-    deposit = data["results"][0]
-    assert deposit["id"] == deposit_id
-    assert deposit["status"] == DEPOSIT_STATUS_PARTIAL
+    data_p1 = response.json()
+    assert data_p1["count"] == 3  # total nb of deposits
+    expected_next_p1 = f"{main_url}?page=2&page_size=1"
+    assert data_p1["next"].endswith(expected_next_p1) is True
+    assert data_p1["previous"] is None
+    assert len(data_p1["results"]) == 1  # page of size 1
+    deposit_d = data_p1["results"][0]
+    assert deposit_d["id"] == deposit1.id
+    assert deposit_d["status"] == deposit1.status
     expected_status_detail = convert_status_detail(STATUS_DETAIL)
-    assert deposit["status_detail"] == expected_status_detail
+    assert deposit_d["status_detail"] == expected_status_detail
+    assert deposit_d["raw_metadata"] is not None
+    assert (
+        deposit_d["raw_metadata"]
+        == deposit1.depositrequest_set.filter(type="metadata")[0].raw_metadata
+    )
 
     # then 2nd page
-    response2 = authenticated_client.get(expected_next)
+    response2 = authenticated_client.get(data_p1["next"])
 
     assert response2.status_code == status.HTTP_200_OK
-    data2 = response2.json()
+    data_p2 = response2.json()
 
-    assert data["count"] == 2  # total result of 2 deposits if consuming all results
-    assert data2["next"] is None
+    assert data_p2["count"] == 3  # total nb of deposits
+    expected_next_p2 = f"{main_url}?page=3&page_size=1"
+    assert data_p2["next"].endswith(expected_next_p2)
+    assert data_p2["previous"].endswith(url)
+    assert len(data_p2["results"]) == 1  # page of size 1
 
-    expected_previous = f"{main_url}?page_size=1"
-    assert data2["previous"].endswith(expected_previous) is True
-    assert len(data2["results"]) == 1  # page of size 1
+    deposit2_d = data_p2["results"][0]
+    assert deposit2_d["id"] == deposit2.id
+    assert deposit2_d["status"] == deposit2.status
+    assert deposit2_d["raw_metadata"] is not None
+    assert (
+        deposit2_d["raw_metadata"]
+        == deposit2.depositrequest_set.filter(type="metadata")[0].raw_metadata
+    )
 
-    deposit2 = data2["results"][0]
-    assert deposit2["id"] == deposit_id2
-    assert deposit2["status"] == DEPOSIT_STATUS_DEPOSITED
+    # then 3rd (and last) page
+    response3 = authenticated_client.get(data_p2["next"])
+
+    assert response3.status_code == status.HTTP_200_OK
+    data_p3 = response3.json()
+
+    assert data_p3["count"] == 3  # total nb of deposits
+    assert data_p3["next"] is None, "No more page beyond that point"
+
+    assert data_p3["previous"] == data_p1["next"]
+    assert len(data_p3["results"]) == 1  # page of size 1
+
+    deposit3_d = data_p3["results"][0]
+    assert deposit3_d["id"] == deposit3.id
+    assert deposit3_d["status"] == deposit3.status
+    assert not deposit3.depositrequest_set.filter(
+        type="metadata"
+    ), "No metadata type request for that deposit"
+    # hence no raw metadata set for that deposit
+    assert deposit3_d["raw_metadata"] is None, "no raw metadata for that deposit"
 
 
 def test_deposit_list_exclude(partial_deposit, deposited_deposit, authenticated_client):

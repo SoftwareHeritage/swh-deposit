@@ -147,6 +147,7 @@ class Deposit(models.Model):
     load_task_id = models.TextField(
         blank=True, null=True, verbose_name="Scheduler's associated loading task id"
     )
+    raw_metadata: Optional[str] = None
 
     class Meta:
         db_table = "deposit"
@@ -166,6 +167,13 @@ class Deposit(models.Model):
         if self.status in (DEPOSIT_STATUS_REJECTED):
             d["status_detail"] = self.status_detail
         return str(d)
+
+    def set_raw_metadata(self, raw_metadata: str) -> None:
+        """Set the metadata raw out of a 'metadata' typed deposit request. This is
+        specifically used during listing.
+
+        """
+        self.raw_metadata = raw_metadata
 
 
 def client_directory_path(instance: "DepositRequest", filename: str) -> str:
