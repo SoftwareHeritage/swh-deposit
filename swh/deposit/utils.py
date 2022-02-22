@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
 
 import iso8601
@@ -109,7 +109,7 @@ def parse_swh_metadata_provenance(
 
          <swh:deposit>
            <swh:metadata-provenance>
-             <schema:url>https://url.org/metadata/url</schema:url>
+             <schema:url>https://example.org/metadata/url</schema:url>
            </swh:metadata-provenance>
          </swh:deposit>
 
@@ -131,11 +131,49 @@ def parse_swh_metadata_provenance(
     return None
 
 
+def parse_swh_deposit_origin(
+    metadata: ElementTree.Element,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Parses <swh:add_to_origin> and <swh:create_origin> from metadata document,
+    if any.
+
+    .. code-block:: xml
+
+       <swh:deposit>
+         <swh:create_origin>
+           <swh:origin url='https://example.org/repo/software123/'/>
+         </swh:reference>
+       </swh:deposit>
+
+    .. code-block:: xml
+
+       <swh:deposit>
+         <swh:add_to_origin>
+           <swh:origin url='https://example.org/repo/software123/'/>
+         </swh:add_to_origin>
+       </swh:deposit>
+
+    Returns:
+        tuple of (origin_to_create, origin_to_add). If both are non-None, this
+        should typically be an error raised to the user.
+    """
+    create_origin = metadata.find(
+        "swh:deposit/swh:create_origin/swh:origin", namespaces=NAMESPACES
+    )
+    add_to_origin = metadata.find(
+        "swh:deposit/swh:add_to_origin/swh:origin", namespaces=NAMESPACES
+    )
+
+    return (
+        None if create_origin is None else create_origin.attrib["url"],
+        None if add_to_origin is None else add_to_origin.attrib["url"],
+    )
+
+
 def parse_swh_reference(
     metadata: ElementTree.Element,
 ) -> Optional[Union[QualifiedSWHID, str]]:
-    """Parse swh reference within the metadata dict (or origin) reference if found,
-    None otherwise.
+    """Parse <swh:reference> within the metadata document, if any.
 
     .. code-block:: xml
 

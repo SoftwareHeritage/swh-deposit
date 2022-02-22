@@ -75,7 +75,11 @@ from ..errors import (
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
 from ..parsers import parse_xml
-from ..utils import extended_swhid_from_qualified, parse_swh_reference
+from ..utils import (
+    extended_swhid_from_qualified,
+    parse_swh_deposit_origin,
+    parse_swh_reference,
+)
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -911,14 +915,9 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
 
     def _set_deposit_origin_from_metadata(self, deposit, metadata, headers):
-        create_origin = metadata.find(
-            "swh:deposit/swh:create_origin/swh:origin", namespaces=NAMESPACES
-        )
-        add_to_origin = metadata.find(
-            "swh:deposit/swh:add_to_origin/swh:origin", namespaces=NAMESPACES
-        )
+        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata)
 
-        if create_origin is not None and add_to_origin is not None:
+        if create_origin and add_to_origin:
             raise DepositError(
                 BAD_REQUEST,
                 "<swh:create_origin> and <swh:add_to_origin> are mutually exclusive, "
@@ -926,13 +925,13 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "origin.",
             )
 
-        if create_origin is not None:
-            origin_url = create_origin.attrib["url"]
+        if create_origin:
+            origin_url = create_origin
             check_client_origin(deposit.client, origin_url)
             deposit.origin_url = origin_url
 
-        if add_to_origin is not None:
-            origin_url = add_to_origin.attrib["url"]
+        if add_to_origin:
+            origin_url = add_to_origin
             check_client_origin(deposit.client, origin_url)
             deposit.parent = (
                 Deposit.objects.filter(

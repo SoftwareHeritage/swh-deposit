@@ -278,23 +278,25 @@ def client_command_parse_input(
     if metadata:
         from xml.etree import ElementTree
 
-        from swh.deposit.utils import parse_swh_metadata_provenance, parse_xml
+        from swh.deposit.utils import (
+            parse_swh_deposit_origin,
+            parse_swh_metadata_provenance,
+        )
 
-        metadata_raw = open(metadata, "r").read()
-        metadata_dict = parse_xml(metadata_raw)
-        metadata_swh = metadata_dict.get("swh:deposit", {})
-        if (
-            "swh:create_origin" not in metadata_swh
-            and "swh:add_to_origin" not in metadata_swh
-        ):
+        metadata_tree = ElementTree.fromstring(open(metadata).read())
+        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata_tree)
+        if create_origin and add_to_origin:
+            logger.error(
+                "The metadata file provided must not contain both "
+                '"<swh:create_origin>" and "<swh:add_to_origin>" tags',
+            )
+        elif not create_origin and not add_to_origin:
             logger.warning(
                 "The metadata file provided should contain "
                 '"<swh:create_origin>" or "<swh:add_to_origin>" tag',
             )
 
-        meta_prov_url = parse_swh_metadata_provenance(
-            ElementTree.fromstring(metadata_raw)
-        )
+        meta_prov_url = parse_swh_metadata_provenance(metadata_tree)
 
         if not meta_prov_url:
             logger.warning(
