@@ -17,6 +17,7 @@ from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED
 from swh.deposit.models import Deposit, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import check_archive, post_multipart
+from swh.deposit.utils import NAMESPACES
 
 
 def test_post_deposit_multipart(
@@ -43,8 +44,8 @@ def test_post_deposit_multipart(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -76,8 +77,8 @@ def test_post_deposit_multipart_without_origin_url(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -109,8 +110,8 @@ def test_post_deposit_multipart_zip(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -124,11 +125,12 @@ def test_post_deposit_multipart_zip(
         assert deposit_request.deposit == deposit
         if deposit_request.type == "archive":
             check_archive(sample_archive["name"], deposit_request.archive.name)
-            assert deposit_request.metadata is None
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["atom:id"]
+                parse_xml(deposit_request.raw_metadata).findtext(
+                    "atom:id", namespaces=NAMESPACES
+                )
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -158,8 +160,8 @@ def test_post_deposit_multipart_tar(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -173,11 +175,12 @@ def test_post_deposit_multipart_tar(
         assert deposit_request.deposit == deposit
         if deposit_request.type == "archive":
             check_archive(sample_archive["name"], deposit_request.archive.name)
-            assert deposit_request.metadata is None
             assert deposit_request.raw_metadata is None
         else:
             assert (
-                deposit_request.metadata["atom:id"]
+                parse_xml(deposit_request.raw_metadata).findtext(
+                    "atom:id", namespaces=NAMESPACES
+                )
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -208,8 +211,8 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"
@@ -226,7 +229,9 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["atom:id"]
+                parse_xml(deposit_request.raw_metadata).findtext(
+                    "atom:id", namespaces=NAMESPACES
+                )
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert deposit_request.raw_metadata == data_atom_entry
@@ -256,7 +261,9 @@ def test_post_deposit_multipart_put_to_replace_metadata(
             check_archive(sample_archive["name"], deposit_request.archive.name)
         else:
             assert (
-                deposit_request.metadata["atom:id"]
+                parse_xml(deposit_request.raw_metadata).findtext(
+                    "atom:id", namespaces=NAMESPACES
+                )
                 == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
             )
             assert (

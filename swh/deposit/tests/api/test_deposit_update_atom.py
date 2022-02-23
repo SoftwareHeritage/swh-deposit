@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from io import BytesIO
-
 from django.urls import reverse_lazy as reverse
 import pytest
 from rest_framework import status
@@ -21,6 +19,7 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom, put_atom
+from swh.deposit.utils import NAMESPACES
 from swh.model.hashutil import hash_to_bytes
 from swh.model.model import (
     MetadataAuthority,
@@ -55,8 +54,8 @@ def test_post_deposit_atom_entry_multiple_steps(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = int(response_content["swh:deposit_id"])
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -69,12 +68,9 @@ def test_post_deposit_atom_entry_multiple_steps(
 
     atom_entry_data = atom_dataset["entry-only-create-origin"] % (origin_url)
 
-    for link in response_content["atom:link"]:
-        if link["@rel"] == "http://purl.org/net/sword/terms/add":
-            se_iri = link["@href"]
-            break
-    else:
-        assert False, f"missing SE-IRI from {response_content['link']}"
+    se_iri = response_content.find(
+        "atom:link[@rel='http://purl.org/net/sword/terms/add']", namespaces=NAMESPACES
+    ).attrib["href"]
 
     # when updating the first deposit post
     response = post_atom(
@@ -84,8 +80,8 @@ def test_post_deposit_atom_entry_multiple_steps(
     # then
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = int(response_content["swh:deposit_id"])
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -100,14 +96,12 @@ def test_post_deposit_atom_entry_multiple_steps(
 
     atom_entry_data1 = atom_dataset["entry-data1"]
     expected_meta = [
-        {"metadata": parse_xml(atom_entry_data1), "raw_metadata": atom_entry_data1},
-        {"metadata": parse_xml(atom_entry_data), "raw_metadata": atom_entry_data},
+        atom_entry_data1,
+        atom_entry_data,
     ]
 
     for i, deposit_request in enumerate(deposit_requests):
-        actual_metadata = deposit_request.metadata
-        assert actual_metadata == expected_meta[i]["metadata"]
-        assert deposit_request.raw_metadata == expected_meta[i]["raw_metadata"]
+        assert deposit_request.raw_metadata == expected_meta[i]
         assert bool(deposit_request.archive) is False
 
 
@@ -216,8 +210,8 @@ def test_add_metadata_to_unknown_deposit(
     response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
-    assert (
-        "Deposit 1000 does not exist" in response_content["sword:error"]["atom:summary"]
+    assert "Deposit 1000 does not exist" in response_content.findtext(
+        "atom:summary", namespaces=NAMESPACES
     )
 
 
@@ -238,7 +232,9 @@ def test_add_metadata_to_unknown_collection(
     response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
-    assert "Unknown collection name" in response_content["sword:error"]["atom:summary"]
+    assert "Unknown collection name" in response_content.findtext(
+        "atom:summary", namespaces=NAMESPACES
+    )
 
 
 def test_replace_metadata_to_unknown_deposit(
@@ -257,8 +253,8 @@ def test_replace_metadata_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["atom:summary"]
+        response_content.findtext("atom:summary", namespaces=NAMESPACES)
+        == "Deposit %s does not exist" % unknown_deposit_id
     )
 
 
@@ -542,14 +538,11 @@ def test_put_atom_with_create_origin_and_external_identifier(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
 
-    for link in response_content["atom:link"]:
-        if link["@rel"] == "edit":
-            edit_iri = link["@href"]
-            break
-    else:
-        assert False, response_content
+    edit_iri = response_content.find(
+        "atom:link[@rel='edit']", namespaces=NAMESPACES
+    ).attrib["href"]
 
     # when
     response = put_atom(
@@ -581,14 +574,11 @@ def test_put_atom_with_create_origin_and_reference(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
 
-    for link in response_content["atom:link"]:
-        if link["@rel"] == "edit":
-            edit_iri = link["@href"]
-            break
-    else:
-        assert False, response_content
+    edit_iri = response_content.find(
+        "atom:link[@rel='edit']", namespaces=NAMESPACES
+    ).attrib["href"]
 
     # when
     response = put_atom(

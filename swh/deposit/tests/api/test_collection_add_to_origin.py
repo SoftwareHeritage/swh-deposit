@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from io import BytesIO
-
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
 
@@ -12,6 +10,7 @@ from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
+from swh.deposit.utils import NAMESPACES
 
 from ..conftest import internal_create_deposit
 
@@ -40,8 +39,8 @@ def test_add_deposit_with_add_to_origin(
     )
 
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     assert deposit_id != deposit.id
 

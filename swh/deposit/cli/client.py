@@ -160,7 +160,7 @@ def _collection(client: PublicApiDepositClient) -> str:
     if "error" in sd_content:
         msg = sd_content["error"]
         raise InputError(f"Service document retrieval: {msg}")
-    collection = sd_content["app:service"]["app:workspace"]["app:collection"][
+    collection = sd_content["app:service"]["app:workspace"][0]["app:collection"][
         "sword:name"
     ]
     return collection

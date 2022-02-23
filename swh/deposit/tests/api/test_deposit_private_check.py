@@ -26,6 +26,7 @@ from swh.deposit.tests.common import (
     create_arborescence_archive,
     create_archive_with_archive,
 )
+from swh.deposit.utils import NAMESPACES
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 
@@ -204,9 +205,11 @@ def create_deposit_archive_with_archive(
     # then
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(response.content)
-    deposit_status = response_content["swh:deposit_status"]
+    deposit_status = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
     assert deposit_status == DEPOSIT_STATUS_DEPOSITED
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert DEPOSIT_STATUS_DEPOSITED == deposit.status

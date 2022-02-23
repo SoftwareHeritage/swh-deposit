@@ -5,10 +5,10 @@
 
 """Tests the handling of the Atom content when doing a POST Col-IRI."""
 
-from io import BytesIO
 import textwrap
 import uuid
 import warnings
+from xml.etree import ElementTree
 
 import attr
 from django.urls import reverse_lazy as reverse
@@ -22,9 +22,12 @@ from swh.deposit.config import (
     APIConfig,
 )
 from swh.deposit.models import Deposit, DepositCollection, DepositRequest
-from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
-from swh.deposit.utils import compute_metadata_context, extended_swhid_from_qualified
+from swh.deposit.utils import (
+    NAMESPACES,
+    compute_metadata_context,
+    extended_swhid_from_qualified,
+)
 from swh.model.hypothesis_strategies import (
     directories,
     present_contents,
@@ -121,14 +124,16 @@ def test_post_deposit_atom_201_even_with_decimal(
     # then
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     dr = DepositRequest.objects.get(deposit=deposit)
 
-    assert dr.metadata is not None
-    sw_version = dr.metadata.get("codemeta:softwareVersion")
+    assert dr.raw_metadata is not None
+    sw_version = ElementTree.fromstring(dr.raw_metadata).findtext(
+        "codemeta:softwareVersion", namespaces=NAMESPACES
+    )
     assert sw_version == "10.4"
 
 
@@ -145,7 +150,9 @@ def test_post_deposit_atom_400_with_empty_body(
         data=atom_content,
         HTTP_SLUG="external-id",
     )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.status_code == status.HTTP_400_BAD_REQUEST
+    ), response.content.decode()
     assert b"Empty body request is not supported" in response.content
 
 
@@ -259,8 +266,8 @@ def test_post_deposit_atom_use_slug_header(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -288,8 +295,8 @@ def test_post_deposit_atom_no_origin_url_nor_slug_header(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -318,8 +325,8 @@ def test_post_deposit_atom_with_slug_and_external_identifier(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -443,8 +450,8 @@ def test_post_deposit_atom_entry_initial(
     # then
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -453,7 +460,6 @@ def test_post_deposit_atom_entry_initial(
 
     # one associated request to a deposit
     deposit_request = DepositRequest.objects.get(deposit=deposit)
-    assert deposit_request.metadata is not None
     assert deposit_request.raw_metadata == atom_entry_data
     assert bool(deposit_request.archive) is False
 
@@ -482,9 +488,9 @@ def test_post_deposit_atom_entry_with_codemeta(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = ElementTree.fromstring(response.content)
 
-    deposit_id = response_content["swh:deposit_id"]
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -493,7 +499,6 @@ def test_post_deposit_atom_entry_with_codemeta(
 
     # one associated request to a deposit
     deposit_request = DepositRequest.objects.get(deposit=deposit)
-    assert deposit_request.metadata is not None
     assert deposit_request.raw_metadata == atom_entry_data
     assert bool(deposit_request.archive) is False
 
@@ -572,10 +577,10 @@ def test_deposit_metadata_swhid(
     )
 
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = ElementTree.fromstring(response.content)
 
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.swhid == str(swhid_target)
     assert deposit.swhid_context == str(swhid_reference)
@@ -650,9 +655,9 @@ def test_deposit_metadata_origin(
     )
 
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = ElementTree.fromstring(response.content)
     # Ensure the deposit is finalized
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
     deposit = Deposit.objects.get(pk=deposit_id)
     # we got not swhid as input so we cannot have those
     assert deposit.swhid is None
@@ -738,8 +743,10 @@ def test_deposit_metadata_unknown_swhid(
     assert (
         response.status_code == status.HTTP_400_BAD_REQUEST
     ), response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
-    assert "object does not exist" in response_content["sword:error"]["atom:summary"]
+    response_content = ElementTree.fromstring(response.content)
+    assert "object does not exist" in response_content.findtext(
+        "atom:summary", namespaces=NAMESPACES
+    )
 
 
 @pytest.mark.parametrize(
@@ -767,8 +774,10 @@ def test_deposit_metadata_extended_swhid(
     assert (
         response.status_code == status.HTTP_400_BAD_REQUEST
     ), response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
-    assert "Invalid SWHID reference" in response_content["sword:error"]["atom:summary"]
+    response_content = ElementTree.fromstring(response.content)
+    assert "Invalid SWHID reference" in response_content.findtext(
+        "atom:summary", namespaces=NAMESPACES
+    )
 
 
 def test_deposit_metadata_unknown_origin(
@@ -788,5 +797,7 @@ def test_deposit_metadata_unknown_origin(
     assert (
         response.status_code == status.HTTP_400_BAD_REQUEST
     ), response.content.decode()
-    response_content = parse_xml(BytesIO(response.content))
-    assert "known to the archive" in response_content["sword:error"]["atom:summary"]
+    response_content = ElementTree.fromstring(response.content)
+    assert "known to the archive" in response_content.findtext(
+        "atom:summary", namespaces=NAMESPACES
+    )

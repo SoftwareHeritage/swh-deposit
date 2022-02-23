@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
 
 import iso8601
-import xmltodict
 
 from swh.model.exceptions import ValidationError
 from swh.model.model import TimestampWithTimezone
@@ -26,19 +25,6 @@ NAMESPACES = {
     "swh": "https://www.softwareheritage.org/schema/2018/deposit",
     "schema": "http://schema.org/",
 }
-
-
-def parse_xml(stream, encoding="utf-8"):
-    data = xmltodict.parse(
-        stream,
-        encoding=encoding,
-        namespaces={uri: prefix for (prefix, uri) in NAMESPACES.items()},
-        process_namespaces=True,
-        dict_constructor=dict,
-    )
-    if "atom:entry" in data:
-        data = data["atom:entry"]
-    return data
 
 
 def normalize_date(date):

@@ -28,6 +28,7 @@ from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import Deposit
+from swh.deposit.parsers import parse_xml
 from swh.deposit.utils import NAMESPACES, compute_metadata_context
 from swh.model import hashutil
 from swh.model.model import (
@@ -53,7 +54,6 @@ from ..config import (
     DEPOSIT_STATUS_PARTIAL,
     EDIT_IRI,
     EM_IRI,
-    METADATA_KEY,
     METADATA_TYPE,
     RAW_METADATA_KEY,
     SE_IRI,
@@ -74,7 +74,6 @@ from ..errors import (
     ParserError,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
-from ..parsers import parse_xml
 from ..utils import (
     extended_swhid_from_qualified,
     parse_swh_deposit_origin,
@@ -319,15 +318,11 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
             deposit_request.save()
 
-        metadata = deposit_request_data.get(METADATA_KEY)
-        if metadata:
-            # TODO: remove non-raw metadata? we don't use these anymore except in
-            # manual queries to the deposit DB
-            raw_metadata = deposit_request_data[RAW_METADATA_KEY]
+        raw_metadata = deposit_request_data.get(RAW_METADATA_KEY)
+        if raw_metadata:
             deposit_request = DepositRequest(
                 type=METADATA_TYPE,
                 deposit=deposit,
-                metadata=metadata,
                 raw_metadata=raw_metadata.decode("utf-8"),
             )
             deposit_request.save()
@@ -505,9 +500,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             archive=filehandler.name,
         )
 
-    def _read_metadata(
-        self, metadata_stream
-    ) -> Tuple[bytes, Dict[str, Any], ElementTree.Element]:
+    def _read_metadata(self, metadata_stream) -> Tuple[bytes, ElementTree.Element]:
         """
         Given a metadata stream, reads the metadata and returns the metadata in three
         forms:
@@ -517,11 +510,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         * parsed as ElementTree, to extract information immediately
         """
         raw_metadata = metadata_stream.read()
-        metadata_dict = parse_xml(raw_metadata)
-        metadata_tree = ElementTree.fromstring(raw_metadata)
-        # TODO: remove metadata_dict? we don't use it anymore, except in manual
-        # queries to the deposit DB
-        return raw_metadata, metadata_dict, metadata_tree
+        metadata_tree = parse_xml(raw_metadata)
+        return raw_metadata, metadata_tree
 
     def _multipart_upload(
         self,
@@ -608,7 +598,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         try:
-            raw_metadata, metadata_dict, metadata_tree = self._read_metadata(
+            raw_metadata, metadata_tree = self._read_metadata(
                 data["application/atom+xml"]
             )
         except ParserError:
@@ -627,7 +617,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
-            METADATA_KEY: metadata_dict,
             RAW_METADATA_KEY: raw_metadata,
         }
         self._deposit_request_put(
@@ -646,7 +635,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         self,
         deposit: Deposit,
         swhid_reference: Union[str, QualifiedSWHID],
-        metadata_dict: Dict,
         metadata_tree: ElementTree.Element,
         raw_metadata: bytes,
         deposit_origin: Optional[str] = None,
@@ -663,8 +651,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         Args:
             deposit: Deposit reference
             swhid_reference: The swhid or the origin to attach metadata information to
-            metadata_dict: Full dict of metadata for storage in the deposit DB as jsonb
-              (parsed out of raw_metadata)
             metadata_tree: Full element tree of metadata to check for validity
               (parsed out of raw_metadata)
             raw_metadata: The actual raw metadata to send in the storage metadata
@@ -696,7 +682,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         # replace metadata within the deposit backend
         deposit_request_data = {
-            METADATA_KEY: metadata_dict,
             RAW_METADATA_KEY: raw_metadata,
         }
 
@@ -839,9 +824,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         try:
-            raw_metadata, metadata_dict, metadata_tree = self._read_metadata(
-                metadata_stream
-            )
+            raw_metadata, metadata_tree = self._read_metadata(metadata_stream)
         except ParserError:
             raise DepositError(
                 BAD_REQUEST,
@@ -850,7 +833,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        if metadata_dict is None:
+        if len(metadata_tree) == 0:
             raise DepositError(
                 BAD_REQUEST, empty_atom_entry_summary, empty_atom_entry_desc
             )
@@ -878,7 +861,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         if swhid_ref is not None:
             deposit.save()  # We need a deposit id
             target_swhid, depo, depo_request = self._store_metadata_deposit(
-                deposit, swhid_ref, metadata_dict, metadata_tree, raw_metadata
+                deposit, swhid_ref, metadata_tree, raw_metadata
             )
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
@@ -902,7 +885,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         self._deposit_request_put(
             deposit,
-            {METADATA_KEY: metadata_dict, RAW_METADATA_KEY: raw_metadata},
+            {RAW_METADATA_KEY: raw_metadata},
             replace_metadata,
             replace_archives,
         )
