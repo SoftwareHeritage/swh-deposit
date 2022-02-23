@@ -604,15 +604,23 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
     from xml.etree import ElementTree
 
     from swh.deposit.client import PublicApiDepositClient
-    from swh.deposit.utils import parse_swh_reference
+    from swh.deposit.utils import parse_swh_metadata_provenance, parse_swh_reference
 
     # Parse to check for a swhid presence within the metadata file
     with open(metadata_path, "r") as f:
         metadata_raw = f.read()
-    actual_swhid = parse_swh_reference(ElementTree.fromstring(metadata_raw))
+    metadata_tree = ElementTree.fromstring(metadata_raw)
+    actual_swhid = parse_swh_reference(metadata_tree)
 
     if not actual_swhid:
         raise InputError("A SWHID must be provided for a metadata-only deposit")
+
+    meta_prov_url = parse_swh_metadata_provenance(metadata_tree)
+    if not meta_prov_url:
+        logger.warning(
+            "A '<swh:metadata-provenance>' should be provided for a metadata-only "
+            "deposit"
+        )
 
     with trap_and_report_exceptions():
         client = PublicApiDepositClient(url=_url(url), auth=(username, password))

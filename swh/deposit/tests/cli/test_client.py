@@ -8,6 +8,7 @@ import contextlib
 import json
 import logging
 import os
+from typing import Optional
 from unittest.mock import MagicMock
 from xml.etree import ElementTree
 
@@ -860,8 +861,17 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     }
 
 
+@pytest.mark.parametrize(
+    "metadata_entry_key", ["entry-data-with-swhid", "entry-data-with-swhid-no-prov"]
+)
 def test_cli_metadata_only_deposit_full_metadata_file(
-    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+    datadir,
+    requests_mock_datadir,
+    cli_runner,
+    atom_dataset,
+    tmp_path,
+    metadata_entry_key,
+    caplog,
 ):
     """Post metadata-only deposit through cli
 
@@ -870,7 +880,7 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     """
     api_url_basename = "deposit.test.metadataonly"
     swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
-    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    metadata = atom_dataset[metadata_entry_key].format(swhid=swhid)
     metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
     with open(metadata_path, "w") as m:
         m.write(metadata)
@@ -900,6 +910,19 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     actual_deposit_status = json.loads(result.output)
     assert "error" not in actual_deposit_status
     assert actual_deposit_status == expected_deposit_status
+
+    count_warnings = 0
+    warning_record: Optional[str] = None
+    for (_, log_level, msg) in caplog.record_tuples:
+        if log_level == logging.WARNING:
+            count_warnings += 1
+            warning_record = msg
+
+    if "no-prov" in metadata_entry_key:
+        assert count_warnings == 1
+        assert "metadata-provenance>' should be provided" in warning_record
+    else:
+        assert count_warnings == 0
 
 
 def test_cli_metadata_only_deposit_invalid_swhid(

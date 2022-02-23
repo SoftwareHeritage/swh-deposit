@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
          xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-         xmlns:schema="http://schema.org/"
          xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
     <title>Awesome Compiler</title>
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
@@ -10,8 +9,5 @@
       <swh:reference>
         <swh:object swhid="{swhid}" />
       </swh:reference>
-      <swh:metadata-provenance>
-        <schema:url>https://inria.halpreprod.archives-ouvertes.fr/hal-abcdefgh</schema:url>
-      </swh:metadata-provenance>
     </swh:deposit>
 </entry>
