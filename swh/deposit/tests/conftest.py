@@ -6,7 +6,6 @@
 import base64
 from copy import deepcopy
 from functools import partial
-from io import BytesIO
 import os
 import re
 from typing import TYPE_CHECKING, Dict, Mapping
@@ -446,7 +445,7 @@ def create_deposit(
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     from swh.deposit.models import Deposit
 
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
     deposit_id = response_content["swh:deposit_id"]
     deposit = Deposit._default_manager.get(id=deposit_id)
 
