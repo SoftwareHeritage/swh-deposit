@@ -200,6 +200,7 @@ def django_db_setup(request, django_db_blocker, postgresql_proc):
             ("PORT", postgresql_proc.port),  # noqa
         }
     )
+
     with django_db_blocker.unblock():
         setup_databases(
             verbosity=request.config.option.verbose, interactive=False, keepdb=False

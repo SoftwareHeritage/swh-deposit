@@ -114,6 +114,15 @@ class DepositClient(User):
         )
 
 
+DEPOSIT_METADATA_ONLY = "meta"
+DEPOSIT_CODE = "code"
+
+DEPOSIT_TYPES = [
+    (DEPOSIT_METADATA_ONLY, DEPOSIT_METADATA_ONLY),
+    (DEPOSIT_CODE, DEPOSIT_CODE),
+]
+
+
 class Deposit(models.Model):
     """Deposit reception table
 
@@ -147,6 +156,8 @@ class Deposit(models.Model):
     load_task_id = models.TextField(
         blank=True, null=True, verbose_name="Scheduler's associated loading task id"
     )
+    type = models.CharField(max_length=4, choices=DEPOSIT_TYPES, default=DEPOSIT_CODE)
+
     raw_metadata: Optional[str] = None
 
     class Meta:
@@ -156,12 +167,14 @@ class Deposit(models.Model):
     def __str__(self):
         d = {
             "id": self.id,
+            "type": self.type,
+            "status": self.status,
             "reception_date": self.reception_date,
+            "complete_date": self.complete_date,
             "collection": self.collection.name,
             "external_id": self.external_id,
             "origin_url": self.origin_url,
             "client": self.client.username,
-            "status": self.status,
         }
 
         if self.status in (DEPOSIT_STATUS_REJECTED):

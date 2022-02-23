@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -27,7 +27,7 @@ from rest_framework.views import APIView
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
-from swh.deposit.models import Deposit
+from swh.deposit.models import Deposit, DEPOSIT_METADATA_ONLY
 from swh.deposit.parsers import parse_xml
 from swh.deposit.utils import NAMESPACES, compute_metadata_context
 from swh.model import hashutil
@@ -868,6 +868,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             if isinstance(swhid_ref, QualifiedSWHID):
                 deposit.swhid = str(extended_swhid_from_qualified(swhid_ref))
                 deposit.swhid_context = str(swhid_ref)
+            deposit.type = DEPOSIT_METADATA_ONLY
             deposit.complete_date = depo_request.date
             deposit.reception_date = depo_request.date
             deposit.save()

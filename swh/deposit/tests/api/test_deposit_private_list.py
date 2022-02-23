@@ -8,7 +8,7 @@ from rest_framework import status
 
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS, PRIVATE_LIST_DEPOSITS
-from swh.deposit.models import DepositClient
+from swh.deposit.models import DEPOSIT_CODE, DEPOSIT_METADATA_ONLY, DepositClient
 from swh.deposit.tests.conftest import internal_create_deposit
 
 STATUS_DETAIL = {
@@ -37,6 +37,8 @@ def test_deposit_list(
     partial_deposit_with_metadata.save()
     deposit1 = partial_deposit_with_metadata
     deposit2 = partial_deposit_only_metadata
+    deposit2.type = DEPOSIT_METADATA_ONLY
+    deposit2.save()
     deposit3 = partial_deposit
 
     main_url = reverse(PRIVATE_LIST_DEPOSITS)
@@ -56,6 +58,7 @@ def test_deposit_list(
     expected_status_detail = convert_status_detail(STATUS_DETAIL)
     assert deposit_d["status_detail"] == expected_status_detail
     assert deposit_d["raw_metadata"] is not None
+    assert deposit_d["type"] == DEPOSIT_CODE
     assert (
         deposit_d["raw_metadata"]
         == deposit1.depositrequest_set.filter(type="metadata")[0].raw_metadata
@@ -77,6 +80,7 @@ def test_deposit_list(
     assert deposit2_d["id"] == deposit2.id
     assert deposit2_d["status"] == deposit2.status
     assert deposit2_d["raw_metadata"] is not None
+    assert deposit2_d["type"] == DEPOSIT_METADATA_ONLY
     assert (
         deposit2_d["raw_metadata"]
         == deposit2.depositrequest_set.filter(type="metadata")[0].raw_metadata
@@ -97,6 +101,7 @@ def test_deposit_list(
     deposit3_d = data_p3["results"][0]
     assert deposit3_d["id"] == deposit3.id
     assert deposit3_d["status"] == deposit3.status
+    assert deposit3_d["type"] == DEPOSIT_CODE
     assert not deposit3.depositrequest_set.filter(
         type="metadata"
     ), "No metadata type request for that deposit"
