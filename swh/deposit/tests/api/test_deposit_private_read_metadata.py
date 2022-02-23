@@ -9,7 +9,6 @@ from rest_framework import status
 from swh.deposit import __version__
 from swh.deposit.config import PRIVATE_GET_DEPOSIT_METADATA, SE_IRI, SWH_PERSON
 from swh.deposit.models import Deposit
-from swh.deposit.parsers import parse_xml
 
 PRIVATE_GET_DEPOSIT_METADATA_NC = PRIVATE_GET_DEPOSIT_METADATA + "-nc"
 
@@ -63,7 +62,6 @@ def test_read_metadata(
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
             "metadata_raw": metadata_xml_raw,
-            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -131,7 +129,6 @@ def test_read_metadata_revision_with_parent(
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
             "metadata_raw": metadata_xml_raw,
-            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -191,7 +188,6 @@ def test_read_metadata_3(
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
             "metadata_raw": metadata_xml_raw,
-            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -249,7 +245,6 @@ def test_read_metadata_4(
         assert actual_data == {
             "origin": {"type": "deposit", "url": None,},
             "metadata_raw": codemeta_entry_data,
-            "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -320,7 +315,6 @@ def test_read_metadata_5(
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
             "metadata_raw": codemeta_entry_data,
-            "metadata_dict": parse_xml(codemeta_entry_data),
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -398,7 +392,6 @@ def test_read_metadata_multiple_release_notes(
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
             "metadata_raw": metadata_xml_raw,
-            "metadata_dict": parse_xml(metadata_xml_raw),
             "provider": {
                 "metadata": {},
                 "provider_name": "",

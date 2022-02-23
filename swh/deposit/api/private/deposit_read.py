@@ -21,7 +21,6 @@ from swh.model.swhids import CoreSWHID
 from . import APIPrivateView, DepositReadMixin
 from ...config import ARCHIVE_TYPE, SWH_PERSON
 from ...models import Deposit
-from ...utils import parse_xml
 from ..common import APIGet
 
 
@@ -201,7 +200,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
             },
             "tool": self.tool,
             "metadata_raw": raw_metadata,
-            "metadata_dict": parse_xml(raw_metadata),
             "deposit": {
                 "id": deposit.id,
                 "client": deposit.client.username,
