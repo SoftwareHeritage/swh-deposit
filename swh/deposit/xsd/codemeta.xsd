@@ -23,11 +23,13 @@
   </xsd:element>
 
   <xsd:complexType name="PersonOrOrganization">
-    <!-- Allows anything, but at least <codemeta:name> should be present -->
-    <xsd:choice maxOccurs="unbounded">
+    <!-- Allows anything, but at least <codemeta:name> should be present.
+         This is not technically required by Codemeta, but we really want it
+         in swh-deposit. -->
+    <xsd:all>
       <xsd:element ref="codemeta:name" />
-      <xsd:any processContents="lax" />
-    </xsd:choice>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:all>
   </xsd:complexType>
 
   <xsd:element name="name" type="xsd:string" />

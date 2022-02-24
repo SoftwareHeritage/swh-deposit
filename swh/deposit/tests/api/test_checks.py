@@ -80,6 +80,34 @@ _parameters1 = [
                 <url>some url</url>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <schema:unknown-tag>should allow anything here</schema:unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <schema:unknown-tag>should allow anything here</schema:unknown-tag>
+                    <codemeta:name>someone</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <schema:unknown-tag>should allow anything here</schema:unknown-tag>
+                    <codemeta:name>someone</codemeta:name>
                     <schema:unknown-tag>should allow anything here</schema:unknown-tag>
                 </codemeta:author>
                 {PROVENANCE_XML}
@@ -330,6 +358,24 @@ _parameters3 = [
             [
                 {
                     "summary": ".*Reason: character data between child elements.*",
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <schema:unknown-tag>should allow anything here</schema:unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Tag '?codemeta:name'? expected.*",
                     "fields": ["codemeta:author"],
                 },
             ],
