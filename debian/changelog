@@ -1,3 +1,26 @@
+swh-deposit (0.17.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.17.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2022-02-24 12:04:52
+    +0100)
+  * Upstream changes:     - v0.17.0     - Replace xmltodict with
+    ElementTree to handle SWORD documents and remove xmltodict     -
+    dependency     - Remove metadata merging; use only the latest
+    document     - deposit: Explicit deposit type, either 'meta' or
+    'code' deposit     - Ensure metadata provenance url matches provider
+    url when provided     - cli: Warn when metadata-only deposit without
+    metadata provenance     - deposit-list: Allow deposit listing with
+    their raw metadata if any     - Specify a new element to describe
+    the provenance of deposit metadata     - deposit.cli.client: Allow
+    user to define the metadata provenance url     - deposit_check:
+    Actually store warning in deposit status detail     - docs: Replace
+    references to --slug from the user manual     - docs: Add links to
+    description of <swh:create_origin>.     - Deduplicate parsing of
+    add_to_origin/create_to_origin + add error logging in the     -
+    client
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 24 Feb 2022 11:17:05 +0000
+
 swh-deposit (0.16.3-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.16.3     - (tagged by Antoine R. Dumont
