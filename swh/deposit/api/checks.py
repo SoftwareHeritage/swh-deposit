@@ -14,10 +14,14 @@ Suggested fields:
 
 """
 
+import dataclasses
+import functools
 from typing import Dict, Optional, Tuple
 from xml.etree import ElementTree
 
 import iso8601
+import pkg_resources
+import xmlschema
 
 from swh.deposit.utils import NAMESPACES, normalize_date, parse_swh_metadata_provenance
 
@@ -26,6 +30,21 @@ INVALID_DATE_FORMAT = "Invalid date format"
 
 SUGGESTED_FIELDS_MISSING = "Suggested fields are missing"
 METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
+
+
+@dataclasses.dataclass
+class Schemas:
+    swh: xmlschema.XMLSchema11
+
+
+@functools.lru_cache(1)
+def schemas() -> Schemas:
+    def load_xsd(name) -> xmlschema.XMLSchema11:
+        return xmlschema.XMLSchema11(
+            pkg_resources.resource_string("swh.deposit", f"xsd/{name}.xsd").decode()
+        )
+
+    return Schemas(swh=load_xsd("swh"))
 
 
 def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]:
@@ -67,6 +86,13 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
         detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
         return False, {"metadata": detail + suggested_fields}
 
+    deposit_elt = metadata.find("swh:deposit", namespaces=NAMESPACES)
+    if deposit_elt:
+        try:
+            schemas().swh.validate(deposit_elt)
+        except xmlschema.exceptions.XMLSchemaException as e:
+            return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
+
     fields = []
 
     for commit_date in metadata.findall(
@@ -89,4 +115,5 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
 
     if suggested_fields:  # it's fine but warn about missing suggested fields
         return True, {"metadata": suggested_fields}
+
     return True, None

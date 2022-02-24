@@ -3,6 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+# disable flake8 on this file because of line length
+# flake8: noqa
+
+import re
 import textwrap
 from typing import Any, Dict
 from xml.etree import ElementTree
@@ -78,6 +82,70 @@ _parameters1 = [
                 <codemeta:datePublished>2020-12-21</codemeta:datePublished>
                 <codemeta:dateCreated>2020-12-21</codemeta:dateCreated>
                 {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:add_to_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:add_to_origin>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
+                </swh:deposit>
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:reference>
+                        <swh:origin url="http://example.org" />
+                    </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
+                </swh:deposit>
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:reference>
+                        <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
+                    </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
+                </swh:deposit>
             </entry>
             """,
         ),
@@ -248,3 +316,131 @@ def test_api_checks_check_metadata_fields_ko_and_missing_suggested_fields(
         "metadata": [expected_invalid_summary]
         + [{"fields": [METADATA_PROVENANCE_KEY], "summary": SUGGESTED_FIELDS_MISSING,}]
     }
+
+
+_parameters4 = [
+    (textwrap.dedent(metadata_ko), expected_summary)
+    for (metadata_ko, expected_summary) in [
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:invalid>
+                        <swh:origin url="http://example.org" />
+                    </swh:invalid>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": (
+                    r".*Reason: Unexpected child with tag 'swh:invalid'.*"
+                    r"Instance:.*swh:invalid.*"
+                ),
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:add_to_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:add_to_origin>
+                    <swh:add_to_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:add_to_origin>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": (
+                    r".*Reason: Unexpected child with tag 'swh:add_to_origin'.*"
+                ),
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:reference>
+                        <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
+                        <swh:origin url="http://example.org" />
+                    </swh:reference>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:reference>
+                        <swh:origin url="http://example.org" />
+                        <swh:origin url="http://example.org" />
+                    </swh:reference>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:reference>
+                        <swh:origin url="http://example.org" />
+                        <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
+                    </swh:reference>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": r".*Reason: Unexpected child with tag 'swh:object'.*",
+                "fields": ["swh:deposit"],
+            },
+        ),
+    ]
+]
+
+
+@pytest.mark.parametrize("metadata_ko,expected_summary", _parameters4)
+def test_api_checks_check_metadata_ko_schema(
+    metadata_ko, expected_summary, swh_checks_deposit
+):
+    actual_check, error_detail = check_metadata(ElementTree.fromstring(metadata_ko))
+    assert actual_check is False
+    assert len(error_detail["metadata"]) == 1, error_detail["metadata"]
+    assert error_detail["metadata"][0]["fields"] == expected_summary["fields"]
+
+    # xmlschema returns very detailed errors, we cannot reasonably test them
+    # for equality
+    summary = error_detail["metadata"][0]["summary"]
+    assert re.match(expected_summary["summary"], summary, re.DOTALL), summary
