@@ -6,48 +6,54 @@
             >
   <xsd:element name="deposit">
     <xsd:complexType>
-      <xsd:sequence>
-        <xsd:complexType>
-          <xsd:choice>
-            <!-- code deposit on a new origin -->
-            <xsd:element name="create_origin" >
-              <xsd:complexType>
-                <xsd:element ref="swh:origin" />
-              </xsd:complexType>
-            </xsd:element>
+      <xsd:all>
+        <!-- note that "create_origin", "add_to_origin", and "reference" are
+             mutually exclusive -->
 
-            <!-- code deposit on an origin already created by a previous deposit -->
-            <xsd:element name="add_to_origin" >
-              <xsd:complexType>
-                <xsd:element ref="swh:origin" />
-              </xsd:complexType>
-            </xsd:element>
-
-            <!-- metadata-only deposit -->
-            <xsd:element name="reference">
-              <xsd:complexType>
-                <xsd:choice>
-                  <xsd:element ref="swh:origin" />
-                  <xsd:element ref="swh:object" />
-                </xsd:choice>
-              </xsd:complexType>
-            </xsd:element>
-
-          </xsd:choice>
-        </xsd:complexType>
-
-        <xsd:element name="metadata-provenance" minOccurs="0" maxOccurs="1" >
-          <xsd:any />
+        <!-- code deposit on a new origin -->
+        <xsd:element name="create_origin" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="swh:origin" />
+            </xsd:sequence>
+          </xsd:complexType>
         </xsd:element>
 
-      </xsd:sequence>
+        <!-- code deposit on an origin already created by a previous deposit -->
+        <xsd:element name="add_to_origin" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="swh:origin" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+        <!-- metadata-only deposit -->
+        <xsd:element name="reference" minOccurs="0">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element ref="swh:origin" />
+              <xsd:element ref="swh:object" />
+            </xsd:choice>
+          </xsd:complexType>
+        </xsd:element>
+
+        <xsd:element name="metadata-provenance" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+      </xsd:all>
     </xsd:complexType>
   </xsd:element>
 
   <!-- references a SWHID -->
   <xsd:element name="object">
     <xsd:complexType>
-    <xsd:attribute type="xsd:string" name="swhid"/>
+      <xsd:attribute type="xsd:string" name="swhid"/>
     </xsd:complexType>
   </xsd:element>
 
