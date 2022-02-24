@@ -15,10 +15,12 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any, Collection, Dict, List, Optional
 import warnings
+import xml.etree.ElementTree as ET
 
 import click
 
 from swh.deposit.cli import deposit
+from swh.deposit.utils import NAMESPACES as NS
 
 logger = logging.getLogger(__name__)
 
@@ -108,47 +110,37 @@ def generate_metadata(
         metadata xml string
 
     """
-    import xmltodict
-
     # generate a metadata file with the minimum required metadata
-    document = {
-        "atom:entry": {
-            "@xmlns:atom": "http://www.w3.org/2005/Atom",
-            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-            "@xmlns:schema": "http://schema.org/",
-            "atom:updated": datetime.now(tz=timezone.utc),  # mandatory, cf. docstring
-            "atom:author": deposit_client,  # mandatory, cf. docstring
-            "atom:title": name,  # mandatory, cf. docstring
-            "codemeta:name": name,  # mandatory, cf. docstring
-            "codemeta:author": [  # mandatory, cf. docstring
-                {"codemeta:name": author_name} for author_name in authors
-            ],
-        },
-    }
-    if external_id:
-        document["atom:entry"]["codemeta:identifier"] = external_id
+    document = ET.Element(f"{{{NS['atom']}}}entry")
+    now = datetime.now(tz=timezone.utc)
+    ET.SubElement(document, f"{{{NS['atom']}}}updated").text = str(now)
+    ET.SubElement(document, f"{{{NS['atom']}}}author").text = deposit_client
+    ET.SubElement(document, f"{{{NS['atom']}}}title").text = name
+    ET.SubElement(document, f"{{{NS['codemeta']}}}name").text = name
+    for author_name in authors:
+        author = ET.SubElement(document, f"{{{NS['codemeta']}}}author")
+        ET.SubElement(author, f"{{{NS['codemeta']}}}name").text = author_name
 
-    swh_deposit_dict: Dict = {}
-    if create_origin or metadata_provenance_url:
-        document["atom:entry"][
-            "@xmlns:swh"
-        ] = "https://www.softwareheritage.org/schema/2018/deposit"
+    if external_id:
+        ET.SubElement(document, f"{{{NS['codemeta']}}}identifier").text = external_id
+
+    swh_deposit_elt = ET.Element(f"{{{NS['swh']}}}deposit")
 
     if create_origin:
-        swh_deposit_dict.update(
-            {"swh:create_origin": {"swh:origin": {"@url": create_origin}}}
-        )
+        elt = ET.SubElement(swh_deposit_elt, f"{{{NS['swh']}}}create_origin")
+        ET.SubElement(elt, f"{{{NS['swh']}}}origin").set("url", create_origin)
 
     if metadata_provenance_url:
-        swh_deposit_dict.update(
-            {"swh:metadata-provenance": {"schema:url": metadata_provenance_url}}
-        )
+        elt = ET.SubElement(swh_deposit_elt, f"{{{NS['swh']}}}metadata-provenance")
+        ET.SubElement(elt, f"{{{NS['schema']}}}url").text = metadata_provenance_url
 
-    if swh_deposit_dict:
-        document["atom:entry"]["swh:deposit"] = swh_deposit_dict
+    if len(swh_deposit_elt):
+        document.append(swh_deposit_elt)
 
-    logging.debug("Atom entry dict to generate as xml: %s", document)
-    return xmltodict.unparse(document, pretty=True)
+    s = ET.tostring(document, encoding="utf-8").decode()
+
+    logging.debug("Atom entry dict to generate as xml: %s", s)
+    return s
 
 
 def _collection(client: PublicApiDepositClient) -> str:

@@ -6,11 +6,11 @@
 """Tests updates on EM-IRI"""
 
 from io import BytesIO
+import xml.etree.ElementTree as ET
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
-import xmltodict
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED, EM_IRI, SE_IRI
 from swh.deposit.models import Deposit, DepositRequest
@@ -328,7 +328,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -344,7 +344,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -360,7 +360,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -376,7 +376,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -409,7 +409,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -423,6 +423,6 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )

@@ -5,10 +5,10 @@
 
 from collections import defaultdict
 from typing import Dict, Mapping
+import xml.etree.ElementTree as ET
 
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
-import xmltodict
 
 from swh.deposit.config import (
     ARCHIVE_TYPE,
@@ -18,6 +18,7 @@ from swh.deposit.config import (
     METADATA_TYPE,
 )
 from swh.deposit.models import Deposit, DepositRequest
+from swh.deposit.utils import NAMESPACES
 
 
 def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
@@ -83,7 +84,7 @@ def test_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(response.content)["sword:error"]["summary"]
+        ET.fromstring(response.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -126,7 +127,7 @@ def test_delete_on_edit_iri_cannot_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(response.content)["sword:error"]["summary"]
+        ET.fromstring(response.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
