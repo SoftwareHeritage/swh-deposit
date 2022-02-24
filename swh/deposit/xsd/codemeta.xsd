@@ -7,8 +7,11 @@
   <!-- This is a non-exhaustive schema used to find likely errors in XML-encoded
        Codemeta documents -->
 
+  <!-- technically, only Date is allowed for datePublished; but we allow DateTime
+       for backward compatibility with old swh-deposit versions -->
   <xsd:element name="datePublished" type="codemeta:DateOrDateTime" />
   <xsd:element name="dateCreated" type="codemeta:DateOrDateTime" />
+  <xsd:element name="dateModified" type="codemeta:DateOrDateTime" />
 
   <xsd:simpleType name="DateOrDateTime">
     <xsd:union memberTypes="xsd:date xsd:dateTime"/>

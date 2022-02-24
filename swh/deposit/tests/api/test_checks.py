@@ -81,6 +81,23 @@ _parameters1 = [
                 <author>no one</author>
                 <codemeta:datePublished>2020-12-21</codemeta:datePublished>
                 <codemeta:dateCreated>2020-12-21</codemeta:dateCreated>
+                <codemeta:dateModified>2020-12-25</codemeta:dateModified>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            # technically, only Date is allowed for datePublished; but we allow DateTime
+            # for backward compatibility with old swh-deposit versions
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <external_identifier>some id</external_identifier>
+                <name>nar</name>
+                <author>no one</author>
+                <codemeta:datePublished>2020-12-21T12:00:00</codemeta:datePublished>
+                <codemeta:dateCreated>2020-12-21T12:00:00</codemeta:dateCreated>
+                <codemeta:dateModified>2020-12-25T12:00:00</codemeta:dateModified>
                 {PROVENANCE_XML}
             </entry>
             """,
@@ -311,6 +328,23 @@ _parameters3 = [
                 {
                     "summary": ".*Reason: invalid value '2020-12-bb'.*",
                     "fields": ["codemeta:dateCreated"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <external_identifier>someid</external_identifier>
+                <title>bar</title>
+                <author>no one</author>
+                <codemeta:dateModified>2020-12-aa</codemeta:dateModified>
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: invalid value '2020-12-aa'.*",
+                    "fields": ["codemeta:dateModified"],
                 },
             ],
         ),
