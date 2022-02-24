@@ -315,7 +315,9 @@ A release contains one date:
                     "codemeta:name": "Morane Gruenpeter"
                 },
                 "codemeta:codeRepository": "www.code-repository.com",
-                "codemeta:contributor": "Morane Gruenpeter",
+                "codemeta:contributor": {
+                    "codemeta:name": "Morane Gruenpeter",
+                },
                 "codemeta:dateCreated": "2012",
                 "codemeta:datePublished": "2019-05-27T16:28:33+02:00",
                 "codemeta:description": "description\\_en test v2",
