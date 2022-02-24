@@ -24,22 +24,20 @@ METADATA_PROVENANCE_DICT: Dict[str, Any] = {
 XMLNS = """xmlns="http://www.w3.org/2005/Atom"
                    xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
                    xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-                   xmlns:schema="http://schema.org/"
-"""
+                   xmlns:schema="http://schema.org/" """
 
 PROVENANCE_XML = """
                 <swh:deposit>
                     <swh:metadata-provenance>
                         <schema:url>some-metadata-provenance-url</schema:url>
                     </swh:metadata-provenance>
-                </swh:deposit>
-"""
+                </swh:deposit>"""
 
 _parameters1 = [
     textwrap.dedent(metadata_ok)
     for (metadata_ok,) in [
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -50,7 +48,7 @@ _parameters1 = [
             """,
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -61,7 +59,7 @@ _parameters1 = [
             """,
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>some url</url>
                 <codemeta:name>bar</codemeta:name>
@@ -71,7 +69,7 @@ _parameters1 = [
             """,
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>some url</url>
                 <external_identifier>some id</external_identifier>
@@ -112,7 +110,7 @@ _parameters2 = [
     (textwrap.dedent(metadata_ko), expected_summary)
     for (metadata_ko, expected_summary) in [
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -126,7 +124,7 @@ _parameters2 = [
             },
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -140,7 +138,7 @@ _parameters2 = [
             },
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -155,7 +153,7 @@ _parameters2 = [
             },
         ),
         (
-            f"""
+            f"""\
             <entry xmlns:atom="http://www.w3.org/2005/Atom"
                    xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
                    xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
@@ -173,7 +171,7 @@ _parameters2 = [
             },
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -188,7 +186,7 @@ _parameters2 = [
             },
         ),
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
@@ -221,7 +219,7 @@ _parameters3 = [
     (textwrap.dedent(metadata_ko), expected_summary)
     for (metadata_ko, expected_summary) in [
         (
-            f"""
+            f"""\
             <entry {XMLNS}>
                 <url>some url</url>
                 <external_identifier>someid</external_identifier>
