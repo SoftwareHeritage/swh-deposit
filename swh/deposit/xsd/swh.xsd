@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
             targetNamespace="https://www.softwareheritage.org/schema/2018/deposit"
             xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
             elementFormDefault="qualified"
@@ -7,9 +8,6 @@
   <xsd:element name="deposit">
     <xsd:complexType>
       <xsd:all>
-        <!-- note that "create_origin", "add_to_origin", and "reference" are
-             mutually exclusive -->
-
         <!-- code deposit on a new origin -->
         <xsd:element name="create_origin" minOccurs="0">
           <xsd:complexType>
@@ -47,6 +45,23 @@
         </xsd:element>
 
       </xsd:all>
+
+      <!-- "create_origin", "add_to_origin", and "reference" are mutually exclusive. -->
+      <xsd:assert
+        id="swhdeposit-incompatible-create-and-add"
+        test="not(swh:create_origin) or not(swh:add_to_origin)"
+        vc:minVersion="1.1"
+        />
+      <xsd:assert
+        id="swhdeposit-incompatible-create-and-reference"
+        test="not(swh:create_origin) or not(swh:reference)"
+        vc:minVersion="1.1"
+        />
+      <xsd:assert
+        id="swhdeposit-incompatible-add-and-reference"
+        test="not(swh:add_to_origin) or not(swh:reference)"
+        vc:minVersion="1.1"
+        />
     </xsd:complexType>
   </xsd:element>
 

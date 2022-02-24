@@ -375,6 +375,84 @@ _parameters4 = [
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
+                    <swh:add_to_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:add_to_origin>
+                    <swh:create_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:create_origin>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": (
+                    r".*Reason: assertion test if false.*"
+                    r"Schema:\n*"
+                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-add".*'
+                ),
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:create_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:create_origin>
+                    <swh:reference>
+                        <swh:origin url="http://example.org" />
+                    </swh:reference>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": (
+                    r".*Reason: assertion test if false.*"
+                    r"Schema:\n*"
+                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-reference".*'
+                ),
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
+                    <swh:add_to_origin>
+                        <swh:origin url="http://example.org" />
+                    </swh:add_to_origin>
+                    <swh:reference>
+                        <swh:origin url="http://example.org" />
+                    </swh:reference>
+                </swh:deposit>
+            </entry>
+            """,
+            {
+                "summary": (
+                    r".*Reason: assertion test if false.*"
+                    r"Schema:\n*"
+                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-add-and-reference".*'
+                ),
+                "fields": ["swh:deposit"],
+            },
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <swh:deposit>
                     <swh:reference>
                         <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
                         <swh:origin url="http://example.org" />
