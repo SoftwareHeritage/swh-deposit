@@ -17,5 +17,18 @@
     <xsd:union memberTypes="xsd:date xsd:dateTime"/>
   </xsd:simpleType>
 
+  <xsd:element name="author" type="codemeta:PersonOrOrganization">
+  </xsd:element>
+  <xsd:element name="contributor" type="codemeta:PersonOrOrganization">
+  </xsd:element>
+
+  <xsd:complexType name="PersonOrOrganization">
+    <!-- Allows anything, but at least <codemeta:name> should be present -->
+    <xsd:choice maxOccurs="unbounded">
+      <xsd:element ref="codemeta:name" />
+      <xsd:any processContents="lax" />
+    </xsd:choice>
+  </xsd:complexType>
+
   <xsd:element name="name" type="xsd:string" />
 </xsd:schema>

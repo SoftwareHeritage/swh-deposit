@@ -67,7 +67,21 @@ _parameters1 = [
             <entry {XMLNS}>
                 <url>some url</url>
                 <codemeta:name>bar</codemeta:name>
-                <codemeta:author>no one</codemeta:author>
+                <codemeta:author>
+                    <codemeta:name>no one</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <schema:unknown-tag>should allow anything here</schema:unknown-tag>
+                </codemeta:author>
                 {PROVENANCE_XML}
             </entry>
             """,
@@ -301,6 +315,22 @@ _parameters3 = [
                 {
                     "summary": ".*Reason: a simple content element can't have child elements.*",
                     "fields": ["codemeta:name"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>no one</codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: character data between child elements.*",
+                    "fields": ["codemeta:author"],
                 },
             ],
         ),
