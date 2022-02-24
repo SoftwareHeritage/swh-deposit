@@ -149,8 +149,4 @@ def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
         HTTP_IN_PROGRESS="true",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    expected_msg = (
-        f"Cannot create origin {origin_url}, "
-        f"it must start with {deposit_user.provider_url}"
-    )
-    assert expected_msg in response.content.decode()
+    assert "URL mismatch" in response.content.decode()

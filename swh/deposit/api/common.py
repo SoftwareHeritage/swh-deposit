@@ -27,9 +27,14 @@ from rest_framework.views import APIView
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
-from swh.deposit.models import Deposit, DEPOSIT_METADATA_ONLY
+from swh.deposit.models import DEPOSIT_METADATA_ONLY, Deposit
 from swh.deposit.parsers import parse_xml
-from swh.deposit.utils import NAMESPACES, compute_metadata_context
+from swh.deposit.utils import (
+    NAMESPACES,
+    check_url_match_provider,
+    compute_metadata_context,
+    parse_swh_metadata_provenance,
+)
 from swh.model import hashutil
 from swh.model.model import (
     MetadataAuthority,
@@ -157,15 +162,6 @@ def guess_deposit_origin_url(deposit: Deposit):
         # but SWORD requires we support it. So let's generate a random slug.
         external_id = str(uuid.uuid4())
     return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
-
-
-def check_client_origin(client: DepositClient, origin_url: str):
-    provider_url = client.provider_url.rstrip("/") + "/"
-    if not origin_url.startswith(provider_url):
-        raise DepositError(
-            FORBIDDEN,
-            f"Cannot create origin {origin_url}, it must start with {provider_url}",
-        )
 
 
 class APIBase(APIConfig, APIView, metaclass=ABCMeta):
@@ -859,6 +855,14 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         if swhid_ref is not None:
+            # It's suggested to user to provide it
+            metadata_provenance_url = parse_swh_metadata_provenance(metadata_tree)
+            if metadata_provenance_url:
+                # If the provenance is provided, ensure it matches client provider url
+                check_url_match_provider(
+                    metadata_provenance_url, deposit.client.provider_url
+                )
+
             deposit.save()  # We need a deposit id
             target_swhid, depo, depo_request = self._store_metadata_deposit(
                 deposit, swhid_ref, metadata_tree, raw_metadata
@@ -911,12 +915,12 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         if create_origin:
             origin_url = create_origin
-            check_client_origin(deposit.client, origin_url)
+            check_url_match_provider(origin_url, deposit.client.provider_url)
             deposit.origin_url = origin_url
 
         if add_to_origin:
             origin_url = add_to_origin
-            check_client_origin(deposit.client, origin_url)
+            check_url_match_provider(origin_url, deposit.client.provider_url)
             deposit.parent = (
                 Deposit.objects.filter(
                     client=deposit.client,

@@ -238,11 +238,7 @@ def test_post_deposit_atom_403_create_wrong_origin_url_prefix(
         HTTP_IN_PROGRESS="true",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    expected_msg = (
-        f"Cannot create origin {origin_url}, "
-        f"it must start with {deposit_user.provider_url}"
-    )
-    assert expected_msg in response.content.decode()
+    assert "URL mismatch" in response.content.decode()
 
 
 def test_post_deposit_atom_use_slug_header(
@@ -510,7 +506,7 @@ def test_deposit_metadata_invalid(
 
     """
     invalid_swhid = "swh:1:dir :31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
-    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=invalid_swhid)
+    xml_data = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=invalid_swhid)
 
     response = post_atom(
         authenticated_client,
@@ -519,6 +515,29 @@ def test_deposit_metadata_invalid(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert b"Invalid SWHID reference" in response.content
+
+
+def test_deposit_metadata_invalid_metadata_provenance(
+    authenticated_client, deposit_collection, atom_dataset
+):
+    """Posting invalid metadata provenance is bad request returned to client
+
+    """
+    invalid_swhid = "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
+    xml_data = atom_dataset["entry-data-with-swhid"].format(
+        swhid=invalid_swhid,
+        metadata_provenance_url=(
+            "https://inria.halpreprod.archives-ouvertes.fr/hal-abcdefgh"
+        ),
+    )
+
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=xml_data,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert b"URL mismatch" in response.content
 
 
 def test_deposit_metadata_fails_functional_checks(
@@ -565,7 +584,10 @@ def test_deposit_metadata_swhid(
     swhid_reference = QualifiedSWHID.from_string(swhid)
     swhid_target = extended_swhid_from_qualified(swhid_reference)
 
-    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    xml_data = atom_dataset["entry-data-with-swhid"].format(
+        swhid=swhid,
+        metadata_provenance_url="https://hal-test.archives-ouvertes.fr/hal-abcdefgh",
+    )
     deposit_client = authenticated_client.deposit_client
 
     _insert_object(swh_storage, swhid_reference)
@@ -732,7 +754,7 @@ def test_deposit_metadata_unknown_swhid(
     """Posting a swhid reference is rejected if the referenced object is unknown
 
     """
-    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    xml_data = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=swhid)
 
     response = post_atom(
         authenticated_client,
@@ -763,7 +785,7 @@ def test_deposit_metadata_extended_swhid(
     for an extended object type
 
     """
-    xml_data = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    xml_data = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=swhid)
 
     response = post_atom(
         authenticated_client,

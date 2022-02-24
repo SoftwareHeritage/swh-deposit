@@ -141,7 +141,7 @@ def test_parse_swh_reference_empty(xml_swh_deposit_template, xml_ref):
 
 @pytest.fixture
 def xml_with_swhid(atom_dataset):
-    return atom_dataset["entry-data-with-swhid"]
+    return atom_dataset["entry-data-with-swhid-no-prov"]
 
 
 @pytest.mark.parametrize(
@@ -156,7 +156,7 @@ def xml_with_swhid(atom_dataset):
     ],
 )
 def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
-    xml_data = xml_with_swhid.format(swhid=swhid)
+    xml_data = xml_with_swhid.format(swhid=swhid,)
     metadata = ElementTree.fromstring(xml_data)
 
     actual_swhid = utils.parse_swh_reference(metadata)

@@ -11,7 +11,7 @@
         <swh:object swhid="{swhid}" />
       </swh:reference>
       <swh:metadata-provenance>
-        <schema:url>https://inria.halpreprod.archives-ouvertes.fr/hal-abcdefgh</schema:url>
+        <schema:url>{metadata_provenance_url}</schema:url>
       </swh:metadata-provenance>
     </swh:deposit>
 </entry>

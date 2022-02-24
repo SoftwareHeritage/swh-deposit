@@ -880,7 +880,16 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     """
     api_url_basename = "deposit.test.metadataonly"
     swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
-    metadata = atom_dataset[metadata_entry_key].format(swhid=swhid)
+    atom_data = atom_dataset[metadata_entry_key]
+    if metadata_entry_key == "entry-data-with-swhid":
+        metadata = atom_data.format(
+            swhid=swhid,
+            metadata_provenance_url=(
+                "https://inria.halpreprod.archives-ouvertes.fr/hal-abcdefgh"
+            ),
+        )
+    else:
+        metadata = atom_data.format(swhid=swhid)
     metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
     with open(metadata_path, "w") as m:
         m.write(metadata)
@@ -933,7 +942,7 @@ def test_cli_metadata_only_deposit_invalid_swhid(
     """
     api_url_basename = "deposit.test.metadataonly"
     invalid_swhid = "ssh:2:sth:xxx"
-    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=invalid_swhid)
+    metadata = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=invalid_swhid)
     metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
     with open(metadata_path, "w") as f:
         f.write(metadata)
