@@ -20,7 +20,7 @@ Update content
     :reqheader Content-MD5: md5 checksum hex encoded of the tarball
     :reqheader Content-Disposition: attachment; filename=[filename] ; the filename
       parameter must be text (ascii)
-    :reqheader In-progress: `true` if not final; `false` when final request.
+    :reqheader In-progress: ``true`` if not final; ``false`` when final request.
     :statuscode 204: success without payload on PUT
     :statuscode 201: success for deposit on POST
     :statuscode 401: Unauthorized

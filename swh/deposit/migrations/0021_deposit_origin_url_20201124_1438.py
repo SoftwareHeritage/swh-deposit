@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="deposit", name="origin_url", field=models.TextField(null=True),
         ),
-        migrations.RunPython(fill_origin_url),
+        # migrations.RunPython(fill_origin_url),
         migrations.AlterField(
             model_name="deposit", name="external_id", field=models.TextField(null=True),
         ),

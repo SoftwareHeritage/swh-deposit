@@ -1,12 +1,12 @@
-# Copyright (C) 2018-2020  The Software Heritage developers
+# Copyright (C) 2018-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from collections import OrderedDict
 import io
 
 from swh.deposit.parsers import SWHXMLParser
+from swh.deposit.utils import NAMESPACES
 
 
 def test_parsing_without_duplicates():
@@ -30,30 +30,23 @@ def test_parsing_without_duplicates():
     )
 
     actual_result = SWHXMLParser().parse(xml_no_duplicate)
-    expected_dict = OrderedDict(
-        [
-            ("atom:title", "Awesome Compiler"),
-            (
-                "codemeta:license",
-                OrderedDict(
-                    [
-                        ("codemeta:name", "GPL3.0"),
-                        ("codemeta:url", "https://opensource.org/licenses/GPL-3.0"),
-                    ]
-                ),
-            ),
-            ("codemeta:runtimePlatform", "Python3"),
-            (
-                "codemeta:author",
-                OrderedDict(
-                    [("codemeta:name", "author1"), ("codemeta:affiliation", "Inria")]
-                ),
-            ),
-            ("codemeta:programmingLanguage", "ocaml"),
-            ("codemeta:issueTracker", "http://issuetracker.com"),
-        ]
+
+    assert (
+        actual_result.findtext(
+            "codemeta:license/codemeta:name",
+            namespaces={"codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"},
+        )
+        == "GPL3.0"
     )
-    assert expected_dict == actual_result
+    assert (
+        actual_result.findtext("codemeta:license/codemeta:name", namespaces=NAMESPACES)
+        == "GPL3.0"
+    )
+    authors = actual_result.findall(
+        "codemeta:author/codemeta:name", namespaces=NAMESPACES
+    )
+    assert len(authors) == 1
+    assert authors[0].text == "author1"
 
 
 def test_parsing_with_duplicates():
@@ -88,42 +81,20 @@ def test_parsing_with_duplicates():
 
     actual_result = SWHXMLParser().parse(xml_with_duplicates)
 
-    expected_dict = OrderedDict(
-        [
-            ("atom:title", "Another Compiler"),
-            ("codemeta:runtimePlatform", ["GNU/Linux", "Un*x"]),
-            (
-                "codemeta:license",
-                [
-                    OrderedDict(
-                        [
-                            ("codemeta:name", "GPL3.0"),
-                            ("codemeta:url", "https://opensource.org/licenses/GPL-3.0"),
-                        ]
-                    ),
-                    OrderedDict(
-                        [("codemeta:name", "spdx"), ("codemeta:url", "http://spdx.org")]
-                    ),
-                ],
-            ),
-            (
-                "codemeta:author",
-                [
-                    OrderedDict(
-                        [
-                            ("codemeta:name", "author1"),
-                            ("codemeta:affiliation", "Inria"),
-                        ]
-                    ),
-                    OrderedDict(
-                        [
-                            ("codemeta:name", "author2"),
-                            ("codemeta:affiliation", "Inria"),
-                        ]
-                    ),
-                ],
-            ),
-            ("codemeta:programmingLanguage", ["ocaml", "haskell", "python3"]),
-        ]
+    assert (
+        actual_result.findtext(
+            "codemeta:license/codemeta:name",
+            namespaces={"codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"},
+        )
+        == "GPL3.0"
     )
-    assert expected_dict == actual_result
+    assert (
+        actual_result.findtext("codemeta:license/codemeta:name", namespaces=NAMESPACES)
+        == "GPL3.0"
+    )
+    authors = actual_result.findall(
+        "codemeta:author/codemeta:name", namespaces=NAMESPACES
+    )
+    assert len(authors) == 2
+    assert authors[0].text == "author1"
+    assert authors[1].text == "author2"

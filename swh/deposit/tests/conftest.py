@@ -6,10 +6,10 @@
 import base64
 from copy import deepcopy
 from functools import partial
-from io import BytesIO
 import os
 import re
 from typing import TYPE_CHECKING, Dict, Mapping
+from xml.etree import ElementTree
 
 from django.test.utils import setup_databases  # type: ignore
 from django.urls import reverse_lazy as reverse
@@ -35,12 +35,12 @@ from swh.deposit.config import (
     SE_IRI,
     setup_django_for,
 )
-from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import (
     create_arborescence_archive,
     post_archive,
     post_atom,
 )
+from swh.deposit.utils import NAMESPACES
 from swh.model.hashutil import hash_to_bytes
 from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.scheduler import get_scheduler
@@ -200,6 +200,7 @@ def django_db_setup(request, django_db_blocker, postgresql_proc):
             ("PORT", postgresql_proc.port),  # noqa
         }
     )
+
     with django_db_blocker.unblock():
         setup_databases(
             verbosity=request.config.option.verbose, interactive=False, keepdb=False
@@ -446,8 +447,10 @@ def create_deposit(
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
     from swh.deposit.models import Deposit
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(
+        response_content.findtext("swh:deposit_id", "", namespaces=NAMESPACES)
+    )
     deposit = Deposit._default_manager.get(id=deposit_id)
 
     if deposit.status != deposit_status:
@@ -563,8 +566,8 @@ def partial_deposit_only_metadata(
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(response.content)
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = ElementTree.fromstring(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
     from swh.deposit.models import Deposit
 
     deposit = Deposit._default_manager.get(pk=deposit_id)

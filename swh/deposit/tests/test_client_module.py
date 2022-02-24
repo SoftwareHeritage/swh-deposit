@@ -29,7 +29,7 @@ def test_client_read_data_ok(requests_mock_datadir):
 
     assert isinstance(result, dict)
 
-    collection = result["app:service"]["app:workspace"]["app:collection"]
+    collection = result["app:service"]["app:workspace"][0]["app:collection"]
     assert collection["sword:name"] == "test"
 
 

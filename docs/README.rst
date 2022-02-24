@@ -25,7 +25,7 @@ different actors, holding software artifacts or metadata, can preserve their ass
 without having to pass through an intermediate collaborative development platform, which
 is already harvested by SWH (e.g GitHub, Gitlab, etc.).
 
-This mechanism is the `deposit`.
+This mechanism is the ``deposit``.
 
 The main idea is the deposit is an authenticated access to an API allowing the user to
 provide source code artifacts -- with metadata -- to be ingested in the SWH Archive. The
@@ -61,11 +61,11 @@ in `swh.deposit` if you want to do upload deposits using HTTP requests.
 Read the :ref:`deposit-metadata` chapter to get more details on what metadata
 are supported when doing a deposit.
 
-See :ref:`swh-deposit-dev-env` if you want to hack the code of the `swh.deposit` module.
+See :ref:`swh-deposit-dev-env` if you want to hack the code of the ``swh.deposit`` module.
 
 See :ref:`swh-deposit-prod-env` if you want to deploy your own copy of the
 `swh.deposit` stack.
 
 
 .. _codemeta: https://codemeta.github.io/
-.. _`SWORD v2`: http://swordapp.org/sword-v2/
+.. _SWORD v2: http://swordapp.org/sword-v2/

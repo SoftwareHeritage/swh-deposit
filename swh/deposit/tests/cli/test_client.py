@@ -1,20 +1,25 @@
-# Copyright (C) 2020-2021 The Software Heritage developers
+# Copyright (C) 2020-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import ast
-from collections import OrderedDict
 import contextlib
 import json
 import logging
 import os
+from typing import Optional
 from unittest.mock import MagicMock
+from xml.etree import ElementTree
 
 import pytest
 import yaml
 
-from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.checks import (
+    METADATA_PROVENANCE_KEY,
+    SUGGESTED_FIELDS_MISSING,
+    check_metadata,
+)
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _collection, _url, generate_metadata
 from swh.deposit.client import (
@@ -24,6 +29,7 @@ from swh.deposit.client import (
     ServiceDocumentDepositClient,
 )
 from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 from swh.model.exceptions import ValidationError
 
 from ..conftest import TEST_USER
@@ -175,24 +181,46 @@ def test_cli_client_generate_metadata_ok(slug):
         authors=["some", "authors"],
         external_id="external-id",
         create_origin="origin-url",
+        metadata_provenance_url="meta-prov-url",
     )
 
-    actual_metadata = dict(parse_xml(actual_metadata_xml))
-    assert actual_metadata["atom:author"] == "deposit-client"
-    assert actual_metadata["atom:title"] == "project-name"
-    assert actual_metadata["atom:updated"] is not None
-    assert actual_metadata["codemeta:name"] == "project-name"
-    assert actual_metadata["codemeta:identifier"] == "external-id"
-    assert actual_metadata["codemeta:author"] == [
-        OrderedDict([("codemeta:name", "some")]),
-        OrderedDict([("codemeta:name", "authors")]),
-    ]
+    actual_metadata = parse_xml(actual_metadata_xml)
     assert (
-        actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
+        actual_metadata.findtext("atom:author", namespaces=NAMESPACES)
+        == "deposit-client"
+    )
+    assert (
+        actual_metadata.findtext("atom:title", namespaces=NAMESPACES) == "project-name"
+    )
+    assert actual_metadata.findtext("atom:updated", namespaces=NAMESPACES) is not None
+    assert (
+        actual_metadata.findtext("codemeta:name", namespaces=NAMESPACES)
+        == "project-name"
+    )
+    assert (
+        actual_metadata.findtext("codemeta:identifier", namespaces=NAMESPACES)
+        == "external-id"
+    )
+    authors = actual_metadata.findall(
+        "codemeta:author/codemeta:name", namespaces=NAMESPACES
+    )
+    assert len(authors) == 2
+    assert authors[0].text == "some"
+    assert authors[1].text == "authors"
+    assert (
+        actual_metadata.find(
+            "swh:deposit/swh:create_origin/swh:origin", namespaces=NAMESPACES
+        ).attrib["url"]
         == "origin-url"
     )
+    assert (
+        actual_metadata.findtext(
+            "swh:deposit/swh:metadata-provenance/schema:url", namespaces=NAMESPACES
+        )
+        == "meta-prov-url"
+    )
 
-    checks_ok, detail = check_metadata(actual_metadata)
+    checks_ok, detail = check_metadata(ElementTree.fromstring(actual_metadata_xml))
 
     assert checks_ok is True
     assert detail is None
@@ -206,22 +234,36 @@ def test_cli_client_generate_metadata_ok2(slug):
         "deposit-client", "project-name", authors=["some", "authors"],
     )
 
-    actual_metadata = dict(parse_xml(actual_metadata_xml))
-    assert actual_metadata["atom:author"] == "deposit-client"
-    assert actual_metadata["atom:title"] == "project-name"
-    assert actual_metadata["atom:updated"] is not None
-    assert actual_metadata["codemeta:name"] == "project-name"
-    assert actual_metadata["codemeta:author"] == [
-        OrderedDict([("codemeta:name", "some")]),
-        OrderedDict([("codemeta:name", "authors")]),
-    ]
-    assert actual_metadata.get("codemeta:identifier") is None
-    assert actual_metadata.get("swh:deposit") is None
+    actual_metadata = parse_xml(actual_metadata_xml)
+    assert (
+        actual_metadata.findtext("atom:author", namespaces=NAMESPACES)
+        == "deposit-client"
+    )
+    assert (
+        actual_metadata.findtext("atom:title", namespaces=NAMESPACES) == "project-name"
+    )
+    assert actual_metadata.findtext("atom:updated", namespaces=NAMESPACES) is not None
+    assert (
+        actual_metadata.findtext("codemeta:name", namespaces=NAMESPACES)
+        == "project-name"
+    )
+    authors = actual_metadata.findall(
+        "codemeta:author/codemeta:name", namespaces=NAMESPACES
+    )
+    assert len(authors) == 2
+    assert authors[0].text == "some"
+    assert authors[1].text == "authors"
+    assert actual_metadata.find("codemeta:identifier", namespaces=NAMESPACES) is None
+    assert actual_metadata.find("swh:deposit", namespaces=NAMESPACES) is None
 
-    checks_ok, detail = check_metadata(actual_metadata)
+    checks_ok, detail = check_metadata(ElementTree.fromstring(actual_metadata_xml))
 
     assert checks_ok is True
-    assert detail is None
+    assert detail == {
+        "metadata": [
+            {"summary": SUGGESTED_FIELDS_MISSING, "fields": [METADATA_PROVENANCE_KEY]}
+        ]
+    }
 
 
 def test_cli_single_minimal_deposit_with_slug(
@@ -242,6 +284,7 @@ def test_cli_single_minimal_deposit_with_slug(
             "--password", TEST_USER["password"],
             "--name", "test-project",
             "--archive", sample_archive["path"],
+            "--metadata-provenance-url", "meta-prov-url",
             "--author", "Jane Doe",
             "--slug", slug,
             "--format", "json",
@@ -258,15 +301,31 @@ def test_cli_single_minimal_deposit_with_slug(
     }
 
     with open(metadata_path) as fd:
-        actual_metadata = dict(parse_xml(fd.read()))
-        assert actual_metadata["atom:author"] == TEST_USER["username"]
-        assert actual_metadata["codemeta:name"] == "test-project"
-        assert actual_metadata["atom:title"] == "test-project"
-        assert actual_metadata["atom:updated"] is not None
-        assert actual_metadata["codemeta:identifier"] == slug
-        assert actual_metadata["codemeta:author"] == OrderedDict(
-            [("codemeta:name", "Jane Doe")]
+        actual_metadata = parse_xml(fd.read())
+        assert (
+            actual_metadata.findtext("atom:author", namespaces=NAMESPACES)
+            == TEST_USER["username"]
         )
+        assert (
+            actual_metadata.findtext("codemeta:name", namespaces=NAMESPACES)
+            == "test-project"
+        )
+        assert (
+            actual_metadata.findtext("atom:title", namespaces=NAMESPACES)
+            == "test-project"
+        )
+        assert (
+            actual_metadata.findtext("atom:updated", namespaces=NAMESPACES) is not None
+        )
+        assert (
+            actual_metadata.findtext("codemeta:identifier", namespaces=NAMESPACES)
+            == slug
+        )
+        authors = actual_metadata.findall(
+            "codemeta:author/codemeta:name", namespaces=NAMESPACES
+        )
+        assert len(authors) == 1
+        assert authors[0].text == "Jane Doe"
 
     count_warnings = 0
     for (_, log_level, _) in caplog.record_tuples:
@@ -299,6 +358,7 @@ def test_cli_single_minimal_deposit_with_create_origin(
             "--archive", sample_archive["path"],
             "--author", "Jane Doe",
             "--create-origin", origin,
+            "--metadata-provenance-url", "meta-prov-url",
             "--format", "json",
         ],
     )
@@ -313,18 +373,39 @@ def test_cli_single_minimal_deposit_with_create_origin(
     }
 
     with open(metadata_path) as fd:
-        actual_metadata = dict(parse_xml(fd.read()))
-        assert actual_metadata["atom:author"] == TEST_USER["username"]
-        assert actual_metadata["codemeta:name"] == "test-project"
-        assert actual_metadata["atom:title"] == "test-project"
-        assert actual_metadata["atom:updated"] is not None
+        actual_metadata = parse_xml(fd.read())
         assert (
-            actual_metadata["swh:deposit"]["swh:create_origin"]["swh:origin"]["@url"]
+            actual_metadata.findtext("atom:author", namespaces=NAMESPACES)
+            == TEST_USER["username"]
+        )
+        assert (
+            actual_metadata.findtext("codemeta:name", namespaces=NAMESPACES)
+            == "test-project"
+        )
+        assert (
+            actual_metadata.findtext("atom:title", namespaces=NAMESPACES)
+            == "test-project"
+        )
+        assert (
+            actual_metadata.findtext("atom:updated", namespaces=NAMESPACES) is not None
+        )
+        assert (
+            actual_metadata.find(
+                "swh:deposit/swh:create_origin/swh:origin", namespaces=NAMESPACES
+            ).attrib["url"]
             == origin
         )
-        assert actual_metadata["codemeta:author"] == OrderedDict(
-            [("codemeta:name", "Jane Doe")]
+        assert (
+            actual_metadata.findtext(
+                "swh:deposit/swh:metadata-provenance/schema:url", namespaces=NAMESPACES
+            )
+            == "meta-prov-url"
         )
+        authors = actual_metadata.findall(
+            "codemeta:author/codemeta:name", namespaces=NAMESPACES
+        )
+        assert len(authors) == 1
+        assert authors[0].text == "Jane Doe"
 
     count_warnings = 0
     for (_, log_level, _) in caplog.record_tuples:
@@ -549,7 +630,7 @@ def test_cli_single_deposit_slug_generation(
 
     with open(metadata_path) as fd:
         metadata_xml = fd.read()
-        actual_metadata = dict(parse_xml(metadata_xml))
+        actual_metadata = parse_xml(metadata_xml)
         assert "codemeta:identifier" not in actual_metadata
 
 
@@ -780,8 +861,17 @@ def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     }
 
 
+@pytest.mark.parametrize(
+    "metadata_entry_key", ["entry-data-with-swhid", "entry-data-with-swhid-no-prov"]
+)
 def test_cli_metadata_only_deposit_full_metadata_file(
-    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+    datadir,
+    requests_mock_datadir,
+    cli_runner,
+    atom_dataset,
+    tmp_path,
+    metadata_entry_key,
+    caplog,
 ):
     """Post metadata-only deposit through cli
 
@@ -790,7 +880,16 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     """
     api_url_basename = "deposit.test.metadataonly"
     swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
-    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=swhid)
+    atom_data = atom_dataset[metadata_entry_key]
+    if metadata_entry_key == "entry-data-with-swhid":
+        metadata = atom_data.format(
+            swhid=swhid,
+            metadata_provenance_url=(
+                "https://inria.halpreprod.archives-ouvertes.fr/hal-abcdefgh"
+            ),
+        )
+    else:
+        metadata = atom_data.format(swhid=swhid)
     metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
     with open(metadata_path, "w") as m:
         m.write(metadata)
@@ -821,6 +920,19 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     assert "error" not in actual_deposit_status
     assert actual_deposit_status == expected_deposit_status
 
+    count_warnings = 0
+    warning_record: Optional[str] = None
+    for (_, log_level, msg) in caplog.record_tuples:
+        if log_level == logging.WARNING:
+            count_warnings += 1
+            warning_record = msg
+
+    if "no-prov" in metadata_entry_key:
+        assert count_warnings == 1
+        assert "metadata-provenance>' should be provided" in warning_record
+    else:
+        assert count_warnings == 0
+
 
 def test_cli_metadata_only_deposit_invalid_swhid(
     datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
@@ -830,7 +942,7 @@ def test_cli_metadata_only_deposit_invalid_swhid(
     """
     api_url_basename = "deposit.test.metadataonly"
     invalid_swhid = "ssh:2:sth:xxx"
-    metadata = atom_dataset["entry-data-with-swhid"].format(swhid=invalid_swhid)
+    metadata = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=invalid_swhid)
     metadata_path = os.path.join(tmp_path, "entry-data-with-swhid.xml")
     with open(metadata_path, "w") as f:
         f.write(metadata)
@@ -885,7 +997,6 @@ def test_cli_metadata_only_deposit_no_swhid(
     "metadata_entry_key", ["entry-data-with-add-to-origin", "entry-only-create-origin"]
 )
 def test_cli_deposit_warning_missing_origin(
-    sample_archive,
     metadata_entry_key,
     tmp_path,
     atom_dataset,
@@ -893,11 +1004,12 @@ def test_cli_deposit_warning_missing_origin(
     cli_runner,
     requests_mock_datadir,
 ):
-    """Deposit cli should log warning when the provided metadata xml is missing origins
+    """Deposit cli should warn when provided metadata xml is missing 'origins' tags
 
     """
     # For the next deposit, no warning should be logged as either <swh:create_origin> or
-    # <swh:origin_to_add> are provided
+    # <swh:origin_to_add> are provided, and <swh:metadata-provenance-url> is always
+    # provided.
 
     metadata_raw = atom_dataset[metadata_entry_key] % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-origin-tag-to-deposit.xml")
@@ -920,6 +1032,37 @@ def test_cli_deposit_warning_missing_origin(
     for (_, log_level, _) in caplog.record_tuples:
         # all messages are info or below messages so everything is fine
         assert log_level < logging.WARNING
+
+
+def test_cli_deposit_warning_missing_provenance_url(
+    tmp_path, atom_dataset, caplog, cli_runner, requests_mock_datadir,
+):
+    """Deposit cli should warn when no metadata provenance is provided
+
+    """
+    atom_template = atom_dataset["entry-data-with-add-to-origin-no-prov"]
+    metadata_raw = atom_template % "some-url"
+    metadata_path = os.path.join(tmp_path, "metadata-with-missing-prov-url.xml")
+    with open(metadata_path, "w") as f:
+        f.write(metadata_raw)
+
+    # fmt: off
+    cli_runner.invoke(
+        cli,
+        [
+            "upload",
+            "--url", "https://deposit.swh.test/1",
+            "--username", TEST_USER["username"],
+            "--password", TEST_USER["password"],
+            "--metadata", metadata_path,
+        ],
+    )
+    # fmt: on
+
+    count_warnings = sum(
+        1 for (_, log_level, _) in caplog.record_tuples if log_level == logging.WARNING
+    )
+    assert count_warnings == 1
 
 
 def test_cli_failure_should_be_parseable(atom_dataset, mocker):

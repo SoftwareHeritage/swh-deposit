@@ -1,14 +1,12 @@
-# Copyright (C) 2017-2021 The Software Heritage developers
+# Copyright (C) 2017-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Dict, List, Tuple
+from typing import Optional
 
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
-
-from swh.deposit import utils
 
 from ...config import METADATA_TYPE, APIConfig
 from ...models import Deposit, DepositRequest
@@ -27,37 +25,31 @@ class DepositReadMixin:
             request_type: 'archive' or 'metadata'
 
         Yields:
-            deposit requests of type request_type associated to the deposit
+            deposit requests of type request_type associated to the deposit,
+            most recent first
 
         """
         deposit_requests = DepositRequest.objects.filter(
             type=request_type, deposit=deposit
-        ).order_by("id")
+        ).order_by("-id")
 
         for deposit_request in deposit_requests:
             yield deposit_request
 
-    def _metadata_get(self, deposit: Deposit) -> Tuple[Dict[str, Any], List[str]]:
-        """Given a deposit, retrieve all metadata requests into one Dict and returns both that
-           aggregated metadata dict and the list of raw_metdadata.
+    def _metadata_get(self, deposit: Deposit) -> Optional[bytes]:
+        """Retrieve the last non-empty raw metadata object for that deposit, if any
 
         Args:
             deposit: The deposit instance to extract metadata from
 
-        Returns:
-            Tuple of aggregated metadata dict, list of raw_metadata
-
         """
-        metadata: List[Dict[str, Any]] = []
-        raw_metadata: List[str] = []
         for deposit_request in self._deposit_requests(
             deposit, request_type=METADATA_TYPE
         ):
-            metadata.append(deposit_request.metadata)
-            raw_metadata.append(deposit_request.raw_metadata)
+            if deposit_request.raw_metadata is not None:
+                return deposit_request.raw_metadata
 
-        aggregated_metadata = utils.merge(*metadata)
-        return (aggregated_metadata, raw_metadata)
+        return None
 
 
 class APIPrivateView(APIConfig, APIView):

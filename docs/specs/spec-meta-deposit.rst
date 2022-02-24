@@ -29,7 +29,7 @@ Requirements
    - directory
    - content
 7. The SWHID MAY be a :ref:`core identifier <swhids-core>` with or without :ref:`qualifiers <swhids-qualifiers>`
-8. The SWHID MUST NOT reference a fragment of code with the classifier `lines`
+8. The SWHID MUST NOT reference a fragment of code with the classifier ``lines``
 
 A complete metadata example
 ---------------------------

@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:schema="http://schema.org/"
        xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
     <swh:deposit>
       <swh:create_origin>
         <swh:origin url="%s" />
       </swh:create_origin>
+      <swh:metadata-provenance>
+        <schema:url>http://some-url/metadata-provenance-url</schema:url>
+      </swh:metadata-provenance>
     </swh:deposit>
 </entry>
 

@@ -7,17 +7,17 @@ The general idea is that a deposit can be created either in a single request
 or by multiple requests to allow the user to add elements to the deposit piece
 by piece (be it the deposited data or the metadata describing it).
 
-An update request that does not have the `In-Progress: true` HTTP header will
-de facto declare the deposit as *completed* (aka in the `deposited` status; see
+An update request that does not have the ``In-Progress: true`` HTTP header will
+de facto declare the deposit as *completed* (aka in the ``deposited`` status; see
 below) and thus ready for ingestion.
 
 Once the deposit is declared *complete* by the user, the server performs a few
 validation checks. Then, if valid, schedule the ingestion of the deposited data
 in the Software Heritage Archive (SWH).
 
-There is a `status` property attached to a deposit allowing to follow the
+There is a ``status`` property attached to a deposit allowing to follow the
 processing workflow of the deposit. For example, when this ingestion task
-completes successfully, the deposit is marked as `done`.
+completes successfully, the deposit is marked as ``done``.
 
 
 Possible deposit statuses are:

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -7,7 +7,7 @@ from django.urls import reverse_lazy as reverse
 import pytest
 from rest_framework import status
 
-from swh.deposit.api.checks import MANDATORY_FIELDS_MISSING
+from swh.deposit.api.checks import METADATA_PROVENANCE_KEY, SUGGESTED_FIELDS_MISSING
 from swh.deposit.api.private.deposit_check import (
     MANDATORY_ARCHIVE_INVALID,
     MANDATORY_ARCHIVE_MISSING,
@@ -26,6 +26,7 @@ from swh.deposit.tests.common import (
     create_arborescence_archive,
     create_archive_with_archive,
 )
+from swh.deposit.utils import NAMESPACES
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 
@@ -54,6 +55,14 @@ def test_deposit_ok(
         assert data["status"] == DEPOSIT_STATUS_VERIFIED
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_VERIFIED
+
+        # Deposit is ok but it's missing suggested fields in its metadata detected by
+        # the checks
+        status_detail = deposit.status_detail["metadata"]
+        assert len(status_detail) == 1
+        suggested = status_detail[0]
+        assert suggested["summary"] == SUGGESTED_FIELDS_MISSING
+        assert set(suggested["fields"]) == set([METADATA_PROVENANCE_KEY])
 
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
@@ -132,13 +141,7 @@ def test_deposit_ko_unsupported_tarball(
         # metadata check failure
         assert len(details["metadata"]) == 1
         mandatory = details["metadata"][0]
-        assert mandatory["summary"] == MANDATORY_FIELDS_MISSING
-        assert set(mandatory["fields"]) == set(
-            [
-                "atom:author or codemeta:author",
-                "atom:name or atom:title or codemeta:name",
-            ]
-        )
+        assert mandatory["summary"] == "Missing Atom document"
 
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_REJECTED
@@ -202,9 +205,11 @@ def create_deposit_archive_with_archive(
     # then
     assert response.status_code == status.HTTP_201_CREATED
     response_content = parse_xml(response.content)
-    deposit_status = response_content["swh:deposit_status"]
+    deposit_status = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
     assert deposit_status == DEPOSIT_STATUS_DEPOSITED
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert DEPOSIT_STATUS_DEPOSITED == deposit.status

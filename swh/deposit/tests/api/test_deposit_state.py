@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 
-from io import BytesIO
+from xml.etree import ElementTree
 
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
@@ -15,7 +15,7 @@ from swh.deposit.config import (
     STATE_IRI,
 )
 from swh.deposit.models import DEPOSIT_STATUS_DETAIL, DEPOSIT_STATUS_LOAD_SUCCESS
-from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 
 def test_post_deposit_with_status_check(authenticated_client, deposited_deposit):
@@ -29,16 +29,25 @@ def test_post_deposit_with_status_check(authenticated_client, deposited_deposit)
     status_response = authenticated_client.get(status_url)
 
     assert status_response.status_code == status.HTTP_200_OK
-    r = parse_xml(BytesIO(status_response.content))
+    r = ElementTree.fromstring(status_response.content)
 
-    assert int(r["swh:deposit_id"]) == deposit.id
-    assert r["swh:deposit_status"] == DEPOSIT_STATUS_DEPOSITED
+    assert int(r.findtext("swh:deposit_id", namespaces=NAMESPACES)) == deposit.id
     assert (
-        r["swh:deposit_status_detail"]
+        r.findtext("swh:deposit_status", namespaces=NAMESPACES)
+        == DEPOSIT_STATUS_DEPOSITED
+    )
+    assert (
+        r.findtext("swh:deposit_status_detail", namespaces=NAMESPACES)
         == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_DEPOSITED]
     )
-    assert r["swh:deposit_external_id"] == deposit.external_id
-    assert r["swh:deposit_origin_url"] == deposit.origin_url
+    assert (
+        r.findtext("swh:deposit_external_id", namespaces=NAMESPACES)
+        == deposit.external_id
+    )
+    assert (
+        r.findtext("swh:deposit_origin_url", namespaces=NAMESPACES)
+        == deposit.origin_url
+    )
 
 
 def test_status_unknown_deposit(authenticated_client, deposit_collection):
@@ -74,12 +83,18 @@ def test_status_deposit_rejected(authenticated_client, rejected_deposit):
 
     # then
     assert status_response.status_code == status.HTTP_200_OK
-    r = parse_xml(BytesIO(status_response.content))
-    assert int(r["swh:deposit_id"]) == deposit.id
-    assert r["swh:deposit_status"] == DEPOSIT_STATUS_REJECTED
-    assert r["swh:deposit_status_detail"] == "Deposit failed the checks"
+    r = ElementTree.fromstring(status_response.content)
+    assert int(r.findtext("swh:deposit_id", namespaces=NAMESPACES)) == deposit.id
+    assert (
+        r.findtext("swh:deposit_status", namespaces=NAMESPACES)
+        == DEPOSIT_STATUS_REJECTED
+    )
+    assert (
+        r.findtext("swh:deposit_status_detail", namespaces=NAMESPACES)
+        == "Deposit failed the checks"
+    )
     if deposit.swhid:
-        assert r["swh:deposit_swhid"] == deposit.swhid
+        assert r.findtext("swh:deposit_swhid", namespaces=NAMESPACES) == deposit.swhid
 
 
 def test_status_with_http_accept_header_should_not_break(
@@ -113,15 +128,24 @@ def test_status_complete_deposit(authenticated_client, complete_deposit):
 
     # then
     assert status_response.status_code == status.HTTP_200_OK
-    r = parse_xml(BytesIO(status_response.content))
-    assert int(r["swh:deposit_id"]) == deposit.id
-    assert r["swh:deposit_status"] == DEPOSIT_STATUS_LOAD_SUCCESS
+    r = ElementTree.fromstring(status_response.content)
+    assert int(r.findtext("swh:deposit_id", namespaces=NAMESPACES)) == deposit.id
     assert (
-        r["swh:deposit_status_detail"]
+        r.findtext("swh:deposit_status", namespaces=NAMESPACES)
+        == DEPOSIT_STATUS_LOAD_SUCCESS
+    )
+    assert (
+        r.findtext("swh:deposit_status_detail", namespaces=NAMESPACES)
         == DEPOSIT_STATUS_DETAIL[DEPOSIT_STATUS_LOAD_SUCCESS]
     )
     assert deposit.swhid is not None
-    assert r["swh:deposit_swh_id"] == deposit.swhid
+    assert r.findtext("swh:deposit_swh_id", namespaces=NAMESPACES) == deposit.swhid
     assert deposit.swhid_context is not None
-    assert r["swh:deposit_swh_id_context"] == deposit.swhid_context
-    assert r["swh:deposit_origin_url"] == deposit.origin_url
+    assert (
+        r.findtext("swh:deposit_swh_id_context", namespaces=NAMESPACES)
+        == deposit.swhid_context
+    )
+    assert (
+        r.findtext("swh:deposit_origin_url", namespaces=NAMESPACES)
+        == deposit.origin_url
+    )
