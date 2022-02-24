@@ -194,7 +194,11 @@ Using Atom with DublinCore and CodeMeta (multi-schema entry)
 
 Note
 ----
+
 We aim on harmonizing the metadata from different origins and thus
 metadata will be translated to the `CodeMeta
-v.2 <https://doi.org/10.5063/SCHEMA/CODEMETA-2.0>`__ vocabulary if
+v2.0 <https://doi.org/10.5063/SCHEMA/CODEMETA-2.0>`__ vocabulary if
 possible.
+
+See :ref:`deposit-protocol` for details on the content of ``<swh:deposit>``
+elements.

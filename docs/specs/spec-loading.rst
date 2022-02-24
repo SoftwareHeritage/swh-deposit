@@ -161,8 +161,8 @@ The content is deposited with a set of descriptive metadata in the CodeMeta
 vocabulary. The following CodeMeta terms implies that the
 artifact is a release:
 
-- `releaseNotes`
-- `softwareVersion`
+- ``releaseNotes``
+- ``softwareVersion``
 
 If present, a release artifact will be created with the mapping below:
 

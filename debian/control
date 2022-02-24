@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 9),
                python3-django,
                python3-djangorestframework,
                python3-django-test-migrations,
-			   python3-iso8601,
+               python3-iso8601,
                python3-pytest,
                python3-pytest-django,
                python3-pytest-mock,
@@ -23,7 +23,6 @@ Build-Depends: debhelper (>= 9),
                python3-swh.core (>= 0.0.75~),
                python3-swh.model (>= 0.3.8~),
                python3-swh.scheduler (>= 0.0.39~),
-               python3-xmltodict,
 Standards-Version: 3.9.6
 Homepage: https://forge.softwareheritage.org/source/swh-deposit/
 

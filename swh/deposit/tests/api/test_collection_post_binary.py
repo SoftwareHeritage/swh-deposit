@@ -5,7 +5,6 @@
 
 """Tests the handling of the binary content when doing a POST Col-IRI."""
 
-from io import BytesIO
 import uuid
 
 from django.urls import reverse_lazy as reverse
@@ -20,6 +19,7 @@ from swh.deposit.tests.common import (
     create_arborescence_archive,
     post_archive,
 )
+from swh.deposit.utils import NAMESPACES
 
 
 def test_post_deposit_binary_no_slug(
@@ -39,8 +39,8 @@ def test_post_deposit_binary_no_slug(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
@@ -96,9 +96,9 @@ def test_post_deposit_binary_upload_ok(
     )
 
     # then
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
     assert response.status_code == status.HTTP_201_CREATED
-    deposit_id = response_content["swh:deposit_id"]
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -112,16 +112,34 @@ def test_post_deposit_binary_upload_ok(
     assert deposit_request.metadata is None
     assert deposit_request.raw_metadata is None
 
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
 
-    assert response_content["swh:deposit_archive"] == sample_archive["name"]
-    assert int(response_content["swh:deposit_id"]) == deposit.id
-    assert response_content["swh:deposit_status"] == deposit.status
+    assert (
+        response_content.findtext("swh:deposit_archive", namespaces=NAMESPACES)
+        == sample_archive["name"]
+    )
+    assert (
+        int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
+        == deposit.id
+    )
+    assert (
+        response_content.findtext("swh:deposit_status", namespaces=NAMESPACES)
+        == deposit.status
+    )
 
     # deprecated tags
-    assert response_content["atom:deposit_archive"] == sample_archive["name"]
-    assert int(response_content["atom:deposit_id"]) == deposit.id
-    assert response_content["atom:deposit_status"] == deposit.status
+    assert (
+        response_content.findtext("atom:deposit_archive", namespaces=NAMESPACES)
+        == sample_archive["name"]
+    )
+    assert (
+        int(response_content.findtext("atom:deposit_id", namespaces=NAMESPACES))
+        == deposit.id
+    )
+    assert (
+        response_content.findtext("atom:deposit_status", namespaces=NAMESPACES)
+        == deposit.status
+    )
 
     from django.urls import reverse as reverse_strict
 
@@ -303,8 +321,8 @@ def test_post_deposit_2_post_2_different_deposits(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     deposit = Deposit.objects.get(pk=deposit_id)
 
@@ -324,8 +342,10 @@ def test_post_deposit_2_post_2_different_deposits(
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id2 = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id2 = int(
+        response_content.findtext("swh:deposit_id", namespaces=NAMESPACES)
+    )
 
     deposit2 = Deposit.objects.get(pk=deposit_id2)
 

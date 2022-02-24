@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,6 +9,7 @@ import hashlib
 import json
 from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
 import uuid
+from xml.etree import ElementTree
 
 import attr
 from django.core.files.uploadedfile import UploadedFile
@@ -26,8 +27,14 @@ from rest_framework.views import APIView
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
-from swh.deposit.models import Deposit
-from swh.deposit.utils import compute_metadata_context
+from swh.deposit.models import DEPOSIT_METADATA_ONLY, Deposit
+from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import (
+    NAMESPACES,
+    check_url_match_provider,
+    compute_metadata_context,
+    parse_swh_metadata_provenance,
+)
 from swh.model import hashutil
 from swh.model.model import (
     MetadataAuthority,
@@ -52,7 +59,6 @@ from ..config import (
     DEPOSIT_STATUS_PARTIAL,
     EDIT_IRI,
     EM_IRI,
-    METADATA_KEY,
     METADATA_TYPE,
     RAW_METADATA_KEY,
     SE_IRI,
@@ -73,8 +79,11 @@ from ..errors import (
     ParserError,
 )
 from ..models import DepositClient, DepositCollection, DepositRequest
-from ..parsers import parse_xml
-from ..utils import extended_swhid_from_qualified, parse_swh_reference
+from ..utils import (
+    extended_swhid_from_qualified,
+    parse_swh_deposit_origin,
+    parse_swh_reference,
+)
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -153,15 +162,6 @@ def guess_deposit_origin_url(deposit: Deposit):
         # but SWORD requires we support it. So let's generate a random slug.
         external_id = str(uuid.uuid4())
     return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
-
-
-def check_client_origin(client: DepositClient, origin_url: str):
-    provider_url = client.provider_url.rstrip("/") + "/"
-    if not origin_url.startswith(provider_url):
-        raise DepositError(
-            FORBIDDEN,
-            f"Cannot create origin {origin_url}, it must start with {provider_url}",
-        )
 
 
 class APIBase(APIConfig, APIView, metaclass=ABCMeta):
@@ -314,13 +314,11 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
             deposit_request.save()
 
-        metadata = deposit_request_data.get(METADATA_KEY)
-        if metadata:
-            raw_metadata = deposit_request_data[RAW_METADATA_KEY]
+        raw_metadata = deposit_request_data.get(RAW_METADATA_KEY)
+        if raw_metadata:
             deposit_request = DepositRequest(
                 type=METADATA_TYPE,
                 deposit=deposit,
-                metadata=metadata,
                 raw_metadata=raw_metadata.decode("utf-8"),
             )
             deposit_request.save()
@@ -498,14 +496,18 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             archive=filehandler.name,
         )
 
-    def _read_metadata(self, metadata_stream) -> Tuple[bytes, Dict[str, Any]]:
-        """Given a metadata stream, reads the metadata and returns both the
-           parsed and the raw metadata.
+    def _read_metadata(self, metadata_stream) -> Tuple[bytes, ElementTree.Element]:
+        """
+        Given a metadata stream, reads the metadata and returns the metadata in three
+        forms:
 
+        * verbatim (as raw bytes), for archival in long-term storage
+        * parsed as a Python dict, for archival in postgresql's jsonb type
+        * parsed as ElementTree, to extract information immediately
         """
         raw_metadata = metadata_stream.read()
-        metadata = parse_xml(raw_metadata)
-        return raw_metadata, metadata
+        metadata_tree = parse_xml(raw_metadata)
+        return raw_metadata, metadata_tree
 
     def _multipart_upload(
         self,
@@ -592,7 +594,9 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         self._check_file_md5sum(filehandler, headers.content_md5sum)
 
         try:
-            raw_metadata, metadata = self._read_metadata(data["application/atom+xml"])
+            raw_metadata, metadata_tree = self._read_metadata(
+                data["application/atom+xml"]
+            )
         except ParserError:
             raise DepositError(
                 PARSING_ERROR,
@@ -601,7 +605,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        self._set_deposit_origin_from_metadata(deposit, metadata, headers)
+        self._set_deposit_origin_from_metadata(deposit, metadata_tree, headers)
 
         # actual storage of data
         self._deposit_put(
@@ -609,7 +613,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
-            METADATA_KEY: metadata,
             RAW_METADATA_KEY: raw_metadata,
         }
         self._deposit_request_put(
@@ -628,7 +631,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         self,
         deposit: Deposit,
         swhid_reference: Union[str, QualifiedSWHID],
-        metadata: Dict,
+        metadata_tree: ElementTree.Element,
         raw_metadata: bytes,
         deposit_origin: Optional[str] = None,
     ) -> Tuple[ExtendedSWHID, Deposit, DepositRequest]:
@@ -644,8 +647,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         Args:
             deposit: Deposit reference
             swhid_reference: The swhid or the origin to attach metadata information to
-            metadata: Full dict of metadata to check for validity (parsed out of
-              raw_metadata)
+            metadata_tree: Full element tree of metadata to check for validity
+              (parsed out of raw_metadata)
             raw_metadata: The actual raw metadata to send in the storage metadata
             deposit_origin: Optional deposit origin url to use if any (e.g. deposit
               update scenario provides one)
@@ -658,7 +661,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             Tuple of target swhid, deposit, and deposit request
 
         """
-        metadata_ok, error_details = check_metadata(metadata)
+        metadata_ok, error_details = check_metadata(metadata_tree)
         if not metadata_ok:
             assert error_details, "Details should be set when a failure occurs"
             raise DepositError(
@@ -675,7 +678,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         # replace metadata within the deposit backend
         deposit_request_data = {
-            METADATA_KEY: metadata,
             RAW_METADATA_KEY: raw_metadata,
         }
 
@@ -818,7 +820,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         try:
-            raw_metadata, metadata = self._read_metadata(metadata_stream)
+            raw_metadata, metadata_tree = self._read_metadata(metadata_stream)
         except ParserError:
             raise DepositError(
                 BAD_REQUEST,
@@ -827,16 +829,16 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        if metadata is None:
+        if len(metadata_tree) == 0:
             raise DepositError(
                 BAD_REQUEST, empty_atom_entry_summary, empty_atom_entry_desc
             )
 
-        self._set_deposit_origin_from_metadata(deposit, metadata, headers)
+        self._set_deposit_origin_from_metadata(deposit, metadata_tree, headers)
 
         # Determine if we are in the metadata-only deposit case
         try:
-            swhid_ref = parse_swh_reference(metadata)
+            swhid_ref = parse_swh_reference(metadata_tree)
         except ValidationError as e:
             raise DepositError(
                 PARSING_ERROR, "Invalid SWHID reference", str(e),
@@ -853,15 +855,24 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         if swhid_ref is not None:
+            # It's suggested to user to provide it
+            metadata_provenance_url = parse_swh_metadata_provenance(metadata_tree)
+            if metadata_provenance_url:
+                # If the provenance is provided, ensure it matches client provider url
+                check_url_match_provider(
+                    metadata_provenance_url, deposit.client.provider_url
+                )
+
             deposit.save()  # We need a deposit id
             target_swhid, depo, depo_request = self._store_metadata_deposit(
-                deposit, swhid_ref, metadata, raw_metadata
+                deposit, swhid_ref, metadata_tree, raw_metadata
             )
 
             deposit.status = DEPOSIT_STATUS_LOAD_SUCCESS
             if isinstance(swhid_ref, QualifiedSWHID):
                 deposit.swhid = str(extended_swhid_from_qualified(swhid_ref))
                 deposit.swhid_context = str(swhid_ref)
+            deposit.type = DEPOSIT_METADATA_ONLY
             deposit.complete_date = depo_request.date
             deposit.reception_date = depo_request.date
             deposit.save()
@@ -879,7 +890,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         self._deposit_request_put(
             deposit,
-            {METADATA_KEY: metadata, RAW_METADATA_KEY: raw_metadata},
+            {RAW_METADATA_KEY: raw_metadata},
             replace_metadata,
             replace_archives,
         )
@@ -892,8 +903,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
 
     def _set_deposit_origin_from_metadata(self, deposit, metadata, headers):
-        create_origin = metadata.get("swh:deposit", {}).get("swh:create_origin")
-        add_to_origin = metadata.get("swh:deposit", {}).get("swh:add_to_origin")
+        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata)
 
         if create_origin and add_to_origin:
             raise DepositError(
@@ -904,13 +914,13 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         if create_origin:
-            origin_url = create_origin["swh:origin"]["@url"]
-            check_client_origin(deposit.client, origin_url)
+            origin_url = create_origin
+            check_url_match_provider(origin_url, deposit.client.provider_url)
             deposit.origin_url = origin_url
 
         if add_to_origin:
-            origin_url = add_to_origin["swh:origin"]["@url"]
-            check_client_origin(deposit.client, origin_url)
+            origin_url = add_to_origin
+            check_url_match_provider(origin_url, deposit.client.provider_url)
             deposit.parent = (
                 Deposit.objects.filter(
                     client=deposit.client,
@@ -922,7 +932,10 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
             deposit.origin_url = origin_url
 
-        if "atom:external_identifier" in metadata:
+        external_identifier_element = metadata.find(
+            "atom:external_identifier", namespaces=NAMESPACES
+        )
+        if external_identifier_element is not None:
             # Deprecated tag.
             # When clients stopped using it, this should raise an error
             # unconditionally
@@ -934,7 +947,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                     "<swh:create_origin> and <swh:add_to_origin> from now on.",
                 )
 
-            if headers.slug and metadata["atom:external_identifier"] != headers.slug:
+            if headers.slug and external_identifier_element.text != headers.slug:
                 raise DepositError(
                     BAD_REQUEST,
                     "The <external_identifier> tag and Slug header are deprecated, "

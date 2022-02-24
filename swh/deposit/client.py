@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,9 +10,10 @@
 import hashlib
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 import warnings
+from xml.etree import ElementTree
 
 import requests
 from requests import Response
@@ -20,7 +21,7 @@ from requests.utils import parse_header_links
 
 from swh.core.config import load_from_envvar
 from swh.deposit import __version__ as swh_deposit_version
-from swh.deposit.utils import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 logger = logging.getLogger(__name__)
 
@@ -303,12 +304,13 @@ class BaseDepositClient(BaseApiDepositClient):
                 'detail': Some more detail about the error if any
 
         """
-        data = parse_xml(xml_content)
-        sword_error = data["sword:error"]
+        data = ElementTree.fromstring(xml_content)
         return {
-            "summary": sword_error["atom:summary"],
-            "detail": sword_error.get("detail", ""),
-            "sword:verboseDescription": sword_error.get("sword:verboseDescription", ""),
+            "summary": data.findtext("atom:summary", namespaces=NAMESPACES),
+            "detail": data.findtext("detail", "", namespaces=NAMESPACES).strip(),
+            "sword:verboseDescription": data.findtext(
+                "sword:verboseDescription", "", namespaces=NAMESPACES
+            ).strip(),
         }
 
     def do_execute(self, method: str, url: str, info: Dict, **kwargs) -> Response:
@@ -397,7 +399,42 @@ class ServiceDocumentDepositClient(BaseDepositClient):
         """Parse service document's success response.
 
         """
-        return parse_xml(xml_content)
+        single_keys = [
+            "atom:title",
+            "sword:collectionPolicy",
+            "dc:abstract",
+            "sword:treatment",
+            "sword:mediation",
+            "sword:metadataRelevantHeader",
+            "sword:service",
+            "sword:name",
+        ]
+        multi_keys = [
+            "app:accept",
+            "sword:acceptPackaging",
+        ]
+        data = ElementTree.fromstring(xml_content)
+        workspace: List[Dict[str, Any]] = [
+            {
+                "app:collection": {
+                    **{
+                        key: collection.findtext(key, namespaces=NAMESPACES)
+                        for key in single_keys
+                    },
+                    **{
+                        key: [
+                            elt.text
+                            for elt in collection.findall(key, namespaces=NAMESPACES)
+                        ]
+                        for key in multi_keys
+                    },
+                }
+            }
+            for collection in data.findall(
+                "app:workspace/app:collection", namespaces=NAMESPACES
+            )
+        ]
+        return {"app:service": {"app:workspace": workspace}}
 
     def parse_result_error(self, xml_content: str) -> Dict[str, Any]:
         result = super().parse_result_error(xml_content)
@@ -434,7 +471,7 @@ class StatusDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        data = parse_xml(xml_content)
+        data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
             "deposit_status",
@@ -443,7 +480,7 @@ class StatusDepositClient(BaseDepositClient):
             "deposit_swh_id_context",
             "deposit_external_id",
         ]
-        return {key: data.get("swh:" + key) for key in keys}
+        return {key: data.findtext("swh:" + key, namespaces=NAMESPACES) for key in keys}
 
 
 class CollectionListDepositClient(BaseDepositClient):
@@ -481,8 +518,8 @@ class CollectionListDepositClient(BaseDepositClient):
         """
         link_header = headers.get("Link", "") if headers else ""
         links = parse_header_links(link_header)
-        data = parse_xml(xml_content)["atom:feed"]
-        total_result = data.get("swh:count", 0)
+        data = ElementTree.fromstring(xml_content)
+        total_result = data.findtext("swh:count", "0", namespaces=NAMESPACES).strip()
         keys = [
             "id",
             "reception_date",
@@ -494,13 +531,12 @@ class CollectionListDepositClient(BaseDepositClient):
             "swhid_context",
             "origin_url",
         ]
-        entries_ = data.get("atom:entry", [])
-        entries = [entries_] if isinstance(entries_, dict) else entries_
+        entries = data.findall("atom:entry", namespaces=NAMESPACES)
         deposits_d = [
             {
-                key: deposit.get(f"swh:{key}")
+                key: deposit.findtext(f"swh:{key}", namespaces=NAMESPACES)
                 for key in keys
-                if deposit.get(f"swh:{key}") is not None
+                if deposit.find(f"swh:{key}", namespaces=NAMESPACES) is not None
             }
             for deposit in entries
         ]
@@ -538,14 +574,14 @@ class BaseCreateDepositClient(BaseDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        data = parse_xml(xml_content)
+        data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
             "deposit_status",
             "deposit_status_detail",
             "deposit_date",
         ]
-        return {key: data.get("swh:" + key) for key in keys}
+        return {key: data.findtext("swh:" + key, namespaces=NAMESPACES) for key in keys}
 
     def compute_headers(self, info: Dict[str, Any]) -> Dict[str, Any]:
         return info
@@ -648,13 +684,13 @@ class CreateMetadataOnlyDepositClient(BaseCreateDepositClient):
         """Given an xml content as string, returns a deposit dict.
 
         """
-        data = parse_xml(xml_content)
+        data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
             "deposit_status",
             "deposit_date",
         ]
-        return {key: data.get("swh:" + key) for key in keys}
+        return {key: data.findtext("swh:" + key, namespaces=NAMESPACES) for key in keys}
 
 
 class CreateMultipartDepositClient(BaseCreateDepositClient):

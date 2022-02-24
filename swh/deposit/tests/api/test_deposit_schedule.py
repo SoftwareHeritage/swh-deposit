@@ -5,7 +5,6 @@
 
 import copy
 import datetime
-from io import BytesIO
 
 from django.urls import reverse_lazy as reverse
 import pytest
@@ -18,6 +17,7 @@ from swh.deposit.config import (
     SE_IRI,
 )
 from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 
 @pytest.fixture()
@@ -81,10 +81,12 @@ def test_add_deposit_schedules_check(
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    actual_state = response_content["swh:deposit_status"]
+    response_content = parse_xml(response.content)
+    actual_state = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
     assert actual_state == DEPOSIT_STATUS_DEPOSITED
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
 
     assert_task_for_deposit(
         swh_scheduler, deposit_id, timestamp_before_call, timestamp_after_call
@@ -123,10 +125,14 @@ def test_update_deposit_schedules_check(
 
     assert response.status_code == status.HTTP_200_OK
 
-    response_content = parse_xml(BytesIO(response.content))
-    actual_state = response_content["swh:deposit_status"]
+    response_content = parse_xml(response.content)
+    actual_state = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
     assert actual_state == DEPOSIT_STATUS_DEPOSITED
-    assert deposit.id == int(response_content["swh:deposit_id"])
+    assert deposit.id == int(
+        response_content.findtext("swh:deposit_id", namespaces=NAMESPACES)
+    )
 
     assert_task_for_deposit(
         swh_scheduler, deposit.id, timestamp_before_call, timestamp_after_call

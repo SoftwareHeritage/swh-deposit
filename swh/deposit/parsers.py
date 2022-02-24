@@ -9,13 +9,12 @@
 """
 
 import logging
-from xml.parsers.expat import ExpatError
+from xml.etree import ElementTree
 
 from django.conf import settings
 from rest_framework.parsers import BaseParser, FileUploadParser, MultiPartParser
 
 from swh.deposit.errors import ParserError
-from swh.deposit.utils import parse_xml as _parse_xml
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,8 @@ class SWHXMLParser(BaseParser):
         """
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
-        return _parse_xml(stream, encoding=encoding)
+        parser = ElementTree.XMLParser(encoding=encoding)
+        return ElementTree.parse(stream, parser=parser)
 
 
 class SWHAtomEntryParser(SWHXMLParser):
@@ -89,6 +89,6 @@ def parse_xml(raw_content):
 
     """
     try:
-        return SWHXMLParser().parse(raw_content)
-    except ExpatError as e:
+        return ElementTree.fromstring(raw_content)
+    except ElementTree.ParseError as e:
         raise ParserError(str(e))

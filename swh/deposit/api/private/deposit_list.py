@@ -23,20 +23,35 @@ class APIList(ListAPIView, APIPrivateView):
     pagination_class = DefaultPagination
 
     def get_queryset(self):
+        """Retrieve iterable of deposits (with some optional filtering)."""
         params = self.request.query_params
         exclude_like = params.get("exclude")
         username = params.get("username")
 
         if username:
-            deposits = Deposit.objects.select_related("client").filter(
+            deposits_qs = Deposit.objects.select_related("client").filter(
                 client__username=username
             )
         else:
-            deposits = Deposit.objects.all()
+            deposits_qs = Deposit.objects.all()
 
         if exclude_like:
             # sql injection: A priori, nothing to worry about, django does it for
             # queryset
             # https://docs.djangoproject.com/en/3.0/topics/security/#sql-injection-protection  # noqa
-            deposits = deposits.exclude(external_id__startswith=exclude_like)
-        return deposits.order_by("id")
+            deposits_qs = deposits_qs.exclude(external_id__startswith=exclude_like)
+
+        deposits = []
+        for deposit in deposits_qs.order_by("id"):
+            deposit_requests = deposit.depositrequest_set.filter(
+                type="metadata"
+            ).order_by("-id")
+            # enrich deposit with raw metadata when we have some
+            if deposit_requests and len(deposit_requests) > 0:
+                raw_meta = deposit_requests[0].raw_metadata
+                if raw_meta:
+                    deposit.set_raw_metadata(raw_meta)
+
+            deposits.append(deposit)
+
+        return deposits

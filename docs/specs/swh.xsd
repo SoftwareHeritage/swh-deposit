@@ -6,32 +6,41 @@
             >
   <xsd:element name="deposit">
     <xsd:complexType>
-      <xsd:choice>
-        <!-- code deposit on a new origin -->
-        <xsd:element name="create_origin" >
-          <xsd:complexType>
-            <xsd:element ref="swh:origin" />
-          </xsd:complexType>
+      <xsd:sequence>
+        <xsd:complexType>
+          <xsd:choice>
+            <!-- code deposit on a new origin -->
+            <xsd:element name="create_origin" >
+              <xsd:complexType>
+                <xsd:element ref="swh:origin" />
+              </xsd:complexType>
+            </xsd:element>
+
+            <!-- code deposit on an origin already created by a previous deposit -->
+            <xsd:element name="add_to_origin" >
+              <xsd:complexType>
+                <xsd:element ref="swh:origin" />
+              </xsd:complexType>
+            </xsd:element>
+
+            <!-- metadata-only deposit -->
+            <xsd:element name="reference">
+              <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element ref="swh:origin" />
+                  <xsd:element ref="swh:object" />
+                </xsd:choice>
+              </xsd:complexType>
+            </xsd:element>
+
+          </xsd:choice>
+        </xsd:complexType>
+
+        <xsd:element name="metadata-provenance" minOccurs="0" maxOccurs="1" >
+          <xsd:any />
         </xsd:element>
 
-        <!-- code deposit on an origin already created by a previous deposit -->
-        <xsd:element name="add_to_origin" >
-          <xsd:complexType>
-            <xsd:element ref="swh:origin" />
-          </xsd:complexType>
-        </xsd:element>
-
-        <!-- metadata-only deposit -->
-        <xsd:element name="reference">
-          <xsd:complexType>
-            <xsd:choice>
-              <xsd:element ref="swh:origin" />
-              <xsd:element ref="swh:object" />
-            </xsd:choice>
-          </xsd:complexType>
-        </xsd:element>
-
-      </xsd:choice>
+      </xsd:sequence>
     </xsd:complexType>
   </xsd:element>
 

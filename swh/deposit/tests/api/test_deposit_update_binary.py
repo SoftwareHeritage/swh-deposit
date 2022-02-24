@@ -6,11 +6,11 @@
 """Tests updates on EM-IRI"""
 
 from io import BytesIO
+import xml.etree.ElementTree as ET
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
-import xmltodict
 
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED, EM_IRI, SE_IRI
 from swh.deposit.models import Deposit, DepositRequest
@@ -23,6 +23,7 @@ from swh.deposit.tests.common import (
     put_archive,
     put_atom,
 )
+from swh.deposit.utils import NAMESPACES
 
 
 def test_post_deposit_binary_and_post_to_add_another_archive(
@@ -48,8 +49,8 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = response_content.findtext("swh:deposit_id", namespaces=NAMESPACES)
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == "partial"
@@ -76,7 +77,7 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(BytesIO(response.content))
+    response_content = parse_xml(response.content)
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -182,8 +183,8 @@ def test_add_archive_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["atom:summary"]
+        response_content.findtext("atom:summary", namespaces=NAMESPACES)
+        == "Deposit %s does not exist" % unknown_deposit_id
     )
 
 
@@ -206,8 +207,8 @@ def test_replace_archive_to_unknown_deposit(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
-        "Deposit %s does not exist" % unknown_deposit_id
-        == response_content["sword:error"]["atom:summary"]
+        response_content.findtext("atom:summary", namespaces=NAMESPACES)
+        == "Deposit %s does not exist" % unknown_deposit_id
     )
 
 
@@ -288,8 +289,8 @@ def test_post_deposit_then_update_refused(
     # then
     assert response.status_code == status.HTTP_201_CREATED
 
-    response_content = parse_xml(BytesIO(response.content))
-    deposit_id = response_content["swh:deposit_id"]
+    response_content = parse_xml(response.content)
+    deposit_id = response_content.findtext("swh:deposit_id", namespaces=NAMESPACES)
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
@@ -327,7 +328,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -343,7 +344,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -359,7 +360,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -375,7 +376,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -408,7 +409,7 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -422,6 +423,6 @@ def test_post_deposit_then_update_refused(
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(r.content)["sword:error"]["summary"]
+        ET.fromstring(r.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
