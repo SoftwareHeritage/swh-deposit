@@ -16,4 +16,6 @@
   <xsd:simpleType name="DateOrDateTime">
     <xsd:union memberTypes="xsd:date xsd:dateTime"/>
   </xsd:simpleType>
+
+  <xsd:element name="name" type="xsd:string" />
 </xsd:schema>

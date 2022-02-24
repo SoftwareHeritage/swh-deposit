@@ -289,6 +289,24 @@ _parameters3 = [
         (
             f"""\
             <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>
+                    <codemeta:name>bar</codemeta:name>
+                </codemeta:name>
+                <author>no one</author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: a simple content element can't have child elements.*",
+                    "fields": ["codemeta:name"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
                 <url>something</url>
                 <external_identifier>something-else</external_identifier>
                 <title>bar</title>
