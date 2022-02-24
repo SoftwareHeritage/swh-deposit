@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+            xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+            elementFormDefault="qualified"
+            >
+  <!-- This is a non-exhaustive schema used to find likely errors in XML-encoded
+       Codemeta documents -->
+
+  <xsd:element name="datePublished" type="codemeta:DateOrDateTime" />
+  <xsd:element name="dateCreated" type="codemeta:DateOrDateTime" />
+
+  <xsd:simpleType name="DateOrDateTime">
+    <xsd:union memberTypes="xsd:date xsd:dateTime"/>
+  </xsd:simpleType>
+</xsd:schema>

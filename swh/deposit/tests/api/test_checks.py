@@ -253,23 +253,6 @@ _parameters2 = [
                 "fields": ["atom:author or codemeta:author"],
             },
         ),
-        (
-            f"""\
-            <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
-                <title>bar</title>
-                <author>someone</author>
-                <codemeta:datePublished>2020-aa-21</codemeta:datePublished>
-                <codemeta:dateCreated>2020-12-bb</codemeta:dateCreated>
-                {PROVENANCE_XML}
-            </entry>
-            """,
-            {
-                "summary": "Invalid date format",
-                "fields": ["codemeta:datePublished", "codemeta:dateCreated"],
-            },
-        ),
     ]
 ]
 
@@ -289,6 +272,29 @@ _parameters3 = [
         (
             f"""\
             <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+                <codemeta:datePublished>2020-aa-21</codemeta:datePublished>
+                <codemeta:dateCreated>2020-12-bb</codemeta:dateCreated>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: invalid value '2020-aa-21'.*",
+                    "fields": ["codemeta:datePublished"],
+                },
+                {
+                    "summary": ".*Reason: invalid value '2020-12-bb'.*",
+                    "fields": ["codemeta:dateCreated"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
                 <url>some url</url>
                 <external_identifier>someid</external_identifier>
                 <title>bar</title>
@@ -297,30 +303,17 @@ _parameters3 = [
                 <codemeta:dateCreated>2020-12-bb</codemeta:dateCreated>
             </entry>
             """,
-            {
-                "summary": "Invalid date format",
-                "fields": ["codemeta:datePublished", "codemeta:dateCreated"],
-            },
+            [
+                {
+                    "summary": ".*Reason: invalid value '2020-aa-21'.*",
+                    "fields": ["codemeta:datePublished"],
+                },
+                {
+                    "summary": ".*Reason: invalid value '2020-12-bb'.*",
+                    "fields": ["codemeta:dateCreated"],
+                },
+            ],
         ),
-    ]
-]
-
-
-@pytest.mark.parametrize("metadata_ko,expected_invalid_summary", _parameters3)
-def test_api_checks_check_metadata_fields_ko_and_missing_suggested_fields(
-    metadata_ko, expected_invalid_summary, swh_checks_deposit
-):
-    actual_check, error_detail = check_metadata(ElementTree.fromstring(metadata_ko))
-    assert actual_check is False
-    assert error_detail == {
-        "metadata": [expected_invalid_summary]
-        + [{"fields": [METADATA_PROVENANCE_KEY], "summary": SUGGESTED_FIELDS_MISSING,}]
-    }
-
-
-_parameters4 = [
-    (textwrap.dedent(metadata_ko), expected_summary)
-    for (metadata_ko, expected_summary) in [
         (
             f"""\
             <entry {XMLNS}>
@@ -335,13 +328,15 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": (
-                    r".*Reason: Unexpected child with tag 'swh:invalid'.*"
-                    r"Instance:.*swh:invalid.*"
-                ),
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": (
+                        r".*Reason: Unexpected child with tag 'swh:invalid'.*"
+                        r"Instance:.*swh:invalid.*"
+                    ),
+                    "fields": ["swh:deposit"],
+                }
+            ],
         ),
         (
             f"""\
@@ -360,12 +355,14 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": (
-                    r".*Reason: Unexpected child with tag 'swh:add_to_origin'.*"
-                ),
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": (
+                        r".*Reason: Unexpected child with tag 'swh:add_to_origin'.*"
+                    ),
+                    "fields": ["swh:deposit"],
+                }
+            ],
         ),
         (
             f"""\
@@ -384,14 +381,16 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": (
-                    r".*Reason: assertion test if false.*"
-                    r"Schema:\n*"
-                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-add".*'
-                ),
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": (
+                        r".*Reason: assertion test if false.*"
+                        r"Schema:\n*"
+                        r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-add".*'
+                    ),
+                    "fields": ["swh:deposit"],
+                }
+            ],
         ),
         (
             f"""\
@@ -410,14 +409,16 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": (
-                    r".*Reason: assertion test if false.*"
-                    r"Schema:\n*"
-                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-reference".*'
-                ),
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": (
+                        r".*Reason: assertion test if false.*"
+                        r"Schema:\n*"
+                        r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-reference".*'
+                    ),
+                    "fields": ["swh:deposit"],
+                }
+            ],
         ),
         (
             f"""\
@@ -436,14 +437,16 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": (
-                    r".*Reason: assertion test if false.*"
-                    r"Schema:\n*"
-                    r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-add-and-reference".*'
-                ),
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": (
+                        r".*Reason: assertion test if false.*"
+                        r"Schema:\n*"
+                        r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-add-and-reference".*'
+                    ),
+                    "fields": ["swh:deposit"],
+                }
+            ],
         ),
         (
             f"""\
@@ -460,10 +463,12 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
+                    "fields": ["swh:deposit"],
+                },
+            ],
         ),
         (
             f"""\
@@ -480,10 +485,12 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": r".*Reason: Unexpected child with tag 'swh:origin'.*",
+                    "fields": ["swh:deposit"],
+                },
+            ],
         ),
         (
             f"""\
@@ -500,25 +507,33 @@ _parameters4 = [
                 </swh:deposit>
             </entry>
             """,
-            {
-                "summary": r".*Reason: Unexpected child with tag 'swh:object'.*",
-                "fields": ["swh:deposit"],
-            },
+            [
+                {
+                    "summary": r".*Reason: Unexpected child with tag 'swh:object'.*",
+                    "fields": ["swh:deposit"],
+                },
+            ],
         ),
     ]
 ]
 
 
-@pytest.mark.parametrize("metadata_ko,expected_summary", _parameters4)
+@pytest.mark.parametrize("metadata_ko,expected_summaries", _parameters3)
 def test_api_checks_check_metadata_ko_schema(
-    metadata_ko, expected_summary, swh_checks_deposit
+    metadata_ko, expected_summaries, swh_checks_deposit
 ):
     actual_check, error_detail = check_metadata(ElementTree.fromstring(metadata_ko))
     assert actual_check is False
-    assert len(error_detail["metadata"]) == 1, error_detail["metadata"]
-    assert error_detail["metadata"][0]["fields"] == expected_summary["fields"]
+    assert len(error_detail["metadata"]) == len(expected_summaries), error_detail[
+        "metadata"
+    ]
 
-    # xmlschema returns very detailed errors, we cannot reasonably test them
-    # for equality
-    summary = error_detail["metadata"][0]["summary"]
-    assert re.match(expected_summary["summary"], summary, re.DOTALL), summary
+    for (detail, expected_summary) in zip(error_detail["metadata"], expected_summaries):
+        assert detail["fields"] == expected_summary["fields"]
+
+        # xmlschema returns very detailed errors, we cannot reasonably test them
+        # for equality
+        summary = detail["summary"]
+        assert re.match(
+            expected_summary["summary"], summary, re.DOTALL
+        ), f"Failed to match {expected_summary['summary']!r} with:\n{summary}"

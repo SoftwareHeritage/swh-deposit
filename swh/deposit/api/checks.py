@@ -19,11 +19,10 @@ import functools
 from typing import Dict, Optional, Tuple
 from xml.etree import ElementTree
 
-import iso8601
 import pkg_resources
 import xmlschema
 
-from swh.deposit.utils import NAMESPACES, normalize_date, parse_swh_metadata_provenance
+from swh.deposit.utils import NAMESPACES, parse_swh_metadata_provenance
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
 INVALID_DATE_FORMAT = "Invalid date format"
@@ -35,6 +34,7 @@ METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 @dataclasses.dataclass
 class Schemas:
     swh: xmlschema.XMLSchema11
+    codemeta: xmlschema.XMLSchema11
 
 
 @functools.lru_cache(1)
@@ -44,7 +44,7 @@ def schemas() -> Schemas:
             pkg_resources.resource_string("swh.deposit", f"xsd/{name}.xsd").decode()
         )
 
-    return Schemas(swh=load_xsd("swh"))
+    return Schemas(swh=load_xsd("swh"), codemeta=load_xsd("codemeta"))
 
 
 def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]:
@@ -93,25 +93,21 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
         except xmlschema.exceptions.XMLSchemaException as e:
             return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
 
-    fields = []
-
-    for commit_date in metadata.findall(
-        "codemeta:datePublished", namespaces=NAMESPACES
-    ):
+    detail = []
+    for child in metadata:
+        for schema_element in schemas().codemeta.root_elements:
+            if child.tag in schema_element.name:
+                break
+        else:
+            # Tag is not specified in the schema, don't validate it
+            continue
         try:
-            normalize_date(commit_date.text)
-        except iso8601.iso8601.ParseError:
-            fields.append("codemeta:datePublished")
+            schemas().codemeta.validate(child)
+        except xmlschema.exceptions.XMLSchemaException as e:
+            detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
 
-    for author_date in metadata.findall("codemeta:dateCreated", namespaces=NAMESPACES):
-        try:
-            normalize_date(author_date.text)
-        except iso8601.iso8601.ParseError:
-            fields.append("codemeta:dateCreated")
-
-    if fields:
-        detail = [{"summary": INVALID_DATE_FORMAT, "fields": fields}]
-        return False, {"metadata": detail + suggested_fields}
+    if detail:
+        return False, {"metadata": detail}
 
     if suggested_fields:  # it's fine but warn about missing suggested fields
         return True, {"metadata": suggested_fields}
