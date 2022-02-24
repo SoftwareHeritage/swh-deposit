@@ -15,6 +15,7 @@ works much better with these extensions.
 All these tags are in the ``https://www.softwareheritage.org/schema/2018/deposit``
 XML namespace, denoted using the ``swhdeposit`` prefix in this section.
 
+.. _deposit-create_origin:
 
 Origin creation with the ``<swhdeposit:create_origin>`` tag
 -----------------------------------------------------------
@@ -91,6 +92,7 @@ If the ``Slug`` header is missing, the server generates one randomly.
 This fallback is provided for compliance with SWORDv2_ clients, but we do not
 recommend relying on it, as it usually creates origins URL that are not meaningful.
 
+.. _deposit-add_to_origin:
 
 Adding releases to an origin, with the ``<swhdeposit:add_to_origin>`` tag
 -------------------------------------------------------------------------
@@ -269,6 +271,79 @@ And to describe an object:
 
 For details on the semantics, see the
 :ref:`metadata deposit specification <spec-metadata-deposit>`
+
+
+.. _deposit-metadata-provenance:
+
+Metadata provenance
+-------------------
+
+To indicate where the metadata is coming from, deposit clients can use a
+``<swhdeposit:metadata-provenance>`` element in ``<swhdeposit:deposit>`` whose content is
+the object the metadata is coming from,
+preferably using the ``https://schema.org/`` namespace.
+
+For example, when the metadata is coming from Wikidata, then the
+``<swhdeposit:metadata-provenance>`` should be the page of a Q-entity, such as
+``https://www.wikidata.org/wiki/Q16988498`` (not the Q-entity
+``http://www.wikidata.org/entity/Q16988498`` itself, as the Q-entity **is** the
+object described in the metadata)
+Or when the metadata is coming from a curated repository like HAL, then
+``<swhdeposit:metadata-provenance>`` should be the HAL project.
+
+In particular, Software Heritage expects the ``<swhdeposit:metadata-provenance>`` object
+to have a ``https://schema.org/url`` property, so that it can appropriately link
+to the original page.
+
+For example, to deposit metadata on GNU Hello:
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <entry xmlns="http://www.w3.org/2005/Atom"
+          xmlns:schema="https://schema.org/">
+
+     <!-- ... -->
+
+     <swh:deposit>
+       <swh:metadata-provenance>
+         <schema:url>https://www.wikidata.org/wiki/Q16988498</schema:url>
+       </swh:metadata-provenance>
+     </swh:deposit>
+
+     <!-- ... -->
+
+   </entry>
+
+Here is a more complete example of a metadata-only deposit on version 2.9 of GNU Hello,
+to show the interaction with other fields,
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <entry xmlns="http://www.w3.org/2005/Atom"
+          xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+          xmlns:schema="https://schema.org/"
+          xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+
+     <swh:deposit>
+       <swh:reference>
+         <swh:object swhid="swh:1:dir:9b6f93b12a500f560796c8dffa383c7f4470a12f;origin=https://ftp.gnu.org/gnu/hello/;visit=swh:1:snp:1abd6aa1901ba0aa7f5b7db059250230957f8434;anchor=swh:1:rev:3d41fbdb693ba46fdebe098782be4867038503e2" />
+       </swh:reference>
+
+       <swh:metadata-provenance>
+         <schema:url>https://www.wikidata.org/wiki/Q16988498</schema:url>
+       </swh:metadata-provenance>
+     </swh:deposit>
+
+     <codemeta:name>GNU Hello</codemeta:name>
+     <codemeta:id>http://www.wikidata.org/entity/Q16988498</codemeta:id>
+     <codemeta:url>https://www.gnu.org/software/hello/</codemeta:url>
+
+     <!-- is part of the GNU project -->
+     <codemeta:isPartOf>http://www.wikidata.org/entity/Q7598</codemeta:isPartOf>
+
+   </entry>
 
 
 Schema

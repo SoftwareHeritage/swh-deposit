@@ -148,6 +148,7 @@ swh/deposit/migrations/0018_migrate_swhids.py
 swh/deposit/migrations/0019_auto_20200519_1035.py
 swh/deposit/migrations/0020_auto_20200929_0855.py
 swh/deposit/migrations/0021_deposit_origin_url_20201124_1438.py
+swh/deposit/migrations/0022_auto_20220223_1542.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
@@ -229,11 +230,14 @@ swh/deposit/tests/data/atom/entry-data-minimal.xml
 swh/deposit/tests/data/atom/entry-data-multiple-release-notes.xml
 swh/deposit/tests/data/atom/entry-data-no-origin-url.xml
 swh/deposit/tests/data/atom/entry-data-parsing-error-prone.xml
+swh/deposit/tests/data/atom/entry-data-with-add-to-origin-no-prov.xml
 swh/deposit/tests/data/atom/entry-data-with-add-to-origin.xml
 swh/deposit/tests/data/atom/entry-data-with-both-add-to-origin-and-external-id.xml
 swh/deposit/tests/data/atom/entry-data-with-both-create-origin-and-add-to-origin.xml
+swh/deposit/tests/data/atom/entry-data-with-metadata-provenance.xml
 swh/deposit/tests/data/atom/entry-data-with-origin-reference.xml
 swh/deposit/tests/data/atom/entry-data-with-swhid-fail-metadata-functional-checks.xml
+swh/deposit/tests/data/atom/entry-data-with-swhid-no-prov.xml
 swh/deposit/tests/data/atom/entry-data-with-swhid.xml
 swh/deposit/tests/data/atom/entry-data0.xml
 swh/deposit/tests/data/atom/entry-data1.xml

@@ -29,7 +29,6 @@ PRIVATE_GET_DEPOSIT_METADATA = "private-read"
 PRIVATE_LIST_DEPOSITS = "private-deposit-list"
 
 ARCHIVE_KEY = "archive"
-METADATA_KEY = "metadata"
 RAW_METADATA_KEY = "raw-metadata"
 
 ARCHIVE_TYPE = "archive"

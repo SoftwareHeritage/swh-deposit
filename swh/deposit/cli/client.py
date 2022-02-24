@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -15,10 +15,12 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any, Collection, Dict, List, Optional
 import warnings
+import xml.etree.ElementTree as ET
 
 import click
 
 from swh.deposit.cli import deposit
+from swh.deposit.utils import NAMESPACES as NS
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,7 @@ def generate_metadata(
     authors: List[str],
     external_id: Optional[str] = None,
     create_origin: Optional[str] = None,
+    metadata_provenance_url: Optional[str] = None,
 ) -> str:
     """Generate sword compliant xml metadata with the minimum required metadata.
 
@@ -101,40 +104,43 @@ def generate_metadata(
         name: Software name
         authors: List of author names
         create_origin: Origin concerned by the deposit
+        metadata_provenance_url: Provenance metadata url
 
     Returns:
         metadata xml string
 
     """
-    import xmltodict
-
     # generate a metadata file with the minimum required metadata
-    document = {
-        "atom:entry": {
-            "@xmlns:atom": "http://www.w3.org/2005/Atom",
-            "@xmlns:codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
-            "atom:updated": datetime.now(tz=timezone.utc),  # mandatory, cf. docstring
-            "atom:author": deposit_client,  # mandatory, cf. docstring
-            "atom:title": name,  # mandatory, cf. docstring
-            "codemeta:name": name,  # mandatory, cf. docstring
-            "codemeta:author": [  # mandatory, cf. docstring
-                {"codemeta:name": author_name} for author_name in authors
-            ],
-        },
-    }
+    document = ET.Element(f"{{{NS['atom']}}}entry")
+    now = datetime.now(tz=timezone.utc)
+    ET.SubElement(document, f"{{{NS['atom']}}}updated").text = str(now)
+    ET.SubElement(document, f"{{{NS['atom']}}}author").text = deposit_client
+    ET.SubElement(document, f"{{{NS['atom']}}}title").text = name
+    ET.SubElement(document, f"{{{NS['codemeta']}}}name").text = name
+    for author_name in authors:
+        author = ET.SubElement(document, f"{{{NS['codemeta']}}}author")
+        ET.SubElement(author, f"{{{NS['codemeta']}}}name").text = author_name
+
     if external_id:
-        document["atom:entry"]["codemeta:identifier"] = external_id
+        ET.SubElement(document, f"{{{NS['codemeta']}}}identifier").text = external_id
+
+    swh_deposit_elt = ET.Element(f"{{{NS['swh']}}}deposit")
 
     if create_origin:
-        document["atom:entry"][
-            "@xmlns:swh"
-        ] = "https://www.softwareheritage.org/schema/2018/deposit"
-        document["atom:entry"]["swh:deposit"] = {
-            "swh:create_origin": {"swh:origin": {"@url": create_origin}}
-        }
+        elt = ET.SubElement(swh_deposit_elt, f"{{{NS['swh']}}}create_origin")
+        ET.SubElement(elt, f"{{{NS['swh']}}}origin").set("url", create_origin)
 
-    logging.debug("Atom entry dict to generate as xml: %s", document)
-    return xmltodict.unparse(document, pretty=True)
+    if metadata_provenance_url:
+        elt = ET.SubElement(swh_deposit_elt, f"{{{NS['swh']}}}metadata-provenance")
+        ET.SubElement(elt, f"{{{NS['schema']}}}url").text = metadata_provenance_url
+
+    if len(swh_deposit_elt):
+        document.append(swh_deposit_elt)
+
+    s = ET.tostring(document, encoding="utf-8").decode()
+
+    logging.debug("Atom entry dict to generate as xml: %s", s)
+    return s
 
 
 def _collection(client: PublicApiDepositClient) -> str:
@@ -146,7 +152,7 @@ def _collection(client: PublicApiDepositClient) -> str:
     if "error" in sd_content:
         msg = sd_content["error"]
         raise InputError(f"Service document retrieval: {msg}")
-    collection = sd_content["app:service"]["app:workspace"]["app:collection"][
+    collection = sd_content["app:service"]["app:workspace"][0]["app:collection"][
         "sword:name"
     ]
     return collection
@@ -160,6 +166,7 @@ def client_command_parse_input(
     collection: Optional[str],
     slug: Optional[str],
     create_origin: Optional[str],
+    metadata_provenance_url: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -204,6 +211,7 @@ def client_command_parse_input(
             "metadata": the metadata file to deposit
             "collection": the user's collection under which to put the deposit
             "create_origin": the origin concerned by the deposit
+            "metadata_provenance_url": the metadata provenance url
             "in_progress": if the deposit is partial or not
             "url": deposit's server main entry point
             "deposit_id": optional deposit identifier
@@ -215,7 +223,12 @@ def client_command_parse_input(
             metadata_path = os.path.join(temp_dir, "metadata.xml")
             logging.debug("Temporary file: %s", metadata_path)
             metadata_xml = generate_metadata(
-                username, name, authors, external_id=slug, create_origin=create_origin
+                username,
+                name,
+                authors,
+                external_id=slug,
+                create_origin=create_origin,
+                metadata_provenance_url=metadata_provenance_url,
             )
             logging.debug("Metadata xml generated: %s", metadata_xml)
             with open(metadata_path, "w") as f:
@@ -255,17 +268,32 @@ def client_command_parse_input(
         )
 
     if metadata:
-        from swh.deposit.utils import parse_xml
+        from xml.etree import ElementTree
 
-        metadata_raw = open(metadata, "r").read()
-        metadata_dict = parse_xml(metadata_raw).get("swh:deposit", {})
-        if (
-            "swh:create_origin" not in metadata_dict
-            and "swh:add_to_origin" not in metadata_dict
-        ):
+        from swh.deposit.utils import (
+            parse_swh_deposit_origin,
+            parse_swh_metadata_provenance,
+        )
+
+        metadata_tree = ElementTree.fromstring(open(metadata).read())
+        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata_tree)
+        if create_origin and add_to_origin:
+            logger.error(
+                "The metadata file provided must not contain both "
+                '"<swh:create_origin>" and "<swh:add_to_origin>" tags',
+            )
+        elif not create_origin and not add_to_origin:
             logger.warning(
                 "The metadata file provided should contain "
                 '"<swh:create_origin>" or "<swh:add_to_origin>" tag',
+            )
+
+        meta_prov_url = parse_swh_metadata_provenance(metadata_tree)
+
+        if not meta_prov_url:
+            logger.warning(
+                "The metadata file provided should contain "
+                '"<swh:metadata-provenance>" tag'
             )
 
     if replace and not deposit_id:
@@ -371,6 +399,13 @@ def output_format_decorator(f):
     ),
 )
 @click.option(
+    "--metadata-provenance-url",
+    help=(
+        "(Optional) Provenance metadata url to indicate from where the metadata is "
+        "coming from."
+    ),
+)
+@click.option(
     "--partial/--no-partial",
     default=False,
     help=(
@@ -414,6 +449,7 @@ def upload(
     collection: Optional[str],
     slug: Optional[str],
     create_origin: Optional[str],
+    metadata_provenance_url: Optional[str],
     partial: bool,
     deposit_id: Optional[int],
     swhid: Optional[str],
@@ -473,6 +509,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
                 collection,
                 slug,
                 create_origin,
+                metadata_provenance_url,
                 partial,
                 deposit_id,
                 swhid,
@@ -556,16 +593,26 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
     """Deposit metadata only upload
 
     """
+    from xml.etree import ElementTree
+
     from swh.deposit.client import PublicApiDepositClient
-    from swh.deposit.utils import parse_swh_reference, parse_xml
+    from swh.deposit.utils import parse_swh_metadata_provenance, parse_swh_reference
 
     # Parse to check for a swhid presence within the metadata file
     with open(metadata_path, "r") as f:
         metadata_raw = f.read()
-    actual_swhid = parse_swh_reference(parse_xml(metadata_raw))
+    metadata_tree = ElementTree.fromstring(metadata_raw)
+    actual_swhid = parse_swh_reference(metadata_tree)
 
     if not actual_swhid:
         raise InputError("A SWHID must be provided for a metadata-only deposit")
+
+    meta_prov_url = parse_swh_metadata_provenance(metadata_tree)
+    if not meta_prov_url:
+        logger.warning(
+            "A '<swh:metadata-provenance>' should be provided for a metadata-only "
+            "deposit"
+        )
 
     with trap_and_report_exceptions():
         client = PublicApiDepositClient(url=_url(url), auth=(username, password))

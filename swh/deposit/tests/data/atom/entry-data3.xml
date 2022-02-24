@@ -1,7 +1,13 @@
 <?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom" xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+  <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
+  <author>some awesome author</author>
+
   <author>another one</author>
   <author>no one</author>
   <codemeta:dateCreated>2017-10-07T15:17:08Z</codemeta:dateCreated>
   <codemeta:releaseNotes>This is the release of October 7th, 2017.</codemeta:releaseNotes>
+  <codemeta:dateCreated>2015-04-06T17:08:47+02:00</codemeta:dateCreated>
+  <codemeta:datePublished>2017-05-03T16:08:47+02:00</codemeta:datePublished>
 </entry>

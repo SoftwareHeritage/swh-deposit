@@ -11,6 +11,7 @@ from rest_framework import status
 from swh.deposit.config import CONT_FILE_IRI
 from swh.deposit.models import DEPOSIT_STATUS_DETAIL
 from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 
 def test_api_deposit_content_nominal(
@@ -21,18 +22,21 @@ def test_api_deposit_content_nominal(
     """
 
     for deposit in [complete_deposit, partial_deposit_only_metadata]:
-        expected_deposit = {
-            "swh:deposit_id": str(deposit.id),
-            "swh:deposit_status": deposit.status,
-            "swh:deposit_status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
-        }
-
         url = reverse(CONT_FILE_IRI, args=[deposit.collection.name, deposit.id])
         response = authenticated_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        actual_deposit = dict(parse_xml(response.content))
-        del actual_deposit["swh:deposit_date"]
-        assert set(actual_deposit.items()) >= set(expected_deposit.items())
+        actual_deposit = parse_xml(response.content)
+        assert actual_deposit.findtext("swh:deposit_id", namespaces=NAMESPACES) == str(
+            deposit.id
+        )
+        assert (
+            actual_deposit.findtext("swh:deposit_status", namespaces=NAMESPACES)
+            == deposit.status
+        )
+        assert (
+            actual_deposit.findtext("swh:deposit_status_detail", namespaces=NAMESPACES)
+            == DEPOSIT_STATUS_DETAIL[deposit.status]
+        )
 
 
 def test_api_deposit_content_unknown(

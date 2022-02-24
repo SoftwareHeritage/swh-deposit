@@ -29,6 +29,7 @@ class StatusDetailField(_UnvalidatedField):
 
 class DepositSerializer(serializers.ModelSerializer):
     status_detail = StatusDetailField()
+    raw_metadata = _UnvalidatedField()
 
     class Meta:
         model = Deposit

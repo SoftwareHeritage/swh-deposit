@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
        xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
   <url>https://hal-test.archives-ouvertes.fr/some-external-id</url>
   <author>some awesome author</author>
@@ -9,4 +10,9 @@
       <swh:origin url="https://hal-test.archives-ouvertes.fr/some-external-id" />
     </swh:create_origin>
   </swh:deposit>
+
+  <author>another one</author>
+  <author>no one</author>
+  <codemeta:dateCreated>2017-10-07T15:17:08Z</codemeta:dateCreated>
+  <codemeta:releaseNotes>This is the release of October 7th, 2017.</codemeta:releaseNotes>
 </entry>

@@ -1,12 +1,13 @@
-# Copyright (C) 2018-2020  The Software Heritage developers
+# Copyright (C) 2018-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from xml.etree import ElementTree
+
 import pytest
 
 from swh.deposit import utils
-from swh.deposit.parsers import parse_xml
 from swh.model.exceptions import ValidationError
 from swh.model.swhids import CoreSWHID, QualifiedSWHID
 
@@ -25,92 +26,6 @@ def xml_with_origin_reference():
   </entry>
     """
     return xml_data.strip()
-
-
-def test_merge():
-    """Calling utils.merge on dicts should merge without losing information
-
-    """
-    d0 = {"author": "someone", "license": [["gpl2"]], "a": 1}
-
-    d1 = {
-        "author": ["author0", {"name": "author1"}],
-        "license": [["gpl3"]],
-        "b": {"1": "2"},
-    }
-
-    d2 = {"author": map(lambda x: x, ["else"]), "license": "mit", "b": {"2": "3",}}
-
-    d3 = {
-        "author": (v for v in ["no one"]),
-    }
-
-    actual_merge = utils.merge(d0, d1, d2, d3)
-
-    expected_merge = {
-        "a": 1,
-        "license": [["gpl2"], ["gpl3"], "mit"],
-        "author": ["someone", "author0", {"name": "author1"}, "else", "no one"],
-        "b": {"1": "2", "2": "3",},
-    }
-    assert actual_merge == expected_merge
-
-
-def test_merge_2():
-    d0 = {"license": "gpl2", "runtime": {"os": "unix derivative"}}
-
-    d1 = {"license": "gpl3", "runtime": "GNU/Linux"}
-
-    expected = {
-        "license": ["gpl2", "gpl3"],
-        "runtime": [{"os": "unix derivative"}, "GNU/Linux"],
-    }
-
-    actual = utils.merge(d0, d1)
-    assert actual == expected
-
-
-def test_merge_edge_cases():
-    input_dict = {
-        "license": ["gpl2", "gpl3"],
-        "runtime": [{"os": "unix derivative"}, "GNU/Linux"],
-    }
-    # against empty dict
-    actual = utils.merge(input_dict, {})
-    assert actual == input_dict
-
-    # against oneself
-    actual = utils.merge(input_dict, input_dict, input_dict)
-    assert actual == input_dict
-
-
-def test_merge_one_dict():
-    """Merge one dict should result in the same dict value
-
-    """
-    input_and_expected = {"anything": "really"}
-    actual = utils.merge(input_and_expected)
-    assert actual == input_and_expected
-
-
-def test_merge_raise():
-    """Calling utils.merge with any no dict argument should raise
-
-    """
-    d0 = {"author": "someone", "a": 1}
-
-    d1 = ["not a dict"]
-
-    with pytest.raises(ValueError):
-        utils.merge(d0, d1)
-
-    with pytest.raises(ValueError):
-        utils.merge(d1, d0)
-
-    with pytest.raises(ValueError):
-        utils.merge(d1)
-
-    assert utils.merge(d0) == d0
 
 
 def test_normalize_date_0():
@@ -189,18 +104,19 @@ def test_compute_metadata_context(swhid: str, expected_metadata_context):
 def test_parse_swh_reference_origin(xml_with_origin_reference):
     url = "https://url"
     xml_data = xml_with_origin_reference.format(url=url)
-    metadata = parse_xml(xml_data)
+    metadata = ElementTree.fromstring(xml_data)
 
     actual_origin = utils.parse_swh_reference(metadata)
     assert actual_origin == url
 
 
 @pytest.fixture
-def xml_with_empty_reference():
+def xml_swh_deposit_template():
     xml_data = """<?xml version="1.0"?>
-  <entry xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+  <entry xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+         xmlns:schema="http://schema.org/">
       <swh:deposit>
-        {swh_reference}
+        {swh_deposit}
       </swh:deposit>
   </entry>
     """
@@ -216,16 +132,16 @@ def xml_with_empty_reference():
         """<swh:reference><swh:object swhid="" /></swh:reference>""",
     ],
 )
-def test_parse_swh_reference_empty(xml_with_empty_reference, xml_ref):
-    xml_body = xml_with_empty_reference.format(swh_reference=xml_ref)
-    metadata = utils.parse_xml(xml_body)
+def test_parse_swh_reference_empty(xml_swh_deposit_template, xml_ref):
+    xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
+    metadata = ElementTree.fromstring(xml_body)
 
     assert utils.parse_swh_reference(metadata) is None
 
 
 @pytest.fixture
 def xml_with_swhid(atom_dataset):
-    return atom_dataset["entry-data-with-swhid"]
+    return atom_dataset["entry-data-with-swhid-no-prov"]
 
 
 @pytest.mark.parametrize(
@@ -240,8 +156,8 @@ def xml_with_swhid(atom_dataset):
     ],
 )
 def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
-    xml_data = xml_with_swhid.format(swhid=swhid)
-    metadata = utils.parse_xml(xml_data)
+    xml_data = xml_with_swhid.format(swhid=swhid,)
+    metadata = ElementTree.fromstring(xml_data)
 
     actual_swhid = utils.parse_swh_reference(metadata)
     assert actual_swhid is not None
@@ -267,7 +183,36 @@ def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
 
     """
     xml_invalid_swhid = xml_with_swhid.format(swhid=invalid_swhid)
-    metadata = utils.parse_xml(xml_invalid_swhid)
+    metadata = ElementTree.fromstring(xml_invalid_swhid)
 
     with pytest.raises(ValidationError):
         utils.parse_swh_reference(metadata)
+
+
+@pytest.mark.parametrize(
+    "xml_ref",
+    [
+        "",
+        "<swh:metadata-provenance></swh:metadata-provenance>",
+        "<swh:metadata-provenance><schema:url /></swh:metadata-provenance>",
+    ],
+)
+def test_parse_swh_metatada_provenance_empty(xml_swh_deposit_template, xml_ref):
+    xml_body = xml_swh_deposit_template.format(swh_deposit=xml_ref)
+    metadata = ElementTree.fromstring(xml_body)
+
+    assert utils.parse_swh_metadata_provenance(metadata) is None
+
+
+@pytest.fixture
+def xml_with_metadata_provenance(atom_dataset):
+    return atom_dataset["entry-data-with-metadata-provenance"]
+
+
+def test_parse_swh_metadata_provenance2(xml_with_metadata_provenance):
+    xml_data = xml_with_metadata_provenance.format(url="https://url.org/metadata/url")
+    metadata = ElementTree.fromstring(xml_data)
+
+    actual_url = utils.parse_swh_metadata_provenance(metadata)
+
+    assert actual_url == "https://url.org/metadata/url"

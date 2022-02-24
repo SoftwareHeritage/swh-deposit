@@ -108,7 +108,7 @@ class EditAPI(APIPut, APIDelete):
             )
 
         try:
-            raw_metadata, metadata = self._read_metadata(request.data)
+            raw_metadata, metadata_tree = self._read_metadata(request.data)
         except ParserError:
             raise DepositError(
                 BAD_REQUEST,
@@ -117,7 +117,7 @@ class EditAPI(APIPut, APIDelete):
                 "Please ensure your metadata file is correctly formatted.",
             )
 
-        if not metadata:
+        if len(metadata_tree) == 0:
             raise DepositError(
                 BAD_REQUEST,
                 "Empty body request is not supported",
@@ -128,7 +128,7 @@ class EditAPI(APIPut, APIDelete):
         _, deposit, deposit_request = self._store_metadata_deposit(
             deposit,
             QualifiedSWHID.from_string(swhid),
-            metadata,
+            metadata_tree,
             raw_metadata,
             deposit.origin_url,
         )

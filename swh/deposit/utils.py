@@ -1,15 +1,15 @@
-# Copyright (C) 2018-2020 The Software Heritage developers
+# Copyright (C) 2018-2022 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import logging
-from types import GeneratorType
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
+from xml.etree import ElementTree
 
 import iso8601
-import xmltodict
 
+from swh.deposit.errors import FORBIDDEN, DepositError
 from swh.model.exceptions import ValidationError
 from swh.model.model import TimestampWithTimezone
 from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
@@ -17,75 +17,15 @@ from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
 logger = logging.getLogger(__name__)
 
 
-def parse_xml(stream, encoding="utf-8"):
-    namespaces = {
-        "http://www.w3.org/2005/Atom": "atom",
-        "http://www.w3.org/2007/app": "app",
-        "http://purl.org/dc/terms/": "dc",
-        "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0": "codemeta",
-        "http://purl.org/net/sword/terms/": "sword",
-        "https://www.softwareheritage.org/schema/2018/deposit": "swh",
-    }
-
-    data = xmltodict.parse(
-        stream,
-        encoding=encoding,
-        namespaces=namespaces,
-        process_namespaces=True,
-        dict_constructor=dict,
-    )
-    if "atom:entry" in data:
-        data = data["atom:entry"]
-    return data
-
-
-def merge(*dicts):
-    """Given an iterator of dicts, merge them losing no information.
-
-    Args:
-        *dicts: arguments are all supposed to be dict to merge into one
-
-    Returns:
-        dict merged without losing information
-
-    """
-
-    def _extend(existing_val, value):
-        """Given an existing value and a value (as potential lists), merge
-           them together without repetition.
-
-        """
-        if isinstance(value, (list, map, GeneratorType)):
-            vals = value
-        else:
-            vals = [value]
-        for v in vals:
-            if v in existing_val:
-                continue
-            existing_val.append(v)
-        return existing_val
-
-    d = {}
-    for data in dicts:
-        if not isinstance(data, dict):
-            raise ValueError("dicts is supposed to be a variable arguments of dict")
-
-        for key, value in data.items():
-            existing_val = d.get(key)
-            if not existing_val:
-                d[key] = value
-                continue
-            if isinstance(existing_val, (list, map, GeneratorType)):
-                new_val = _extend(existing_val, value)
-            elif isinstance(existing_val, dict):
-                if isinstance(value, dict):
-                    new_val = merge(existing_val, value)
-                else:
-                    new_val = _extend([existing_val], value)
-            else:
-                new_val = _extend([existing_val], value)
-            d[key] = new_val
-    return d
+NAMESPACES = {
+    "atom": "http://www.w3.org/2005/Atom",
+    "app": "http://www.w3.org/2007/app",
+    "dc": "http://purl.org/dc/terms/",
+    "codemeta": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+    "sword": "http://purl.org/net/sword/terms/",
+    "swh": "https://www.softwareheritage.org/schema/2018/deposit",
+    "schema": "http://schema.org/",
+}
 
 
 def normalize_date(date):
@@ -113,7 +53,7 @@ def normalize_date(date):
 
     return {
         "timestamp": tstz.timestamp.to_dict(),
-        "offset": tstz.offset,
+        "offset": tstz.offset_minutes(),
     }
 
 
@@ -146,9 +86,79 @@ ALLOWED_QUALIFIERS_NODE_TYPE = (
 )
 
 
-def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]:
-    """Parse swh reference within the metadata dict (or origin) reference if found,
-    None otherwise.
+def parse_swh_metadata_provenance(metadata: ElementTree.Element,) -> Optional[str]:
+    """Parse swh metadata-provenance within the metadata dict reference if found, None
+    otherwise.
+
+    .. code-block:: xml
+
+         <swh:deposit>
+           <swh:metadata-provenance>
+             <schema:url>https://example.org/metadata/url</schema:url>
+           </swh:metadata-provenance>
+         </swh:deposit>
+
+    Args:
+        metadata: result of parsing an Atom document with :func:`parse_xml`
+
+    Raises:
+        ValidationError in case of invalid xml
+
+    Returns:
+        Either the metadata provenance url if any or None otherwise
+
+    """
+    url_element = metadata.find(
+        "swh:deposit/swh:metadata-provenance/schema:url", namespaces=NAMESPACES
+    )
+    if url_element is not None:
+        return url_element.text
+    return None
+
+
+def parse_swh_deposit_origin(
+    metadata: ElementTree.Element,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Parses <swh:add_to_origin> and <swh:create_origin> from metadata document,
+    if any.
+
+    .. code-block:: xml
+
+       <swh:deposit>
+         <swh:create_origin>
+           <swh:origin url='https://example.org/repo/software123/'/>
+         </swh:reference>
+       </swh:deposit>
+
+    .. code-block:: xml
+
+       <swh:deposit>
+         <swh:add_to_origin>
+           <swh:origin url='https://example.org/repo/software123/'/>
+         </swh:add_to_origin>
+       </swh:deposit>
+
+    Returns:
+        tuple of (origin_to_create, origin_to_add). If both are non-None, this
+        should typically be an error raised to the user.
+    """
+    create_origin = metadata.find(
+        "swh:deposit/swh:create_origin/swh:origin", namespaces=NAMESPACES
+    )
+    add_to_origin = metadata.find(
+        "swh:deposit/swh:add_to_origin/swh:origin", namespaces=NAMESPACES
+    )
+
+    return (
+        None if create_origin is None else create_origin.attrib["url"],
+        None if add_to_origin is None else add_to_origin.attrib["url"],
+    )
+
+
+def parse_swh_reference(
+    metadata: ElementTree.Element,
+) -> Optional[Union[QualifiedSWHID, str]]:
+    """Parse <swh:reference> within the metadata document, if any.
 
     .. code-block:: xml
 
@@ -168,7 +178,7 @@ def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]
        </swh:deposit>
 
     Args:
-        metadata: result of parsing an Atom document with :func:`parse_xml`
+        metadata: result of parsing an Atom document
 
     Raises:
         ValidationError in case the swhid referenced (if any) is invalid
@@ -177,27 +187,21 @@ def parse_swh_reference(metadata: Dict,) -> Optional[Union[QualifiedSWHID, str]]
         Either swhid or origin reference if any. None otherwise.
 
     """  # noqa
-    swh_deposit = metadata.get("swh:deposit")
-    if not swh_deposit:
+    ref_origin = metadata.find(
+        "swh:deposit/swh:reference/swh:origin[@url]", namespaces=NAMESPACES
+    )
+    if ref_origin is not None:
+        return ref_origin.attrib["url"]
+
+    ref_object = metadata.find(
+        "swh:deposit/swh:reference/swh:object[@swhid]", namespaces=NAMESPACES
+    )
+    if ref_object is None:
         return None
-
-    swh_reference = swh_deposit.get("swh:reference")
-    if not swh_reference:
-        return None
-
-    swh_origin = swh_reference.get("swh:origin")
-    if swh_origin:
-        url = swh_origin.get("@url")
-        if url:
-            return url
-
-    swh_object = swh_reference.get("swh:object")
-    if not swh_object:
-        return None
-
-    swhid = swh_object.get("@swhid")
+    swhid = ref_object.attrib["swhid"]
     if not swhid:
         return None
+
     swhid_reference = QualifiedSWHID.from_string(swhid)
 
     if swhid_reference.qualifiers():
@@ -252,3 +256,16 @@ def to_header_link(link: str, link_name: str) -> str:
 
     """
     return f'<{link}>; rel="{link_name}"'
+
+
+def check_url_match_provider(url: str, provider_url: str) -> None:
+    """Check url matches the provider url.
+
+    Raises DepositError in case of mismatch
+
+    """
+    provider_url = provider_url.rstrip("/") + "/"
+    if not url.startswith(provider_url):
+        raise DepositError(
+            FORBIDDEN, f"URL mismatch: {url} must start with {provider_url}",
+        )

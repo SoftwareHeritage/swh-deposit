@@ -17,6 +17,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 
 @pytest.fixture
@@ -81,7 +82,7 @@ def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
     )
 
     response_content = parse_xml(response.content)
-    deposit_id = int(response_content["swh:deposit_id"])
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
     deposit = Deposit.objects.get(pk=deposit_id)
     deposit.status = DEPOSIT_STATUS_DEPOSITED
     deposit.save()

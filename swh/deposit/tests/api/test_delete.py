@@ -5,19 +5,20 @@
 
 from collections import defaultdict
 from typing import Dict, Mapping
+import xml.etree.ElementTree as ET
 
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
-import xmltodict
 
 from swh.deposit.config import (
-    ARCHIVE_KEY,
+    ARCHIVE_TYPE,
     DEPOSIT_STATUS_DEPOSITED,
     EDIT_IRI,
     EM_IRI,
-    METADATA_KEY,
+    METADATA_TYPE,
 )
 from swh.deposit.models import Deposit, DepositRequest
+from swh.deposit.utils import NAMESPACES
 
 
 def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
@@ -39,7 +40,7 @@ def test_delete_archive_on_partial_deposit_works(
 
     # deposit request type: 'archive', 1 'metadata'
     deposit_request_types = count_deposit_request_types(deposit_requests)
-    assert deposit_request_types == {ARCHIVE_KEY: 1, METADATA_KEY: 1}
+    assert deposit_request_types == {ARCHIVE_TYPE: 1, METADATA_TYPE: 1}
 
     # when
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit_id])
@@ -52,7 +53,7 @@ def test_delete_archive_on_partial_deposit_works(
     deposit_requests2 = DepositRequest.objects.filter(deposit=deposit)
 
     deposit_request_types = count_deposit_request_types(deposit_requests2)
-    assert deposit_request_types == {METADATA_KEY: 1}
+    assert deposit_request_types == {METADATA_TYPE: 1}
 
 
 def test_delete_archive_on_undefined_deposit_fails(
@@ -83,7 +84,7 @@ def test_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(response.content)["sword:error"]["summary"]
+        ET.fromstring(response.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 
@@ -126,7 +127,7 @@ def test_delete_on_edit_iri_cannot_delete_non_partial_deposit(
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        xmltodict.parse(response.content)["sword:error"]["summary"]
+        ET.fromstring(response.content).findtext("atom:summary", namespaces=NAMESPACES)
         == "You can only act on deposit with status 'partial'"
     )
 

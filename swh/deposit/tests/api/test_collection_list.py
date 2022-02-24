@@ -3,8 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from io import BytesIO
-
 from django.urls import reverse_lazy as reverse
 from requests.utils import parse_header_links
 from rest_framework import status
@@ -12,6 +10,7 @@ from rest_framework import status
 from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_DEPOSITED, DEPOSIT_STATUS_PARTIAL
 from swh.deposit.models import DepositCollection
 from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import NAMESPACES
 
 
 def test_deposit_collection_list_is_auth_protected(anonymous_client):
@@ -64,9 +63,9 @@ def test_deposit_collection_list_nominal(
     response = authenticated_client.get(f"{url}?page_size=1")
     assert response.status_code == status.HTTP_200_OK
 
-    data = parse_xml(BytesIO(response.content))["atom:feed"]
+    data = parse_xml(response.content)
     assert (
-        data["swh:count"] == "2"
+        data.findtext("swh:count", namespaces=NAMESPACES) == "2"
     )  # total result of 2 deposits if consuming all results
     header_link = parse_header_links(response["Link"])
     assert len(header_link) == 1  # only 1 next link
@@ -75,17 +74,21 @@ def test_deposit_collection_list_nominal(
     assert header_link[0]["rel"] == "next"
 
     # only one deposit in the response
-    deposit = data["atom:entry"]  # dict as only 1 value (a-la js)
-    assert isinstance(deposit, dict)
-    assert deposit["swh:id"] == deposit_id
-    assert deposit["swh:status"] == DEPOSIT_STATUS_PARTIAL
+    assert len(data.findall("atom:entry", namespaces=NAMESPACES)) == 1
+    assert data.findtext("atom:entry/swh:id", namespaces=NAMESPACES) == str(deposit_id)
+    assert (
+        data.findtext("atom:entry/swh:status", namespaces=NAMESPACES)
+        == DEPOSIT_STATUS_PARTIAL
+    )
 
     # then 2nd page
     response2 = authenticated_client.get(expected_next)
 
     assert response2.status_code == status.HTTP_200_OK
-    data2 = parse_xml(BytesIO(response2.content))["atom:feed"]
-    assert data2["swh:count"] == "2"  # still total of 2 deposits across all results
+    data2 = parse_xml(response2.content)
+    assert (
+        data2.findtext("swh:count", namespaces=NAMESPACES) == "2"
+    )  # still total of 2 deposits across all results
 
     expected_previous = f"{url}?page_size=1"
     header_link2 = parse_header_links(response2["Link"])
@@ -94,20 +97,26 @@ def test_deposit_collection_list_nominal(
     assert header_link2[0]["rel"] == "previous"
 
     # only 1 deposit in the response
-    deposit2 = data2["atom:entry"]  # dict as only 1 value (a-la js)
-    assert isinstance(deposit2, dict)
-    assert deposit2["swh:id"] == deposit_id2
-    assert deposit2["swh:status"] == DEPOSIT_STATUS_DEPOSITED
+    assert len(data2.findall("atom:entry", namespaces=NAMESPACES)) == 1
+    assert data2.findtext("atom:entry/swh:id", namespaces=NAMESPACES) == str(
+        deposit_id2
+    )
+    assert (
+        data2.findtext("atom:entry/swh:status", namespaces=NAMESPACES)
+        == DEPOSIT_STATUS_DEPOSITED
+    )
 
     # Retrieve every deposit in one query (no page_size parameter)
     response3 = authenticated_client.get(url)
     assert response3.status_code == status.HTTP_200_OK
-    data3 = parse_xml(BytesIO(response3.content))["atom:feed"]
-    assert data3["swh:count"] == "2"  # total result of 2 deposits across all results
-    deposits3 = data3["atom:entry"]  # list here
+    data3 = parse_xml(response3.content)
+    assert (
+        data3.findtext("swh:count", namespaces=NAMESPACES) == "2"
+    )  # total result of 2 deposits across all results
+    deposits3 = data3.findall("atom:entry/swh:id", namespaces=NAMESPACES)  # list here
     assert isinstance(deposits3, list)
     assert len(deposits3) == 2
     header_link3 = parse_header_links(response3["Link"])
     assert header_link3 == []  # no pagination as all results received in one round
-    assert deposit in deposits3
-    assert deposit2 in deposits3
+    assert deposits3[0].text == str(deposit_id)
+    assert deposits3[1].text == str(deposit_id2)

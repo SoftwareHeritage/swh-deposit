@@ -12,7 +12,7 @@ The deposit is architectured around 3 parts:
     correct (the checker), another worker service dedicated to actually ingest the
     deposit into the swh archive.
 
-  - client: a python script `swh deposit` command line interface.
+  - client: a python script ``swh deposit`` command line interface.
 
 All those are packaged in 3 separated debian packages, created and uploaded to the swh
 debian repository. The deposit server and workers configuration are managed by puppet
@@ -33,7 +33,7 @@ expected **/etc/softwareheritage/deposit/server.yml** configuration file.
 Environment (production/staging)
 --------------------------------
 
-`SWH_CONFIG_FILENAME` must be defined and target the deposit server configuration file.
+``SWH_CONFIG_FILENAME`` must be defined and target the deposit server configuration file.
 So either 1. prefix the following commands or 2. export the environment variable in your
 shell session. For the remaining part of the documentation, we assume 2. has been
 configured.
@@ -58,7 +58,7 @@ Add client and collection
 
 The deposit can be configured to use either the 1. django basic authentication framework
 or the 2. swh keycloak instance. If the server uses 2., the password is managed by
-keycloak so the option `--password`` is ignored.
+keycloak so the option ``--password`` is ignored.
 
 * basic
 
