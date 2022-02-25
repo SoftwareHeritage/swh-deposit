@@ -358,7 +358,14 @@ class BaseDepositClient(BaseApiDepositClient):
                     headers = dict(response.headers) if response.headers else None
                     return self.parse_result_ok(response.text, headers)
             else:
-                error = self.parse_result_error(response.text)
+                try:
+                    error = self.parse_result_error(response.text)
+                except ElementTree.ParseError:
+                    logger.warning(
+                        "Error message in response is not xml parsable: %s",
+                        response.text,
+                    )
+                    error = {}
                 empty = self.empty_result
                 error.update(empty)
                 if response.status_code == 503:
