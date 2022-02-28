@@ -412,6 +412,7 @@ _parameters3 = [
                 <author>no one</author>
                 <codemeta:datePublished>2020-aa-21</codemeta:datePublished>
                 <codemeta:dateCreated>2020-12-bb</codemeta:dateCreated>
+                {PROVENANCE_XML}
             </entry>
             """,
             [
@@ -433,12 +434,32 @@ _parameters3 = [
                 <title>bar</title>
                 <author>no one</author>
                 <codemeta:dateModified>2020-12-aa</codemeta:dateModified>
+                {PROVENANCE_XML}
             </entry>
             """,
             [
                 {
                     "summary": ".*Reason: invalid value '2020-12-aa'.*",
                     "fields": ["codemeta:dateModified"],
+                },
+            ],
+        ),
+        (
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>no one</codemeta:author>
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: character data between child elements.*",
+                    "fields": ["codemeta:author"],
+                },
+                {
+                    "summary": "Suggested fields are missing",
+                    "fields": ["swh:metadata-provenance"],
                 },
             ],
         ),
@@ -453,6 +474,9 @@ _parameters3 = [
                     <swh:invalid>
                         <swh:origin url="http://example.org" />
                     </swh:invalid>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -480,6 +504,9 @@ _parameters3 = [
                     <swh:add_to_origin>
                         <swh:origin url="http://example.org" />
                     </swh:add_to_origin>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -506,6 +533,9 @@ _parameters3 = [
                     <swh:create_origin>
                         <swh:origin url="http://example.org" />
                     </swh:create_origin>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -534,6 +564,9 @@ _parameters3 = [
                     <swh:reference>
                         <swh:origin url="http://example.org" />
                     </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -562,6 +595,9 @@ _parameters3 = [
                     <swh:reference>
                         <swh:origin url="http://example.org" />
                     </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -588,6 +624,9 @@ _parameters3 = [
                         <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
                         <swh:origin url="http://example.org" />
                     </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -610,6 +649,9 @@ _parameters3 = [
                         <swh:origin url="http://example.org" />
                         <swh:origin url="http://example.org" />
                     </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,
@@ -632,6 +674,9 @@ _parameters3 = [
                         <swh:origin url="http://example.org" />
                         <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
                     </swh:reference>
+                    <swh:metadata-provenance>
+                        <schema:url>some-metadata-provenance-url</schema:url>
+                    </swh:metadata-provenance>
                 </swh:deposit>
             </entry>
             """,

@@ -108,7 +108,7 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
             detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
 
     if detail:
-        return False, {"metadata": detail}
+        return False, {"metadata": detail + suggested_fields}
 
     if suggested_fields:  # it's fine but warn about missing suggested fields
         return True, {"metadata": suggested_fields}
