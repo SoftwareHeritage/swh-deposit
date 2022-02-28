@@ -9,7 +9,6 @@ from xml.etree import ElementTree
 
 import iso8601
 
-from swh.deposit.errors import FORBIDDEN, DepositError
 from swh.model.exceptions import ValidationError
 from swh.model.model import TimestampWithTimezone
 from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
@@ -256,16 +255,3 @@ def to_header_link(link: str, link_name: str) -> str:
 
     """
     return f'<{link}>; rel="{link_name}"'
-
-
-def check_url_match_provider(url: str, provider_url: str) -> None:
-    """Check url matches the provider url.
-
-    Raises DepositError in case of mismatch
-
-    """
-    provider_url = provider_url.rstrip("/") + "/"
-    if not url.startswith(provider_url):
-        raise DepositError(
-            FORBIDDEN, f"URL mismatch: {url} must start with {provider_url}",
-        )

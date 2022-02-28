@@ -24,14 +24,13 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.checks import check_metadata, check_url_match_provider
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import DEPOSIT_METADATA_ONLY, Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.utils import (
     NAMESPACES,
-    check_url_match_provider,
     compute_metadata_context,
     parse_swh_metadata_provenance,
 )
