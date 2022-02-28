@@ -180,6 +180,20 @@ _parameters1 = [
             """,
         ),
         (
+            "author-two-names",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
             "codemeta-affiliation",
             f"""\
             <entry {XMLNS}>
@@ -275,6 +289,18 @@ _parameters1 = [
                         <codemeta:name>University 2</codemeta:name>
                     </codemeta:affiliation>
                 </codemeta:contributor>
+                <codemeta:maintainer>
+                    <codemeta:name>A Maintainer</codemeta:name>
+                    <codemeta:affiliation>
+                        <codemeta:name>University 3</codemeta:name>
+                    </codemeta:affiliation>
+                </codemeta:maintainer>
+                <codemeta:copyrightHolder>
+                    <codemeta:name>University 3</codemeta:name>
+                </codemeta:copyrightHolder>
+                <codemeta:creator>
+                    <codemeta:name>A Maintainer</codemeta:name>
+                </codemeta:creator>
                 <codemeta:applicationCategory>something</codemeta:applicationCategory>
                 <codemeta:applicationSubCategory>something else</codemeta:applicationSubCategory>
                 <codemeta:installUrl>http://example.org/</codemeta:installUrl>
@@ -510,6 +536,28 @@ _parameters3 = [
                 {
                     "summary": ".*Tag '?codemeta:name'? expected.*",
                     "fields": ["codemeta:contributor"],
+                },
+            ],
+        ),
+        (
+            "maintainer-with-no-name",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>should allow anything here</codemeta:name>
+                </codemeta:author>
+                <codemeta:maintainer>
+                    <schema:unknown-tag>abc</schema:unknown-tag>
+                </codemeta:maintainer>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Tag '?codemeta:name'? expected.*",
+                    "fields": ["codemeta:maintainer"],
                 },
             ],
         ),

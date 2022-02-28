@@ -20,10 +20,11 @@
     <xsd:union memberTypes="xsd:date xsd:dateTime"/>
   </xsd:simpleType>
 
-  <xsd:element name="author" type="codemeta:PersonOrOrganization">
-  </xsd:element>
-  <xsd:element name="contributor" type="codemeta:PersonOrOrganization">
-  </xsd:element>
+  <xsd:element name="author" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="contributor" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="copyrightHolder" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="creator" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="maintainer" type="codemeta:PersonOrOrganization" />
 
   <xsd:complexType name="PersonOrOrganization">
     <!-- Allows anything, but at least <codemeta:name> should be present.
