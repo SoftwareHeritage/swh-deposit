@@ -6,6 +6,7 @@
 # disable flake8 on this file because of line length
 # flake8: noqa
 
+import pprint
 import re
 import textwrap
 from typing import Any, Dict
@@ -243,7 +244,7 @@ _parameters1 = [
 )
 def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
     actual_check, detail = check_metadata(ElementTree.fromstring(metadata_ok))
-    assert actual_check is True, f"Unexpected result: {detail}"
+    assert actual_check is True, f"Unexpected result:\n{pprint.pformat(detail)}"
     if "swh:deposit" in metadata_ok:
         # no missing suggested field
         assert detail is None
