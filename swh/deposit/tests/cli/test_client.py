@@ -179,7 +179,7 @@ def test_cli_client_generate_metadata_ok(slug):
         "deposit-client",
         "project-name",
         authors=["some", "authors"],
-        external_id="external-id",
+        external_id="http://example.org/external-id",
         create_origin="origin-url",
         metadata_provenance_url="meta-prov-url",
     )
@@ -199,7 +199,7 @@ def test_cli_client_generate_metadata_ok(slug):
     )
     assert (
         actual_metadata.findtext("codemeta:identifier", namespaces=NAMESPACES)
-        == "external-id"
+        == "http://example.org/external-id"
     )
     authors = actual_metadata.findall(
         "codemeta:author/codemeta:name", namespaces=NAMESPACES

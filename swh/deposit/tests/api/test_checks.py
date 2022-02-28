@@ -157,6 +157,7 @@ _parameters1 = [
                 <codemeta:datePublished>2020-12-21</codemeta:datePublished>
                 <codemeta:dateCreated>2020-12-21</codemeta:dateCreated>
                 <codemeta:dateModified>2020-12-25</codemeta:dateModified>
+                <codemeta:embargoDate>2020-12-25</codemeta:embargoDate>
                 {PROVENANCE_XML}
             </entry>
             """,
@@ -248,6 +249,45 @@ _parameters1 = [
                         <schema:url>some-metadata-provenance-url</schema:url>
                     </swh:metadata-provenance>
                 </swh:deposit>
+            </entry>
+            """,
+        ),
+        (
+            # a full example with every tag we know
+            "codemeta-full",
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <name>foo</name>
+                <author>someone</author>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                    <codemeta:id>http://example.org/~theauthor/</codemeta:id>
+                    <codemeta:email>author@example.org</codemeta:email>
+                    <codemeta:affiliation>
+                        <codemeta:name>University 1</codemeta:name>
+                    </codemeta:affiliation>
+                    <codemeta:identifier>https://sandbox.orcid.org/0000-0002-9227-8514</codemeta:identifier>
+                </codemeta:author>
+                <codemeta:contributor>
+                    <codemeta:name>A Contributor</codemeta:name>
+                    <codemeta:affiliation>
+                        <codemeta:name>University 2</codemeta:name>
+                    </codemeta:affiliation>
+                </codemeta:contributor>
+                <codemeta:applicationCategory>something</codemeta:applicationCategory>
+                <codemeta:applicationSubCategory>something else</codemeta:applicationSubCategory>
+                <codemeta:installUrl>http://example.org/</codemeta:installUrl>
+                <codemeta:releaseNotes>Blah blah</codemeta:releaseNotes>
+                <codemeta:softwareVersion>1.0.0</codemeta:softwareVersion>
+                <codemeta:version>1.0.0</codemeta:version>
+                <codemeta:keywords>kw1</codemeta:keywords>
+                <codemeta:keywords>kw2</codemeta:keywords>
+                <codemeta:description>Blah blah</codemeta:description>
+                <codemeta:url>http://example.org/</codemeta:url>
+                <codemeta:issueTracker>http://example.org/</codemeta:issueTracker>
+                <codemeta:readme>http://example.org/</codemeta:readme>
+                {PROVENANCE_XML}
             </entry>
             """,
         ),
@@ -452,6 +492,110 @@ _parameters3 = [
             ],
         ),
         (
+            "contributor-with-no-name",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>should allow anything here</codemeta:name>
+                </codemeta:author>
+                <codemeta:contributor>
+                    <schema:unknown-tag>abc</schema:unknown-tag>
+                </codemeta:contributor>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Tag '?codemeta:name'? expected.*",
+                    "fields": ["codemeta:contributor"],
+                },
+            ],
+        ),
+        (
+            "id-is-not-url",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                    <codemeta:id>http://not a url/</codemeta:id>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: 'http://not a url/' is not a valid URI.*",
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
+            "identifier-is-invalid-url",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                    <codemeta:identifier>http://[invalid-url/</codemeta:identifier>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": (
+                        r".*Reason: 'http://\[invalid-url/' is not a valid URI.*"
+                    ),
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
+            "identifier-is-not-url",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                    <codemeta:identifier>http://not a url/</codemeta:identifier>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: 'http://not a url/' is not a valid URI.*",
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
+            "identifier-is-not-url2",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                    <codemeta:identifier>not a url</codemeta:identifier>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: 'not a url' is not an absolute URI.*",
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
             "invalid-dates",
             f"""\
             <entry {XMLNS}>
@@ -491,6 +635,25 @@ _parameters3 = [
                 {
                     "summary": ".*Reason: invalid value '2020-12-aa'.*",
                     "fields": ["codemeta:dateModified"],
+                },
+            ],
+        ),
+        (
+            "invalid-embargoDate",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <external_identifier>someid</external_identifier>
+                <title>bar</title>
+                <author>no one</author>
+                <codemeta:embargoDate>2022-02-28T12:00:00</codemeta:embargoDate>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Invalid datetime string '2022-02-28T12:00:00'.*",
+                    "fields": ["codemeta:embargoDate"],
                 },
             ],
         ),

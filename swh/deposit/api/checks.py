@@ -17,6 +17,7 @@ Suggested fields:
 import dataclasses
 import functools
 from typing import Dict, Optional, Tuple
+import urllib
 from xml.etree import ElementTree
 
 import pkg_resources
@@ -30,6 +31,41 @@ INVALID_DATE_FORMAT = "Invalid date format"
 
 SUGGESTED_FIELDS_MISSING = "Suggested fields are missing"
 METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
+
+
+def extra_validator(element, xsd_element):
+    """Performs extra checks on Atom elements that cannot be implemented purely
+    within XML Schema.
+
+    For now, this only checks URIs are absolute."""
+    type_name = xsd_element.type.name
+    if type_name == "{http://www.w3.org/2001/XMLSchema}anyURI":
+        # Check their URI is absolute.
+        # This could technically be implemented in the schema like this:
+        #     <xsd:simpleType name="URL">
+        #       <xsd:restriction base="xsd:anyURI">
+        #         <!-- https://datatracker.ietf.org/doc/html/rfc2396#section-3.1 -->
+        #         <xsd:pattern value="[a-zA-Z][a-zA-Z0-9+.-]*:.+" />
+        #       </xsd:restriction>
+        #     </xsd:simpleType>
+        # However, this would give an unreadable error, so we implement it here
+        # in Python instead.
+        try:
+            url = urllib.parse.urlparse(element.text)
+        except ValueError:
+            raise xmlschema.XMLSchemaValidationError(
+                xsd_element, element, f"{element.text!r} is not a valid URI",
+            ) from None
+        else:
+            if not url.scheme or not url.netloc:
+                raise xmlschema.XMLSchemaValidationError(
+                    xsd_element, element, f"{element.text!r} is not an absolute URI",
+                )
+            elif " " in url.netloc:
+                # urllib is a little too permissive...
+                raise xmlschema.XMLSchemaValidationError(
+                    xsd_element, element, f"{element.text!r} is not a valid URI",
+                )
 
 
 @dataclasses.dataclass
@@ -90,7 +126,7 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
     deposit_elt = metadata.find("swh:deposit", namespaces=NAMESPACES)
     if deposit_elt:
         try:
-            schemas().swh.validate(deposit_elt)
+            schemas().swh.validate(deposit_elt, extra_validator=extra_validator)
         except xmlschema.exceptions.XMLSchemaException as e:
             return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
 
@@ -103,7 +139,7 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
             # Tag is not specified in the schema, don't validate it
             continue
         try:
-            schemas().codemeta.validate(child)
+            schemas().codemeta.validate(child, extra_validator=extra_validator)
         except xmlschema.exceptions.XMLSchemaException as e:
             detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
 

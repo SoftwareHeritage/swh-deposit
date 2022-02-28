@@ -7,11 +7,14 @@
   <!-- This is a non-exhaustive schema used to find likely errors in XML-encoded
        Codemeta documents -->
 
+  <xsd:element name="id" type="xsd:anyURI" />
+
   <!-- technically, only Date is allowed for datePublished; but we allow DateTime
        for backward compatibility with old swh-deposit versions -->
   <xsd:element name="datePublished" type="codemeta:DateOrDateTime" />
   <xsd:element name="dateCreated" type="codemeta:DateOrDateTime" />
   <xsd:element name="dateModified" type="codemeta:DateOrDateTime" />
+  <xsd:element name="embargoDate" type="xsd:date" />
 
   <xsd:simpleType name="DateOrDateTime">
     <xsd:union memberTypes="xsd:date xsd:dateTime"/>
@@ -38,4 +41,20 @@
   <xsd:element name="affiliation" type="codemeta:PersonOrOrganization" />
 
   <xsd:element name="name" type="xsd:string" />
+  <xsd:element name="givenName" type="xsd:string" />
+  <xsd:element name="familyName" type="xsd:string" />
+  <xsd:element name="email" type="xsd:string" />
+  <xsd:element name="identifier" type="xsd:anyURI" />
+
+  <xsd:element name="applicationCategory" type="xsd:string" />
+  <xsd:element name="applicationSubCategory" type="xsd:string" />
+  <xsd:element name="installUrl" type="xsd:anyURI" />
+  <xsd:element name="releaseNotes" type="xsd:string" />
+  <xsd:element name="softwareVersion" type="xsd:string" />
+  <xsd:element name="version" type="xsd:string" />
+  <xsd:element name="keywords" type="xsd:string" />
+  <xsd:element name="description" type="xsd:string" />
+  <xsd:element name="url" type="xsd:anyURI" />
+  <xsd:element name="issueTracker" type="xsd:anyURI" />
+  <xsd:element name="readme" type="xsd:anyURI" />
 </xsd:schema>
