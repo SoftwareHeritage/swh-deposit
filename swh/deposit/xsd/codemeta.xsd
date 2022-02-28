@@ -32,5 +32,10 @@
     </xsd:all>
   </xsd:complexType>
 
+  <!-- note that codemeta:affiliation expects Organization as value,
+       but https://codemeta.github.io/terms/ mistakenly documents it as Text.
+       See https://github.com/codemeta/codemeta/pull/239 -->
+  <xsd:element name="affiliation" type="codemeta:PersonOrOrganization" />
+
   <xsd:element name="name" type="xsd:string" />
 </xsd:schema>

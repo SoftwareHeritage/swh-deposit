@@ -179,6 +179,22 @@ _parameters1 = [
             """,
         ),
         (
+            "codemeta-affiliation",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:affiliation>
+                        <codemeta:name>My Orga</codemeta:name>
+                    </codemeta:affiliation>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
             "swh:add_to_origin",
             f"""\
             <entry {XMLNS}>
@@ -376,6 +392,26 @@ _parameters3 = [
                 {
                     "summary": ".*Reason: a simple content element can't have child elements.*",
                     "fields": ["codemeta:name"],
+                },
+            ],
+        ),
+        (
+            "chardata-in-affiliation",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:affiliation>My Orga</codemeta:affiliation>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: character data between child elements.*",
+                    "fields": ["codemeta:author"],
                 },
             ],
         ),
