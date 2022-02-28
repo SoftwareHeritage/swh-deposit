@@ -38,9 +38,10 @@ PROVENANCE_XML = """
                 </swh:deposit>"""
 
 _parameters1 = [
-    textwrap.dedent(metadata_ok)
-    for (metadata_ok,) in [
+    pytest.param(textwrap.dedent(metadata_ok), id=id_)
+    for (id_, metadata_ok,) in [
         (
+            "atom-only-with-name",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -52,6 +53,18 @@ _parameters1 = [
             """,
         ),
         (
+            "atom-only-with-title",
+            f"""\
+            <entry {XMLNS}>
+                <url>something</url>
+                <external_identifier>something-else</external_identifier>
+                <title>bar</title>
+                <author>someone</author>
+            </entry>
+            """,
+        ),
+        (
+            "atom-only-and-external_identifier",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -63,6 +76,7 @@ _parameters1 = [
             """,
         ),
         (
+            "atom-and-codemeta-minimal",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -75,6 +89,21 @@ _parameters1 = [
             """,
         ),
         (
+            "unknown-codemeta-inner-element-after",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:unknown-tag>should allow anything here</codemeta:unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            "unknown-schema-inner-element-after",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -88,6 +117,7 @@ _parameters1 = [
             """,
         ),
         (
+            "unknown-schema-inner-element-before",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -101,6 +131,7 @@ _parameters1 = [
             """,
         ),
         (
+            "unknown-schema-inner-element-before-and-after",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -115,6 +146,7 @@ _parameters1 = [
             """,
         ),
         (
+            "codemeta-dates",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -129,6 +161,7 @@ _parameters1 = [
             """,
         ),
         (
+            "codemeta-datetimes",
             # technically, only Date is allowed for datePublished; but we allow DateTime
             # for backward compatibility with old swh-deposit versions
             f"""\
@@ -145,16 +178,7 @@ _parameters1 = [
             """,
         ),
         (
-            f"""\
-            <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
-                <title>bar</title>
-                <author>someone</author>
-            </entry>
-            """,
-        ),
-        (
+            "swh:add_to_origin",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -173,6 +197,7 @@ _parameters1 = [
             """,
         ),
         (
+            "swh:reference-origin",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -191,6 +216,7 @@ _parameters1 = [
             """,
         ),
         (
+            "swh:reference-object",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -234,9 +260,10 @@ def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
 
 
 _parameters2 = [
-    (textwrap.dedent(metadata_ko), expected_summary)
-    for (metadata_ko, expected_summary) in [
+    pytest.param(textwrap.dedent(metadata_ko), expected_summary, id=id_)
+    for (id_, metadata_ko, expected_summary) in [
         (
+            "no-name-or-title",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -251,6 +278,7 @@ _parameters2 = [
             },
         ),
         (
+            "no-author",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -265,6 +293,7 @@ _parameters2 = [
             },
         ),
         (
+            "wrong-title-namespace",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -280,6 +309,7 @@ _parameters2 = [
             },
         ),
         (
+            "wrong-author-namespace",
             f"""\
             <entry xmlns:atom="http://www.w3.org/2005/Atom"
                    xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
@@ -298,6 +328,7 @@ _parameters2 = [
             },
         ),
         (
+            "wrong-author-tag",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -326,9 +357,10 @@ def test_api_checks_check_metadata_ko(
 
 
 _parameters3 = [
-    (textwrap.dedent(metadata_ko), expected_summary)
-    for (metadata_ko, expected_summary) in [
+    pytest.param(textwrap.dedent(metadata_ko), expected_summary, id=id_)
+    for (id_, metadata_ko, expected_summary) in [
         (
+            "child-element-in-name",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -347,6 +379,7 @@ _parameters3 = [
             ],
         ),
         (
+            "chardata-in-author",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -363,6 +396,7 @@ _parameters3 = [
             ],
         ),
         (
+            "author-with-no-name",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -381,6 +415,7 @@ _parameters3 = [
             ],
         ),
         (
+            "invalid-dates",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -404,29 +439,7 @@ _parameters3 = [
             ],
         ),
         (
-            f"""\
-            <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>someid</external_identifier>
-                <title>bar</title>
-                <author>no one</author>
-                <codemeta:datePublished>2020-aa-21</codemeta:datePublished>
-                <codemeta:dateCreated>2020-12-bb</codemeta:dateCreated>
-                {PROVENANCE_XML}
-            </entry>
-            """,
-            [
-                {
-                    "summary": ".*Reason: invalid value '2020-aa-21'.*",
-                    "fields": ["codemeta:datePublished"],
-                },
-                {
-                    "summary": ".*Reason: invalid value '2020-12-bb'.*",
-                    "fields": ["codemeta:dateCreated"],
-                },
-            ],
-        ),
-        (
+            "invalid-dateModified",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -445,6 +458,7 @@ _parameters3 = [
             ],
         ),
         (
+            "error-and-missing-provenance",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -464,6 +478,7 @@ _parameters3 = [
             ],
         ),
         (
+            "unknown-tag-in-swh-namespace",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -491,6 +506,7 @@ _parameters3 = [
             ],
         ),
         (
+            "multiple-swh:add_to_origin",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -520,6 +536,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:add_to_origin-and-swh:create_origin",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -551,6 +568,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:reference-and-swh:create_origin",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -582,6 +600,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:add_to_origin-and-swh:reference",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -613,6 +632,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:reference-two-children",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -638,6 +658,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:reference-two-origins",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -663,6 +684,7 @@ _parameters3 = [
             ],
         ),
         (
+            "swh:reference-two-objects",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
@@ -671,7 +693,7 @@ _parameters3 = [
                 <author>someone</author>
                 <swh:deposit>
                     <swh:reference>
-                        <swh:origin url="http://example.org" />
+                        <swh:object swhid="swh:1:dir:1111111111111111111111111111111111111111" />
                         <swh:object swhid="swh:1:dir:0000000000000000000000000000000000000000" />
                     </swh:reference>
                     <swh:metadata-provenance>
