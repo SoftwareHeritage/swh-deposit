@@ -1,8 +1,11 @@
-swh-deposit (0.17.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (0.17.1-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.17.1     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2022-03-02 17:04:34 +0100)
+  * Upstream changes:     - v0.17.1     - * Move
+    check_url_match_provider to api.checks instead of utils
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 24 Feb 2022 11:26:29 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 02 Mar 2022 16:11:00 +0000
 
 swh-deposit (0.17.0-1~swh1) unstable-swh; urgency=medium
 
