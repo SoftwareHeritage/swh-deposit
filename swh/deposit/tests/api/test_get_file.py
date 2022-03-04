@@ -5,6 +5,8 @@
 
 """Tests 'GET File-IRI'."""
 
+import datetime
+
 from django.urls import reverse_lazy as reverse
 from rest_framework import status
 
@@ -20,6 +22,7 @@ def test_api_deposit_content_nominal(
     """Retrieve information on deposit should return 200 response
 
     """
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
 
     for deposit in [complete_deposit, partial_deposit_only_metadata]:
         url = reverse(CONT_FILE_IRI, args=[deposit.collection.name, deposit.id])
@@ -36,6 +39,13 @@ def test_api_deposit_content_nominal(
         assert (
             actual_deposit.findtext("swh:deposit_status_detail", namespaces=NAMESPACES)
             == DEPOSIT_STATUS_DETAIL[deposit.status]
+        )
+        assert (
+            now - datetime.timedelta(hours=1)
+            <= datetime.datetime.fromisoformat(
+                actual_deposit.findtext("swh:deposit_date", namespaces=NAMESPACES)
+            )
+            <= now
         )
 
 

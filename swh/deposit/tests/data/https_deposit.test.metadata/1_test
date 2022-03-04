@@ -4,13 +4,13 @@
        xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit"
        >
     <sd:deposit_id>666</sd:deposit_id>
-    <sd:deposit_date>Oct. 8, 2020, 4:57 p.m.</sd:deposit_date>
+    <sd:deposit_date>2020-10-08T13:52:34.509655Z</sd:deposit_date>
     <sd:deposit_archive>hardcoded_sample_archive_path</sd:deposit_archive>
     <sd:deposit_status>partial</sd:deposit_status>
 
     <!-- deprecated tags: -->
     <deposit_id>666</deposit_id>
-    <deposit_date>Oct. 8, 2020, 4:57 p.m.</deposit_date>
+    <deposit_date>2020-10-08T13:52:34.509655Z</deposit_date>
     <deposit_archive>hardcoded_sample_archive_path</deposit_archive>
     <deposit_status>partial</deposit_status>
 
