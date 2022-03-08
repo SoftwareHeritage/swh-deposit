@@ -16,8 +16,18 @@
   <xsd:element name="dateModified" type="codemeta:DateOrDateTime" />
   <xsd:element name="embargoDate" type="xsd:date" />
 
+  <xsd:simpleType name="Date">
+    <!-- schema:Date allows truncated formats, but XML Schema primitive types
+         need to be joined to approximate it:
+         https://www.w3.org/TR/xmlschema-2/#truncatedformats
+         Note that this is stricter than ISO8601. For example, it does not
+         allow week dates or ordinal days.
+      -->
+    <xsd:union memberTypes="xsd:date xsd:gYearMonth xsd:gYear"/>
+  </xsd:simpleType>
+
   <xsd:simpleType name="DateOrDateTime">
-    <xsd:union memberTypes="xsd:date xsd:dateTime"/>
+    <xsd:union memberTypes="codemeta:Date xsd:dateTime"/>
   </xsd:simpleType>
 
   <xsd:element name="author" type="codemeta:PersonOrOrganization" />

@@ -163,6 +163,38 @@ _parameters1 = [
             """,
         ),
         (
+            "codemeta-date-month",
+            # Allowed by ISO8601, therefore by schema:Date, but not by xsd:date
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <external_identifier>some id</external_identifier>
+                <name>nar</name>
+                <author>no one</author>
+                <codemeta:datePublished>2020-12</codemeta:datePublished>
+                <codemeta:dateCreated>2020-12</codemeta:dateCreated>
+                <codemeta:dateModified>2020-12</codemeta:dateModified>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            "codemeta-date-year",
+            # Allowed by ISO8601, therefore by schema:Date, but not by xsd:date
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <external_identifier>some id</external_identifier>
+                <name>nar</name>
+                <author>no one</author>
+                <codemeta:datePublished>2020</codemeta:datePublished>
+                <codemeta:dateCreated>2020</codemeta:dateCreated>
+                <codemeta:dateModified>2020</codemeta:dateModified>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
             "codemeta-datetimes",
             # technically, only Date is allowed for datePublished; but we allow DateTime
             # for backward compatibility with old swh-deposit versions
