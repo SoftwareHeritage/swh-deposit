@@ -48,8 +48,9 @@
 
   <!-- note that codemeta:affiliation expects Organization as value,
        but https://codemeta.github.io/terms/ mistakenly documents it as Text.
-       See https://github.com/codemeta/codemeta/pull/239 -->
-  <xsd:element name="affiliation" type="codemeta:PersonOrOrganization" />
+       See https://github.com/codemeta/codemeta/pull/239
+       Therefore, more custom checks are implemented in swh/deposit/api/checks.py
+       in order to allow either. -->
 
   <xsd:element name="name" type="xsd:string" />
   <xsd:element name="givenName" type="xsd:string" />

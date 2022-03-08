@@ -32,6 +32,8 @@ INVALID_DATE_FORMAT = "Invalid date format"
 SUGGESTED_FIELDS_MISSING = "Suggested fields are missing"
 METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 
+AFFILIATION_NO_NAME = "Reason: affiliation does not have a <codemeta:name> element"
+
 
 def extra_validator(element, xsd_element):
     """Performs extra checks on Atom elements that cannot be implemented purely
@@ -142,6 +144,44 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
             schemas().codemeta.validate(child, extra_validator=extra_validator)
         except xmlschema.exceptions.XMLSchemaException as e:
             detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
+        else:
+            # Manually validate <codemeta:affiliation>. Unfortunately, this cannot be
+            # validated by codemeta.xsd, because Codemeta has conflicting requirements:
+            # 1. https://codemeta.github.io/terms/ requires it to be Text (represented
+            #    by simple content), but
+            # 2. https://doi.org/10.5063/SCHEMA/CODEMETA-2.0 requires it to be an
+            #    Organization (represented by complex content)
+            # And this is (legitimately) not representable in XML Schema.
+            #
+            # See https://github.com/codemeta/codemeta/pull/239 for a discussion about
+            # this issue.
+            for affiliation in child.findall(
+                "codemeta:affiliation", namespaces=NAMESPACES
+            ):
+                if len(affiliation) > 0:
+                    # This is a complex element (as required by
+                    # https://codemeta.github.io/terms/), then we want to make sure
+                    # there is at least a name.
+                    if not affiliation.findtext("codemeta:name", namespaces=NAMESPACES):
+                        detail.append(
+                            {
+                                "fields": [schema_element.prefixed_name],
+                                "summary": AFFILIATION_NO_NAME,
+                            }
+                        )
+                        break
+                else:
+                    # This is a simple element (as required by
+                    # https://doi.org/10.5063/SCHEMA/CODEMETA-2.0)
+                    if affiliation.text is None or not affiliation.text.strip():
+                        # Completely empty element
+                        detail.append(
+                            {
+                                "fields": [schema_element.prefixed_name],
+                                "summary": AFFILIATION_NO_NAME,
+                            }
+                        )
+                        break
 
     if detail:
         return False, {"metadata": detail + suggested_fields}

@@ -226,7 +226,9 @@ _parameters1 = [
             """,
         ),
         (
-            "codemeta-affiliation",
+            # Required by codemeta.jsonld, but forbidden by
+            # https://codemeta.github.io/terms/
+            "element-in--affiliation",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
@@ -236,6 +238,22 @@ _parameters1 = [
                     <codemeta:affiliation>
                         <codemeta:name>My Orga</codemeta:name>
                     </codemeta:affiliation>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            # Forbidden by codemeta.jsonld, but required by
+            # https://codemeta.github.io/terms/
+            "chardata-in-affiliation",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:affiliation>My Orga</codemeta:affiliation>
                 </codemeta:author>
                 {PROVENANCE_XML}
             </entry>
@@ -494,21 +512,44 @@ _parameters3 = [
             ],
         ),
         (
-            "chardata-in-affiliation",
+            "affiliation-with-no-name",
             f"""\
             <entry {XMLNS}>
                 <url>some url</url>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
-                    <codemeta:affiliation>My Orga</codemeta:affiliation>
+                    <codemeta:affiliation>
+                        <codemeta:url>http://example.org</codemeta:url>
+                    </codemeta:affiliation>
                 </codemeta:author>
                 {PROVENANCE_XML}
             </entry>
             """,
             [
                 {
-                    "summary": ".*Reason: character data between child elements.*",
+                    "summary": ".*Reason: affiliation does not have a <codemeta:name> element.*",
+                    "fields": ["codemeta:author"],
+                },
+            ],
+        ),
+        (
+            "empty-affiliation",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:affiliation>
+                    </codemeta:affiliation>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": ".*Reason: affiliation does not have a <codemeta:name> element.*",
                     "fields": ["codemeta:author"],
                 },
             ],
