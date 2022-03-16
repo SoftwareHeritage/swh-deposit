@@ -170,7 +170,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             author_date = commit_date = None
 
-        if deposit.parent:
+        if deposit.parent and deposit.parent.swhid:
             parent_swhid = deposit.parent.swhid
             assert parent_swhid is not None
             swhid = CoreSWHID.from_string(parent_swhid)
