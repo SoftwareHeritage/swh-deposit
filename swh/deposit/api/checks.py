@@ -16,7 +16,7 @@ Suggested fields:
 
 import dataclasses
 import functools
-from typing import Dict, Optional, Tuple
+from typing import Dict, Iterator, Optional, Tuple, cast
 import urllib
 from xml.etree import ElementTree
 
@@ -35,7 +35,10 @@ METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 AFFILIATION_NO_NAME = "Reason: affiliation does not have a <codemeta:name> element"
 
 
-def extra_validator(element, xsd_element):
+def extra_validator(
+    element: ElementTree.Element,
+    xsd_element: xmlschema.validators.elements.Xsd11Element,
+) -> Optional[Iterator[xmlschema.XMLSchemaValidationError]]:
     """Performs extra checks on Atom elements that cannot be implemented purely
     within XML Schema.
 
@@ -55,17 +58,17 @@ def extra_validator(element, xsd_element):
         try:
             url = urllib.parse.urlparse(element.text)
         except ValueError:
-            raise xmlschema.XMLSchemaValidationError(
+            yield xmlschema.XMLSchemaValidationError(
                 xsd_element, element, f"{element.text!r} is not a valid URI",
-            ) from None
+            )
         else:
             if not url.scheme or not url.netloc:
-                raise xmlschema.XMLSchemaValidationError(
+                yield xmlschema.XMLSchemaValidationError(
                     xsd_element, element, f"{element.text!r} is not an absolute URI",
                 )
             elif " " in url.netloc:
                 # urllib is a little too permissive...
-                raise xmlschema.XMLSchemaValidationError(
+                yield xmlschema.XMLSchemaValidationError(
                     xsd_element, element, f"{element.text!r} is not a valid URI",
                 )
 
@@ -128,7 +131,17 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
     deposit_elt = metadata.find("swh:deposit", namespaces=NAMESPACES)
     if deposit_elt:
         try:
-            schemas().swh.validate(deposit_elt, extra_validator=extra_validator)
+            schemas().swh.validate(
+                deposit_elt,
+                extra_validator=cast(
+                    # ExtraValidatorType is a callable with "SchemaType" as second
+                    # argument, but extra_validator() is actually passed Xsd11Element
+                    # as second argument
+                    # https://github.com/sissaschool/xmlschema/issues/291
+                    xmlschema.aliases.ExtraValidatorType,
+                    extra_validator,
+                ),
+            )
         except xmlschema.exceptions.XMLSchemaException as e:
             return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
 
@@ -141,7 +154,17 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
             # Tag is not specified in the schema, don't validate it
             continue
         try:
-            schemas().codemeta.validate(child, extra_validator=extra_validator)
+            schemas().codemeta.validate(
+                child,
+                extra_validator=cast(
+                    # ExtraValidatorType is a callable with "SchemaType" as second
+                    # argument, but extra_validator() is actually passed Xsd11Element
+                    # as second argument
+                    # https://github.com/sissaschool/xmlschema/issues/291
+                    xmlschema.aliases.ExtraValidatorType,
+                    extra_validator,
+                ),
+            )
         except xmlschema.exceptions.XMLSchemaException as e:
             detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
         else:
