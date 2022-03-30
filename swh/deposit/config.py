@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -27,6 +27,7 @@ PRIVATE_CHECK_DEPOSIT = "check-deposit"
 PRIVATE_PUT_DEPOSIT = "private-update"
 PRIVATE_GET_DEPOSIT_METADATA = "private-read"
 PRIVATE_LIST_DEPOSITS = "private-deposit-list"
+PRIVATE_LIST_DEPOSITS_DATATABLES = "private-deposit-list-datatables"
 
 ARCHIVE_KEY = "archive"
 RAW_METADATA_KEY = "raw-metadata"
