@@ -16,6 +16,7 @@ Suggested fields:
 
 import dataclasses
 import functools
+import re
 from typing import Dict, Iterator, Optional, Tuple, cast
 import urllib
 from xml.etree import ElementTree
@@ -55,22 +56,33 @@ def extra_validator(
         #     </xsd:simpleType>
         # However, this would give an unreadable error, so we implement it here
         # in Python instead.
-        try:
-            url = urllib.parse.urlparse(element.text)
-        except ValueError:
+        yield from absolute_uri_validator(element, xsd_element)
+    elif type_name == "{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}identifierType":
+        # Made-up type, that allows both absolute URIs and HAL-IDs
+        if not re.match("hal-[0-9]+", element.text or ""):
+            yield from absolute_uri_validator(element, xsd_element)
+
+
+def absolute_uri_validator(
+    element: ElementTree.Element,
+    xsd_element: xmlschema.validators.elements.Xsd11Element,
+) -> Iterator[xmlschema.XMLSchemaValidationError]:
+    try:
+        url = urllib.parse.urlparse(element.text)
+    except ValueError:
+        yield xmlschema.XMLSchemaValidationError(
+            xsd_element, element, f"{element.text!r} is not a valid URI",
+        )
+    else:
+        if not url.scheme or not url.netloc:
+            yield xmlschema.XMLSchemaValidationError(
+                xsd_element, element, f"{element.text!r} is not an absolute URI",
+            )
+        elif " " in url.netloc:
+            # urllib is a little too permissive...
             yield xmlschema.XMLSchemaValidationError(
                 xsd_element, element, f"{element.text!r} is not a valid URI",
             )
-        else:
-            if not url.scheme or not url.netloc:
-                yield xmlschema.XMLSchemaValidationError(
-                    xsd_element, element, f"{element.text!r} is not an absolute URI",
-                )
-            elif " " in url.netloc:
-                # urllib is a little too permissive...
-                yield xmlschema.XMLSchemaValidationError(
-                    xsd_element, element, f"{element.text!r} is not a valid URI",
-                )
 
 
 @dataclasses.dataclass

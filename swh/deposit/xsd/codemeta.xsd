@@ -52,11 +52,23 @@
        Therefore, more custom checks are implemented in swh/deposit/api/checks.py
        in order to allow either. -->
 
+
+  <xsd:simpleType name="halId">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="hal-[0-9]+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="identifierType">
+    <!-- CodeMeta only allows URIs, but we make an exception for HAL-IDs,
+         in order not to break backward-compatibility. -->
+    <xsd:union memberTypes="xsd:anyURI codemeta:halId"/>
+  </xsd:simpleType>
+  <xsd:element name="identifier" type="codemeta:identifierType" />
+
   <xsd:element name="name" type="xsd:string" />
   <xsd:element name="givenName" type="xsd:string" />
   <xsd:element name="familyName" type="xsd:string" />
   <xsd:element name="email" type="xsd:string" />
-  <xsd:element name="identifier" type="xsd:anyURI" />
 
   <xsd:element name="applicationCategory" type="xsd:string" />
   <xsd:element name="applicationSubCategory" type="xsd:string" />

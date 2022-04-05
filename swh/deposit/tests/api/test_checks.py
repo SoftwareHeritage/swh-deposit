@@ -147,6 +147,38 @@ _parameters1 = [
             """,
         ),
         (
+            "identifier-is-halid",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                </codemeta:author>
+                <codemeta:identifier>hal-12345</codemeta:identifier>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            "identifier-is-propertyvalue",
+            f"""\
+            <entry {XMLNS}>
+                <url>some url</url>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>The Author</codemeta:name>
+                </codemeta:author>
+                <schema:identifier>
+                    <codemeta:type>schema:PropertyValue</codemeta:type>
+                    <schema:propertyID>HAL-ID</schema:propertyID>
+                    <schema:value>hal-02527911</schema:value>
+                </schema:identifier>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
             "codemeta-dates",
             f"""\
             <entry {XMLNS}>
