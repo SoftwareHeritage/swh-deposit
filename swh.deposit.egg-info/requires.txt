@@ -9,6 +9,7 @@ django<4,>=2
 djangorestframework
 psycopg2<2.9
 setuptools
+xmlschema
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0
@@ -17,7 +18,7 @@ swh.auth[django]>=0.5.3
 swh.storage>=0.28.0
 
 [testing]
-pytest<7.0.0
+pytest
 pytest-django
 pytest-mock
 swh.scheduler[testing]
@@ -33,6 +34,7 @@ django<4,>=2
 djangorestframework
 psycopg2<2.9
 setuptools
+xmlschema
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0

@@ -29,8 +29,7 @@ class ContentAPI(APIBase):
 
         requests = DepositRequest.objects.filter(deposit=deposit)
         context = {
-            "deposit_id": deposit.id,
-            "status": deposit.status,
+            "deposit": deposit,
             "status_detail": DEPOSIT_STATUS_DETAIL[deposit.status],
             "requests": requests,
         }

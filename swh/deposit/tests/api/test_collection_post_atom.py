@@ -1,10 +1,11 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 """Tests the handling of the Atom content when doing a POST Col-IRI."""
 
+import datetime
 import textwrap
 import uuid
 import warnings
@@ -436,18 +437,27 @@ def test_post_deposit_atom_entry_initial(
     atom_entry_data = atom_dataset["entry-data0"] % origin_url
 
     # when
+    date_before = datetime.datetime.now(tz=datetime.timezone.utc)
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
         data=atom_entry_data,
         HTTP_IN_PROGRESS="false",
     )
+    date_after = datetime.datetime.now(tz=datetime.timezone.utc)
 
     # then
     assert response.status_code == status.HTTP_201_CREATED, response.content.decode()
 
     response_content = ElementTree.fromstring(response.content)
     deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
+    assert (
+        date_before
+        <= datetime.datetime.fromisoformat(
+            response_content.findtext("swh:deposit_date", namespaces=NAMESPACES)
+        )
+        <= date_after
+    )
 
     deposit = Deposit.objects.get(pk=deposit_id)
     assert deposit.collection == deposit_collection
