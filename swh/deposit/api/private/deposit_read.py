@@ -147,10 +147,8 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
                 **origin** (Dict): Information about the origin
 
-                **metadata_raw** (str): List of raw metadata received for the
+                **raw_metadata** (str): List of raw metadata received for the
                   deposit
-
-                **metadata_dict** (Dict): Deposit aggregated metadata into one dict
 
                 **provider** (Dict): the metadata provider information about the
                   deposit client
@@ -167,10 +165,14 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         if raw_metadata:
             metadata_tree = ElementTree.fromstring(raw_metadata)
             author_date, commit_date = self._parse_dates(deposit, metadata_tree)
+            release_notes_elements = metadata_tree.findall(
+                "codemeta:releaseNotes", namespaces=NAMESPACES
+            )
         else:
             author_date = commit_date = None
+            release_notes_elements = []
 
-        if deposit.parent:
+        if deposit.parent and deposit.parent.swhid:
             parent_swhid = deposit.parent.swhid
             assert parent_swhid is not None
             swhid = CoreSWHID.from_string(parent_swhid)
@@ -179,9 +181,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             parents = []
 
-        release_notes_elements = metadata_tree.findall(
-            "codemeta:releaseNotes", namespaces=NAMESPACES
-        )
         release_notes: Optional[str]
         if release_notes_elements:
             release_notes = "\n\n".join(
@@ -199,7 +198,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
                 "metadata": {},
             },
             "tool": self.tool,
-            "metadata_raw": raw_metadata,
+            "raw_metadata": raw_metadata,
             "deposit": {
                 "id": deposit.id,
                 "client": deposit.client.username,

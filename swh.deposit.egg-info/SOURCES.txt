@@ -77,7 +77,6 @@ docs/specs/metadata_example.xml
 docs/specs/protocol-reference.rst
 docs/specs/spec-loading.rst
 docs/specs/spec-meta-deposit.rst
-docs/specs/swh.xsd
 resources/deposit/server.yml
 swh/__init__.py
 swh.deposit.egg-info/PKG-INFO
@@ -186,6 +185,7 @@ swh/deposit/tests/test_client_module.py
 swh/deposit/tests/test_common.py
 swh/deposit/tests/test_gunicorn_config.py
 swh/deposit/tests/test_init.py
+swh/deposit/tests/test_migrations.py
 swh/deposit/tests/test_utils.py
 swh/deposit/tests/api/__init__.py
 swh/deposit/tests/api/conftest.py
@@ -288,4 +288,5 @@ swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_check
 swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_metadata
 swh/deposit/tests/loader/data/https_nowhere.org/1_private_test_1_raw
 swh/deposit/tests_migration/__init__.py
-swh/deposit/tests_migration/test_migrations.py
+swh/deposit/xsd/codemeta.xsd
+swh/deposit/xsd/swh.xsd

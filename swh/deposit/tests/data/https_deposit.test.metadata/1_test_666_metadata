@@ -3,13 +3,13 @@
        xmlns:dcterms="http://purl.org/dc/terms/"
        xmlns:sd="https://www.softwareheritage.org/schema/2018/deposit">
     <sd:deposit_id>666</sd:deposit_id>
-    <sd:deposit_date>Oct. 9, 2020, 8:44 p.m.</sd:deposit_date>
+    <sd:deposit_date>2020-10-08T13:52:34.509655Z</sd:deposit_date>
     <sd:deposit_archive>something</sd:deposit_archive>
     <sd:deposit_status>deposited</sd:deposit_status>
 
     <!-- Deprecated tags: -->
     <deposit_id>666</deposit_id>
-    <deposit_date>Oct. 9, 2020, 8:44 p.m.</deposit_date>
+    <deposit_date>2020-10-08T13:52:34.509655Z</deposit_date>
     <deposit_archive>something</deposit_archive>
     <deposit_status>deposited</deposit_status>
 

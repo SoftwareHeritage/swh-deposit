@@ -234,7 +234,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
 
     """
     # to avoid loading too early django namespaces
-    from datetime import datetime
+    import datetime
 
     from swh.deposit.config import (
         DEPOSIT_STATUS_LOAD_FAILURE,
@@ -281,5 +281,7 @@ def adm_deposit_reschedule(ctx, deposit_id):
     # Schedule back the deposit loading task
     scheduler = APIConfig().scheduler
     scheduler.set_status_tasks(
-        [task_id], status="next_run_not_scheduled", next_run=datetime.now()
+        [task_id],
+        status="next_run_not_scheduled",
+        next_run=datetime.datetime.now(tz=datetime.timezone.utc),
     )

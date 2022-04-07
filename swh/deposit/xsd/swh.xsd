@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+            targetNamespace="https://www.softwareheritage.org/schema/2018/deposit"
+            xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+            elementFormDefault="qualified"
+            >
+  <xsd:element name="deposit">
+    <xsd:complexType>
+      <xsd:all>
+        <!-- code deposit on a new origin -->
+        <xsd:element name="create_origin" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="swh:origin" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+        <!-- code deposit on an origin already created by a previous deposit -->
+        <xsd:element name="add_to_origin" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="swh:origin" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+        <!-- metadata-only deposit -->
+        <xsd:element name="reference" minOccurs="0">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element ref="swh:origin" />
+              <xsd:element ref="swh:object" />
+            </xsd:choice>
+          </xsd:complexType>
+        </xsd:element>
+
+        <xsd:element name="metadata-provenance" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
+      </xsd:all>
+
+      <!-- "create_origin", "add_to_origin", and "reference" are mutually exclusive. -->
+      <xsd:assert
+        id="swhdeposit-incompatible-create-and-add"
+        test="not(swh:create_origin) or not(swh:add_to_origin)"
+        vc:minVersion="1.1"
+        />
+      <xsd:assert
+        id="swhdeposit-incompatible-create-and-reference"
+        test="not(swh:create_origin) or not(swh:reference)"
+        vc:minVersion="1.1"
+        />
+      <xsd:assert
+        id="swhdeposit-incompatible-add-and-reference"
+        test="not(swh:add_to_origin) or not(swh:reference)"
+        vc:minVersion="1.1"
+        />
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references a SWHID -->
+  <xsd:element name="object">
+    <xsd:complexType>
+      <xsd:attribute type="xsd:string" name="swhid"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- references an origin by URL -->
+  <xsd:element name="origin">
+    <xsd:complexType>
+      <xsd:attribute type="xsd:string" name="url"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
