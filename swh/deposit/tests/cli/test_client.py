@@ -1011,10 +1011,10 @@ def test_cli_deposit_warning_missing_origin(
     # <swh:origin_to_add> are provided, and <swh:metadata-provenance-url> is always
     # provided.
 
-    metadata_raw = atom_dataset[metadata_entry_key] % "some-url"
+    raw_metadata = atom_dataset[metadata_entry_key] % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-origin-tag-to-deposit.xml")
     with open(metadata_path, "w") as f:
-        f.write(metadata_raw)
+        f.write(raw_metadata)
 
     # fmt: off
     cli_runner.invoke(
@@ -1041,10 +1041,10 @@ def test_cli_deposit_warning_missing_provenance_url(
 
     """
     atom_template = atom_dataset["entry-data-with-add-to-origin-no-prov"]
-    metadata_raw = atom_template % "some-url"
+    raw_metadata = atom_template % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-missing-prov-url.xml")
     with open(metadata_path, "w") as f:
-        f.write(metadata_raw)
+        f.write(raw_metadata)
 
     # fmt: off
     cli_runner.invoke(

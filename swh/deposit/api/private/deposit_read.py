@@ -147,10 +147,8 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
 
                 **origin** (Dict): Information about the origin
 
-                **metadata_raw** (str): List of raw metadata received for the
+                **raw_metadata** (str): List of raw metadata received for the
                   deposit
-
-                **metadata_dict** (Dict): Deposit aggregated metadata into one dict
 
                 **provider** (Dict): the metadata provider information about the
                   deposit client
@@ -199,7 +197,7 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
                 "metadata": {},
             },
             "tool": self.tool,
-            "metadata_raw": raw_metadata,
+            "raw_metadata": raw_metadata,
             "deposit": {
                 "id": deposit.id,
                 "client": deposit.client.username,

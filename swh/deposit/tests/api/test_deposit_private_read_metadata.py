@@ -61,7 +61,7 @@ def test_read_metadata(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_raw,
+            "raw_metadata": metadata_xml_raw,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -128,7 +128,7 @@ def test_read_metadata_revision_with_parent(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_raw,
+            "raw_metadata": metadata_xml_raw,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -187,7 +187,7 @@ def test_read_metadata_3(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
-            "metadata_raw": metadata_xml_raw,
+            "raw_metadata": metadata_xml_raw,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -244,7 +244,7 @@ def test_read_metadata_4(
 
         assert actual_data == {
             "origin": {"type": "deposit", "url": None,},
-            "metadata_raw": codemeta_entry_data,
+            "raw_metadata": codemeta_entry_data,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -314,7 +314,7 @@ def test_read_metadata_5(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/hal-01243065",
             },
-            "metadata_raw": codemeta_entry_data,
+            "raw_metadata": codemeta_entry_data,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
@@ -391,7 +391,7 @@ def test_read_metadata_multiple_release_notes(
                 "type": "deposit",
                 "url": "https://hal-test.archives-ouvertes.fr/some-external-id",
             },
-            "metadata_raw": metadata_xml_raw,
+            "raw_metadata": metadata_xml_raw,
             "provider": {
                 "metadata": {},
                 "provider_name": "",
