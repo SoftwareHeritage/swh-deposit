@@ -6,6 +6,7 @@ recursive-include swh/deposit/fixtures *
 recursive-include swh/deposit/templates *
 recursive-include swh/deposit/tests/data *
 recursive-include swh/deposit/tests/*/data *
+recursive-include swh/deposit/xsd *
 recursive-include swh py.typed
 include tox.ini
 include pytest.ini

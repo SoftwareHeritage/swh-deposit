@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+            xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+            elementFormDefault="qualified"
+            >
+  <!-- This is a non-exhaustive schema used to find likely errors in XML-encoded
+       Codemeta documents -->
+
+  <xsd:element name="id" type="xsd:anyURI" />
+
+  <!-- technically, only Date is allowed for datePublished; but we allow DateTime
+       for backward compatibility with old swh-deposit versions -->
+  <xsd:element name="datePublished" type="codemeta:DateOrDateTime" />
+  <xsd:element name="dateCreated" type="codemeta:DateOrDateTime" />
+  <xsd:element name="dateModified" type="codemeta:DateOrDateTime" />
+  <xsd:element name="embargoDate" type="xsd:date" />
+
+  <xsd:simpleType name="Date">
+    <!-- schema:Date allows truncated formats, but XML Schema primitive types
+         need to be joined to approximate it:
+         https://www.w3.org/TR/xmlschema-2/#truncatedformats
+         Note that this is stricter than ISO8601. For example, it does not
+         allow week dates or ordinal days.
+      -->
+    <xsd:union memberTypes="xsd:date xsd:gYearMonth xsd:gYear"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="DateOrDateTime">
+    <xsd:union memberTypes="codemeta:Date xsd:dateTime"/>
+  </xsd:simpleType>
+
+  <xsd:element name="author" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="contributor" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="copyrightHolder" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="creator" type="codemeta:PersonOrOrganization" />
+  <xsd:element name="maintainer" type="codemeta:PersonOrOrganization" />
+
+  <xsd:complexType name="PersonOrOrganization">
+    <!-- Allows anything, but at least <codemeta:name> should be present.
+         This is not technically required by Codemeta, but we really want it
+         in swh-deposit. -->
+    <xsd:all>
+      <xsd:element ref="codemeta:name" />
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:all>
+  </xsd:complexType>
+
+  <!-- note that codemeta:affiliation expects Organization as value,
+       but https://codemeta.github.io/terms/ mistakenly documents it as Text.
+       See https://github.com/codemeta/codemeta/pull/239
+       Therefore, more custom checks are implemented in swh/deposit/api/checks.py
+       in order to allow either. -->
+
+
+  <xsd:simpleType name="halId">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="hal-[0-9]+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="identifierType">
+    <!-- CodeMeta only allows URIs, but we make an exception for HAL-IDs,
+         in order not to break backward-compatibility. -->
+    <xsd:union memberTypes="xsd:anyURI codemeta:halId"/>
+  </xsd:simpleType>
+  <xsd:element name="identifier" type="codemeta:identifierType" />
+
+  <xsd:element name="name" type="xsd:string" />
+  <xsd:element name="givenName" type="xsd:string" />
+  <xsd:element name="familyName" type="xsd:string" />
+  <xsd:element name="email" type="xsd:string" />
+
+  <xsd:element name="applicationCategory" type="xsd:string" />
+  <xsd:element name="applicationSubCategory" type="xsd:string" />
+  <xsd:element name="installUrl" type="xsd:anyURI" />
+  <xsd:element name="releaseNotes" type="xsd:string" />
+  <xsd:element name="softwareVersion" type="xsd:string" />
+  <xsd:element name="version" type="xsd:string" />
+  <xsd:element name="keywords" type="xsd:string" />
+  <xsd:element name="description" type="xsd:string" />
+  <xsd:element name="url" type="xsd:anyURI" />
+  <xsd:element name="issueTracker" type="xsd:anyURI" />
+  <xsd:element name="readme" type="xsd:anyURI" />
+</xsd:schema>

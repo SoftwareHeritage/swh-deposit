@@ -350,9 +350,7 @@ Schema
 ------
 
 Here is an XML schema to summarize the syntax described in this document:
-
-.. literalinclude:: swh.xsd
-   :language: xml
+https://forge.softwareheritage.org/source/swh-deposit/browse/master/swh/deposit/xsd/swh.xsd
 
 
 

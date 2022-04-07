@@ -600,8 +600,8 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
 
     # Parse to check for a swhid presence within the metadata file
     with open(metadata_path, "r") as f:
-        metadata_raw = f.read()
-    metadata_tree = ElementTree.fromstring(metadata_raw)
+        raw_metadata = f.read()
+    metadata_tree = ElementTree.fromstring(raw_metadata)
     actual_swhid = parse_swh_reference(metadata_tree)
 
     if not actual_swhid:

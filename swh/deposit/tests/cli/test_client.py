@@ -179,7 +179,7 @@ def test_cli_client_generate_metadata_ok(slug):
         "deposit-client",
         "project-name",
         authors=["some", "authors"],
-        external_id="external-id",
+        external_id="http://example.org/external-id",
         create_origin="origin-url",
         metadata_provenance_url="meta-prov-url",
     )
@@ -199,7 +199,7 @@ def test_cli_client_generate_metadata_ok(slug):
     )
     assert (
         actual_metadata.findtext("codemeta:identifier", namespaces=NAMESPACES)
-        == "external-id"
+        == "http://example.org/external-id"
     )
     authors = actual_metadata.findall(
         "codemeta:author/codemeta:name", namespaces=NAMESPACES
@@ -297,7 +297,7 @@ def test_cli_single_minimal_deposit_with_slug(
         "deposit_id": "615",
         "deposit_status": "partial",
         "deposit_status_detail": None,
-        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+        "deposit_date": "2020-10-08T13:52:34.509655Z",
     }
 
     with open(metadata_path) as fd:
@@ -369,7 +369,7 @@ def test_cli_single_minimal_deposit_with_create_origin(
         "deposit_id": "615",
         "deposit_status": "partial",
         "deposit_status_detail": None,
-        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+        "deposit_date": "2020-10-08T13:52:34.509655Z",
     }
 
     with open(metadata_path) as fd:
@@ -625,7 +625,7 @@ def test_cli_single_deposit_slug_generation(
         "deposit_id": "615",
         "deposit_status": "partial",
         "deposit_status_detail": None,
-        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+        "deposit_date": "2020-10-08T13:52:34.509655Z",
     }
 
     with open(metadata_path) as fd:
@@ -666,7 +666,7 @@ def test_cli_multisteps_deposit(
         "deposit_id": str(deposit_id),
         "deposit_status": "partial",
         "deposit_status_detail": None,
-        "deposit_date": "Oct. 8, 2020, 4:57 p.m.",
+        "deposit_date": "2020-10-08T13:52:34.509655Z",
     }
 
     # Update the partial deposit with only 1 archive
@@ -897,7 +897,7 @@ def test_cli_metadata_only_deposit_full_metadata_file(
     expected_deposit_status = {
         "deposit_id": "100",
         "deposit_status": "done",
-        "deposit_date": "2020-10-08T13:52:34.509655",
+        "deposit_date": "2020-10-08T13:52:34.509655Z",
     }
 
     assert expected_deposit_status["deposit_status"] == "done"
@@ -1011,10 +1011,10 @@ def test_cli_deposit_warning_missing_origin(
     # <swh:origin_to_add> are provided, and <swh:metadata-provenance-url> is always
     # provided.
 
-    metadata_raw = atom_dataset[metadata_entry_key] % "some-url"
+    raw_metadata = atom_dataset[metadata_entry_key] % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-origin-tag-to-deposit.xml")
     with open(metadata_path, "w") as f:
-        f.write(metadata_raw)
+        f.write(raw_metadata)
 
     # fmt: off
     cli_runner.invoke(
@@ -1041,10 +1041,10 @@ def test_cli_deposit_warning_missing_provenance_url(
 
     """
     atom_template = atom_dataset["entry-data-with-add-to-origin-no-prov"]
-    metadata_raw = atom_template % "some-url"
+    raw_metadata = atom_template % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-missing-prov-url.xml")
     with open(metadata_path, "w") as f:
-        f.write(metadata_raw)
+        f.write(raw_metadata)
 
     # fmt: off
     cli_runner.invoke(
