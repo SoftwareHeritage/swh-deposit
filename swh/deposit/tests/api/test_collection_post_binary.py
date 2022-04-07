@@ -246,7 +246,7 @@ def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     archive = create_arborescence_archive(
-        tmp_path, "archive2", "file2", b"some content in file", up_to_size=500
+        tmp_path, "archive2", "file2", b"some content in file", up_to_size=5000
     )
 
     external_id = "some-external-id"
