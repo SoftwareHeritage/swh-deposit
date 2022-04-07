@@ -130,7 +130,7 @@ def requests_mock_datadir(datadir, requests_mock_datadir):
 @pytest.fixture
 def common_deposit_config(swh_scheduler_config, swh_storage_backend_config):
     return {
-        "max_upload_size": 500,
+        "max_upload_size": 5000,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
         "checks": False,
         "scheduler": {"cls": "local", **swh_scheduler_config,},

@@ -78,5 +78,5 @@ def check_response(response, username):
     </workspace>
 </service>
 """
-        % (500, username, username, username, username)
+        % (5000, username, username, username, username)
     )  # noqa

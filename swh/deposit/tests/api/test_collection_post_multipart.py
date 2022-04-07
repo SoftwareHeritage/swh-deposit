@@ -368,7 +368,7 @@ def test_post_deposit_multipart_if_upload_size_limit_exceeded(
 
     archive = {
         **sample_archive,
-        "data": sample_archive["data"] * 8,
+        "data": sample_archive["data"] * 100,
     }
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
 
