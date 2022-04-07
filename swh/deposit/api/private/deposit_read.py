@@ -165,8 +165,12 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         if raw_metadata:
             metadata_tree = ElementTree.fromstring(raw_metadata)
             author_date, commit_date = self._parse_dates(deposit, metadata_tree)
+            release_notes_elements = metadata_tree.findall(
+                "codemeta:releaseNotes", namespaces=NAMESPACES
+            )
         else:
             author_date = commit_date = None
+            release_notes_elements = []
 
         if deposit.parent and deposit.parent.swhid:
             parent_swhid = deposit.parent.swhid
@@ -177,9 +181,6 @@ class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
         else:
             parents = []
 
-        release_notes_elements = metadata_tree.findall(
-            "codemeta:releaseNotes", namespaces=NAMESPACES
-        )
         release_notes: Optional[str]
         if release_notes_elements:
             release_notes = "\n\n".join(
