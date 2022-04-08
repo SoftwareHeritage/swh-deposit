@@ -34,16 +34,16 @@ DEPOSIT_PERMISSION = "swh.deposit.api"
 
 def convert_response(request, content):
     """Convert response from drf's basic authentication mechanism to a
-       swh-deposit one.
+    swh-deposit one.
 
-        Args:
-           request (Request): Use to build the response
-           content (bytes): The drf's answer
+     Args:
+        request (Request): Use to build the response
+        content (bytes): The drf's answer
 
-        Returns:
+     Returns:
 
-            Response with the same status error as before, only the
-            body is now an swh-deposit compliant one.
+         Response with the same status error as before, only the
+         body is now an swh-deposit compliant one.
 
     """
     from json import loads
@@ -66,9 +66,9 @@ def convert_response(request, content):
 
 class WrapBasicAuthenticationResponseMiddleware:
     """Middleware to capture potential authentication error and convert
-       them to standard deposit response.
+    them to standard deposit response.
 
-       This is to be installed in django's settings.py module.
+    This is to be installed in django's settings.py module.
 
     """
 
@@ -88,9 +88,7 @@ class WrapBasicAuthenticationResponseMiddleware:
 
 
 class HasDepositPermission(BasePermission):
-    """Allows access to authenticated users with the DEPOSIT_PERMISSION.
-
-    """
+    """Allows access to authenticated users with the DEPOSIT_PERMISSION."""
 
     def has_permission(self, request, view):
         assert isinstance(request.user, DepositClient)
@@ -123,15 +121,11 @@ class KeycloakBasicAuthentication(BasicAuthentication):
         return self._client
 
     def _cache_key(self, user_id: str) -> str:
-        """Internal key to use to store user id token.
-
-        """
+        """Internal key to use to store user id token."""
         return f"oidc_user_{self.client.realm_name}_{self.client.client_id}_{user_id}"
 
     def get_user(self, user_id: str) -> Optional[OIDCUser]:
-        """Retrieve user from cache if any.
-
-        """
+        """Retrieve user from cache if any."""
         oidc_profile = cache.get(self._cache_key(user_id))
         if oidc_profile:
             try:
@@ -180,7 +174,9 @@ class KeycloakBasicAuthentication(BasicAuthentication):
         if ttl:
             # cache the oidc_profile user while it's valid
             cache.set(
-                self._cache_key(user_id), oidc_profile, timeout=max(0, ttl),
+                self._cache_key(user_id),
+                oidc_profile,
+                timeout=max(0, ttl),
             )
 
         return (deposit_client, None)

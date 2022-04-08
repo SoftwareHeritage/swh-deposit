@@ -18,8 +18,8 @@ class DefaultPagination(PageNumberPagination):
 
 class StatusDetailField(_UnvalidatedField):
     """status_detail field is a dict, we want a simple message instead.
-       So, we reuse the convert_status_detail from deposit_status
-       endpoint to that effect.
+    So, we reuse the convert_status_detail from deposit_status
+    endpoint to that effect.
 
     """
 

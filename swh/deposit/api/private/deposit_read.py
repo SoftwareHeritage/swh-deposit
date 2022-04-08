@@ -102,9 +102,7 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
 
 
 class APIReadMetadata(APIPrivateView, APIGet, DepositReadMixin):
-    """Class in charge of aggregating metadata on a deposit.
-
-    """
+    """Class in charge of aggregating metadata on a deposit."""
 
     def _parse_dates(
         self, deposit: Deposit, metadata: ElementTree.Element

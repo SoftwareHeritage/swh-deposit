@@ -52,9 +52,7 @@ def test_backend_authentication_user_inactive(backend_success, deposit_user):
 
 
 def test_backend_authentication_ok(backend_success, deposit_user):
-    """Keycloak configured ok, backend db configured ok, user logs in
-
-    """
+    """Keycloak configured ok, backend db configured ok, user logs in"""
     user0, _ = backend_success.authenticate_credentials(
         deposit_user.username, PASSWORD, REQUEST_OBJECT
     )

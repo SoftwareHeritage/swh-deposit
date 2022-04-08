@@ -16,10 +16,21 @@ STATUS_DETAIL = {
         "summary": "At least one compatible url field. Failed",
         "fields": ["testurl"],
     },
-    "metadata": [{"summary": "Mandatory fields missing", "fields": ["9", 10, 1.212],},],
+    "metadata": [
+        {
+            "summary": "Mandatory fields missing",
+            "fields": ["9", 10, 1.212],
+        },
+    ],
     "archive": [
-        {"summary": "Invalid archive", "fields": ["3"],},
-        {"summary": "Unsupported archive", "fields": [2],},
+        {
+            "summary": "Invalid archive",
+            "fields": ["3"],
+        },
+        {
+            "summary": "Unsupported archive",
+            "fields": [2],
+        },
     ],
 }
 
@@ -30,9 +41,7 @@ def test_deposit_list(
     partial_deposit,
     authenticated_client,
 ):
-    """Deposit list api should return all deposits in a paginated way
-
-    """
+    """Deposit list api should return all deposits in a paginated way"""
     partial_deposit_with_metadata.status_detail = STATUS_DETAIL
     partial_deposit_with_metadata.save()
     deposit1 = partial_deposit_with_metadata
@@ -110,9 +119,7 @@ def test_deposit_list(
 
 
 def test_deposit_list_exclude(partial_deposit, deposited_deposit, authenticated_client):
-    """Exclusion pattern on external_id should be respected
-
-    """
+    """Exclusion pattern on external_id should be respected"""
     partial_deposit.status_detail = STATUS_DETAIL
     partial_deposit.save()
 

@@ -22,9 +22,7 @@ def test_add_deposit_with_add_to_origin(
     atom_dataset,
     deposit_user,
 ):
-    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent
-
-    """
+    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent"""
     # given multiple deposit already loaded
     deposit = completed_deposit
     assert deposit.status == DEPOSIT_STATUS_LOAD_SUCCESS
@@ -89,7 +87,10 @@ def test_add_deposit_add_to_origin_conflict(
 
 
 def test_add_deposit_add_to_wrong_origin(
-    authenticated_client, deposit_collection, atom_dataset, sample_archive,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    sample_archive,
 ):
     """Posting a deposit with an <swh:add_to_origin> referencing an origin
     not starting with the provider_url raises an error
@@ -115,9 +116,7 @@ def test_add_deposit_with_add_to_origin_and_external_identifier(
     atom_dataset,
     deposit_user,
 ):
-    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent
-
-    """
+    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent"""
     # given multiple deposit already loaded
     origin_url = deposit_user.provider_url + completed_deposit.external_id
 
@@ -137,9 +136,7 @@ def test_add_deposit_with_add_to_origin_and_external_identifier(
 def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """Creating an origin for a prefix not owned by the client is forbidden
-
-    """
+    """Creating an origin for a prefix not owned by the client is forbidden"""
     origin_url = "http://example.org/foo"
 
     response = post_atom(

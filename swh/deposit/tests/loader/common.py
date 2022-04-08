@@ -19,7 +19,7 @@ CLIENT_TEST_CONFIG = {
 
 class SWHDepositTestClient(PrivateApiDepositClient):
     """Deposit test client to permit overriding the default request
-       client.
+    client.
 
     """
 
@@ -66,7 +66,7 @@ class SWHDepositTestClient(PrivateApiDepositClient):
 
 def get_stats(storage) -> Dict:
     """Adaptation utils to unify the stats counters across storage
-       implementation.
+    implementation.
 
     """
     storage.refresh_stat_counters()
@@ -87,9 +87,7 @@ def get_stats(storage) -> Dict:
 
 
 def decode_target(branch: Optional[SnapshotBranch]) -> Optional[Dict]:
-    """Test helper to ease readability in test
-
-    """
+    """Test helper to ease readability in test"""
     if not branch:
         return None
     target_type = branch.target_type

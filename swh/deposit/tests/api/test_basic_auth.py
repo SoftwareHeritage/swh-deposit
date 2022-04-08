@@ -24,9 +24,7 @@ def deposit_config(common_deposit_config):
 
 
 def test_service_document_basic(basic_authenticated_client):
-    """With authentication, service document list user's collection
-
-    """
+    """With authentication, service document list user's collection"""
     url = reverse(SD_IRI)
     response = basic_authenticated_client.get(url)
     check_response(response, basic_authenticated_client.deposit_client.username)

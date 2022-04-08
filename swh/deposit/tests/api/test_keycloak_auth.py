@@ -26,9 +26,7 @@ def mock_keycloakopenidconnect_ko(mocker, keycloak_mock_auth_failure):
 
 
 def test_keycloak_failure_service_document(unauthorized_client):
-    """With authentication failure without detail, exception is returned correctly
-
-    """
+    """With authentication failure without detail, exception is returned correctly"""
     url = reverse(SD_IRI)
     response = unauthorized_client.get(url)
     assert response.status_code == 401

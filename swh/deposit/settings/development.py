@@ -29,13 +29,20 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {"handlers": ["console"], "level": "DEBUG", "propagate": True,},
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "django.db.backends": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
-        "swh.deposit": {"handlers": ["console"], "level": "DEBUG",},
+        "swh.deposit": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }
 

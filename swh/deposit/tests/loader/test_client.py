@@ -37,9 +37,7 @@ def test_client_config(deposit_config_path):
 
 
 def build_expected_path(datadir, base_url: str, api_url: str) -> str:
-    """Build expected path from api to served file
-
-    """
+    """Build expected path from api to served file"""
     url = urlparse(base_url)
     dirname = "%s_%s" % (url.scheme, url.hostname)
     if api_url.endswith("/"):
@@ -62,9 +60,7 @@ def read_served_path(
     api_url: str,
     convert_fn: Optional[Callable[[str], Any]] = None,
 ) -> bytes:
-    """Read served path
-
-    """
+    """Read served path"""
     archive_path = build_expected_path(datadir, base_url, api_url)
     with open(archive_path, "rb") as f:
         content = f.read()
@@ -89,9 +85,7 @@ def test_read_served_path(datadir):
 
 
 def test_archive_get(tmp_path, datadir, requests_mock_datadir):
-    """Retrieving archive data through private api should stream data
-
-    """
+    """Retrieving archive data through private api should stream data"""
     api_url = "/1/private/test/1/raw/"
     client = PrivateApiDepositClient(CLIENT_TEST_CONFIG)
 
@@ -111,9 +105,7 @@ def test_archive_get(tmp_path, datadir, requests_mock_datadir):
 
 
 def test_archive_get_auth(tmp_path, datadir, requests_mock_datadir):
-    """Retrieving archive data through private api should stream data
-
-    """
+    """Retrieving archive data through private api should stream data"""
     api_url = "/1/private/test/1/raw/"
     config = CLIENT_TEST_CONFIG.copy()
     config["auth"] = {  # add authentication setup
@@ -138,9 +130,7 @@ def test_archive_get_auth(tmp_path, datadir, requests_mock_datadir):
 
 
 def test_archive_get_ko(tmp_path, datadir, requests_mock_datadir):
-    """Reading archive can fail for some reasons
-
-    """
+    """Reading archive can fail for some reasons"""
     unknown_api_url = "/1/private/unknown/deposit-id/raw/"
     client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
 
@@ -152,9 +142,7 @@ def test_archive_get_ko(tmp_path, datadir, requests_mock_datadir):
 
 
 def test_metadata_get(datadir, requests_mock_datadir):
-    """Reading archive should write data in temporary directory
-
-    """
+    """Reading archive should write data in temporary directory"""
     api_url = "/1/private/test/1/metadata"
     client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
     actual_metadata = client.metadata_get(api_url)
@@ -167,9 +155,7 @@ def test_metadata_get(datadir, requests_mock_datadir):
 
 
 def test_metadata_get_ko(requests_mock_datadir):
-    """Reading metadata can fail for some reasons
-
-    """
+    """Reading metadata can fail for some reasons"""
     unknown_api_url = "/1/private/unknown/deposit-id/metadata/"
     client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
 
@@ -181,9 +167,7 @@ def test_metadata_get_ko(requests_mock_datadir):
 
 
 def test_check(requests_mock_datadir):
-    """When check ok, this should return the deposit's status
-
-    """
+    """When check ok, this should return the deposit's status"""
     api_url = "/1/private/test/1/check"
     client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
 
@@ -192,9 +176,7 @@ def test_check(requests_mock_datadir):
 
 
 def test_check_fails(requests_mock_datadir):
-    """Checking deposit can fail for some reason
-
-    """
+    """Checking deposit can fail for some reason"""
     unknown_api_url = "/1/private/test/10/check"
     client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
 
@@ -206,9 +188,7 @@ def test_check_fails(requests_mock_datadir):
 
 
 def test_status_update(mocker):
-    """Update status
-
-    """
+    """Update status"""
     mocked_put = mocker.patch.object(Session, "request")
 
     deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
@@ -231,9 +211,7 @@ def test_status_update(mocker):
 
 
 def test_status_update_with_no_release_id(mocker):
-    """Reading metadata can fail for some reasons
-
-    """
+    """Reading metadata can fail for some reasons"""
     mocked_put = mocker.patch.object(Session, "request")
 
     deposit_client = PrivateApiDepositClient(config=CLIENT_TEST_CONFIG)
@@ -242,5 +220,7 @@ def test_status_update_with_no_release_id(mocker):
     mocked_put.assert_called_once_with(
         "put",
         "https://nowhere.org/update/status/fail",
-        json={"status": DEPOSIT_STATUS_LOAD_FAILURE,},
+        json={
+            "status": DEPOSIT_STATUS_LOAD_FAILURE,
+        },
     )

@@ -30,18 +30,14 @@ if TYPE_CHECKING:
 
 
 class InputError(ValueError):
-    """Input script error
-
-    """
+    """Input script error"""
 
     pass
 
 
 @contextmanager
 def trap_and_report_exceptions():
-    """Trap and report exceptions (InputError, MaintenanceError) in a unified way.
-
-    """
+    """Trap and report exceptions (InputError, MaintenanceError) in a unified way."""
     from swh.deposit.client import MaintenanceError
 
     try:
@@ -144,9 +140,7 @@ def generate_metadata(
 
 
 def _collection(client: PublicApiDepositClient) -> str:
-    """Retrieve the client's collection
-
-    """
+    """Retrieve the client's collection"""
     # retrieve user's collection
     sd_content = client.service_document()
     if "error" in sd_content:
@@ -322,9 +316,7 @@ def _subdict(d: Dict[str, Any], keys: Collection[str]) -> Dict[str, Any]:
 
 
 def credentials_decorator(f):
-    """Add default --url, --username and --password flag to cli.
-
-    """
+    """Add default --url, --username and --password flag to cli."""
     f = click.option(
         "--password", required=True, help="(Mandatory) User's associated password"
     )(f)
@@ -341,9 +333,7 @@ def credentials_decorator(f):
 
 
 def output_format_decorator(f):
-    """Add --format output flag decorator to cli.
-
-    """
+    """Add --format output flag decorator to cli."""
     return click.option(
         "-f",
         "--format",
@@ -462,10 +452,10 @@ def upload(
 ):
     """Software Heritage Public Deposit Client
 
-    Create/Update deposit through the command line.
+        Create/Update deposit through the command line.
 
-More documentation can be found at
-https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
+    More documentation can be found at
+    https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 
     """
     import tempfile
@@ -545,9 +535,7 @@ https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html.
 @output_format_decorator
 @click.pass_context
 def status(ctx, url, username, password, deposit_id, output_format):
-    """Deposit's status
-
-    """
+    """Deposit's status"""
     from swh.deposit.client import PublicApiDepositClient
 
     url = _url(url)
@@ -563,9 +551,7 @@ def status(ctx, url, username, password, deposit_id, output_format):
 
 
 def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
-    """Display the result data into a dedicated output format.
-
-    """
+    """Display the result data into a dedicated output format."""
     import json
 
     import yaml
@@ -590,9 +576,7 @@ def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
 @output_format_decorator
 @click.pass_context
 def metadata_only(ctx, url, username, password, metadata_path, output_format):
-    """Deposit metadata only upload
-
-    """
+    """Deposit metadata only upload"""
     from xml.etree import ElementTree
 
     from swh.deposit.client import PublicApiDepositClient
@@ -626,16 +610,18 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
 @credentials_decorator
 @output_format_decorator
 @click.option(
-    "--page", default=1, help="Page number when requesting more information",
+    "--page",
+    default=1,
+    help="Page number when requesting more information",
 )
 @click.option(
-    "--page-size", default=100, help="Page number when requesting more information",
+    "--page-size",
+    default=100,
+    help="Page number when requesting more information",
 )
 @click.pass_context
 def deposit_list(ctx, url, username, password, output_format, page, page_size):
-    """Client deposit listing
-
-    """
+    """Client deposit listing"""
     from swh.deposit.client import PublicApiDepositClient
 
     url = _url(url)

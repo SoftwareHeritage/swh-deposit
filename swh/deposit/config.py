@@ -110,8 +110,12 @@ class APIConfig:
 
     def swh_deposit_authority(self):
         return MetadataAuthority(
-            type=MetadataAuthorityType.REGISTRY, url=self.config["swh_authority_url"],
+            type=MetadataAuthorityType.REGISTRY,
+            url=self.config["swh_authority_url"],
         )
 
     def swh_deposit_fetcher(self):
-        return MetadataFetcher(name=self.tool["name"], version=self.tool["version"],)
+        return MetadataFetcher(
+            name=self.tool["name"],
+            version=self.tool["version"],
+        )

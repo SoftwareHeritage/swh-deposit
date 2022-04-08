@@ -7,26 +7,20 @@ from unittest.mock import patch
 
 
 def test_checker_deposit_ready(requests_mock_datadir, deposit_checker):
-    """Check on a valid 'deposited' deposit should result in 'verified'
-
-    """
+    """Check on a valid 'deposited' deposit should result in 'verified'"""
     actual_result = deposit_checker.check(collection="test", deposit_id=1)
     assert actual_result == {"status": "eventful"}
 
 
 def test_checker_deposit_rejected(requests_mock_datadir, deposit_checker):
-    """Check on invalid 'deposited' deposit should result in 'rejected'
-
-    """
+    """Check on invalid 'deposited' deposit should result in 'rejected'"""
     actual_result = deposit_checker.check(collection="test", deposit_id=2)
     assert actual_result == {"status": "failed"}
 
 
 @patch("swh.deposit.client.requests.get")
 def test_checker_deposit_rejected_exception(mock_requests, deposit_checker):
-    """Check on invalid 'deposited' deposit should result in 'rejected'
-
-    """
+    """Check on invalid 'deposited' deposit should result in 'rejected'"""
     mock_requests.side_effect = ValueError("simulated problem when checking")
     actual_result = deposit_checker.check(collection="test", deposit_id=3)
     assert actual_result == {"status": "failed"}

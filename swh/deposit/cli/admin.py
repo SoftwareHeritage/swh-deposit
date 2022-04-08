@@ -22,7 +22,10 @@ if TYPE_CHECKING:
     "--config-file",
     "-C",
     default=None,
-    type=click.Path(exists=True, dir_okay=False,),
+    type=click.Path(
+        exists=True,
+        dir_okay=False,
+    ),
     help="Optional extra configuration file.",
 )
 @click.option(
@@ -139,8 +142,8 @@ def user_create(
 def user_list(ctx):
     """List existing users.
 
-       This entrypoint is not paginated yet as there is not a lot of
-       entry.
+    This entrypoint is not paginated yet as there is not a lot of
+    entry.
 
     """
     # to avoid loading too early django namespaces
@@ -158,8 +161,7 @@ def user_list(ctx):
 @click.argument("username", required=True)
 @click.pass_context
 def user_exists(ctx, username: str):
-    """Check if user exists.
-    """
+    """Check if user exists."""
     # to avoid loading too early django namespaces
     from swh.deposit.models import DepositClient
 
@@ -191,8 +193,8 @@ def collection_create(ctx, name):
 def collection_list(ctx):
     """List existing collections.
 
-       This entrypoint is not paginated yet as there is not a lot of
-       entry.
+    This entrypoint is not paginated yet as there is not a lot of
+    entry.
 
     """
     # to avoid loading too early django namespaces

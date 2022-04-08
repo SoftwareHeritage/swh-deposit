@@ -10,36 +10,28 @@ from swh.deposit.config import SD_IRI
 
 
 def test_service_document_no_auth_fails(client):
-    """Without authentication, service document endpoint should return 401
-
-    """
+    """Without authentication, service document endpoint should return 401"""
     url = reverse(SD_IRI)
     response = client.get(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_service_document_no_auth_with_http_auth_should_not_break(client):
-    """Without auth, sd endpoint through browser should return 401
-
-    """
+    """Without auth, sd endpoint through browser should return 401"""
     url = reverse(SD_IRI)
     response = client.get(url, HTTP_ACCEPT="text/html,application/xml;q=9,*/*,q=8")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_service_document(authenticated_client):
-    """With authentication, service document list user's collection
-
-    """
+    """With authentication, service document list user's collection"""
     url = reverse(SD_IRI)
     response = authenticated_client.get(url)
     check_response(response, authenticated_client.deposit_client.username)
 
 
 def test_service_document_with_http_accept_header(authenticated_client):
-    """With authentication, with browser, sd list user's collection
-
-    """
+    """With authentication, with browser, sd list user's collection"""
     url = reverse(SD_IRI)
     response = authenticated_client.get(
         url, HTTP_ACCEPT="text/html,application/xml;q=9,*/*,q=8"

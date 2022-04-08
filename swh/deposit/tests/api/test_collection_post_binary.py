@@ -25,9 +25,7 @@ from swh.deposit.utils import NAMESPACES
 def test_post_deposit_binary_no_slug(
     authenticated_client, deposit_collection, sample_archive, deposit_user, mocker
 ):
-    """Posting a binary deposit without slug header should generate one
-
-    """
+    """Posting a binary deposit without slug header should generate one"""
     id_ = str(uuid.uuid4())
     mocker.patch("uuid.uuid4", return_value=id_)
 
@@ -35,7 +33,10 @@ def test_post_deposit_binary_no_slug(
 
     # when
     response = post_archive(
-        authenticated_client, url, sample_archive, in_progress="false",
+        authenticated_client,
+        url,
+        sample_archive,
+        in_progress="false",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -51,9 +52,7 @@ def test_post_deposit_binary_no_slug(
 def test_post_deposit_binary_support(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Binary upload with content-type not in [zip,x-tar] should return 415
-
-    """
+    """Binary upload with content-type not in [zip,x-tar] should return 415"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -78,9 +77,7 @@ def test_post_deposit_binary_support(
 def test_post_deposit_binary_upload_ok(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Binary upload with correct headers should return 201 with receipt
-
-    """
+    """Binary upload with correct headers should return 201 with receipt"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -151,9 +148,7 @@ def test_post_deposit_binary_upload_ok(
 def test_post_deposit_binary_failure_unsupported_packaging_header(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Bin deposit without supported content_disposition header returns 400
-
-    """
+    """Bin deposit without supported content_disposition header returns 400"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -182,9 +177,7 @@ def test_post_deposit_binary_failure_unsupported_packaging_header(
 def test_post_deposit_binary_upload_no_content_disposition_header(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Binary upload without content_disposition header should return 400
-
-    """
+    """Binary upload without content_disposition header should return 400"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -211,9 +204,7 @@ def test_post_deposit_binary_upload_no_content_disposition_header(
 def test_post_deposit_mediation_not_supported(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Binary upload with mediation should return a 412 response
-
-    """
+    """Binary upload with mediation should return a 412 response"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -239,9 +230,7 @@ def test_post_deposit_mediation_not_supported(
 def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
     authenticated_client, deposit_collection, sample_archive, tmp_path
 ):
-    """Binary upload must not exceed the limit set up...
-
-    """
+    """Binary upload must not exceed the limit set up..."""
     tmp_path = str(tmp_path)
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -271,9 +260,7 @@ def test_post_deposit_binary_upload_fail_if_upload_size_limit_exceeded(
 def test_post_deposit_binary_upload_fail_if_content_length_missing(
     authenticated_client, deposit_collection, sample_archive, tmp_path
 ):
-    """The Content-Length header is mandatory
-
-    """
+    """The Content-Length header is mandatory"""
     tmp_path = str(tmp_path)
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -304,9 +291,7 @@ def test_post_deposit_binary_upload_fail_if_content_length_missing(
 def test_post_deposit_2_post_2_different_deposits(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """2 posting deposits should return 2 different 201 with receipt
-
-    """
+    """2 posting deposits should return 2 different 201 with receipt"""
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     # when

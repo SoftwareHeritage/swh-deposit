@@ -34,9 +34,7 @@ from swh.storage.interface import PagedResult
 def test_post_deposit_atom_entry_multiple_steps(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """After initial deposit, updating a deposit should return a 201
-
-    """
+    """After initial deposit, updating a deposit should return a 201"""
     # given
     origin_url = deposit_user.provider_url + "2225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
@@ -74,7 +72,10 @@ def test_post_deposit_atom_entry_multiple_steps(
 
     # when updating the first deposit post
     response = post_atom(
-        authenticated_client, se_iri, data=atom_entry_data, HTTP_IN_PROGRESS="False",
+        authenticated_client,
+        se_iri,
+        data=atom_entry_data,
+        HTTP_IN_PROGRESS="False",
     )
 
     # then
@@ -113,9 +114,7 @@ def test_replace_metadata_to_deposit_is_possible(
     atom_dataset,
     deposit_user,
 ):
-    """Replace all metadata with another one should return a 204 response
-
-    """
+    """Replace all metadata with another one should return a 204 response"""
     # given
     deposit = partial_deposit_with_metadata
     origin_url = deposit_user.provider_url + deposit.external_id
@@ -132,7 +131,9 @@ def test_replace_metadata_to_deposit_is_possible(
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, deposit.id])
 
     response = put_atom(
-        authenticated_client, update_uri, data=atom_dataset["entry-data1"],
+        authenticated_client,
+        update_uri,
+        data=atom_dataset["entry-data1"],
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -159,9 +160,7 @@ def test_add_metadata_to_deposit_is_possible(
     atom_dataset,
     deposit_user,
 ):
-    """Add metadata with another one should return a 204 response
-
-    """
+    """Add metadata with another one should return a 204 response"""
     deposit = partial_deposit_with_metadata
     origin_url = deposit_user.provider_url + deposit.external_id
     requests = DepositRequest.objects.filter(deposit=deposit, type="metadata")
@@ -197,9 +196,7 @@ def test_add_metadata_to_deposit_is_possible(
 def test_add_metadata_to_unknown_deposit(
     deposit_collection, authenticated_client, atom_dataset
 ):
-    """Replacing metadata to unknown deposit should return a 404 response
-
-    """
+    """Replacing metadata to unknown deposit should return a 404 response"""
     unknown_deposit_id = 1000
     try:
         Deposit.objects.get(pk=unknown_deposit_id)
@@ -207,7 +204,11 @@ def test_add_metadata_to_unknown_deposit(
         assert True
 
     url = reverse(SE_IRI, args=[deposit_collection, unknown_deposit_id])
-    response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
+    response = post_atom(
+        authenticated_client,
+        url,
+        data=atom_dataset["entry-data1"],
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert "Deposit 1000 does not exist" in response_content.findtext(
@@ -218,9 +219,7 @@ def test_add_metadata_to_unknown_deposit(
 def test_add_metadata_to_unknown_collection(
     partial_deposit, authenticated_client, atom_dataset
 ):
-    """Replacing metadata to unknown deposit should return a 404 response
-
-    """
+    """Replacing metadata to unknown deposit should return a 404 response"""
     deposit = partial_deposit
     unknown_collection_name = "unknown-collection"
     try:
@@ -229,7 +228,11 @@ def test_add_metadata_to_unknown_collection(
         assert True
 
     url = reverse(SE_IRI, args=[unknown_collection_name, deposit.id])
-    response = post_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
+    response = post_atom(
+        authenticated_client,
+        url,
+        data=atom_dataset["entry-data1"],
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert "Unknown collection name" in response_content.findtext(
@@ -240,16 +243,18 @@ def test_add_metadata_to_unknown_collection(
 def test_replace_metadata_to_unknown_deposit(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Adding metadata to unknown deposit should return a 404 response
-
-    """
+    """Adding metadata to unknown deposit should return a 404 response"""
     unknown_deposit_id = 998
     try:
         Deposit.objects.get(pk=unknown_deposit_id)
     except Deposit.DoesNotExist:
         assert True
     url = reverse(EDIT_IRI, args=[deposit_collection.name, unknown_deposit_id])
-    response = put_atom(authenticated_client, url, data=atom_dataset["entry-data1"],)
+    response = put_atom(
+        authenticated_client,
+        url,
+        data=atom_dataset["entry-data1"],
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     response_content = parse_xml(response.content)
     assert (
@@ -261,9 +266,7 @@ def test_replace_metadata_to_unknown_deposit(
 def test_post_metadata_to_em_iri_failure(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Update (POST) archive with wrong content type should return 400
-
-    """
+    """Update (POST) archive with wrong content type should return 400"""
     deposit = partial_deposit
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit.id])
     response = authenticated_client.post(
@@ -280,15 +283,15 @@ def test_post_metadata_to_em_iri_failure(
 def test_put_metadata_to_em_iri_failure(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Update (PUT) archive with wrong content type should return 400
-
-    """
+    """Update (PUT) archive with wrong content type should return 400"""
     # given
     deposit = partial_deposit
     # when
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, deposit.id])
     response = put_atom(
-        authenticated_client, update_uri, data=atom_dataset["entry-data1"],
+        authenticated_client,
+        update_uri,
+        data=atom_dataset["entry-data1"],
     )
     # then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -307,10 +310,10 @@ def test_put_update_metadata_done_deposit_nominal(
     swh_storage,
 ):
     """Nominal scenario, client send an update of metadata on a deposit with status "done"
-       with an existing swhid. Such swhid has its metadata updated accordingly both in
-       the deposit backend and in the metadata storage.
+    with an existing swhid. Such swhid has its metadata updated accordingly both in
+    the deposit backend and in the metadata storage.
 
-       Response: 204
+    Response: 204
 
     """
     deposit_swhid = CoreSWHID.from_string(complete_deposit.swhid)
@@ -377,7 +380,8 @@ def test_put_update_metadata_done_deposit_nominal(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"], version=config.tool["version"],
+        name=config.tool["name"],
+        version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -415,7 +419,7 @@ def test_put_update_metadata_done_deposit_failure_mismatched_swhid(
 ):
     """failure: client updates metadata on deposit with SWHID not matching the deposit's.
 
-       Response: 400
+    Response: 400
 
     """
     incorrect_swhid = "swh:1:dir:ef04a768181417fbc5eef4243e2507915f24deea"
@@ -443,7 +447,7 @@ def test_put_update_metadata_done_deposit_failure_malformed_xml(
 ):
     """failure: client updates metadata on deposit done with a malformed xml
 
-       Response: 400
+    Response: 400
 
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
@@ -468,7 +472,7 @@ def test_put_update_metadata_done_deposit_failure_empty_xml(
 ):
     """failure: client updates metadata on deposit done with an empty xml.
 
-       Response: 400
+    Response: 400
 
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
@@ -495,7 +499,7 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
 ):
     """failure: client updates metadata on deposit done without required incomplete metadata
 
-       Response: 400
+    Response: 400
 
     """
     update_uri = reverse(EDIT_IRI, args=[deposit_collection.name, complete_deposit.id])
@@ -559,9 +563,7 @@ def test_put_atom_with_create_origin_and_external_identifier(
 def test_put_atom_with_create_origin_and_reference(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """<swh:reference> and <swh:create_origin> are mutually exclusive
-
-    """
+    """<swh:reference> and <swh:create_origin> are mutually exclusive"""
     external_id = "foobar"
     origin_url = deposit_user.provider_url + external_id
     url = reverse(COL_IRI, args=[deposit_collection.name])

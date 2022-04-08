@@ -29,8 +29,7 @@ def xml_with_origin_reference():
 
 
 def test_normalize_date_0():
-    """When date is a list, choose the first date and normalize it
-    """
+    """When date is a list, choose the first date and normalize it"""
     actual_date = utils.normalize_date(["2017-10-12", "date1"])
 
     assert actual_date == {
@@ -40,8 +39,7 @@ def test_normalize_date_0():
 
 
 def test_normalize_date_1():
-    """Providing a date in a reasonable format, everything is fine
-    """
+    """Providing a date in a reasonable format, everything is fine"""
     actual_date = utils.normalize_date("2018-06-11 17:02:02")
 
     assert actual_date == {
@@ -51,8 +49,7 @@ def test_normalize_date_1():
 
 
 def test_normalize_date_doing_irrelevant_stuff():
-    """Providing a date with only the year results in a reasonable date
-    """
+    """Providing a date with only the year results in a reasonable date"""
     actual_date = utils.normalize_date("2017")
 
     assert actual_date == {
@@ -64,7 +61,10 @@ def test_normalize_date_doing_irrelevant_stuff():
 @pytest.mark.parametrize(
     "swhid,expected_metadata_context",
     [
-        ("swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49", {"origin": None},),
+        (
+            "swh:1:cnt:51b5c8cc985d190b5a7ef4878128ebfdc2358f49",
+            {"origin": None},
+        ),
         (
             "swh:1:snp:51b5c8cc985d190b5a7ef4878128ebfdc2358f49;origin=http://blah",
             {"origin": "http://blah", "path": None},
@@ -156,7 +156,9 @@ def xml_with_swhid(atom_dataset):
     ],
 )
 def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
-    xml_data = xml_with_swhid.format(swhid=swhid,)
+    xml_data = xml_with_swhid.format(
+        swhid=swhid,
+    )
     metadata = ElementTree.fromstring(xml_data)
 
     actual_swhid = utils.parse_swh_reference(metadata)
@@ -179,9 +181,7 @@ def test_parse_swh_reference_swhid(swhid, xml_with_swhid):
     ],
 )
 def test_parse_swh_reference_invalid_swhid(invalid_swhid, xml_with_swhid):
-    """Unparsable swhid should raise
-
-    """
+    """Unparsable swhid should raise"""
     xml_invalid_swhid = xml_with_swhid.format(swhid=invalid_swhid)
     metadata = ElementTree.fromstring(xml_invalid_swhid)
 
