@@ -39,6 +39,9 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "django.utils.autoreload": {
+            "level": "INFO",
+        },
         "swh.deposit": {
             "handlers": ["console"],
             "level": "DEBUG",
