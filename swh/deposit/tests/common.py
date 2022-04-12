@@ -16,9 +16,7 @@ from swh.core import tarball
 
 
 def compute_info(archive_path):
-    """Given a path, compute information on path.
-
-    """
+    """Given a path, compute information on path."""
     with open(archive_path, "rb") as f:
         length = 0
         sha1sum = hashlib.sha1()
@@ -42,9 +40,7 @@ def compute_info(archive_path):
 
 
 def _compress(path, extension, dir_path):
-    """Compress path according to extension
-
-    """
+    """Compress path according to extension"""
     if extension == "zip" or extension == "tar":
         return tarball.compress(path, extension, dir_path)
     elif "." in extension:
@@ -118,9 +114,7 @@ def create_arborescence_archive(
 
 
 def create_archive_with_archive(root_path, name, archive):
-    """Create an archive holding another.
-
-    """
+    """Create an archive holding another."""
     invalid_archive_path = os.path.join(root_path, name)
     with tarfile.open(invalid_archive_path, "w:gz") as _archive:
         _archive.add(archive["path"], arcname=archive["name"])
@@ -157,7 +151,12 @@ def _post_or_put_archive(f, url, archive, slug=None, in_progress=None, **kwargs)
         HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
     )
     kwargs = {**default_kwargs, **kwargs}
-    return f(url, data=archive["data"], HTTP_CONTENT_MD5=archive["md5sum"], **kwargs,)
+    return f(
+        url,
+        data=archive["data"],
+        HTTP_CONTENT_MD5=archive["md5sum"],
+        **kwargs,
+    )
 
 
 def post_archive(authenticated_client, *args, **kwargs):
@@ -202,7 +201,10 @@ def _post_or_put_multipart(f, url, archive, atom_entry, **kwargs):
     return f(
         url,
         format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
+        data={
+            "archive": archive,
+            "atom_entry": atom_entry,
+        },
         **kwargs,
     )
 

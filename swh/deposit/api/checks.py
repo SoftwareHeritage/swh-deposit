@@ -71,17 +71,23 @@ def absolute_uri_validator(
         url = urllib.parse.urlparse(element.text)
     except ValueError:
         yield xmlschema.XMLSchemaValidationError(
-            xsd_element, element, f"{element.text!r} is not a valid URI",
+            xsd_element,
+            element,
+            f"{element.text!r} is not a valid URI",
         )
     else:
         if not url.scheme or not url.netloc:
             yield xmlschema.XMLSchemaValidationError(
-                xsd_element, element, f"{element.text!r} is not an absolute URI",
+                xsd_element,
+                element,
+                f"{element.text!r} is not an absolute URI",
             )
         elif " " in url.netloc:
             # urllib is a little too permissive...
             yield xmlschema.XMLSchemaValidationError(
-                xsd_element, element, f"{element.text!r} is not a valid URI",
+                xsd_element,
+                element,
+                f"{element.text!r} is not a valid URI",
             )
 
 
@@ -236,5 +242,6 @@ def check_url_match_provider(url: str, provider_url: str) -> None:
     provider_url = provider_url.rstrip("/") + "/"
     if not url.startswith(provider_url):
         raise DepositError(
-            FORBIDDEN, f"URL mismatch: {url} must start with {provider_url}",
+            FORBIDDEN,
+            f"URL mismatch: {url} must start with {provider_url}",
         )

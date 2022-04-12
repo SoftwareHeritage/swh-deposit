@@ -118,9 +118,7 @@ def pytest_configure():
 
 @pytest.fixture
 def requests_mock_datadir(datadir, requests_mock_datadir):
-    """Override default behavior to deal with put/post methods
-
-    """
+    """Override default behavior to deal with put/post methods"""
     cb = partial(get_response_cb, datadir=datadir)
     requests_mock_datadir.put(re.compile("https://"), body=cb)
     requests_mock_datadir.post(re.compile("https://"), body=cb)
@@ -133,7 +131,10 @@ def common_deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "max_upload_size": 5000,
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
         "checks": False,
-        "scheduler": {"cls": "local", **swh_scheduler_config,},
+        "scheduler": {
+            "cls": "local",
+            **swh_scheduler_config,
+        },
         "storage": swh_storage_backend_config,
         "storage_metadata": swh_storage_backend_config,
         "swh_authority_url": "http://deposit.softwareheritage.example/",
@@ -218,7 +219,7 @@ def execute_sql(sql):
 @pytest.fixture(autouse=True, scope="session")
 def swh_proxy():
     """Automatically inject this fixture in all tests to ensure no outside
-       connection takes place.
+    connection takes place.
 
     """
     os.environ["http_proxy"] = "http://localhost:999"
@@ -226,9 +227,7 @@ def swh_proxy():
 
 
 def create_deposit_collection(collection_name: str):
-    """Create a deposit collection with name collection_name
-
-    """
+    """Create a deposit collection with name collection_name"""
     from swh.deposit.models import DepositCollection
 
     try:
@@ -288,16 +287,12 @@ def deposit_another_user(db, deposit_another_collection):
 
 @pytest.fixture
 def anonymous_client():
-    """Create an anonymous client (no credentials during queries to the deposit)
-
-    """
+    """Create an anonymous client (no credentials during queries to the deposit)"""
     return APIClient()  # <- drf's client
 
 
 def mock_keycloakopenidconnect(mocker, keycloak_mock):
-    """Mock swh.deposit.auth.KeycloakOpenIDConnect to return the keycloak_mock
-
-    """
+    """Mock swh.deposit.auth.KeycloakOpenIDConnect to return the keycloak_mock"""
     mock = mocker.patch("swh.deposit.auth.KeycloakOpenIDConnect")
     mock.from_configfile.return_value = keycloak_mock
     return mock
@@ -306,7 +301,7 @@ def mock_keycloakopenidconnect(mocker, keycloak_mock):
 @pytest.fixture
 def mock_keycloakopenidconnect_ok(mocker, keycloak_mock_auth_success):
     """Mock keycloak so it always accepts connection for user with the right
-       permissions
+    permissions
 
     """
     return mock_keycloakopenidconnect(mocker, keycloak_mock_auth_success)
@@ -350,9 +345,7 @@ def authenticated_client(mock_keycloakopenidconnect_ok, anonymous_client, deposi
 
 @pytest.fixture
 def unauthorized_client(mock_keycloakopenidconnect_ko, anonymous_client, deposit_user):
-    """Create an unauthorized client (will see their authentication fail)
-
-    """
+    """Create an unauthorized client (will see their authentication fail)"""
     yield from _create_authenticated_client(anonymous_client, deposit_user)
 
 
@@ -361,7 +354,7 @@ def insufficient_perm_client(
     mocker, keycloak_mock_auth_success, anonymous_client, deposit_user
 ):
     """keycloak accepts connection but client returned has no deposit permission, so access
-       is not allowed.
+    is not allowed.
 
     """
     keycloak_mock_auth_success.client_permissions = []
@@ -371,9 +364,7 @@ def insufficient_perm_client(
 
 @pytest.fixture
 def sample_archive(tmp_path):
-    """Returns a sample archive
-
-    """
+    """Returns a sample archive"""
     tmp_path = str(tmp_path)  # pytest version limitation in previous version
     archive = create_arborescence_archive(
         tmp_path, "archive1", "file1", b"some content in file"
@@ -410,9 +401,7 @@ def internal_create_deposit(
     external_id: str,
     status: str,
 ) -> "Deposit":
-    """Create a deposit for a given collection with internal tool
-
-    """
+    """Create a deposit for a given collection with internal tool"""
     from swh.deposit.models import Deposit
 
     deposit = Deposit(
@@ -430,9 +419,7 @@ def create_deposit(
     deposit_status=DEPOSIT_STATUS_DEPOSITED,
     in_progress=False,
 ):
-    """Create a skeleton shell deposit
-
-    """
+    """Create a skeleton shell deposit"""
     url = reverse(COL_IRI, args=[collection_name])
     # when
     response = post_archive(
@@ -468,7 +455,7 @@ def create_binary_deposit(
     **kwargs,
 ):
     """Create a deposit with both metadata and archive set. Then alters its status
-       to `deposit_status`.
+    to `deposit_status`.
 
     """
     deposit = create_deposit(
@@ -499,9 +486,7 @@ def create_binary_deposit(
 
 
 def deposit_factory(deposit_status=DEPOSIT_STATUS_DEPOSITED, in_progress=False):
-    """Build deposit with a specific status
-
-    """
+    """Build deposit with a specific status"""
 
     @pytest.fixture()
     def _deposit(
@@ -537,9 +522,7 @@ failed_deposit = deposit_factory(deposit_status=DEPOSIT_STATUS_LOAD_FAILURE)
 def partial_deposit_with_metadata(
     sample_archive, deposit_collection, authenticated_client, atom_dataset
 ):
-    """Returns deposit with archive and metadata provided, status 'partial'
-
-    """
+    """Returns deposit with archive and metadata provided, status 'partial'"""
     return create_binary_deposit(
         authenticated_client,
         deposit_collection.name,
@@ -577,9 +560,7 @@ def partial_deposit_only_metadata(
 
 @pytest.fixture
 def complete_deposit(sample_archive, deposit_collection, authenticated_client):
-    """Returns a completed deposit (load success)
-
-    """
+    """Returns a completed deposit (load success)"""
     deposit = create_deposit(
         authenticated_client,
         deposit_collection.name,

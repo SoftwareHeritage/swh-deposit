@@ -28,9 +28,7 @@ def datadir(request):
 
 @pytest.fixture
 def ready_deposit_ok(partial_deposit_with_metadata):
-    """Returns a deposit ready for checks (it will pass the checks).
-
-    """
+    """Returns a deposit ready for checks (it will pass the checks)."""
     deposit = partial_deposit_with_metadata
     deposit.status = DEPOSIT_STATUS_DEPOSITED
     deposit.save()
@@ -39,9 +37,7 @@ def ready_deposit_ok(partial_deposit_with_metadata):
 
 @pytest.fixture
 def ready_deposit_verified(partial_deposit_with_metadata):
-    """Returns a deposit ready for checks (it will pass the checks).
-
-    """
+    """Returns a deposit ready for checks (it will pass the checks)."""
     deposit = partial_deposit_with_metadata
     deposit.status = DEPOSIT_STATUS_VERIFIED
     deposit.save()
@@ -51,7 +47,7 @@ def ready_deposit_verified(partial_deposit_with_metadata):
 @pytest.fixture
 def ready_deposit_only_metadata(partial_deposit_only_metadata):
     """Deposit in status ready that will fail the checks (because missing
-       archive).
+    archive).
 
     """
     deposit = partial_deposit_only_metadata

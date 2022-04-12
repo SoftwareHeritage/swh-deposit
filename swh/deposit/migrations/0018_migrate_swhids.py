@@ -29,9 +29,7 @@ swh_storage = None
 
 
 def get_storage() -> Optional[Any]:
-    """Instantiate a storage client
-
-    """
+    """Instantiate a storage client"""
     settings = os.environ.get("DJANGO_SETTINGS_MODULE")
     if settings != "swh.deposit.settings.production":  # Bypass for now
         return None

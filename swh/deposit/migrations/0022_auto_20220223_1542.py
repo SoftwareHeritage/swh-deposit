@@ -47,12 +47,15 @@ class Migration(migrations.Migration):
             model_name="deposit",
             name="type",
             field=models.CharField(
-                choices=DEPOSIT_TYPES, default=DEPOSIT_CODE, max_length=4,
+                choices=DEPOSIT_TYPES,
+                default=DEPOSIT_CODE,
+                max_length=4,
             ),
             preserve_default=False,
         ),
         # Migrate and make the operations possibly reversible
         migrations.RunPython(
-            fill_deposit_type, reverse_code=migrations.RunPython.noop,
+            fill_deposit_type,
+            reverse_code=migrations.RunPython.noop,
         ),
     ]

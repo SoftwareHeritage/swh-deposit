@@ -18,13 +18,21 @@ def test_convert_status_detail():
             "fields": ["blahurl", "testurl"],
         },
         "metadata": [
-            {"summary": "Mandatory fields missing", "fields": ["url", "title"],},
+            {
+                "summary": "Mandatory fields missing",
+                "fields": ["url", "title"],
+            },
             {
                 "summary": "Alternate fields missing",
                 "fields": ["name or title", "url or badurl"],
             },
         ],
-        "archive": [{"summary": "Unreadable archive", "fields": ["1"],}],
+        "archive": [
+            {
+                "summary": "Unreadable archive",
+                "fields": ["1"],
+            }
+        ],
     }
 
     expected_status_detail = """- Mandatory fields missing (url, title)
@@ -43,10 +51,21 @@ def test_convert_status_detail_2():
             "summary": "At least one compatible url field. Failed",
             "fields": ["testurl"],
         },
-        "metadata": [{"summary": "Mandatory fields missing", "fields": ["name"],},],
+        "metadata": [
+            {
+                "summary": "Mandatory fields missing",
+                "fields": ["name"],
+            },
+        ],
         "archive": [
-            {"summary": "Invalid archive", "fields": ["2"],},
-            {"summary": "Unsupported archive", "fields": ["1"],},
+            {
+                "summary": "Invalid archive",
+                "fields": ["2"],
+            },
+            {
+                "summary": "Unsupported archive",
+                "fields": ["1"],
+            },
         ],
         "loading": ["error1", "error 2"],
     }
@@ -65,7 +84,9 @@ def test_convert_status_detail_2():
 
 def test_convert_status_detail_3():
     status_detail = {
-        "url": {"summary": "At least one compatible url field",},
+        "url": {
+            "summary": "At least one compatible url field",
+        },
     }
 
     expected_status_detail = "- At least one compatible url field\n"
@@ -80,11 +101,20 @@ def test_convert_status_detail_edge_case():
             "fields": ["testurl"],
         },
         "metadata": [
-            {"summary": "Mandatory fields missing", "fields": ["9", 10, 1.212],},
+            {
+                "summary": "Mandatory fields missing",
+                "fields": ["9", 10, 1.212],
+            },
         ],
         "archive": [
-            {"summary": "Invalid archive", "fields": ["3"],},
-            {"summary": "Unsupported archive", "fields": [2],},
+            {
+                "summary": "Invalid archive",
+                "fields": ["3"],
+            },
+            {
+                "summary": "Unsupported archive",
+                "fields": [2],
+            },
         ],
     }
 

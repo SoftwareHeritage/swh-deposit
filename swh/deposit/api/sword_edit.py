@@ -19,9 +19,9 @@ from .common import APIPost, ParsedRequestHeaders, Receipt
 class SwordEditAPI(APIPost):
     """Deposit request class defining api endpoints for sword deposit.
 
-       What's known as 'SE-IRI' in the sword specification.
+    What's known as 'SE-IRI' in the sword specification.
 
-       HTTP verbs supported: POST
+    HTTP verbs supported: POST
 
     """
 

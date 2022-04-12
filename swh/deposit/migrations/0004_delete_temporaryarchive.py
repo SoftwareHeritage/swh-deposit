@@ -12,5 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.DeleteModel(name="TemporaryArchive",),
+        migrations.DeleteModel(
+            name="TemporaryArchive",
+        ),
     ]

@@ -43,9 +43,7 @@ def private_check_url_endpoints(collection, deposit):
 def test_deposit_ok(
     authenticated_client, deposit_collection, ready_deposit_ok, extension
 ):
-    """Proper deposit should succeed the checks (-> status ready)
-
-    """
+    """Proper deposit should succeed the checks (-> status ready)"""
     deposit = ready_deposit_ok
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -72,9 +70,7 @@ def test_deposit_ok(
 def test_deposit_invalid_tarball(
     tmp_path, authenticated_client, deposit_collection, extension
 ):
-    """Deposit with tarball (of 1 tarball) should fail the checks: rejected
-
-    """
+    """Deposit with tarball (of 1 tarball) should fail the checks: rejected"""
     deposit = create_deposit_archive_with_archive(
         tmp_path, extension, authenticated_client, deposit_collection.name
     )
@@ -95,9 +91,7 @@ def test_deposit_invalid_tarball(
 def test_deposit_ko_missing_tarball(
     authenticated_client, deposit_collection, ready_deposit_only_metadata
 ):
-    """Deposit without archive should fail the checks: rejected
-
-    """
+    """Deposit without archive should fail the checks: rejected"""
     deposit = ready_deposit_only_metadata
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
@@ -121,9 +115,7 @@ def test_deposit_ko_missing_tarball(
 def test_deposit_ko_unsupported_tarball(
     tmp_path, authenticated_client, deposit_collection, ready_deposit_invalid_archive
 ):
-    """Deposit with an unsupported tarball should fail the checks: rejected
-
-    """
+    """Deposit with an unsupported tarball should fail the checks: rejected"""
     deposit = ready_deposit_invalid_archive
     assert DEPOSIT_STATUS_DEPOSITED == deposit.status
 
@@ -154,9 +146,9 @@ def test_check_deposit_metadata_ok(
     authenticated_client, deposit_collection, ready_deposit_ok
 ):
     """Proper deposit should succeed the checks (-> status ready)
-       with all **MUST** metadata
+    with all **MUST** metadata
 
-       using the codemeta metadata test set
+    using the codemeta metadata test set
     """
     deposit = ready_deposit_ok
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED

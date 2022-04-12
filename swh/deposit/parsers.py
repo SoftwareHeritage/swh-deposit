@@ -20,17 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 class SWHFileUploadZipParser(FileUploadParser):
-    """File upload parser limited to zip archive.
-
-    """
+    """File upload parser limited to zip archive."""
 
     media_type = "application/zip"
 
 
 class SWHFileUploadTarParser(FileUploadParser):
-    """File upload parser limited to tarball (tar, tar.gz, tar.*) archives.
-
-    """
+    """File upload parser limited to tarball (tar, tar.gz, tar.*) archives."""
 
     media_type = "application/x-tar"
 
@@ -53,9 +49,7 @@ class SWHXMLParser(BaseParser):
 
 
 class SWHAtomEntryParser(SWHXMLParser):
-    """Atom entry parser limited to specific mediatype
-
-    """
+    """Atom entry parser limited to specific mediatype"""
 
     media_type = "application/atom+xml;type=entry"
 
@@ -68,9 +62,7 @@ class SWHAtomEntryParser(SWHXMLParser):
 
 
 class SWHMultiPartParser(MultiPartParser):
-    """Multipart parser limited to a subset of mediatypes.
-
-    """
+    """Multipart parser limited to a subset of mediatypes."""
 
     media_type = "multipart/*; *"
 

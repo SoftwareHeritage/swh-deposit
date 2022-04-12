@@ -31,9 +31,7 @@ def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
 def test_delete_archive_on_partial_deposit_works(
     authenticated_client, partial_deposit_with_metadata, deposit_collection
 ):
-    """Removing partial deposit's archive should return a 204 response
-
-    """
+    """Removing partial deposit's archive should return a 204 response"""
     deposit_id = partial_deposit_with_metadata.id
     deposit = Deposit.objects.get(pk=deposit_id)
     deposit_requests = DepositRequest.objects.filter(deposit=deposit)
@@ -59,9 +57,7 @@ def test_delete_archive_on_partial_deposit_works(
 def test_delete_archive_on_undefined_deposit_fails(
     authenticated_client, deposit_collection, sample_archive
 ):
-    """Delete undefined deposit returns a 404 response
-
-    """
+    """Delete undefined deposit returns a 404 response"""
     # when
     update_uri = reverse(EM_IRI, args=[deposit_collection.name, 999])
     response = authenticated_client.delete(update_uri)
@@ -72,9 +68,7 @@ def test_delete_archive_on_undefined_deposit_fails(
 def test_delete_non_partial_deposit(
     authenticated_client, deposit_collection, deposited_deposit
 ):
-    """Delete !partial status deposit should return a 400 response
-
-    """
+    """Delete !partial status deposit should return a 400 response"""
     deposit = deposited_deposit
     assert deposit.status == DEPOSIT_STATUS_DEPOSITED
 
@@ -95,9 +89,7 @@ def test_delete_non_partial_deposit(
 def test_delete_partial_deposit(
     authenticated_client, deposit_collection, partial_deposit
 ):
-    """Delete deposit should return a 204 response
-
-    """
+    """Delete deposit should return a 204 response"""
     # given
     deposit = partial_deposit
 
@@ -115,9 +107,7 @@ def test_delete_partial_deposit(
 def test_delete_on_edit_iri_cannot_delete_non_partial_deposit(
     authenticated_client, deposit_collection, complete_deposit
 ):
-    """Delete !partial deposit should return a 400 response
-
-    """
+    """Delete !partial deposit should return a 400 response"""
     # given
     deposit = complete_deposit
 

@@ -13,6 +13,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="depositclient", name="url", field=models.TextField(null=False),
+            model_name="depositclient",
+            name="url",
+            field=models.TextField(null=False),
         ),
     ]

@@ -48,9 +48,7 @@ def test_add_deposit_when_partial_makes_new_deposit(
     atom_dataset,
     deposit_user,
 ):
-    """Posting deposit on collection when previous is partial makes new deposit
-
-    """
+    """Posting deposit on collection when previous is partial makes new deposit"""
     deposit = partial_deposit
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
     origin_url = deposit_user.provider_url + deposit.external_id

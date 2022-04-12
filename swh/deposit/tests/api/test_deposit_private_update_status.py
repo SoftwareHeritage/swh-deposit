@@ -31,9 +31,7 @@ def private_check_url_endpoints(collection, deposit):
 def test_update_deposit_status_success_with_info(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Update deposit with load success should require all information to succeed
-
-    """
+    """Update deposit with load success should require all information to succeed"""
     deposit = ready_deposit_verified
     expected_status = DEPOSIT_STATUS_LOAD_SUCCESS
     status_detail = "it works!"
@@ -61,7 +59,9 @@ def test_update_deposit_status_success_with_info(
         )
 
         response = authenticated_client.put(
-            url, content_type="application/json", data=json.dumps(full_body_info),
+            url,
+            content_type="application/json",
+            data=json.dumps(full_body_info),
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -80,9 +80,7 @@ def test_update_deposit_status_success_with_info(
 def test_update_deposit_status_rejected_with_info(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Update deposit with rejected status needs few information to succeed
-
-    """
+    """Update deposit with rejected status needs few information to succeed"""
     deposit = ready_deposit_verified
 
     for url in private_check_url_endpoints(deposit_collection, deposit):
@@ -108,9 +106,7 @@ def test_update_deposit_status_rejected_with_info(
 def test_update_deposit_status_success_with_incomplete_data(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Update deposit status with status success and incomplete information should fail
-
-    """
+    """Update deposit status with status success and incomplete information should fail"""
     deposit = ready_deposit_verified
 
     origin_url = "something"
@@ -134,7 +130,9 @@ def test_update_deposit_status_success_with_incomplete_data(
             body.pop(key)  # make the body incomplete
 
             response = authenticated_client.put(
-                url, content_type="application/json", data=json.dumps(body),
+                url,
+                content_type="application/json",
+                data=json.dumps(body),
             )
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -147,9 +145,7 @@ def test_update_deposit_status_success_with_incomplete_data(
 def test_update_deposit_status_will_fail_with_unknown_status(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Unknown status for update should return a 400 response
-
-    """
+    """Unknown status for update should return a 400 response"""
     deposit = ready_deposit_verified
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.put(
@@ -163,9 +159,7 @@ def test_update_deposit_status_will_fail_with_unknown_status(
 def test_update_deposit_status_will_fail_with_no_status_key(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """No status provided for update should return a 400 response
-
-    """
+    """No status provided for update should return a 400 response"""
     deposit = ready_deposit_verified
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.put(
@@ -181,9 +175,7 @@ def test_update_deposit_status_will_fail_with_no_status_key(
 def test_update_deposit_status_success_without_swhid_fail(
     authenticated_client, deposit_collection, ready_deposit_verified
 ):
-    """Providing successful status without swhid should return a 400
-
-    """
+    """Providing successful status without swhid should return a 400"""
     deposit = ready_deposit_verified
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.put(

@@ -404,7 +404,8 @@ _parameters1 = [
 
 
 @pytest.mark.parametrize(
-    "metadata_ok", _parameters1,
+    "metadata_ok",
+    _parameters1,
 )
 def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
     actual_check, detail = check_metadata(ElementTree.fromstring(metadata_ok))

@@ -10,9 +10,7 @@ import pytest
 def test_task_check_eventful(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
-    """Successful check should make the check succeed
-
-    """
+    """Successful check should make the check succeed"""
     client = mocker.patch("swh.deposit.loader.checker.PrivateApiDepositClient.check")
     client.return_value = "verified"
 
@@ -33,9 +31,7 @@ def test_task_check_eventful(
 def test_task_check_failure(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
-    """Unverified check status should make the check fail
-
-    """
+    """Unverified check status should make the check fail"""
     client = mocker.patch("swh.deposit.loader.checker.PrivateApiDepositClient.check")
     client.return_value = "not-verified"  # will make the status "failed"
 
@@ -56,9 +52,7 @@ def test_task_check_failure(
 def test_task_check_3(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
-    """Unexpected failures should fail the check
-
-    """
+    """Unexpected failures should fail the check"""
     client = mocker.patch("swh.deposit.loader.checker.PrivateApiDepositClient.check")
     client.side_effect = ValueError("unexpected failure will make it fail")
 

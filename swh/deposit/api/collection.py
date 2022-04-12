@@ -47,9 +47,7 @@ class CollectionAPI(ListAPIView, APIPost):
     pagination_class = DefaultPagination
 
     def get(self, request, *args, **kwargs):
-        """List the user's collection if the user has access to said collection.
-
-        """
+        """List the user's collection if the user has access to said collection."""
         self.checks(request, kwargs["collection_name"])
         paginated_result = super().get(request, *args, **kwargs)
         data = paginated_result.data

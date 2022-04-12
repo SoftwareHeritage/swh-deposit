@@ -32,9 +32,16 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(populate_deposit_type2),
-        migrations.RemoveField(model_name="depositrequest", name="type",),
-        migrations.RenameField(
-            model_name="depositrequest", old_name="type2", new_name="type",
+        migrations.RemoveField(
+            model_name="depositrequest",
+            name="type",
         ),
-        migrations.DeleteModel(name="DepositRequestType",),
+        migrations.RenameField(
+            model_name="depositrequest",
+            old_name="type2",
+            new_name="type",
+        ),
+        migrations.DeleteModel(
+            name="DepositRequestType",
+        ),
     ]
