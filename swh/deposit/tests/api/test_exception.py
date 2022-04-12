@@ -11,9 +11,7 @@ from swh.deposit.exception import custom_exception_handler
 
 
 def test_custom_exception_handler_operational_error(mocker):
-    """Operation error are translated to service unavailable
-
-    """
+    """Operation error are translated to service unavailable"""
     fake_exception = OperationalError("Fake internal error", 503)
 
     response = custom_exception_handler(fake_exception, {})
@@ -36,9 +34,7 @@ def test_custom_exception_handler_operational_error(mocker):
 
 
 def test_custom_exception_handler_default_behavior_maintained(mocker):
-    """Other internal errors are transmitted as is
-
-    """
+    """Other internal errors are transmitted as is"""
     fake_exception = APIException("Fake internal error", 500)
     fake_response = Response(
         exception=fake_exception, status=fake_exception.status_code

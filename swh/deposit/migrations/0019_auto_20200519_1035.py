@@ -12,6 +12,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="deposit", name="swh_anchor_id",),
-        migrations.RemoveField(model_name="deposit", name="swh_anchor_id_context",),
+        migrations.RemoveField(
+            model_name="deposit",
+            name="swh_anchor_id",
+        ),
+        migrations.RemoveField(
+            model_name="deposit",
+            name="swh_anchor_id_context",
+        ),
     ]

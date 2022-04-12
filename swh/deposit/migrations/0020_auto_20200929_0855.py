@@ -13,9 +13,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="deposit", old_name="swh_id", new_name="swhid",
+            model_name="deposit",
+            old_name="swh_id",
+            new_name="swhid",
         ),
         migrations.RenameField(
-            model_name="deposit", old_name="swh_id_context", new_name="swhid_context",
+            model_name="deposit",
+            old_name="swh_id_context",
+            new_name="swhid_context",
         ),
     ]

@@ -164,9 +164,7 @@ def guess_deposit_origin_url(deposit: Deposit):
 
 
 class APIBase(APIConfig, APIView, metaclass=ABCMeta):
-    """Base deposit request class sharing multiple common behaviors.
-
-    """
+    """Base deposit request class sharing multiple common behaviors."""
 
     _client: Optional[DepositClient] = None
 
@@ -326,9 +324,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         return deposit_request
 
     def _delete_archives(self, collection_name: str, deposit: Deposit) -> Dict:
-        """Delete archive references from the deposit id.
-
-        """
+        """Delete archive references from the deposit id."""
         DepositRequest.objects.filter(deposit=deposit, type=ARCHIVE_TYPE).delete()
 
         return {}
@@ -361,7 +357,9 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         return {}
 
     def _check_file_length(
-        self, filehandler: UploadedFile, content_length: Optional[int] = None,
+        self,
+        filehandler: UploadedFile,
+        content_length: Optional[int] = None,
     ) -> None:
         """Check the filehandler passed as argument has exactly the
         expected content_length
@@ -387,7 +385,9 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
     def _check_file_md5sum(
-        self, filehandler: UploadedFile, md5sum: Optional[bytes],
+        self,
+        filehandler: UploadedFile,
+        md5sum: Optional[bytes],
     ) -> None:
         """Check the filehandler passed as argument has the expected md5sum
 
@@ -479,7 +479,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         # actual storage of data
         archive_metadata = filehandler
         self._deposit_put(
-            deposit=deposit, in_progress=headers.in_progress,
+            deposit=deposit,
+            in_progress=headers.in_progress,
         )
         self._deposit_request_put(
             deposit,
@@ -608,7 +609,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         # actual storage of data
         self._deposit_put(
-            deposit=deposit, in_progress=headers.in_progress,
+            deposit=deposit,
+            in_progress=headers.in_progress,
         )
         deposit_request_data = {
             ARCHIVE_KEY: filehandler,
@@ -670,7 +672,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         metadata_authority = MetadataAuthority(
-            type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit.client.provider_url,
+            type=MetadataAuthorityType.DEPOSIT_CLIENT,
+            url=deposit.client.provider_url,
         )
 
         metadata_fetcher = self.swh_deposit_fetcher()
@@ -840,7 +843,9 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             swhid_ref = parse_swh_reference(metadata_tree)
         except ValidationError as e:
             raise DepositError(
-                PARSING_ERROR, "Invalid SWHID reference", str(e),
+                PARSING_ERROR,
+                "Invalid SWHID reference",
+                str(e),
             )
 
         if swhid_ref is not None and (
@@ -884,7 +889,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             )
 
         self._deposit_put(
-            deposit=deposit, in_progress=headers.in_progress,
+            deposit=deposit,
+            in_progress=headers.in_progress,
         )
 
         self._deposit_request_put(
@@ -1048,9 +1054,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
     def restrict_access(
         self, request: Request, headers: ParsedRequestHeaders, deposit: Deposit
     ) -> None:
-        """Allow modifications on deposit with status 'partial' only, reject the rest.
-
-        """
+        """Allow modifications on deposit with status 'partial' only, reject the rest."""
         if request.method != "GET" and deposit.status != DEPOSIT_STATUS_PARTIAL:
             summary = "You can only act on deposit with status '%s'" % (
                 DEPOSIT_STATUS_PARTIAL,
@@ -1062,7 +1066,8 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
     def _basic_not_allowed_method(self, request: Request, method: str):
         raise DepositError(
-            METHOD_NOT_ALLOWED, f"{method} method is not supported on this endpoint",
+            METHOD_NOT_ALLOWED,
+            f"{method} method is not supported on this endpoint",
         )
 
     def get(
@@ -1081,9 +1086,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
 
 class APIGet(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support GET method.
-
-    """
+    """Mixin for class to support GET method."""
 
     def get(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: int
@@ -1127,9 +1130,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 
 
 class APIPost(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support POST method.
-
-    """
+    """Mixin for class to support POST method."""
 
     def post(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
@@ -1153,7 +1154,11 @@ class APIPost(APIBase, metaclass=ABCMeta):
         )
 
         return self._make_deposit_receipt(
-            request, collection_name, status, iri_key, receipt,
+            request,
+            collection_name,
+            status,
+            iri_key,
+            receipt,
         )
 
     def _make_deposit_receipt(
@@ -1210,9 +1215,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
 
 
 class APIPut(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support PUT method.
-
-    """
+    """Mixin for class to support PUT method."""
 
     def put(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: int
@@ -1252,9 +1255,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
 
 
 class APIDelete(APIBase, metaclass=ABCMeta):
-    """Mixin for class to support DELETE method.
-
-    """
+    """Mixin for class to support DELETE method."""
 
     def delete(  # type: ignore
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None

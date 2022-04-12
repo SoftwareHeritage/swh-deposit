@@ -30,7 +30,12 @@ LOGGING = {
             "formatter": "standard",
         },
     },
-    "loggers": {"swh.deposit": {"handlers": ["console"], "level": "ERROR",},},
+    "loggers": {
+        "swh.deposit": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+    },
 }
 
 # https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-MEDIA_ROOT

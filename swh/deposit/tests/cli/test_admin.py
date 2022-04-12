@@ -21,21 +21,39 @@ def enable_db_access_for_all_tests(db):
 
 
 def test_cli_admin_user_list_nothing(cli_runner):
-    result = cli_runner.invoke(cli, ["user", "list",])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "user",
+            "list",
+        ],
+    )
 
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
     assert result.output == "Empty user list\n"
 
 
 def test_cli_admin_user_list_with_users(cli_runner, deposit_user):
-    result = cli_runner.invoke(cli, ["user", "list",])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "user",
+            "list",
+        ],
+    )
 
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
     assert result.output == f"{deposit_user.username}\n"  # only 1 user
 
 
 def test_cli_admin_collection_list_nothing(cli_runner):
-    result = cli_runner.invoke(cli, ["collection", "list",])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "collection",
+            "list",
+        ],
+    )
 
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
     assert result.output == "Empty collection list\n"
@@ -46,7 +64,13 @@ def test_cli_admin_collection_list_with_collections(cli_runner, deposit_collecti
 
     new_collection = create_deposit_collection("something")
 
-    result = cli_runner.invoke(cli, ["collection", "list",])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "collection",
+            "list",
+        ],
+    )
 
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
     collections = "\n".join([deposit_collection.name, new_collection.name])
@@ -76,7 +100,13 @@ def test_cli_admin_create_collection(cli_runner):
         pass
 
     result = cli_runner.invoke(
-        cli, ["collection", "create", "--name", collection_name,]
+        cli,
+        [
+            "collection",
+            "create",
+            "--name",
+            collection_name,
+        ],
     )
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
 
@@ -91,7 +121,13 @@ Collection '{collection_name}' created.
     )
 
     result2 = cli_runner.invoke(
-        cli, ["collection", "create", "--name", collection_name,]
+        cli,
+        [
+            "collection",
+            "create",
+            "--name",
+            collection_name,
+        ],
     )
     assert result2.exit_code == 0, f"Unexpected output: {result.output}"
     assert (
@@ -116,7 +152,15 @@ def test_cli_admin_user_create(cli_runner):
         pass
 
     result = cli_runner.invoke(
-        cli, ["user", "create", "--username", user_name, "--password", "password",]
+        cli,
+        [
+            "user",
+            "create",
+            "--username",
+            user_name,
+            "--password",
+            "password",
+        ],
     )
     assert result.exit_code == 0, f"Unexpected output: {result.output}"
     user = DepositClient.objects.get(username=user_name)
@@ -198,9 +242,7 @@ User '{user_name}' updated.
 
 
 def test_cli_admin_reschedule_unknown_deposit(cli_runner):
-    """Rescheduling unknown deposit should report failure
-
-    """
+    """Rescheduling unknown deposit should report failure"""
     unknown_deposit_id = 666
 
     from swh.deposit.models import Deposit
@@ -219,9 +261,7 @@ def test_cli_admin_reschedule_unknown_deposit(cli_runner):
 
 
 def test_cli_admin_reschedule_verified_deposit(cli_runner, complete_deposit):
-    """Rescheduling verified deposit should do nothing but report
-
-    """
+    """Rescheduling verified deposit should do nothing but report"""
     deposit = complete_deposit
     deposit.status = "verified"
     deposit.save()
@@ -240,9 +280,7 @@ def test_cli_admin_reschedule_verified_deposit(cli_runner, complete_deposit):
 def test_cli_admin_reschedule_unaccepted_deposit_status(
     status_to_check, cli_runner, complete_deposit
 ):
-    """Rescheduling verified deposit should do nothing but report
-
-    """
+    """Rescheduling verified deposit should do nothing but report"""
     deposit = complete_deposit
     deposit.status = status_to_check  # not accepted status will fail the check
     deposit.save()
@@ -259,9 +297,7 @@ def test_cli_admin_reschedule_unaccepted_deposit_status(
 
 
 def test_cli_admin_reschedule_missing_task_id(cli_runner, complete_deposit):
-    """Rescheduling deposit with no load_task_id cannot work.
-
-    """
+    """Rescheduling deposit with no load_task_id cannot work."""
     deposit = complete_deposit
     deposit.load_task_id = ""  # drop the load-task-id so it fails the check
     deposit.save()
@@ -278,9 +314,7 @@ def test_cli_admin_reschedule_missing_task_id(cli_runner, complete_deposit):
 
 
 def test_cli_admin_reschedule_nominal(cli_runner, complete_deposit, swh_scheduler):
-    """Rescheduling deposit with no load_task_id cannot work.
-
-    """
+    """Rescheduling deposit with no load_task_id cannot work."""
     deposit = complete_deposit
 
     from swh.deposit.models import Deposit

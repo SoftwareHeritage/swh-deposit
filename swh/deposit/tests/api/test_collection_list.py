@@ -14,9 +14,7 @@ from swh.deposit.utils import NAMESPACES
 
 
 def test_deposit_collection_list_is_auth_protected(anonymous_client):
-    """Deposit list should require authentication
-
-    """
+    """Deposit list should require authentication"""
     url = reverse(COL_IRI, args=("test",))
     response = anonymous_client.get(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -26,9 +24,7 @@ def test_deposit_collection_list_is_auth_protected(anonymous_client):
 def test_deposit_collection_list_collection_access_restricted_to_user_coll(
     deposit_another_collection, deposit_user, authenticated_client
 ):
-    """Deposit list api should restrict access to user's collection
-
-    """
+    """Deposit list api should restrict access to user's collection"""
     collection_id = authenticated_client.deposit_client.collections[0]
     coll = DepositCollection.objects.get(pk=collection_id)
     # authenticated_client has access to the "coll" collection
@@ -46,9 +42,7 @@ def test_deposit_collection_list_collection_access_restricted_to_user_coll(
 def test_deposit_collection_list_nominal(
     partial_deposit, deposited_deposit, authenticated_client
 ):
-    """Deposit list api should return the user deposits in a paginated way
-
-    """
+    """Deposit list api should return the user deposits in a paginated way"""
     client_id = authenticated_client.deposit_client.id
     assert partial_deposit.client.id == client_id
     assert deposited_deposit.client.id == client_id

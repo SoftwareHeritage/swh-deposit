@@ -13,9 +13,7 @@ from rest_framework.exceptions import APIException
 def custom_exception_handler(
     exc: APIException, context: Dict
 ) -> Optional[HttpResponse]:
-    """Custom deposit exception handler to ensure consistent xml output
-
-    """
+    """Custom deposit exception handler to ensure consistent xml output"""
     from rest_framework.views import exception_handler
 
     # drf's default exception handler first, to get the standard error response

@@ -30,7 +30,9 @@ class Migration(migrations.Migration):
                 ),
                 ("description", models.TextField(blank=True, null=True)),
             ],
-            options={"db_table": "dbversion",},
+            options={
+                "db_table": "dbversion",
+            },
         ),
         migrations.CreateModel(
             name="Deposit",
@@ -55,7 +57,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "deposit",},
+            options={
+                "db_table": "deposit",
+            },
         ),
         migrations.CreateModel(
             name="DepositClient",
@@ -78,9 +82,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "deposit_client",},
+            options={
+                "db_table": "deposit_client",
+            },
             bases=("auth.user",),
-            managers=[("objects", django.contrib.auth.models.UserManager()),],
+            managers=[
+                ("objects", django.contrib.auth.models.UserManager()),
+            ],
         ),
         migrations.CreateModel(
             name="DepositCollection",
@@ -88,7 +96,9 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
                 ("name", models.TextField()),
             ],
-            options={"db_table": "deposit_collection",},
+            options={
+                "db_table": "deposit_collection",
+            },
         ),
         migrations.CreateModel(
             name="DepositRequest",
@@ -104,7 +114,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "deposit_request",},
+            options={
+                "db_table": "deposit_request",
+            },
         ),
         migrations.CreateModel(
             name="DepositRequestType",
@@ -112,7 +124,9 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
                 ("name", models.TextField()),
             ],
-            options={"db_table": "deposit_request_type",},
+            options={
+                "db_table": "deposit_request_type",
+            },
         ),
         migrations.AddField(
             model_name="depositrequest",

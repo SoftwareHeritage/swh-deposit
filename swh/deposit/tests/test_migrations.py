@@ -96,7 +96,8 @@ def test_migrations_22_add_deposit_type_column_model_and_data(migrator):
         client_id=client.id,
         collection_id=collection.id,
         swhid=CoreSWHID(
-            object_type=ObjectType.DIRECTORY, object_id=hash_to_bytes(directory_id),
+            object_type=ObjectType.DIRECTORY,
+            object_id=hash_to_bytes(directory_id),
         ),
         swhid_context=QualifiedSWHID(
             object_type=ObjectType.DIRECTORY,

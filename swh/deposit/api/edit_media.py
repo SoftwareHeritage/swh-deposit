@@ -24,9 +24,9 @@ from .common import (
 class EditMediaAPI(APIPost, APIPut, APIDelete):
     """Deposit request class defining api endpoints for sword deposit.
 
-       What's known as 'EM IRI' in the sword specification.
+    What's known as 'EM IRI' in the sword specification.
 
-       HTTP verbs supported: PUT, POST, DELETE
+    HTTP verbs supported: PUT, POST, DELETE
 
     """
 

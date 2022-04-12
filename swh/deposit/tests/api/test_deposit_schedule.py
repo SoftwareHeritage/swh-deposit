@@ -43,7 +43,10 @@ def assert_task_for_deposit(
     assert timestamp_before_call <= task.pop("next_run") <= timestamp_after_call
     assert task["arguments"] == {
         "args": [],
-        "kwargs": {"collection": "test", "deposit_id": deposit_id,},
+        "kwargs": {
+            "collection": "test",
+            "deposit_id": deposit_id,
+        },
     }
     assert task["policy"] == "oneshot"
     assert task["type"] == "check-deposit"
@@ -53,9 +56,7 @@ def assert_task_for_deposit(
 def test_add_deposit_schedules_check(
     authenticated_client, deposit_collection, sample_archive, swh_scheduler
 ):
-    """Posting deposit by POST Col-IRI creates a checker task
-
-    """
+    """Posting deposit by POST Col-IRI creates a checker task"""
     tasks = swh_scheduler.grab_ready_tasks("check-deposit")
     assert len(tasks) == 0
 
@@ -100,9 +101,7 @@ def test_update_deposit_schedules_check(
     atom_dataset,
     swh_scheduler,
 ):
-    """Updating deposit by POST SE-IRI creates a checker task
-
-    """
+    """Updating deposit by POST SE-IRI creates a checker task"""
     deposit = partial_deposit_with_metadata
     assert deposit.status == DEPOSIT_STATUS_PARTIAL
 

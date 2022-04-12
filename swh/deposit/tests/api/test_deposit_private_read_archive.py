@@ -31,9 +31,7 @@ def test_access_to_existing_deposit_with_one_archive(
     sample_archive,
     tmp_path,
 ):
-    """Access to deposit should stream a 200 response with its raw content
-
-    """
+    """Access to deposit should stream a 200 response with its raw content"""
     deposit = complete_deposit
 
     for i, url in enumerate(private_get_raw_url_endpoints(deposit_collection, deposit)):
@@ -57,9 +55,7 @@ def test_access_to_existing_deposit_with_one_archive(
 def test_access_to_existing_deposit_with_multiple_archives(
     tmp_path, authenticated_client, deposit_collection, partial_deposit, sample_archive
 ):
-    """Access to deposit should stream a 200 response with its raw contents
-
-    """
+    """Access to deposit should stream a 200 response with its raw contents"""
     deposit = partial_deposit
     archive2 = create_arborescence_archive(
         tmp_path, "archive2", "file2", b"some other content in file"

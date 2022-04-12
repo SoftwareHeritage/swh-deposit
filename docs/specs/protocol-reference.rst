@@ -281,7 +281,7 @@ Metadata provenance
 To indicate where the metadata is coming from, deposit clients can use a
 ``<swhdeposit:metadata-provenance>`` element in ``<swhdeposit:deposit>`` whose content is
 the object the metadata is coming from,
-preferably using the ``https://schema.org/`` namespace.
+preferably using the ``http://schema.org/`` namespace.
 
 For example, when the metadata is coming from Wikidata, then the
 ``<swhdeposit:metadata-provenance>`` should be the page of a Q-entity, such as
@@ -292,7 +292,7 @@ Or when the metadata is coming from a curated repository like HAL, then
 ``<swhdeposit:metadata-provenance>`` should be the HAL project.
 
 In particular, Software Heritage expects the ``<swhdeposit:metadata-provenance>`` object
-to have a ``https://schema.org/url`` property, so that it can appropriately link
+to have a ``http://schema.org/url`` property, so that it can appropriately link
 to the original page.
 
 For example, to deposit metadata on GNU Hello:
@@ -301,7 +301,7 @@ For example, to deposit metadata on GNU Hello:
 
    <?xml version="1.0"?>
    <entry xmlns="http://www.w3.org/2005/Atom"
-          xmlns:schema="https://schema.org/">
+          xmlns:schema="http://schema.org/">
 
      <!-- ... -->
 
@@ -323,7 +323,7 @@ to show the interaction with other fields,
    <?xml version="1.0"?>
    <entry xmlns="http://www.w3.org/2005/Atom"
           xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
-          xmlns:schema="https://schema.org/"
+          xmlns:schema="http://schema.org/"
           xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
 
      <swh:deposit>

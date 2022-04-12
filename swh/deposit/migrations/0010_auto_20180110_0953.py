@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="depositclient", old_name="url", new_name="provider_url",
+            model_name="depositclient",
+            old_name="url",
+            new_name="provider_url",
         ),
         migrations.AddField(
             model_name="depositclient",

@@ -19,6 +19,8 @@ class Migration(migrations.Migration):
                 ("path", models.TextField()),
                 ("date", models.DateTimeField(auto_now_add=True)),
             ],
-            options={"db_table": "deposit_temporary_archive",},
+            options={
+                "db_table": "deposit_temporary_archive",
+            },
         ),
     ]
