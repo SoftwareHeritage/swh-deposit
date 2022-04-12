@@ -30,9 +30,7 @@ from .config import (
 
 
 class Dbversion(models.Model):
-    """Db version
-
-    """
+    """Db version"""
 
     version = models.IntegerField(primary_key=True)
     release = models.DateTimeField(default=now, null=True)
@@ -85,9 +83,7 @@ DEPOSIT_STATUS_DETAIL = {
 
 
 class DepositClient(User):
-    """Deposit client
-
-    """
+    """Deposit client"""
 
     collections = ArrayField(models.IntegerField(), null=True)
     objects = UserManager()  # type: ignore
@@ -124,9 +120,7 @@ DEPOSIT_TYPES = [
 
 
 class Deposit(models.Model):
-    """Deposit reception table
-
-    """
+    """Deposit reception table"""
 
     id = models.BigAutoField(primary_key=True)
 
@@ -214,9 +208,7 @@ REQUEST_TYPES = [(ARCHIVE_TYPE, ARCHIVE_TYPE), (METADATA_TYPE, METADATA_TYPE)]
 
 
 class DepositRequest(models.Model):
-    """Deposit request associated to one deposit.
-
-    """
+    """Deposit request associated to one deposit."""
 
     id = models.BigAutoField(primary_key=True)
     # Deposit concerned by the request

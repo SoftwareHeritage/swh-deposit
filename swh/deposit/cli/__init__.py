@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 @swh_cli_group.group(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def deposit(ctx):
-    """Deposit main command
-    """
+    """Deposit main command"""
     ctx.ensure_object(dict)
     log_level = ctx.obj.get("log_level", logging.INFO)
     logger.setLevel(log_level)

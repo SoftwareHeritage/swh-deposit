@@ -62,7 +62,8 @@ def test_client_read_data_no_result(requests_mock):
 
 def test_client_read_data_collection_error_503(requests_mock, atom_dataset):
     error_content = atom_dataset["error-cli"].format(
-        summary="forbidden", verboseDescription="Access restricted",
+        summary="forbidden",
+        verboseDescription="Access restricted",
     )
     url = "https://deposit.swh.test/1"
     requests_mock.get(f"{url}/servicedocument/", status_code=503, text=error_content)
@@ -82,7 +83,8 @@ def test_client_read_data_collection_error_503(requests_mock, atom_dataset):
 
 def test_client_read_data_status_error_503(requests_mock, atom_dataset):
     error_content = atom_dataset["error-cli"].format(
-        summary="forbidden", verboseDescription="Access restricted",
+        summary="forbidden",
+        verboseDescription="Access restricted",
     )
     collection = "test"
     deposit_id = 1
@@ -172,13 +174,17 @@ def test_client_collection_list_with_pagination_headers(requests_mock, atom_data
         url_page1,
         status_code=200,
         text=collection_list_xml_page1,
-        headers={"Link": to_header_link(url_page2, "next"),},
+        headers={
+            "Link": to_header_link(url_page2, "next"),
+        },
     )
     requests_mock.get(
         url_page2,
         status_code=200,
         text=collection_list_xml_page2,
-        headers={"Link": to_header_link(url_page1, "previous"),},
+        headers={
+            "Link": to_header_link(url_page1, "previous"),
+        },
     )
 
     expected_result_page1 = {

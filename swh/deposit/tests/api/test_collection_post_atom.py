@@ -75,7 +75,8 @@ def _assert_deposit_info_on_metadata(
     swh_storage, metadata_swhid, deposit, metadata_fetcher
 ):
     swh_authority = MetadataAuthority(
-        MetadataAuthorityType.REGISTRY, "http://deposit.softwareheritage.example/",
+        MetadataAuthorityType.REGISTRY,
+        "http://deposit.softwareheritage.example/",
     )
     page_results = swh_storage.raw_extrinsic_metadata_get(metadata_swhid, swh_authority)
 
@@ -109,9 +110,7 @@ def _assert_deposit_info_on_metadata(
 def test_post_deposit_atom_201_even_with_decimal(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting an initial atom entry should return 201 with deposit receipt
-
-    """
+    """Posting an initial atom entry should return 201 with deposit receipt"""
     atom_error_with_decimal = atom_dataset["error-with-decimal"]
 
     response = post_atom(
@@ -141,9 +140,7 @@ def test_post_deposit_atom_201_even_with_decimal(
 def test_post_deposit_atom_400_with_empty_body(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting empty body request should return a 400 response
-
-    """
+    """Posting empty body request should return a 400 response"""
     atom_content = atom_dataset["entry-data-empty-body"]
     response = post_atom(
         authenticated_client,
@@ -160,9 +157,7 @@ def test_post_deposit_atom_400_with_empty_body(
 def test_post_deposit_atom_400_with_empty_request(
     authenticated_client, deposit_collection
 ):
-    """Posting empty request should return a 400 response
-
-    """
+    """Posting empty request should return a 400 response"""
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -177,9 +172,7 @@ def test_post_deposit_atom_400_with_empty_request(
 def test_post_deposit_atom_400_badly_formatted_atom(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting a badly formatted atom should return a 400 response
-
-    """
+    """Posting a badly formatted atom should return a 400 response"""
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -193,9 +186,7 @@ def test_post_deposit_atom_400_badly_formatted_atom(
 def test_post_deposit_atom_parsing_error(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting parsing error prone atom should return 400
-
-    """
+    """Posting parsing error prone atom should return 400"""
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -209,9 +200,7 @@ def test_post_deposit_atom_parsing_error(
 def test_post_deposit_atom_400_both_create_origin_and_add_to_origin(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting a badly formatted atom should return a 400 response
-
-    """
+    """Posting a badly formatted atom should return a 400 response"""
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
@@ -227,9 +216,7 @@ def test_post_deposit_atom_400_both_create_origin_and_add_to_origin(
 def test_post_deposit_atom_403_create_wrong_origin_url_prefix(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """Creating an origin for a prefix not owned by the client is forbidden
-
-    """
+    """Creating an origin for a prefix not owned by the client is forbidden"""
     origin_url = "http://example.org/foo"
 
     response = post_atom(
@@ -275,9 +262,7 @@ def test_post_deposit_atom_use_slug_header(
 def test_post_deposit_atom_no_origin_url_nor_slug_header(
     authenticated_client, deposit_collection, deposit_user, atom_dataset, mocker
 ):
-    """Posting an atom entry without an origin url or a slug header should generate one
-
-    """
+    """Posting an atom entry without an origin url or a slug header should generate one"""
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     slug = str(uuid.uuid4())
@@ -369,12 +354,16 @@ def test_post_deposit_atom_with_create_origin_and_external_identifier(
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     document = atom_dataset["error-with-external-identifier-and-create-origin"].format(
-        external_id=external_id, url=origin_url,
+        external_id=external_id,
+        url=origin_url,
     )
 
     # when
     response = post_atom(
-        authenticated_client, url, data=document, HTTP_IN_PROGRESS="false",
+        authenticated_client,
+        url,
+        data=document,
+        HTTP_IN_PROGRESS="false",
     )
 
     assert b"&lt;external_identifier&gt; is deprecated" in response.content
@@ -384,20 +373,22 @@ def test_post_deposit_atom_with_create_origin_and_external_identifier(
 def test_post_deposit_atom_with_create_origin_and_reference(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """<swh:reference> and <swh:create_origin> are mutually exclusive
-
-    """
+    """<swh:reference> and <swh:create_origin> are mutually exclusive"""
     external_id = "foobar"
     origin_url = deposit_user.provider_url + external_id
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
     document = atom_dataset["error-with-reference-and-create-origin"].format(
-        external_id=external_id, url=origin_url,
+        external_id=external_id,
+        url=origin_url,
     )
 
     # when
     response = post_atom(
-        authenticated_client, url, data=document, HTTP_IN_PROGRESS="false",
+        authenticated_client,
+        url,
+        data=document,
+        HTTP_IN_PROGRESS="false",
     )
 
     assert b"only one may be used on a given deposit" in response.content
@@ -405,9 +396,7 @@ def test_post_deposit_atom_with_create_origin_and_reference(
 
 
 def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset):
-    """Posting an atom entry to an unknown collection should return a 404
-
-    """
+    """Posting an atom entry to an unknown collection should return a 404"""
     unknown_collection = "unknown-one"
     with pytest.raises(DepositCollection.DoesNotExist):
         DepositCollection.objects.get(name=unknown_collection)
@@ -425,9 +414,7 @@ def test_post_deposit_atom_unknown_collection(authenticated_client, atom_dataset
 def test_post_deposit_atom_entry_initial(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """Posting an initial atom entry should return 201 with deposit receipt
-
-    """
+    """Posting an initial atom entry should return 201 with deposit receipt"""
     # given
     origin_url = deposit_user.provider_url + "1225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
@@ -473,9 +460,7 @@ def test_post_deposit_atom_entry_initial(
 def test_post_deposit_atom_entry_with_codemeta(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):
-    """Posting an initial atom entry should return 201 with deposit receipt
-
-    """
+    """Posting an initial atom entry should return 201 with deposit receipt"""
     # given
     origin_url = deposit_user.provider_url + "1225c695-cfb8-4ebb-aaaa-80da344efa6a"
 
@@ -512,9 +497,7 @@ def test_post_deposit_atom_entry_with_codemeta(
 def test_deposit_metadata_invalid(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting invalid swhid reference is bad request returned to client
-
-    """
+    """Posting invalid swhid reference is bad request returned to client"""
     invalid_swhid = "swh:1:dir :31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
     xml_data = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=invalid_swhid)
 
@@ -530,9 +513,7 @@ def test_deposit_metadata_invalid(
 def test_deposit_metadata_invalid_metadata_provenance(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting invalid metadata provenance is bad request returned to client
-
-    """
+    """Posting invalid metadata provenance is bad request returned to client"""
     invalid_swhid = "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
     xml_data = atom_dataset["entry-data-with-swhid"].format(
         swhid=invalid_swhid,
@@ -553,9 +534,7 @@ def test_deposit_metadata_invalid_metadata_provenance(
 def test_deposit_metadata_fails_functional_checks(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Posting functionally invalid metadata swhid is bad request returned to client
-
-    """
+    """Posting functionally invalid metadata swhid is bad request returned to client"""
     swhid = "swh:1:dir:31b5c8cc985d190b5a7ef4878128ebfdc2358f49"
     invalid_xml_data = atom_dataset[
         "entry-data-with-swhid-fail-metadata-functional-checks"
@@ -586,11 +565,13 @@ def test_deposit_metadata_fails_functional_checks(
     ],
 )
 def test_deposit_metadata_swhid(
-    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+    swhid,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
 ):
-    """Posting a swhid reference is stored on raw extrinsic metadata storage
-
-    """
+    """Posting a swhid reference is stored on raw extrinsic metadata storage"""
     swhid_reference = QualifiedSWHID.from_string(swhid)
     swhid_target = extended_swhid_from_qualified(swhid_reference)
 
@@ -622,7 +603,8 @@ def test_deposit_metadata_swhid(
 
     # Ensure metadata stored in the metadata storage is consistent
     metadata_authority = MetadataAuthority(
-        type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit_client.provider_url,
+        type=MetadataAuthorityType.DEPOSIT_CLIENT,
+        url=deposit_client.provider_url,
     )
 
     actual_authority = swh_storage.metadata_authority_get(
@@ -632,7 +614,8 @@ def test_deposit_metadata_swhid(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"], version=config.tool["version"],
+        name=config.tool["name"],
+        version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -659,7 +642,10 @@ def test_deposit_metadata_swhid(
         metadata=xml_data.encode(),
         **metadata_context,
     )
-    assert page_results == PagedResult(results=[metadata], next_page_token=None,)
+    assert page_results == PagedResult(
+        results=[metadata],
+        next_page_token=None,
+    )
 
     # Get metadata about the deposited metadata object and check it:
     _assert_deposit_info_on_metadata(
@@ -668,14 +654,20 @@ def test_deposit_metadata_swhid(
 
 
 @pytest.mark.parametrize(
-    "url", ["https://gitlab.org/user/repo", "https://whatever.else/repo",]
+    "url",
+    [
+        "https://gitlab.org/user/repo",
+        "https://whatever.else/repo",
+    ],
 )
 def test_deposit_metadata_origin(
-    url, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+    url,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
 ):
-    """Posting a swhid reference is stored on raw extrinsic metadata storage
-
-    """
+    """Posting a swhid reference is stored on raw extrinsic metadata storage"""
     xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     origin_swhid = Origin(url).swhid()
     deposit_client = authenticated_client.deposit_client
@@ -700,7 +692,8 @@ def test_deposit_metadata_origin(
 
     # Ensure metadata stored in the metadata storage is consistent
     metadata_authority = MetadataAuthority(
-        type=MetadataAuthorityType.DEPOSIT_CLIENT, url=deposit_client.provider_url,
+        type=MetadataAuthorityType.DEPOSIT_CLIENT,
+        url=deposit_client.provider_url,
     )
 
     actual_authority = swh_storage.metadata_authority_get(
@@ -710,7 +703,8 @@ def test_deposit_metadata_origin(
 
     config = APIConfig()
     metadata_fetcher = MetadataFetcher(
-        name=config.tool["name"], version=config.tool["version"],
+        name=config.tool["name"],
+        version=config.tool["version"],
     )
 
     actual_fetcher = swh_storage.metadata_fetcher_get(
@@ -735,7 +729,10 @@ def test_deposit_metadata_origin(
         format="sword-v2-atom-codemeta",
         metadata=xml_data.encode(),
     )
-    assert page_results == PagedResult(results=[metadata], next_page_token=None,)
+    assert page_results == PagedResult(
+        results=[metadata],
+        next_page_token=None,
+    )
 
     # Get metadata about the deposited metadata object and check it:
     _assert_deposit_info_on_metadata(
@@ -759,11 +756,13 @@ def test_deposit_metadata_origin(
     ],
 )
 def test_deposit_metadata_unknown_swhid(
-    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+    swhid,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
 ):
-    """Posting a swhid reference is rejected if the referenced object is unknown
-
-    """
+    """Posting a swhid reference is rejected if the referenced object is unknown"""
     xml_data = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=swhid)
 
     response = post_atom(
@@ -789,7 +788,11 @@ def test_deposit_metadata_unknown_swhid(
     ],
 )
 def test_deposit_metadata_extended_swhid(
-    swhid, authenticated_client, deposit_collection, atom_dataset, swh_storage,
+    swhid,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
 ):
     """Posting a swhid reference is rejected if the referenced SWHID is
     for an extended object type
@@ -813,11 +816,12 @@ def test_deposit_metadata_extended_swhid(
 
 
 def test_deposit_metadata_unknown_origin(
-    authenticated_client, deposit_collection, atom_dataset, swh_storage,
+    authenticated_client,
+    deposit_collection,
+    atom_dataset,
+    swh_storage,
 ):
-    """Posting a swhid reference is stored on raw extrinsic metadata storage
-
-    """
+    """Posting a swhid reference is stored on raw extrinsic metadata storage"""
     url = "https://gitlab.org/user/repo"
     xml_data = atom_dataset["entry-data-with-origin-reference"].format(url=url)
     response = post_atom(

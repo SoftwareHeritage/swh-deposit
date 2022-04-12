@@ -28,9 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class ParserError(ValueError):
-    """Specific parsing error detected when parsing the xml metadata input
-
-    """
+    """Specific parsing error detected when parsing the xml metadata input"""
 
     pass
 
@@ -156,9 +154,7 @@ def make_error_response(req, key, summary=None, verbose_description=None):
 
 
 class DepositError(ValueError):
-    """Represents an error that should be reported to the client
-
-    """
+    """Represents an error that should be reported to the client"""
 
     def __init__(self, key, summary, verbose_description=None):
         self.key = key

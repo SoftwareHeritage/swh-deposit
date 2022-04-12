@@ -57,9 +57,7 @@ def normalize_date(date):
 
 
 def compute_metadata_context(swhid_reference: QualifiedSWHID) -> Dict[str, Any]:
-    """Given a SWHID object, determine the context as a dict.
-
-    """
+    """Given a SWHID object, determine the context as a dict."""
     metadata_context: Dict[str, Any] = {"origin": None}
     if swhid_reference.qualifiers():
         metadata_context = {
@@ -85,7 +83,9 @@ ALLOWED_QUALIFIERS_NODE_TYPE = (
 )
 
 
-def parse_swh_metadata_provenance(metadata: ElementTree.Element,) -> Optional[str]:
+def parse_swh_metadata_provenance(
+    metadata: ElementTree.Element,
+) -> Optional[str]:
     """Parse swh metadata-provenance within the metadata dict reference if found, None
     otherwise.
 

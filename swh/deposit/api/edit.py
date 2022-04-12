@@ -17,9 +17,9 @@ from .common import APIDelete, APIPut, ParsedRequestHeaders
 class EditAPI(APIPut, APIDelete):
     """Deposit request class defining api endpoints for sword deposit.
 
-       What's known as 'Edit-IRI' in the sword specification.
+    What's known as 'Edit-IRI' in the sword specification.
 
-       HTTP verbs supported: PUT, DELETE
+    HTTP verbs supported: PUT, DELETE
 
     """
 
@@ -136,7 +136,7 @@ class EditAPI(APIPut, APIDelete):
     def process_delete(self, req, collection_name: str, deposit: Deposit) -> None:
         """Delete the container (deposit).
 
-           source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deleteconteiner  # noqa
+        source: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html#protocoloperations_deleteconteiner  # noqa
 
         """
         self._delete_deposit(collection_name, deposit)

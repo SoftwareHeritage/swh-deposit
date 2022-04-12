@@ -14,9 +14,7 @@ from swh.deposit.parsers import parse_xml
 
 
 def test_deposit_post_will_fail_with_401(unauthorized_client):
-    """Without authentication, endpoint refuses access with 401 response
-
-    """
+    """Without authentication, endpoint refuses access with 401 response"""
     url = reverse(COL_IRI, args=["hal"])
     response = unauthorized_client.post(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -33,21 +31,20 @@ def test_deposit_post_insufficient_permission(insufficient_perm_client):
 def test_access_to_another_user_collection_is_forbidden(
     authenticated_client, deposit_another_collection, deposit_user
 ):
-    """Access to another user collection should return a 403
-
-    """
+    """Access to another user collection should return a 403"""
     coll2 = deposit_another_collection
     url = reverse(COL_IRI, args=[coll2.name])
     response = authenticated_client.post(url)
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    msg = "Client %s cannot access collection %s" % (deposit_user.username, coll2.name,)
+    msg = "Client %s cannot access collection %s" % (
+        deposit_user.username,
+        coll2.name,
+    )
     assert msg in response.content.decode("utf-8")
 
 
 def test_put_on_col_iri_not_supported(authenticated_client, deposit_collection):
-    """Delete on col iri should return a 405 response
-
-    """
+    """Delete on col iri should return a 405 response"""
     url = reverse(COL_IRI, args=[deposit_collection.name])
     response = authenticated_client.put(url)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
@@ -57,9 +54,7 @@ def test_put_on_col_iri_not_supported(authenticated_client, deposit_collection):
 
 
 def test_delete_on_col_iri_not_supported(authenticated_client, deposit_collection):
-    """Delete on col iri should return a 405 response
-
-    """
+    """Delete on col iri should return a 405 response"""
     url = reverse(COL_IRI, args=[deposit_collection.name])
     response = authenticated_client.delete(url)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED

@@ -89,9 +89,7 @@ def test_post_deposit_multipart_without_origin_url(
 def test_post_deposit_multipart_zip(
     authenticated_client, deposit_collection, atom_dataset, sample_archive
 ):
-    """one multipart deposit (zip+xml) should be accepted
-
-    """
+    """one multipart deposit (zip+xml) should be accepted"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
@@ -139,9 +137,7 @@ def test_post_deposit_multipart_zip(
 def test_post_deposit_multipart_tar(
     authenticated_client, deposit_collection, atom_dataset, sample_archive
 ):
-    """one multipart deposit (tar+xml) should be accepted
-
-    """
+    """one multipart deposit (tar+xml) should be accepted"""
     # given
     url = reverse(COL_IRI, args=[deposit_collection.name])
     data_atom_entry = atom_dataset["entry-data-deposit-binary"]
@@ -190,7 +186,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
     authenticated_client, deposit_collection, atom_dataset, sample_archive
 ):
     """One multipart deposit followed by a metadata update should be
-       accepted
+    accepted
 
     """
     # given
@@ -306,7 +302,10 @@ def test_post_deposit_multipart_only_archive_and_atom_entry(
     response = authenticated_client.post(
         url,
         format="multipart",
-        data={"archive": archive, "atom_entry": other_archive,},
+        data={
+            "archive": archive,
+            "atom_entry": other_archive,
+        },
         # + headers
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG="external-id",
@@ -324,7 +323,9 @@ def test_post_deposit_multipart_only_archive_and_atom_entry(
     response = authenticated_client.post(
         url,
         format="multipart",
-        data={"archive": archive,},
+        data={
+            "archive": archive,
+        },
         # + headers
         HTTP_IN_PROGRESS="false",
         HTTP_SLUG="external-id",

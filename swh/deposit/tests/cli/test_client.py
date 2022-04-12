@@ -36,9 +36,7 @@ from ..conftest import TEST_USER
 
 
 def generate_slug() -> str:
-    """Generate a slug (sample purposes).
-
-    """
+    """Generate a slug (sample purposes)."""
     import uuid
 
     return str(uuid.uuid4())
@@ -66,9 +64,7 @@ def patched_tmp_path(tmp_path, mocker):
 
 @pytest.fixture
 def client_mock_api_down(mocker, slug):
-    """A mock client whose connection with api fails due to maintenance issue
-
-    """
+    """A mock client whose connection with api fails due to maintenance issue"""
     mock_client = MagicMock()
     mocker.patch("swh.deposit.client.PublicApiDepositClient", return_value=mock_client)
     mock_client.service_document.side_effect = MaintenanceError(
@@ -108,11 +104,13 @@ def test_cli_collection_ko_because_downtime():
 
 
 def test_cli_upload_conflictual_flags(
-    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+    datadir,
+    requests_mock_datadir,
+    cli_runner,
+    atom_dataset,
+    tmp_path,
 ):
-    """Post metadata-only deposit through cli with invalid swhid raises
-
-    """
+    """Post metadata-only deposit through cli with invalid swhid raises"""
     api_url_basename = "deposit.test.metadataonly"
     metadata = atom_dataset["entry-data-minimal"]
     metadata_path = os.path.join(tmp_path, "entry-data-minimal.xml")
@@ -141,9 +139,7 @@ def test_cli_upload_conflictual_flags(
 def test_cli_deposit_with_server_down_for_maintenance(
     sample_archive, caplog, client_mock_api_down, slug, patched_tmp_path, cli_runner
 ):
-    """ Deposit failure due to maintenance down time should be explicit
-
-    """
+    """Deposit failure due to maintenance down time should be explicit"""
     # fmt: off
     result = cli_runner.invoke(
         cli,
@@ -172,9 +168,7 @@ def test_cli_deposit_with_server_down_for_maintenance(
 
 
 def test_cli_client_generate_metadata_ok(slug):
-    """Generated metadata is well formed and pass service side metadata checks
-
-    """
+    """Generated metadata is well formed and pass service side metadata checks"""
     actual_metadata_xml = generate_metadata(
         "deposit-client",
         "project-name",
@@ -227,11 +221,11 @@ def test_cli_client_generate_metadata_ok(slug):
 
 
 def test_cli_client_generate_metadata_ok2(slug):
-    """Generated metadata is well formed and pass service side metadata checks
-
-    """
+    """Generated metadata is well formed and pass service side metadata checks"""
     actual_metadata_xml = generate_metadata(
-        "deposit-client", "project-name", authors=["some", "authors"],
+        "deposit-client",
+        "project-name",
+        authors=["some", "authors"],
     )
 
     actual_metadata = parse_xml(actual_metadata_xml)
@@ -267,9 +261,14 @@ def test_cli_client_generate_metadata_ok2(slug):
 
 
 def test_cli_single_minimal_deposit_with_slug(
-    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner, caplog,
+    sample_archive,
+    slug,
+    patched_tmp_path,
+    requests_mock_datadir,
+    cli_runner,
+    caplog,
 ):
-    """ This ensure a single deposit upload through the cli is fine, cf.
+    """This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
 
@@ -337,9 +336,14 @@ def test_cli_single_minimal_deposit_with_slug(
 
 
 def test_cli_single_minimal_deposit_with_create_origin(
-    sample_archive, slug, patched_tmp_path, requests_mock_datadir, cli_runner, caplog,
+    sample_archive,
+    slug,
+    patched_tmp_path,
+    requests_mock_datadir,
+    cli_runner,
+    caplog,
 ):
-    """ This ensure a single deposit upload through the cli is fine, cf.
+    """This ensure a single deposit upload through the cli is fine, cf.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#single-deposit
     """  # noqa
 
@@ -419,9 +423,7 @@ def test_cli_single_minimal_deposit_with_create_origin(
 def test_cli_validation_metadata(
     sample_archive, caplog, patched_tmp_path, cli_runner, slug
 ):
-    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
-
-    """
+    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls"""
 
     metadata_path = os.path.join(patched_tmp_path, "metadata.xml")
     with open(metadata_path, "a"):
@@ -532,9 +534,7 @@ def test_cli_validation_metadata(
 
 
 def test_cli_validation_no_actionable_command(caplog, cli_runner):
-    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls
-
-    """
+    """Multiple metadata flags scenario (missing, conflicts) properly fails the calls"""
     # no actionable command
     # fmt: off
     result = cli_runner.invoke(
@@ -565,9 +565,7 @@ def test_cli_validation_no_actionable_command(caplog, cli_runner):
 def test_cli_validation_replace_with_no_deposit_id_fails(
     sample_archive, caplog, patched_tmp_path, requests_mock_datadir, datadir, cli_runner
 ):
-    """--replace flags require --deposit-id otherwise fails
-
-    """
+    """--replace flags require --deposit-id otherwise fails"""
     metadata_path = os.path.join(datadir, "atom", "entry-data-deposit-binary.xml")
 
     # fmt: off
@@ -637,7 +635,7 @@ def test_cli_single_deposit_slug_generation(
 def test_cli_multisteps_deposit(
     sample_archive, datadir, slug, requests_mock_datadir, cli_runner
 ):
-    """ First deposit a partial deposit (no metadata, only archive), then update the metadata part.
+    """First deposit a partial deposit (no metadata, only archive), then update the metadata part.
     https://docs.softwareheritage.org/devel/swh-deposit/getting-started.html#multisteps-deposit
     """  # noqa
     api_url = "https://deposit.test.metadata/1"
@@ -739,9 +737,7 @@ def test_cli_multisteps_deposit(
 def test_cli_deposit_status_with_output_format(
     output_format, parser_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
 ):
-    """Check deposit status cli with all possible output formats (json, yaml, logging).
-
-    """
+    """Check deposit status cli with all possible output formats (json, yaml, logging)."""
     api_url_basename = "deposit.test.status"
     deposit_id = 1033
     expected_deposit_status = {
@@ -785,8 +781,7 @@ def test_cli_deposit_status_with_output_format(
 def test_cli_update_metadata_with_swhid_on_completed_deposit(
     datadir, requests_mock_datadir, cli_runner
 ):
-    """Update new metadata on a completed deposit (status done) is ok
-    """
+    """Update new metadata on a completed deposit (status done) is ok"""
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = 123
     expected_deposit_status = {
@@ -829,8 +824,7 @@ def test_cli_update_metadata_with_swhid_on_completed_deposit(
 def test_cli_update_metadata_with_swhid_on_other_status_deposit(
     datadir, requests_mock_datadir, cli_runner
 ):
-    """Update new metadata with swhid on other deposit status is not possible
-    """
+    """Update new metadata with swhid on other deposit status is not possible"""
     api_url_basename = "deposit.test.updateswhid"
     deposit_id = "321"
 
@@ -935,11 +929,13 @@ def test_cli_metadata_only_deposit_full_metadata_file(
 
 
 def test_cli_metadata_only_deposit_invalid_swhid(
-    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+    datadir,
+    requests_mock_datadir,
+    cli_runner,
+    atom_dataset,
+    tmp_path,
 ):
-    """Post metadata-only deposit through cli with invalid swhid raises
-
-    """
+    """Post metadata-only deposit through cli with invalid swhid raises"""
     api_url_basename = "deposit.test.metadataonly"
     invalid_swhid = "ssh:2:sth:xxx"
     metadata = atom_dataset["entry-data-with-swhid-no-prov"].format(swhid=invalid_swhid)
@@ -965,11 +961,13 @@ def test_cli_metadata_only_deposit_invalid_swhid(
 
 
 def test_cli_metadata_only_deposit_no_swhid(
-    datadir, requests_mock_datadir, cli_runner, atom_dataset, tmp_path,
+    datadir,
+    requests_mock_datadir,
+    cli_runner,
+    atom_dataset,
+    tmp_path,
 ):
-    """Post metadata-only deposit through cli with invalid swhid raises
-
-    """
+    """Post metadata-only deposit through cli with invalid swhid raises"""
     api_url_basename = "deposit.test.metadataonly"
     metadata = atom_dataset["entry-data-minimal"]
     metadata_path = os.path.join(tmp_path, "entry-data-minimal.xml")
@@ -1004,9 +1002,7 @@ def test_cli_deposit_warning_missing_origin(
     cli_runner,
     requests_mock_datadir,
 ):
-    """Deposit cli should warn when provided metadata xml is missing 'origins' tags
-
-    """
+    """Deposit cli should warn when provided metadata xml is missing 'origins' tags"""
     # For the next deposit, no warning should be logged as either <swh:create_origin> or
     # <swh:origin_to_add> are provided, and <swh:metadata-provenance-url> is always
     # provided.
@@ -1035,11 +1031,13 @@ def test_cli_deposit_warning_missing_origin(
 
 
 def test_cli_deposit_warning_missing_provenance_url(
-    tmp_path, atom_dataset, caplog, cli_runner, requests_mock_datadir,
+    tmp_path,
+    atom_dataset,
+    caplog,
+    cli_runner,
+    requests_mock_datadir,
 ):
-    """Deposit cli should warn when no metadata provenance is provided
-
-    """
+    """Deposit cli should warn when no metadata provenance is provided"""
     atom_template = atom_dataset["entry-data-with-add-to-origin-no-prov"]
     raw_metadata = atom_template % "some-url"
     metadata_path = os.path.join(tmp_path, "metadata-with-missing-prov-url.xml")
@@ -1088,9 +1086,7 @@ def test_cli_failure_should_be_parseable(atom_dataset, mocker):
 
 
 def test_cli_service_document_failure(atom_dataset, mocker):
-    """Ensure service document failures are properly served
-
-    """
+    """Ensure service document failures are properly served"""
     summary = "Invalid user credentials"
     error_xml = atom_dataset["error-cli"].format(summary=summary, verboseDescription="")
 
@@ -1115,9 +1111,7 @@ def test_cli_service_document_failure(atom_dataset, mocker):
 def test_cli_deposit_collection_list(
     output_format, parser_fn, datadir, slug, requests_mock_datadir, caplog, cli_runner
 ):
-    """Check deposit status cli with all possible output formats (json, yaml, logging).
-
-    """
+    """Check deposit status cli with all possible output formats (json, yaml, logging)."""
     api_url_basename = "deposit.test.list"
 
     expected_deposits = {

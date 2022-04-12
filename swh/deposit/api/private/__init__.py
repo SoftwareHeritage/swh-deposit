@@ -13,9 +13,7 @@ from ...models import Deposit, DepositRequest
 
 
 class DepositReadMixin:
-    """Deposit Read mixin
-
-    """
+    """Deposit Read mixin"""
 
     def _deposit_requests(self, deposit: Deposit, request_type: str):
         """Given a deposit, yields its associated deposit_request
@@ -54,7 +52,7 @@ class DepositReadMixin:
 
 class APIPrivateView(APIConfig, APIView):
     """Mixin intended as private api (so no authentication) based API view
-       (for the private ones).
+    (for the private ones).
 
     """
 
@@ -64,20 +62,28 @@ class APIPrivateView(APIConfig, APIView):
         self.permission_classes = (AllowAny,)
 
     def checks(self, req, collection_name, deposit=None):
-        """Override default checks implementation to allow empty collection.
-
-        """
+        """Override default checks implementation to allow empty collection."""
         headers = self._read_headers(req)
         self.additional_checks(req, headers, collection_name, deposit)
 
         return {"headers": headers}
 
     def get(
-        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
+        self,
+        request,
+        collection_name=None,
+        deposit_id=None,
+        *args,
+        **kwargs,
     ):
         return super().get(request, collection_name, deposit_id)
 
     def put(
-        self, request, collection_name=None, deposit_id=None, *args, **kwargs,
+        self,
+        request,
+        collection_name=None,
+        deposit_id=None,
+        *args,
+        **kwargs,
     ):
         return super().put(request, collection_name, deposit_id)

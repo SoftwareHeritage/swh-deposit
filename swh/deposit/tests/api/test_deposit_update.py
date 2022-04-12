@@ -80,7 +80,11 @@ def test_post_metadata_empty_post_finalize_deposit_ok(
 
     update_uri = reverse(SE_IRI, args=[deposit_collection.name, deposit.id])
     response = post_atom(
-        authenticated_client, update_uri, data="", size=0, HTTP_IN_PROGRESS=False,
+        authenticated_client,
+        update_uri,
+        data="",
+        size=0,
+        HTTP_IN_PROGRESS=False,
     )
 
     assert response.status_code == status.HTTP_200_OK

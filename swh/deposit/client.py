@@ -85,9 +85,7 @@ def compute_unified_information(
 
 
 class MaintenanceError(ValueError):
-    """Informational maintenance error exception
-
-    """
+    """Informational maintenance error exception"""
 
     pass
 
@@ -109,9 +107,7 @@ def handle_deprecated_config(config: Dict) -> Tuple[str, Optional[Tuple[str, str
 
 
 class BaseApiDepositClient:
-    """Deposit client base class
-
-    """
+    """Deposit client base class"""
 
     def __init__(
         self,
@@ -259,9 +255,7 @@ class PrivateApiDepositClient(BaseApiDepositClient):
 
 
 class BaseDepositClient(BaseApiDepositClient):
-    """Base Deposit client to access the public api.
-
-    """
+    """Base Deposit client to access the public api."""
 
     def __init__(
         self, config=None, url=None, auth=None, error_msg=None, empty_result={}
@@ -282,14 +276,14 @@ class BaseDepositClient(BaseApiDepositClient):
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Given an xml result from the api endpoint, parse it and returns a
-           dict.
+        dict.
 
         """
         raise NotImplementedError
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         """Compute some more information given the inputs (e.g http headers,
-           ...)
+        ...)
 
         """
         return {}
@@ -347,7 +341,9 @@ class BaseDepositClient(BaseApiDepositClient):
             msg = self.error_msg % (url, e)
             result = self.empty_result
             result.update(
-                {"error": msg,}
+                {
+                    "error": msg,
+                }
             )
             return result
         else:
@@ -375,15 +371,15 @@ class BaseDepositClient(BaseApiDepositClient):
                     if summary and detail:
                         raise MaintenanceError(f"{summary}: {detail}")
                 error.update(
-                    {"status": response.status_code,}
+                    {
+                        "status": response.status_code,
+                    }
                 )
                 return error
 
 
 class ServiceDocumentDepositClient(BaseDepositClient):
-    """Service Document information retrieval.
-
-    """
+    """Service Document information retrieval."""
 
     def __init__(self, config=None, url=None, auth=None):
         super().__init__(
@@ -403,9 +399,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
     def parse_result_ok(
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Parse service document's success response.
-
-        """
+        """Parse service document's success response."""
         single_keys = [
             "atom:title",
             "sword:collectionPolicy",
@@ -449,9 +443,7 @@ class ServiceDocumentDepositClient(BaseDepositClient):
 
 
 class StatusDepositClient(BaseDepositClient):
-    """Status information on a deposit.
-
-    """
+    """Status information on a deposit."""
 
     def __init__(self, config=None, url=None, auth=None):
         super().__init__(
@@ -475,9 +467,7 @@ class StatusDepositClient(BaseDepositClient):
     def parse_result_ok(
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Given an xml content as string, returns a deposit dict.
-
-        """
+        """Given an xml content as string, returns a deposit dict."""
         data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
@@ -491,9 +481,7 @@ class StatusDepositClient(BaseDepositClient):
 
 
 class CollectionListDepositClient(BaseDepositClient):
-    """List a collection of deposits (owned by a user)
-
-    """
+    """List a collection of deposits (owned by a user)"""
 
     def __init__(self, config=None, url=None, auth=None):
         super().__init__(
@@ -520,9 +508,7 @@ class CollectionListDepositClient(BaseDepositClient):
     def parse_result_ok(
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Given an xml content as string, returns a deposit dict.
-
-        """
+        """Given an xml content as string, returns a deposit dict."""
         link_header = headers.get("Link", "") if headers else ""
         links = parse_header_links(link_header)
         data = ElementTree.fromstring(xml_content)
@@ -556,9 +542,7 @@ class CollectionListDepositClient(BaseDepositClient):
 
 
 class BaseCreateDepositClient(BaseDepositClient):
-    """Deposit client base class to post new deposit.
-
-    """
+    """Deposit client base class to post new deposit."""
 
     def __init__(self, config=None, url=None, auth=None):
         super().__init__(
@@ -566,7 +550,10 @@ class BaseCreateDepositClient(BaseDepositClient):
             auth=auth,
             config=config,
             error_msg="Post Deposit failure at %s: %s",
-            empty_result={"swh:deposit_id": None, "swh:deposit_status": None,},
+            empty_result={
+                "swh:deposit_id": None,
+                "swh:deposit_status": None,
+            },
         )
 
     def compute_url(self, collection, *args, **kwargs):
@@ -578,9 +565,7 @@ class BaseCreateDepositClient(BaseDepositClient):
     def parse_result_ok(
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Given an xml content as string, returns a deposit dict.
-
-        """
+        """Given an xml content as string, returns a deposit dict."""
         data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
@@ -681,16 +666,16 @@ class CreateMetadataOnlyDepositClient(BaseCreateDepositClient):
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
         return {
-            "headers": {"CONTENT-TYPE": "application/atom+xml;type=entry",},
+            "headers": {
+                "CONTENT-TYPE": "application/atom+xml;type=entry",
+            },
             "filepath": kwargs["metadata_path"],
         }
 
     def parse_result_ok(
         self, xml_content: str, headers: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Given an xml content as string, returns a deposit dict.
-
-        """
+        """Given an xml content as string, returns a deposit dict."""
         data = ElementTree.fromstring(xml_content)
         keys = [
             "deposit_id",
@@ -729,9 +714,13 @@ class CreateMultipartDepositClient(BaseCreateDepositClient):
         return files, headers
 
     def compute_information(self, *args, **kwargs) -> Dict[str, Any]:
-        info = compute_unified_information(*args, filepath=kwargs["archive_path"],)
+        info = compute_unified_information(
+            *args,
+            filepath=kwargs["archive_path"],
+        )
         info_meta = compute_unified_information(
-            *args, filepath=kwargs["metadata_path"],
+            *args,
+            filepath=kwargs["metadata_path"],
         )
         files, headers = self._multipart_info(info, info_meta)
         return {"files": files, "headers": headers}
@@ -884,7 +873,9 @@ class PublicApiDepositClient(BaseApiDepositClient):
         return self.deposit_status(collection, deposit_id)
 
     def deposit_metadata_only(
-        self, collection: str, metadata: Optional[str] = None,
+        self,
+        collection: str,
+        metadata: Optional[str] = None,
     ):
         assert metadata is not None
         return CreateMetadataOnlyDepositClient(

@@ -29,9 +29,7 @@ from swh.deposit.utils import NAMESPACES
 def test_post_deposit_binary_and_post_to_add_another_archive(
     authenticated_client, deposit_collection, sample_archive, tmp_path
 ):
-    """Updating a deposit should return a 201 with receipt
-
-    """
+    """Updating a deposit should return a 201 with receipt"""
     tmp_path = str(tmp_path)
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -73,7 +71,10 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
 
     # adding another archive for the deposit and finalizing it
     response = post_archive(
-        authenticated_client, update_uri, archive2, HTTP_SLUG=external_id,
+        authenticated_client,
+        update_uri,
+        archive2,
+        HTTP_SLUG=external_id,
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -112,9 +113,7 @@ def test_replace_archive_to_deposit_is_possible(
     sample_archive,
     atom_dataset,
 ):
-    """Replace all archive with another one should return a 204 response
-
-    """
+    """Replace all archive with another one should return a 204 response"""
     tmp_path = str(tmp_path)
     # given
     deposit = partial_deposit
@@ -167,9 +166,7 @@ def test_replace_archive_to_deposit_is_possible(
 def test_add_archive_to_unknown_deposit(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Adding metadata to unknown deposit should return a 404 response
-
-    """
+    """Adding metadata to unknown deposit should return a 404 response"""
     unknown_deposit_id = 997
     try:
         Deposit.objects.get(pk=unknown_deposit_id)
@@ -191,9 +188,7 @@ def test_add_archive_to_unknown_deposit(
 def test_replace_archive_to_unknown_deposit(
     authenticated_client, deposit_collection, atom_dataset
 ):
-    """Replacing archive to unknown deposit should return a 404 response
-
-    """
+    """Replacing archive to unknown deposit should return a 404 response"""
     unknown_deposit_id = 996
     try:
         Deposit.objects.get(pk=unknown_deposit_id)
@@ -219,9 +214,7 @@ def test_add_archive_to_deposit_is_possible(
     partial_deposit_with_metadata,
     sample_archive,
 ):
-    """Add another archive to a deposit return a 201 response
-
-    """
+    """Add another archive to a deposit return a 201 response"""
     tmp_path = str(tmp_path)
     deposit = partial_deposit_with_metadata
 
@@ -269,9 +262,7 @@ def test_add_archive_to_deposit_is_possible(
 def test_post_deposit_then_update_refused(
     authenticated_client, deposit_collection, sample_archive, atom_dataset, tmp_path
 ):
-    """Updating a deposit with status 'ready' should return a 400
-
-    """
+    """Updating a deposit with status 'ready' should return a 400"""
     tmp_path = str(tmp_path)
     url = reverse(COL_IRI, args=[deposit_collection.name])
 
@@ -404,7 +395,10 @@ def test_post_deposit_then_update_refused(
     r = authenticated_client.put(
         edit_iri,
         format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
+        data={
+            "archive": archive,
+            "atom_entry": atom_entry,
+        },
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST
@@ -418,7 +412,10 @@ def test_post_deposit_then_update_refused(
     r = authenticated_client.post(
         se_iri,
         format="multipart",
-        data={"archive": archive, "atom_entry": atom_entry,},
+        data={
+            "archive": archive,
+            "atom_entry": atom_entry,
+        },
     )
 
     assert r.status_code == status.HTTP_400_BAD_REQUEST

@@ -19,9 +19,7 @@ from swh.deposit.utils import NAMESPACES
 def test_api_deposit_content_nominal(
     authenticated_client, complete_deposit, partial_deposit_only_metadata
 ):
-    """Retrieve information on deposit should return 200 response
-
-    """
+    """Retrieve information on deposit should return 200 response"""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
 
     for deposit in [complete_deposit, partial_deposit_only_metadata]:
@@ -52,9 +50,7 @@ def test_api_deposit_content_nominal(
 def test_api_deposit_content_unknown(
     authenticated_client, complete_deposit, deposit_collection
 ):
-    """Retrieve information on unknown deposit or collection should return 404
-
-    """
+    """Retrieve information on unknown deposit or collection should return 404"""
     unknown_deposit_id = 999
     unknown_collection = "unknown"
     for collection, deposit_id in [

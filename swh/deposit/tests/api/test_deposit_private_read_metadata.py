@@ -38,9 +38,7 @@ def update_deposit_with_metadata(authenticated_client, collection, deposit, meta
 def test_read_missing_metadata(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Private metadata read api to existing deposit should return metadata
-
-    """
+    """Private metadata read api to existing deposit should return metadata"""
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
@@ -85,9 +83,7 @@ def test_read_missing_metadata(
 def test_read_metadata(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Private metadata read api to existing deposit should return metadata
-
-    """
+    """Private metadata read api to existing deposit should return metadata"""
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
@@ -95,7 +91,10 @@ def test_read_metadata(
 
     metadata_xml_raw = atom_dataset["entry-data2"]
     deposit = update_deposit_with_metadata(
-        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+        authenticated_client,
+        deposit_collection,
+        deposit,
+        metadata_xml_raw,
     )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
@@ -143,16 +142,17 @@ def test_read_metadata(
 def test_read_metadata_revision_with_parent(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Private read metadata to a deposit (with parent) returns metadata
-
-    """
+    """Private read metadata to a deposit (with parent) returns metadata"""
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
     deposit.save()
     metadata_xml_raw = atom_dataset["entry-data2"]
     deposit = update_deposit_with_metadata(
-        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+        authenticated_client,
+        deposit_collection,
+        deposit,
+        metadata_xml_raw,
     )
 
     rev_id = "da78a9d4cf1d5d29873693fd496142e3a18c20fa"
@@ -210,9 +210,7 @@ def test_read_metadata_revision_with_parent(
 def test_read_metadata_3(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """date(Created|Published) provided, uses author/committer date
-
-    """
+    """date(Created|Published) provided, uses author/committer date"""
     deposit = partial_deposit
     deposit.external_id = "hal-01243065"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
@@ -220,7 +218,10 @@ def test_read_metadata_3(
 
     metadata_xml_raw = atom_dataset["entry-data3"]
     update_deposit_with_metadata(
-        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+        authenticated_client,
+        deposit_collection,
+        deposit,
+        metadata_xml_raw,
     )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):
@@ -269,9 +270,7 @@ def test_read_metadata_3(
 def test_read_metadata_4(
     authenticated_client, deposit_collection, atom_dataset, partial_deposit
 ):
-    """dateCreated/datePublished not provided, revision uses complete_date
-
-    """
+    """dateCreated/datePublished not provided, revision uses complete_date"""
     deposit = partial_deposit
     codemeta_entry_data = atom_dataset["metadata"] % ""
     deposit = update_deposit_with_metadata(
@@ -290,7 +289,10 @@ def test_read_metadata_4(
         actual_data = response.json()
 
         assert actual_data == {
-            "origin": {"type": "deposit", "url": None,},
+            "origin": {
+                "type": "deposit",
+                "url": None,
+            },
             "raw_metadata": codemeta_entry_data,
             "provider": {
                 "metadata": {},
@@ -394,11 +396,10 @@ def test_read_metadata_5(
 
 
 def test_access_to_nonexisting_deposit_returns_404_response(
-    authenticated_client, deposit_collection,
+    authenticated_client,
+    deposit_collection,
 ):
-    """Read unknown collection should return a 404 response
-
-    """
+    """Read unknown collection should return a 404 response"""
     unknown_id = 999
     try:
         Deposit.objects.get(pk=unknown_id)
@@ -415,9 +416,7 @@ def test_access_to_nonexisting_deposit_returns_404_response(
 def test_read_metadata_multiple_release_notes(
     authenticated_client, deposit_collection, partial_deposit, atom_dataset
 ):
-    """Private metadata read api to existing deposit should return metadata
-
-    """
+    """Private metadata read api to existing deposit should return metadata"""
     deposit = partial_deposit
     deposit.external_id = "some-external-id"
     deposit.origin_url = f"https://hal-test.archives-ouvertes.fr/{deposit.external_id}"
@@ -425,7 +424,10 @@ def test_read_metadata_multiple_release_notes(
 
     metadata_xml_raw = atom_dataset["entry-data-multiple-release-notes"]
     deposit = update_deposit_with_metadata(
-        authenticated_client, deposit_collection, deposit, metadata_xml_raw,
+        authenticated_client,
+        deposit_collection,
+        deposit,
+        metadata_xml_raw,
     )
 
     for url in private_get_raw_url_endpoints(deposit_collection, deposit):

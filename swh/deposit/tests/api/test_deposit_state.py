@@ -19,9 +19,7 @@ from swh.deposit.utils import NAMESPACES
 
 
 def test_post_deposit_with_status_check(authenticated_client, deposited_deposit):
-    """Successful but not loaded deposit should have a status 'deposited'
-
-    """
+    """Successful but not loaded deposit should have a status 'deposited'"""
     deposit = deposited_deposit
     status_url = reverse(STATE_IRI, args=[deposit.collection.name, deposit.id])
 
@@ -51,9 +49,7 @@ def test_post_deposit_with_status_check(authenticated_client, deposited_deposit)
 
 
 def test_status_unknown_deposit(authenticated_client, deposit_collection):
-    """Unknown deposit status should return 404 response
-
-    """
+    """Unknown deposit status should return 404 response"""
     unknown_deposit_id = 999
     status_url = reverse(STATE_IRI, args=[deposit_collection.name, unknown_deposit_id])
     status_response = authenticated_client.get(status_url)
@@ -70,9 +66,7 @@ def test_status_unknown_collection(authenticated_client, deposited_deposit):
 
 
 def test_status_deposit_rejected(authenticated_client, rejected_deposit):
-    """Rejected deposit status should be 'rejected' with detailed summary
-
-    """
+    """Rejected deposit status should be 'rejected' with detailed summary"""
     deposit = rejected_deposit
     # _status_detail = {'url': {'summary': 'Wrong url'}}
 
@@ -100,9 +94,7 @@ def test_status_deposit_rejected(authenticated_client, rejected_deposit):
 def test_status_with_http_accept_header_should_not_break(
     authenticated_client, partial_deposit
 ):
-    """Asking deposit status with Accept header should return 200
-
-    """
+    """Asking deposit status with Accept header should return 200"""
     deposit = partial_deposit
 
     status_url = reverse(STATE_IRI, args=[deposit.collection.name, deposit.id])
@@ -117,9 +109,7 @@ def test_status_with_http_accept_header_should_not_break(
 
 
 def test_status_complete_deposit(authenticated_client, complete_deposit):
-    """Successful and loaded deposit should be 'done' and have detailed swh ids
-
-    """
+    """Successful and loaded deposit should be 'done' and have detailed swh ids"""
     deposit = complete_deposit
     url = reverse(STATE_IRI, args=[deposit.collection.name, deposit.id])
 
