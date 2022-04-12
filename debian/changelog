@@ -1,3 +1,18 @@
+swh-deposit (1.1.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.1.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2022-04-12 15:52:52
+    +0200)
+  * Upstream changes:     - v1.1.0     - api/private/deposit_list: Add
+    new endpoint to be used with datatables     - docs: Replace
+    https://schema.org/ with http://schema.org/ as namespace     -
+    settings/development: Silent django.utils.autoreload debug logs     -
+    Add .git-blame-ignore-revs file with automatic reformatting commits
+    - python: Reformat code with black 22.3.0     - pre-commit, tox:
+    Bump black from 19.10b0 to 22.3.0
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 12 Apr 2022 14:01:06 +0000
+
 swh-deposit (1.0.1-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 1.0.1     - (tagged by Valentin Lorentz
