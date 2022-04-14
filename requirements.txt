@@ -1,3 +1,4 @@
 click
 iso8601
 requests
+sentry-sdk
