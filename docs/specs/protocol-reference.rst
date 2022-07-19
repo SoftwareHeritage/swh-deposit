@@ -75,9 +75,9 @@ including a link to download its source code.
 This is not a technical requirement, but it improves discoverability.
 
 Clients may not submit arbitrary URLs; the server will check the URLs they submit
-belongs a "namespace" they own, known as the ``provider_url`` of the client.
-For example, if a client has their ``provider_url`` set to ``https://example.org/foo/``
-they will not be able to submit deposits to origins whose URL starts with
+belongs to a "namespace" they own, known as the ``provider_url`` of the client. For
+example, if a client has their ``provider_url`` set to ``https://example.org/foo/`` they
+will only be able to submit deposits to origins whose URL starts with
 ``https://example.org/foo/``.
 
 Fallbacks
