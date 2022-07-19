@@ -53,6 +53,8 @@ The debian package may integrate some new schema modifications. To run them:
     sudo django-admin migrate --settings=swh.deposit.settings.production
 
 
+.. _swh-deposit-add-client-and-collection:
+
 Add client and collection
 -------------------------
 
