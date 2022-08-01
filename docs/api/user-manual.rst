@@ -10,8 +10,8 @@ the ``swh deposit`` commands.
 Requirements
 ------------
 
-You need to have an account on the Software Heritage deposit application to be
-able to use the service.
+You need to :ref:`have an account on the Software Heritage deposit application
+<swh-deposit-register-account-as-deposit-client>` to be able to use the service.
 
 Please `contact the Software Heritage team <deposit@softwareheritage.org>`_ for
 more information on how to get access to this service.

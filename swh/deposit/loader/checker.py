@@ -6,6 +6,8 @@
 import logging
 from typing import Any, Dict
 
+import sentry_sdk
+
 from swh.core import config
 from swh.deposit.client import PrivateApiDepositClient
 
@@ -33,6 +35,7 @@ class DepositChecker:
             status = "eventful" if r == "verified" else "failed"
         except Exception:
             logger.exception("Failure during check on '%s'", deposit_check_url)
+            sentry_sdk.capture_exception()
             status = "failed"
         logger.debug("Check status: %s", status)
         return {"status": status}
