@@ -48,6 +48,7 @@ docs/_templates/.placeholder
 docs/api/api-documentation.rst
 docs/api/index.rst
 docs/api/metadata.rst
+docs/api/register-account.rst
 docs/api/use-cases.rst
 docs/api/user-manual.rst
 docs/endpoints/collection.rst

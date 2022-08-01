@@ -116,7 +116,7 @@ class Receipt:
 def _compute_md5(filehandler: UploadedFile) -> bytes:
     h = hashlib.md5()
     for chunk in filehandler:
-        h.update(chunk)  # type: ignore
+        h.update(chunk)
     return h.digest()
 
 
