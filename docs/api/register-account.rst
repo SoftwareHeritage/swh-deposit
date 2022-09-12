@@ -15,9 +15,9 @@ As a deposit client
 -------------------
 
 For this, as a client, you need to register an account on the swh keycloak `production
-<https://archive.softwareheritage.org/oidc/login/?next_path=https://archive.softwareheritage.org/>`_
+<https://archive.softwareheritage.org/oidc/login/>`_
 or `staging
-<https://webapp.staging.swh.network/oidc/login/?next_path=https://webapp.staging.swh.network/>`_
+<https://webapp.staging.swh.network/oidc/login/>`_
 instance.
 
 .. _swh-deposit-register-account-as-sysadm:
