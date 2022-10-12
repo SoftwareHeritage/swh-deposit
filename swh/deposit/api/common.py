@@ -584,14 +584,23 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "in the multipart deposit",
             )
 
-        filehandler = data["application/zip"]
-        if not filehandler:
-            filehandler = data["application/x-tar"]
+        filehandler = data["application/zip"] or data["application/x-tar"]
 
+        if filehandler is None:
+            raise DepositError(
+                BAD_REQUEST,
+                "You must provide an archive, either as application/zip or "
+                "application/x-tar",
+            )
         assert isinstance(filehandler, UploadedFile), filehandler
 
         self._check_file_length(filehandler)
         self._check_file_md5sum(filehandler, headers.content_md5sum)
+
+        if data["application/atom+xml"] is None:
+            raise DepositError(
+                BAD_REQUEST, "You must provide an application/atom+xml entry."
+            )
 
         try:
             raw_metadata, metadata_tree = self._read_metadata(
@@ -620,7 +629,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             deposit, deposit_request_data, replace_metadata, replace_archives
         )
 
-        assert filehandler is not None
         return Receipt(
             deposit_id=deposit.id,
             deposit_date=deposit.reception_date,
