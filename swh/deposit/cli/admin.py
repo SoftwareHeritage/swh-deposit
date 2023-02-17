@@ -114,7 +114,7 @@ def user_create(
 
     # user create/update
     try:
-        user = DepositClient.objects.get(username=username)  # type: ignore
+        user = DepositClient.objects.get(username=username)
         click.echo(f"Update user '{username}'.")
         action_done = "updated"
     except DepositClient.DoesNotExist:
@@ -166,7 +166,7 @@ def user_exists(ctx, username: str):
     from swh.deposit.models import DepositClient
 
     try:
-        DepositClient.objects.get(username=username)  # type: ignore
+        DepositClient.objects.get(username=username)
         click.echo(f"User {username} exists.")
         ctx.exit(0)
     except DepositClient.DoesNotExist:

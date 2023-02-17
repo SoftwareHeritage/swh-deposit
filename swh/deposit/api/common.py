@@ -1018,9 +1018,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         if self._client is None:
             try:
-                self._client = DepositClient.objects.get(  # type: ignore
-                    username=username
-                )
+                self._client = DepositClient.objects.get(username=username)
             except DepositClient.DoesNotExist:
                 raise DepositError(NOT_FOUND, f"Unknown client name {username}")
 
