@@ -144,11 +144,30 @@ of Software Heritage.
 While CodeMeta is designed for use in JSON-LD, it is easy to reuse its vocabulary
 and embed it in an XML document, in three steps:
 
-1. use the JSON-LD compact representation of the CodeMeta document
-2. replace ``@context`` declarations with XML namespaces
-3. unfold JSON lists to sibling XML subtrees
+1. use the `JSON-LD compact representation`_ of the CodeMeta document with
+   ``@context: "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"`` and no other context;
+   which implies that:
 
-For example, this CodeMeta document:
+   1. Codemeta properties (whether in the ``https://codemeta.github.io/terms/``
+      or ``http://schema.org/`` namespaces) are unprefixed terms
+   2. other properties in the ``http://schema.org/`` namespace use `compact IRIs`_
+      with the ``schema`` prefix
+   3. other properties are absolute
+2. replace ``@context`` declarations with a XMLNS declaration with
+   ``https://doi.org/10.5063/SCHEMA/CODEMETA-2.0`` as namespace
+   (eg. ``xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"``
+   or ``xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"``)
+3. if using a non-default namespace, apply its prefix to any unprefixed term
+   (ie. any term defined in https://doi.org/10.5063/SCHEMA/CODEMETA-2.0 )
+4. add XMLNS declarations for any other prefix (eg. ``xmlns:schema="http://schema.org/"``
+   if any property in that namespace is used)
+5. unfold JSON lists to sibling XML subtrees
+
+.. _JSON-LD compact representation: https://www.w3.org/TR/json-ld11/#compacted-document-form
+.. _compact IRIs: https://www.w3.org/TR/json-ld11/#compact-iris
+
+Example Codemeta document
+"""""""""""""""""""""""""
 
 .. code:: json
 
@@ -200,6 +219,56 @@ Or, equivalently:
      </codemeta:author>
    </entry>
 
+
+Note that in both these examples, ``codemeta:name`` is used even though
+the property is actually ``http://schema.org/name``.
+
+Example generic JSON-LD document
+""""""""""""""""""""""""""""""""
+
+Another example using properties not part of Codemeta:
+
+.. code:: json
+
+   {
+      "@context": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+      "name": "My Software",
+      "schema:sameAs": "http://example.org/my-software"
+   }
+
+which is equivalent to:
+
+.. code:: json
+
+   {
+      "@context": "https://doi.org/10.5063/SCHEMA/CODEMETA-2.0",
+      "name": "My Software",
+      "http://schema.org/sameAs": "http://example.org/my-software"
+   }
+
+becomes this XML document:
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+               xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+               xmlns:schema="http://schema.org/">
+     <name>My Software</name>
+     <schema:sameAs>http://example.org/my-software</schema:sameAs>
+   </atom:entry>
+
+Or, equivalently:
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <entry xmlns="http://www.w3.org/2005/Atom"
+          xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+          xmlns:schema="http://schema.org/">
+     <codemeta:name>My Software</codemeta:name>
+     <schema:sameAs>http://example.org/my-software</schema:sameAs>
+   </entry>
 
 .. _mandatory-attributes:
 

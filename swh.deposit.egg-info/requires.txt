@@ -4,11 +4,12 @@ requests
 sentry-sdk
 swh.core[http]>=0.4
 swh.model>=4.4.0
+swh.scheduler
 
 [server]
-django<4,>=2
+django
 djangorestframework
-psycopg2<2.9
+psycopg2
 setuptools
 xmlschema
 swh.core[http]>=0.4
@@ -31,9 +32,9 @@ djangorestframework-stubs>=1.4
 django-test-migrations
 types-requests
 types-pyyaml
-django<4,>=2
+django
 djangorestframework
-psycopg2<2.9
+psycopg2
 setuptools
 xmlschema
 swh.core[http]>=0.4

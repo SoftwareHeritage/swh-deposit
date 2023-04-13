@@ -14,7 +14,7 @@ Description
 -----------
 
 Most of the software source code artifacts present in the SWH Archive are gathered by
-the mean of :term:`loader <loader>` workers run by the SWH project from sourve code
+the mean of :term:`loader <loader>` workers run by the SWH project from source code
 origins identified by :term:`lister <lister>` workers. This is a pull mechanism: it's
 the responsibility of the SWH project to gather and collect source code artifacts that
 way.
