@@ -11,3 +11,4 @@ Deposit API
    api-documentation
    metadata
    use-cases
+   register-account

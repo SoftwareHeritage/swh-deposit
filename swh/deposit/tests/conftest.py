@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2021  The Software Heritage developers
+# Copyright (C) 2019-2022  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,7 @@ import re
 from typing import TYPE_CHECKING, Dict, Mapping
 from xml.etree import ElementTree
 
-from django.test.utils import setup_databases  # type: ignore
+from django.test.utils import setup_databases
 from django.urls import reverse_lazy as reverse
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
@@ -264,7 +264,7 @@ def _create_deposit_user(
     user_data_d = deepcopy(user_data)
     user_data_d.pop("collection", None)
     passwd = user_data_d.pop("password", None)
-    user, _ = DepositClient.objects.get_or_create(  # type: ignore
+    user, _ = DepositClient.objects.get_or_create(
         username=user_data_d["username"],
         defaults={**user_data_d, "collections": [collection.id]},
     )

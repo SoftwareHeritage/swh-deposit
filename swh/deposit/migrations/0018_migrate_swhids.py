@@ -285,7 +285,7 @@ def migrate_deposit_swhid_context_null(apps, schema_editor) -> None:
         )
         deposit.swh_id_context = QualifiedSWHID(
             object_type=ObjectType.DIRECTORY,
-            object_id=dir_id,
+            object_id=hash_to_bytes(dir_id),
             origin=origin,
             visit=CoreSWHID(object_type=ObjectType.SNAPSHOT, object_id=snp_id),
             anchor=CoreSWHID(object_type=ObjectType.REVISION, object_id=rev_id_bytes),

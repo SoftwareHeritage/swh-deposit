@@ -48,6 +48,7 @@ docs/_templates/.placeholder
 docs/api/api-documentation.rst
 docs/api/index.rst
 docs/api/metadata.rst
+docs/api/register-account.rst
 docs/api/use-cases.rst
 docs/api/user-manual.rst
 docs/endpoints/collection.rst
@@ -184,6 +185,7 @@ swh/deposit/tests/conftest.py
 swh/deposit/tests/test_backend.py
 swh/deposit/tests/test_client_module.py
 swh/deposit/tests/test_common.py
+swh/deposit/tests/test_config.py
 swh/deposit/tests/test_gunicorn_config.py
 swh/deposit/tests/test_init.py
 swh/deposit/tests/test_migrations.py

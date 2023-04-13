@@ -1,8 +1,33 @@
-swh-deposit (1.1.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (1.2.1-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 1.2.1     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2023-04-13 11:12:53 +0200)
+  * Upstream changes:     - v1.2.1     - * Raise 400 instead of 500 on
+    'incomplete' multipart request     - * spec-loading: Update with a
+    current example and show metadata     - * protocol spec: Formally
+    define the XML encoding of Codemeta we implicitly use     - *
+    docs/index.rst: Fix sphinx tag name     - * docs/api/register-
+    account: Update webapp login URLs     - * Invert symlink and content
+    for the README file     - * Add django 4 support and bump django in
+    requirements-server     - * swh.deposit.config: Add types and
+    coverage     - * requirements-swh: Add missing dependency     - *
+    tox/mypy/pre-commit maintenance
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 12 Apr 2022 14:05:37 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 13 Apr 2023 09:28:02 +0000
+
+swh-deposit (1.2.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.2.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2022-08-01 11:48:11
+    +0200)
+  * Upstream changes:     - v1.2.0     - Docs     - ====     - Reference
+    a register-account documentation     - specs/protocol-reference:
+    Clarify statement     - Maintenance     - ===========     - Fix mypy
+    error     - Fix master build     - add strict asyncio_mode in
+    pytest.ini     - add missing sentry capture     - Bump mypy to
+    v0.942     - pre-commit: Remove codespell commit-msg hook
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 01 Aug 2022 09:57:49 +0000
 
 swh-deposit (1.1.0-1~swh1) unstable-swh; urgency=medium
 

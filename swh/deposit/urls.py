@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from typing import Sequence, Union
 
-from django.conf.urls import include, url
+from django.conf.urls import include
 from django.shortcuts import render
+from django.urls import re_path as url
 from django.views.generic.base import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns
 

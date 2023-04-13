@@ -116,7 +116,7 @@ class Receipt:
 def _compute_md5(filehandler: UploadedFile) -> bytes:
     h = hashlib.md5()
     for chunk in filehandler:
-        h.update(chunk)  # type: ignore
+        h.update(chunk)
     return h.digest()
 
 
@@ -584,14 +584,23 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 "in the multipart deposit",
             )
 
-        filehandler = data["application/zip"]
-        if not filehandler:
-            filehandler = data["application/x-tar"]
+        filehandler = data["application/zip"] or data["application/x-tar"]
 
+        if filehandler is None:
+            raise DepositError(
+                BAD_REQUEST,
+                "You must provide an archive, either as application/zip or "
+                "application/x-tar",
+            )
         assert isinstance(filehandler, UploadedFile), filehandler
 
         self._check_file_length(filehandler)
         self._check_file_md5sum(filehandler, headers.content_md5sum)
+
+        if data["application/atom+xml"] is None:
+            raise DepositError(
+                BAD_REQUEST, "You must provide an application/atom+xml entry."
+            )
 
         try:
             raw_metadata, metadata_tree = self._read_metadata(
@@ -620,7 +629,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             deposit, deposit_request_data, replace_metadata, replace_archives
         )
 
-        assert filehandler is not None
         return Receipt(
             deposit_id=deposit.id,
             deposit_date=deposit.reception_date,
@@ -1010,9 +1018,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         if self._client is None:
             try:
-                self._client = DepositClient.objects.get(  # type: ignore
-                    username=username
-                )
+                self._client = DepositClient.objects.get(username=username)
             except DepositClient.DoesNotExist:
                 raise DepositError(NOT_FOUND, f"Unknown client name {username}")
 
