@@ -1,3 +1,20 @@
+swh-deposit (1.2.1-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.2.1     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2023-04-13 11:12:53 +0200)
+  * Upstream changes:     - v1.2.1     - * Raise 400 instead of 500 on
+    'incomplete' multipart request     - * spec-loading: Update with a
+    current example and show metadata     - * protocol spec: Formally
+    define the XML encoding of Codemeta we implicitly use     - *
+    docs/index.rst: Fix sphinx tag name     - * docs/api/register-
+    account: Update webapp login URLs     - * Invert symlink and content
+    for the README file     - * Add django 4 support and bump django in
+    requirements-server     - * swh.deposit.config: Add types and
+    coverage     - * requirements-swh: Add missing dependency     - *
+    tox/mypy/pre-commit maintenance
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 13 Apr 2023 09:28:02 +0000
+
 swh-deposit (1.2.0-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 1.2.0     - (tagged by Antoine R. Dumont
