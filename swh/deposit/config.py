@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from swh.core import config
 from swh.deposit import __version__
@@ -58,36 +58,37 @@ DEFAULT_CONFIG = {
 }
 
 
-def setup_django_for(platform=None, config_file=None):
-    """Setup function for command line tools (swh.deposit.create_user) to
-       initialize the needed db access.
+def setup_django_for(platform: Optional[str] = None, config_file: Optional[str] = None):
+    """Setup function for command line tools (e.g. swh.deposit.create_user) to
+    initialize the needed db access.
 
     Note:
         Do not import any django related module prior to this function
-        call. Otherwise, this will raise an
-        django.core.exceptions.ImproperlyConfigured error message.
+        call. Otherwise, this will raise a django.core.exceptions.ImproperlyConfigured
+        error message.
 
     Args:
-        platform (str): the platform the scheduling is running
-        config_file (str): Extra configuration file (typically for the
-                           production platform)
+        platform: the platform to use when running program (e.g. cli, ...)
+        config_file: Extra configuration file (typically for the production platform)
 
     Raises:
-        ValueError in case of wrong platform inputs.
+        ValueError in case of wrong platform inputs
 
     """
     if platform is not None:
         if platform not in AUTHORIZED_PLATFORMS:
-            raise ValueError("Platform should be one of %s" % AUTHORIZED_PLATFORMS)
+            raise ValueError(f"Platform should be one of {AUTHORIZED_PLATFORMS}")
         if "DJANGO_SETTINGS_MODULE" not in os.environ:
-            os.environ["DJANGO_SETTINGS_MODULE"] = "swh.deposit.settings.%s" % platform
+            os.environ["DJANGO_SETTINGS_MODULE"] = f"swh.deposit.settings.{platform}"
 
     if config_file:
+        # Hack to set the environment variable which in some cases is required (e.g.
+        # production)
         os.environ.setdefault("SWH_CONFIG_FILENAME", config_file)
 
-    import django
+    from django import setup
 
-    django.setup()
+    setup()
 
 
 class APIConfig:

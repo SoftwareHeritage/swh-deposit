@@ -271,7 +271,7 @@ def test_post_deposit_multipart_put_to_replace_metadata(
 # FAILURE scenarios
 
 
-def test_post_deposit_multipart_only_archive_and_atom_entry(
+def test_post_deposit_multipart_only_one_archive_and_atom_entry(
     authenticated_client, deposit_collection
 ):
     """Multipart deposit only accepts one archive and one atom+xml"""
@@ -391,3 +391,81 @@ def test_post_deposit_multipart_if_upload_size_limit_exceeded(
 
     with pytest.raises(Deposit.DoesNotExist):
         Deposit.objects.get(external_id=external_id)
+
+
+def test_post_deposit_atom_400_multipart_no_atom(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user, sample_archive
+):
+    """Posting without an atom body should return a 400 response"""
+    origin_url = "http://example.org/foo"
+
+    archive = InMemoryUploadedFile(
+        BytesIO(sample_archive["data"]),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/x-tar",
+        size=sample_archive["length"],
+        charset=None,
+    )
+
+    atom_data = atom_dataset["entry-data0"] % origin_url
+
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(atom_data.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type="application/x-foobar",  # should be application/atom+xml
+        size=len(atom_data),
+        charset="utf-8",
+    )
+
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        format="multipart",
+        data={
+            "archive": archive,
+            "atom_entry": atom_entry,
+        },
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "provide an application/atom+xml entry" in response.content.decode()
+
+
+def test_post_deposit_atom_400_multipart_no_archive(
+    authenticated_client, deposit_collection, atom_dataset, deposit_user, sample_archive
+):
+    """Posting without an atom body should return a 400 response"""
+    origin_url = "http://example.org/foo"
+
+    archive = InMemoryUploadedFile(
+        BytesIO(sample_archive["data"]),
+        field_name=sample_archive["name"],
+        name=sample_archive["name"],
+        content_type="application/x-foobar",  # should be application/x-tar
+        size=sample_archive["length"],
+        charset=None,
+    )
+
+    atom_data = atom_dataset["entry-data0"] % origin_url
+
+    atom_entry = InMemoryUploadedFile(
+        BytesIO(atom_data.encode("utf-8")),
+        field_name="atom0",
+        name="atom0",
+        content_type="application/atom+xml",
+        size=len(atom_data),
+        charset="utf-8",
+    )
+
+    response = authenticated_client.post(
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        format="multipart",
+        data={
+            "archive": archive,
+            "atom_entry": atom_entry,
+        },
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "provide an archive" in response.content.decode()

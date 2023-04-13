@@ -1,5 +1,5 @@
-django >= 2, < 4
+django
 djangorestframework
-psycopg2 < 2.9
+psycopg2
 setuptools
 xmlschema

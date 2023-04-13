@@ -104,7 +104,7 @@ Using Atom with CodeMeta
               <codemeta:identifier> article id </codemeta:identifier>
             </codemeta:referencePublication>
             <codemeta:isPartOf>
-                <codemeta:type> Collaboration/Projet </codemeta:type>
+                <codemeta:type> Collaboration/Project </codemeta:type>
                 <codemeta:name> project name</codemeta:name>
                 <codemeta:identifier> id </codemeta:identifier>
             </codemeta:isPartOf>

@@ -264,7 +264,7 @@ def _create_deposit_user(
     user_data_d = deepcopy(user_data)
     user_data_d.pop("collection", None)
     passwd = user_data_d.pop("password", None)
-    user, _ = DepositClient.objects.get_or_create(  # type: ignore
+    user, _ = DepositClient.objects.get_or_create(
         username=user_data_d["username"],
         defaults={**user_data_d, "collections": [collection.id]},
     )
