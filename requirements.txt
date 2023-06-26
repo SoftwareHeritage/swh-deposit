@@ -1,3 +1,6 @@
+# These dependencies will be installed by deposit clients.
+# Server dependencies go to requirements-server.txt instead.
+
 click
 iso8601
 requests
