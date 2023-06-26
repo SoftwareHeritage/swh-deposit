@@ -1,8 +1,11 @@
-swh-deposit (1.2.1-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (1.2.2-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 1.2.2     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2023-06-26 13:19:25 +0200)
+  * Upstream changes:     - v1.2.2     - * Remove dependency on swh-
+    scheduler without the 'server' extra
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 13 Apr 2023 09:31:29 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 26 Jun 2023 11:26:10 +0000
 
 swh-deposit (1.2.1-1~swh1) unstable-swh; urgency=medium
 
