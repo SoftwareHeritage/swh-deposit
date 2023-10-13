@@ -10,6 +10,8 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 
+from swh.deposit.models import JSONField
+
 
 class Migration(migrations.Migration):
 
@@ -105,7 +107,7 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
                 ("date", models.DateTimeField(auto_now_add=True)),
-                ("metadata", django.contrib.postgres.fields.jsonb.JSONField(null=True)),
+                ("metadata", JSONField(null=True)),
                 (
                     "deposit",
                     models.ForeignKey(

@@ -150,6 +150,7 @@ swh/deposit/migrations/0019_auto_20200519_1035.py
 swh/deposit/migrations/0020_auto_20200929_0855.py
 swh/deposit/migrations/0021_deposit_origin_url_20201124_1438.py
 swh/deposit/migrations/0022_auto_20220223_1542.py
+swh/deposit/migrations/0023_alter_deposit_status_detail_alter_deposit_type_and_more.py
 swh/deposit/migrations/__init__.py
 swh/deposit/settings/__init__.py
 swh/deposit/settings/common.py
