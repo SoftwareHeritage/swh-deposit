@@ -1,3 +1,12 @@
+swh-deposit (1.3.3-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.3     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-07 17:31:20
+    +0100)
+  * Upstream changes:     - v1.3.4     - Add missing dependency
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 07 Nov 2023 16:37:09 +0000
+
 swh-deposit (1.3.2-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 1.3.2     - (tagged by Antoine R. Dumont
