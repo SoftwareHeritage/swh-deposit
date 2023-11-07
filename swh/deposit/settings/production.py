@@ -1,9 +1,11 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import os
+
+import django
 
 from swh.core import config
 
@@ -100,10 +102,13 @@ if authentication == "keycloak":
     # Optional cache server
     server_cache = conf.get("cache_uri")
     if server_cache:
+        cache_backend = "django.core.cache.backends.memcached.MemcachedCache"
+        if django.VERSION[:2] >= (3, 2):
+            cache_backend = "django.core.cache.backends.memcached.PyMemcacheCache"
         CACHES.update(
             {
                 "default": {
-                    "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+                    "BACKEND": cache_backend,
                     "LOCATION": server_cache,
                 }
             }
