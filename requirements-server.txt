@@ -3,3 +3,5 @@ djangorestframework
 psycopg2
 setuptools
 xmlschema
+pymemcache
+

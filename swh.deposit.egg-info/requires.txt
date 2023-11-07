@@ -11,6 +11,7 @@ djangorestframework
 psycopg2
 setuptools
 xmlschema
+pymemcache
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0
@@ -36,6 +37,7 @@ djangorestframework
 psycopg2
 setuptools
 xmlschema
+pymemcache
 swh.core[http]>=0.4
 swh.loader.core>=0.0.71
 swh.scheduler>=0.7.0
