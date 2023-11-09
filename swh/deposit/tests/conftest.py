@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022  The Software Heritage developers
+# Copyright (C) 2019-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -114,6 +114,12 @@ keycloak_mock_auth_failure = keycloak_mock_factory(
 
 def pytest_configure():
     setup_django_for("testing")
+
+
+@pytest.fixture
+def datadir(request):
+    """Override default datadir to target main test datadir"""
+    return os.path.join(os.path.dirname(str(request.fspath)), "data")
 
 
 @pytest.fixture
