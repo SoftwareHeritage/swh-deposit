@@ -2,7 +2,7 @@
 
 export PYBUILD_NAME=swh.deposit
 export PYBUILD_TEST_ARGS=-v -m "not db and not fs"
-export PYTEST_PLUGINS=swh.scheduler.pytest_plugin,swh.storage.pytest_plugin,swh.core.db.pytest_plugin,swh.loader.pytest_plugin
+export PYTEST_PLUGINS=swh.scheduler.pytest_plugin,swh.storage.pytest_plugin,swh.core.pytest_plugin,swh.loader.pytest_plugin
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
