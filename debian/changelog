@@ -1,8 +1,52 @@
-swh-deposit (1.2.2-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (1.3.4-1~swh2) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * Fix pytest plugins declaration
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 26 Jun 2023 11:29:31 +0000
+ -- Antoine R. Dumont (@ardumont) <ardumont@softwareheritage.org>  Thu, 09 Nov 2023 15:53:50 +0100
+
+swh-deposit (1.3.4-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.4     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-09 15:32:19
+    +0100)
+  * Upstream changes:     - v1.3.4     - Fix debian build
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 09 Nov 2023 14:38:16 +0000
+
+swh-deposit (1.3.3-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.3     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-07 17:31:20
+    +0100)
+  * Upstream changes:     - v1.3.4     - Add missing dependency
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 07 Nov 2023 16:37:09 +0000
+
+swh-deposit (1.3.2-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.2     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-07 16:07:32
+    +0100)
+  * Upstream changes:     - v1.3.2     - Improve django4 support (for
+    memcached)
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 07 Nov 2023 15:13:34 +0000
+
+swh-deposit (1.3.1-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.1     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2023-10-18 12:27:01 +0200)
+  * Upstream changes:     - v1.3.1     - * docs: Fix references
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Wed, 18 Oct 2023 10:32:32 +0000
+
+swh-deposit (1.3.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.3.0     - (tagged by David Douard
+    <david.douard@sdfa3.org> on 2023-10-13 17:21:27 +0200)
+  * Upstream changes:     - v1.3.0     - replace JSONField
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 13 Oct 2023 15:38:59 +0000
 
 swh-deposit (1.2.2-1~swh1) unstable-swh; urgency=medium
 

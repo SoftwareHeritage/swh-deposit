@@ -11,9 +11,14 @@ import datetime
 from typing import Optional
 
 from django.contrib.auth.models import User, UserManager
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.timezone import now
+
+try:
+    from django.db.models import JSONField as OrigJSONField
+except ImportError:
+    from django.contrib.postgres.fields import JSONField as OrigJSONField
 
 from swh.auth.django.models import OIDCUser
 
@@ -27,6 +32,16 @@ from .config import (
     DEPOSIT_STATUS_VERIFIED,
     METADATA_TYPE,
 )
+
+
+class JSONField(OrigJSONField):
+    def deconstruct(self):
+        # the original path was 'django.db.models.JSONField' or
+        # 'django.contrib.postgres.fields....'
+        name, path, args, kwargs = super().deconstruct()
+        # Substitute 'my_app' by your application name everywhere.
+        path = "swh.deposit.models.JSONField"
+        return name, path, args, kwargs
 
 
 class Dbversion(models.Model):

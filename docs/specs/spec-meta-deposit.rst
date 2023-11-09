@@ -91,7 +91,7 @@ The metadata may be on an origin, identified by the origin's URL:
 Graph objects
 ^^^^^^^^^^^^^
 
-It may also reference an object in the `SWH graph <data-model>`: contents,
+It may also reference an object in the :ref:`SWH graph <data-model>`: contents,
 directories, revisions, releases, and snapshots:
 
 .. code:: xml
@@ -111,7 +111,7 @@ directories, revisions, releases, and snapshots:
   </swh:deposit>
 
 
-The value of the ``swhid`` attribute must be a `SWHID <persistent-identifiers>`,
+The value of the ``swhid`` attribute must be a :ref:`SWHID <persistent-identifiers>`,
 with any context qualifiers in this list:
 
 * ``origin``

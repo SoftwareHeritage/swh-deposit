@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: swh.deposit
-Version: 1.2.2
+Version: 1.3.4
 Summary: Software Heritage Deposit Server
 Home-page: https://forge.softwareheritage.org/source/swh-deposit/
 Author: Software Heritage developers
@@ -16,10 +16,52 @@ Classifier: Operating System :: OS Independent
 Classifier: Development Status :: 5 - Production/Stable
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
-Provides-Extra: testing
-Provides-Extra: server
 License-File: LICENSE
 License-File: AUTHORS
+Requires-Dist: click
+Requires-Dist: iso8601
+Requires-Dist: requests
+Requires-Dist: sentry-sdk
+Requires-Dist: swh.core[http]>=0.4
+Requires-Dist: swh.model>=4.4.0
+Provides-Extra: testing
+Requires-Dist: pytest; extra == "testing"
+Requires-Dist: pytest-django; extra == "testing"
+Requires-Dist: pytest-mock; extra == "testing"
+Requires-Dist: swh.scheduler[testing]; extra == "testing"
+Requires-Dist: swh.loader.core[testing]; extra == "testing"
+Requires-Dist: pytest-postgresql<4.0.0,>=3; extra == "testing"
+Requires-Dist: requests_mock; extra == "testing"
+Requires-Dist: django-stubs; extra == "testing"
+Requires-Dist: djangorestframework-stubs>=1.4; extra == "testing"
+Requires-Dist: django-test-migrations; extra == "testing"
+Requires-Dist: types-requests; extra == "testing"
+Requires-Dist: types-pyyaml; extra == "testing"
+Requires-Dist: django; extra == "testing"
+Requires-Dist: djangorestframework; extra == "testing"
+Requires-Dist: psycopg2; extra == "testing"
+Requires-Dist: setuptools; extra == "testing"
+Requires-Dist: xmlschema; extra == "testing"
+Requires-Dist: pymemcache; extra == "testing"
+Requires-Dist: swh.core[http]>=0.4; extra == "testing"
+Requires-Dist: swh.loader.core>=0.0.71; extra == "testing"
+Requires-Dist: swh.scheduler>=0.7.0; extra == "testing"
+Requires-Dist: swh.model>=0.3.8; extra == "testing"
+Requires-Dist: swh.auth[django]>=0.5.3; extra == "testing"
+Requires-Dist: swh.storage>=0.28.0; extra == "testing"
+Provides-Extra: server
+Requires-Dist: django; extra == "server"
+Requires-Dist: djangorestframework; extra == "server"
+Requires-Dist: psycopg2; extra == "server"
+Requires-Dist: setuptools; extra == "server"
+Requires-Dist: xmlschema; extra == "server"
+Requires-Dist: pymemcache; extra == "server"
+Requires-Dist: swh.core[http]>=0.4; extra == "server"
+Requires-Dist: swh.loader.core>=0.0.71; extra == "server"
+Requires-Dist: swh.scheduler>=0.7.0; extra == "server"
+Requires-Dist: swh.model>=0.3.8; extra == "server"
+Requires-Dist: swh.auth[django]>=0.5.3; extra == "server"
+Requires-Dist: swh.storage>=0.28.0; extra == "server"
 
 Software Heritage - Deposit
 ===========================
