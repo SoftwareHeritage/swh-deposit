@@ -117,6 +117,12 @@ def pytest_configure():
 
 
 @pytest.fixture
+def datadir(request):
+    """Override default datadir to target main test datadir"""
+    return os.path.join(os.path.dirname(str(request.fspath)), "data")
+
+
+@pytest.fixture
 def requests_mock_datadir(datadir, requests_mock_datadir):
     """Override default behavior to deal with put/post methods"""
     cb = partial(get_response_cb, datadir=datadir)
