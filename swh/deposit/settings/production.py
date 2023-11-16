@@ -112,3 +112,26 @@ if authentication == "keycloak":
                 }
             }
         )
+
+# Optional azure backend to use
+cfg_azure = conf.get("azure", {})
+if cfg_azure:
+    # Those 3 keys are mandatory
+    for key in ("container_name", "connection_string"):
+        if not cfg_azure.get(key):
+            raise ValueError(
+                f"Production: invalid configuration; missing {key} config entry."
+            )
+
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "azure_container": cfg_azure["container_name"],
+                "connection_string": cfg_azure["connection_string"],
+            },
+        },
+    }
