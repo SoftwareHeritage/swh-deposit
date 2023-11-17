@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,7 +11,10 @@ from rest_framework import status
 
 from swh.deposit.api.private.deposit_read import aggregate_tarballs
 from swh.deposit.config import EM_IRI, PRIVATE_GET_RAW_CONTENT
+from swh.deposit.models import DepositRequest
 from swh.deposit.tests.common import create_arborescence_archive
+
+from ..common import compute_info, post_archive
 
 PRIVATE_GET_RAW_CONTENT_NC = PRIVATE_GET_RAW_CONTENT + "-nc"
 
@@ -95,8 +98,74 @@ def test_access_to_existing_deposit_with_multiple_archives(
         assert tfile.extractfile("./file2").read() == b"some other content in file"
 
 
-def test_aggregate_tarballs_with_strange_archive(datadir, tmp_path):
-    archive = join(datadir, "archives", "single-artifact-package.tar.gz")
+def test_aggregate_tarballs_with_strange_archive(
+    datadir, authenticated_client, tmp_path, partial_deposit
+):
+    deposit = partial_deposit
+    update_uri = reverse(EM_IRI, args=[deposit.collection.name, deposit.id])
+    archive = compute_info(join(datadir, "archives", "single-artifact-package.tar.gz"))
 
-    with aggregate_tarballs(tmp_path, [archive]) as tarball_path:
+    response = post_archive(
+        authenticated_client,
+        update_uri,
+        archive,
+        content_type="application/x-tar",
+        in_progress=False,
+    )
+
+    # then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    deposit_requests = DepositRequest.objects.filter(type="archive", deposit=deposit)
+
+    archives = [dr.archive for dr in deposit_requests]
+
+    with aggregate_tarballs(tmp_path, archives) as tarball_path:
+        assert exists(tarball_path)
+
+
+def test_aggregate_tarballs_with_remote_tarball(
+    datadir, authenticated_client, tmp_path, partial_deposit
+):
+    """Tarballs can be stored remotely and still be accessible for reading."""
+    deposit = partial_deposit
+    update_uri = reverse(EM_IRI, args=[deposit.collection.name, deposit.id])
+    archive = compute_info(join(datadir, "archives", "single-artifact-package.tar.gz"))
+
+    response = post_archive(
+        authenticated_client,
+        update_uri,
+        archive,
+        content_type="application/x-tar",
+        in_progress=False,
+    )
+
+    # then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    deposit_requests = DepositRequest.objects.filter(type="archive", deposit=deposit)
+
+    all_archives = [dr.archive for dr in deposit_requests]
+
+    archives = [a for a in all_archives if not a.name.endswith(archive["name"])]
+
+    # We'll patch the behavior of this archive to be read as if it were a remote one
+    interesting_archive = [a for a in all_archives if a.name.endswith(archive["name"])][
+        0
+    ]
+
+    class RemoteTarball:
+        """Basic remote tarball implementation for test purposes."""
+
+        name = archive["name"]
+
+        @property
+        def path(self):
+            raise NotImplementedError("We fake the path implementation")
+
+        open = interesting_archive.open
+
+    archives.append(RemoteTarball())
+
+    with aggregate_tarballs(tmp_path, archives) as tarball_path:
         assert exists(tarball_path)
