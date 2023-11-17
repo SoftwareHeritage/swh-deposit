@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -188,8 +188,7 @@ def test_post_deposit_binary_upload_no_content_disposition_header(
         authenticated_client,
         url,
         sample_archive,
-        HTTP_SLUG=external_id,
-        HTTP_IN_PROGRESS="false",
+        in_progress=False,
         HTTP_CONTENT_DISPOSITION=None,
     )
 
