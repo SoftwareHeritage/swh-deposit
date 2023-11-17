@@ -53,6 +53,7 @@ setup(
     extras_require={
         "testing": parse_requirements("test", "server", "swh-server"),
         "server": parse_requirements("server", "swh-server"),
+        "azure": parse_requirements("azure"),
     },
     include_package_data=True,
     entry_points="""
