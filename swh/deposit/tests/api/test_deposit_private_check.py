@@ -75,11 +75,11 @@ def test_deposit_ok(
 
 @pytest.mark.parametrize("extension", ["zip", "tar", "tar.gz", "tar.bz2", "tar.xz"])
 def test_deposit_invalid_tarball(
-    tmp_path, authenticated_client, deposit_collection, extension
+    tmp_path, authenticated_client, deposit_collection, extension, atom_dataset
 ):
     """Deposit with tarball (of 1 tarball) should fail the checks: rejected"""
     deposit = create_deposit_archive_with_archive(
-        tmp_path, extension, authenticated_client, deposit_collection.name
+        tmp_path, extension, authenticated_client, deposit_collection.name, atom_dataset
     )
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
