@@ -145,11 +145,14 @@ def check_archive(archive_name: str, archive_name_to_check: str):
 
 def _post_or_put_archive(f, url, archive, slug=None, in_progress=None, **kwargs):
     default_kwargs = dict(
-        content_type="application/zip",
-        CONTENT_LENGTH=archive["length"],
-        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (archive["name"],),
+        content_type=kwargs.get("content_type") or "application/zip",
         HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        HTTP_IN_PROGRESS=in_progress if in_progress is not None else True,
+        HTTP_CONTENT_DISPOSITION=f"attachment; filename={archive['name']}",
+        CONTENT_LENGTH=archive["length"],
     )
+    if slug:
+        default_kwargs.update(dict(HTTP_SLUG=slug))
     kwargs = {**default_kwargs, **kwargs}
     return f(
         url,

@@ -5,6 +5,9 @@ sentry-sdk
 swh.core[http]>=0.4
 swh.model>=4.4.0
 
+[azure]
+django-storages[azure]
+
 [server]
 django
 djangorestframework

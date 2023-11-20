@@ -13,6 +13,7 @@ conftest.py
 mypy.ini
 pyproject.toml
 pytest.ini
+requirements-azure.txt
 requirements-server.txt
 requirements-swh-server.txt
 requirements-swh.txt

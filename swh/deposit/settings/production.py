@@ -30,23 +30,22 @@ DEBUG = False
 config_file = os.environ.get("SWH_CONFIG_FILENAME")
 if not config_file:
     raise ValueError(
-        "Production: SWH_CONFIG_FILENAME must be set to the"
-        " configuration file needed!"
+        "Production: SWH_CONFIG_FILENAME must be set to the configuration file needed!"
     )
 
 if not os.path.exists(config_file):
     raise ValueError(
-        "Production: configuration file %s does not exist!" % (config_file,)
+        f"Production: configuration file {config_file} does not exist!",
     )
 
 conf = config.load_named_config(config_file)
 if not conf:
-    raise ValueError("Production: configuration %s does not exist." % (config_file,))
+    raise ValueError(f"Production: configuration {config_file} does not exist.")
 
 for key in ("scheduler", "private", "authentication_provider"):
     if not conf.get(key):
         raise ValueError(
-            "Production: invalid configuration; missing %s config entry." % (key,)
+            f"Production: invalid configuration; missing {key} config entry."
         )
 
 ALLOWED_HOSTS += conf.get("allowed_hosts", [])
@@ -113,3 +112,26 @@ if authentication == "keycloak":
                 }
             }
         )
+
+# Optional azure backend to use
+cfg_azure = conf.get("azure", {})
+if cfg_azure:
+    # Those 3 keys are mandatory
+    for key in ("container_name", "connection_string"):
+        if not cfg_azure.get(key):
+            raise ValueError(
+                f"Production: invalid configuration; missing {key} config entry."
+            )
+
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "azure_container": cfg_azure["container_name"],
+                "connection_string": cfg_azure["connection_string"],
+            },
+        },
+    }
