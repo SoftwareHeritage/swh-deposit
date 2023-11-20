@@ -1,3 +1,15 @@
+swh-deposit (1.4.0-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 1.4.0     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-20 10:21:26
+    +0100)
+  * Upstream changes:     - v1.4.0     - private/deposit: Adapt tarballs
+    reading to support remote backend     - settings.production: Allow
+    the use of azure backend if defined     - Add optional requirements
+    for running with azure backend
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 20 Nov 2023 09:28:16 +0000
+
 swh-deposit (1.3.4-1~swh3) unstable-swh; urgency=medium
 
   * Fix package build by updating control and rules
