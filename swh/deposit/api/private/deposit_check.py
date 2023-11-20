@@ -114,20 +114,29 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             <detail-error>) otherwise.
 
         """
-        archive_path = archive_request.archive.path
+        archive = archive_request.archive
+        archive_name = archive.name
 
-        if not known_archive_format(archive_path):
+        if not known_archive_format(archive_name):
             return False, MANDATORY_ARCHIVE_UNSUPPORTED
 
         try:
-            if zipfile.is_zipfile(archive_path):
-                with zipfile.ZipFile(archive_path) as zipfile_:
-                    files = zipfile_.namelist()
-            elif tarfile.is_tarfile(archive_path):
-                with tarfile.open(archive_path) as tarfile_:
-                    files = tarfile_.getnames()
-            else:
-                return False, MANDATORY_ARCHIVE_UNSUPPORTED
+            # Use python's File api which is consistent across different types of
+            # storage backends (e.g. file, azure, ...)
+
+            with archive.open("rb") as archive_fp:
+                try:
+                    with zipfile.ZipFile(archive_fp) as zip_fp:
+                        files = zip_fp.namelist()
+                except Exception:
+                    try:
+                        # rewind since the first tryout reading may have moved the
+                        # cursor
+                        archive_fp.seek(0)
+                        with tarfile.open(fileobj=archive_fp) as tar_fp:
+                            files = tar_fp.getnames()
+                    except Exception:
+                        return False, MANDATORY_ARCHIVE_UNSUPPORTED
         except Exception:
             return False, MANDATORY_ARCHIVE_UNREADABLE
         if len(files) > 1:
