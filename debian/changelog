@@ -1,8 +1,12 @@
-swh-deposit (1.4.0-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (1.4.1-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 1.4.1     - (tagged by Antoine R. Dumont
+    (@ardumont) <ardumont@softwareheritage.org> on 2023-11-20 14:46:03
+    +0100)
+  * Upstream changes:     - v1.4.1     - private/deposit_checks: Ensure
+    checks is done on filename
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 20 Nov 2023 09:32:12 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 20 Nov 2023 13:55:38 +0000
 
 swh-deposit (1.4.0-1~swh1) unstable-swh; urgency=medium
 
