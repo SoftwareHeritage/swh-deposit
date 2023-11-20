@@ -1,7 +1,9 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
+
+import random
 
 from django.urls import reverse_lazy as reverse
 import pytest
@@ -30,7 +32,7 @@ from swh.deposit.tests.common import (
 )
 from swh.deposit.utils import NAMESPACES
 
-from ..common import post_archive, post_atom
+from ..common import SUPPORTED_TARBALL_MODES, post_archive, post_atom
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 
@@ -122,7 +124,7 @@ def test_deposit_ko_missing_tarball(
 def test_deposit_ko_unsupported_tarball(
     tmp_path, authenticated_client, deposit_collection, ready_deposit_invalid_archive
 ):
-    """Deposit with an unsupported tarball should fail the checks: rejected"""
+    """Deposit with unsupported tarball should fail checks and be rejected"""
     deposit = ready_deposit_invalid_archive
     assert DEPOSIT_STATUS_DEPOSITED == deposit.status
 
@@ -147,6 +149,40 @@ def test_deposit_ko_unsupported_tarball(
 
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
+
+
+def test_deposit_ko_unsupported_tarball_prebasic_check(
+    tmp_path, authenticated_client, deposit_collection, atom_dataset
+):
+    """Deposit with unsupported tarball extension should fail checks and be rejected"""
+
+    invalid_gz_mode = random.choice(
+        [f"{ext}-foobar" for ext in SUPPORTED_TARBALL_MODES]
+    )
+    invalid_extension = f"tar.{invalid_gz_mode}"
+
+    deposit = create_deposit_with_archive(
+        tmp_path,
+        invalid_extension,
+        authenticated_client,
+        deposit_collection.name,
+        atom_dataset,
+    )
+    assert DEPOSIT_STATUS_DEPOSITED == deposit.status
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert data["status"] == DEPOSIT_STATUS_REJECTED
+        details = data["details"]
+        # archive checks failure
+        assert len(details["archive"]) == 1
+        assert details["archive"][0]["summary"] == MANDATORY_ARCHIVE_UNSUPPORTED
+
+        deposit = Deposit.objects.get(pk=deposit.id)
+        assert deposit.status == DEPOSIT_STATUS_REJECTED
 
 
 def test_check_deposit_metadata_ok(
