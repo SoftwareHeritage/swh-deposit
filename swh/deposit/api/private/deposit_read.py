@@ -1,13 +1,14 @@
-# Copyright (C) 2017-2022 The Software Heritage developers
+# Copyright (C) 2017-2023 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from contextlib import contextmanager
 import os
+from pathlib import Path
 import shutil
 import tempfile
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 from xml.etree import ElementTree
 
 from rest_framework import status
@@ -25,13 +26,13 @@ from ..common import APIGet
 
 
 @contextmanager
-def aggregate_tarballs(extraction_dir, archive_paths):
+def aggregate_tarballs(extraction_dir: str, archives: List) -> Iterator[str]:
     """Aggregate multiple tarballs into one and returns this new archive's
        path.
 
     Args:
-        extraction_dir (path): Path to use for the tarballs computation
-        archive_paths ([str]): Deposit's archive paths
+        extraction_dir: Path to use for the tarballs computation
+        archive_paths: Deposit's archive paths
 
     Returns:
         Tuple (directory to clean up, archive path (aggregated or not))
@@ -43,10 +44,26 @@ def aggregate_tarballs(extraction_dir, archive_paths):
 
     # root folder to build an aggregated tarball
     aggregated_tarball_rootdir = os.path.join(dir_path, "aggregate")
-    os.makedirs(aggregated_tarball_rootdir, 0o755, exist_ok=True)
+    download_tarball_rootdir = os.path.join(dir_path, "download")
 
-    # uncompress in a temporary location all archives
-    for archive_path in archive_paths:
+    # uncompress in a temporary location all client's deposit archives
+    for archive in archives:
+        with archive.open("rb") as archive_fp:
+            try:
+                # For storage which supports the path method access, let's retrieve it
+                archive_path = archive.path
+            except NotImplementedError:
+                # otherwise for remote backend which do not support it, let's download
+                # the tarball locally first
+                tarball_path = Path(archive.name)
+
+                tarball_path_dir = Path(download_tarball_rootdir) / tarball_path.parent
+                tarball_path_dir.mkdir(0o755, parents=True, exist_ok=True)
+
+                archive_path = str(tarball_path_dir / tarball_path.name)
+                with open(archive_path, "wb") as f:
+                    f.write(archive_fp.read())
+
         tarball.uncompress(archive_path, aggregated_tarball_rootdir)
 
     # Aggregate into one big tarball the multiple smaller ones
@@ -90,13 +107,13 @@ class APIReadArchives(APIPrivateView, APIGet, DepositReadMixin):
             Tuple status, stream of content, content-type
 
         """
-        archive_paths = [
-            r.archive.path
+        archives = [
+            r.archive
             for r in self._deposit_requests(deposit, request_type=ARCHIVE_TYPE)
         ]
         return (
             status.HTTP_200_OK,
-            aggregate_tarballs(self.extraction_dir, archive_paths),
+            aggregate_tarballs(self.extraction_dir, archives),
             "swh/generator",
         )
 

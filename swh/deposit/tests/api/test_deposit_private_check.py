@@ -16,9 +16,11 @@ from swh.deposit.api.private.deposit_check import (
 from swh.deposit.config import (
     COL_IRI,
     DEPOSIT_STATUS_DEPOSITED,
+    DEPOSIT_STATUS_PARTIAL,
     DEPOSIT_STATUS_REJECTED,
     DEPOSIT_STATUS_VERIFIED,
     PRIVATE_CHECK_DEPOSIT,
+    SE_IRI,
 )
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
@@ -27,6 +29,8 @@ from swh.deposit.tests.common import (
     create_archive_with_archive,
 )
 from swh.deposit.utils import NAMESPACES
+
+from ..common import post_archive, post_atom
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 
@@ -41,10 +45,13 @@ def private_check_url_endpoints(collection, deposit):
 
 @pytest.mark.parametrize("extension", ["zip", "tar", "tar.gz", "tar.bz2", "tar.xz"])
 def test_deposit_ok(
-    authenticated_client, deposit_collection, ready_deposit_ok, extension
+    tmp_path, authenticated_client, deposit_collection, extension, atom_dataset
 ):
     """Proper deposit should succeed the checks (-> status ready)"""
-    deposit = ready_deposit_ok
+    deposit = create_deposit_with_archive(
+        tmp_path, extension, authenticated_client, deposit_collection.name, atom_dataset
+    )
+
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
 
@@ -68,11 +75,11 @@ def test_deposit_ok(
 
 @pytest.mark.parametrize("extension", ["zip", "tar", "tar.gz", "tar.bz2", "tar.xz"])
 def test_deposit_invalid_tarball(
-    tmp_path, authenticated_client, deposit_collection, extension
+    tmp_path, authenticated_client, deposit_collection, extension, atom_dataset
 ):
     """Deposit with tarball (of 1 tarball) should fail the checks: rejected"""
     deposit = create_deposit_archive_with_archive(
-        tmp_path, extension, authenticated_client, deposit_collection.name
+        tmp_path, extension, authenticated_client, deposit_collection.name, atom_dataset
     )
     for url in private_check_url_endpoints(deposit_collection, deposit):
         response = authenticated_client.get(url)
@@ -167,9 +174,68 @@ def test_check_deposit_metadata_ok(
         deposit.save()
 
 
-def create_deposit_archive_with_archive(
-    root_path, archive_extension, client, collection_name
+def create_deposit(archive, client, collection_name, atom_dataset):
+    """Create a deposit with archive (and metadata) for client in the collection name."""
+    # we deposit it
+    response = post_archive(
+        client,
+        reverse(COL_IRI, args=[collection_name]),
+        archive,
+        content_type="application/x-tar",
+        slug="external-id",
+        in_progress=True,
+    )
+
+    # then
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(response.content)
+    deposit_status = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
+    assert deposit_status == DEPOSIT_STATUS_PARTIAL
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
+
+    origin_url = client.deposit_client.provider_url
+    response = post_atom(
+        client,
+        reverse(SE_IRI, args=[collection_name, deposit_id]),
+        data=atom_dataset["entry-data0"] % origin_url,
+        in_progress=False,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    response_content = parse_xml(response.content)
+    deposit_status = response_content.findtext(
+        "swh:deposit_status", namespaces=NAMESPACES
+    )
+    assert deposit_status == DEPOSIT_STATUS_DEPOSITED
+
+    deposit = Deposit.objects.get(pk=deposit_id)
+    assert DEPOSIT_STATUS_DEPOSITED == deposit.status
+    return deposit
+
+
+def create_deposit_with_archive(
+    root_path, archive_extension, client, collection_name, atom_dataset
 ):
+    """Create a deposit with a valid archive."""
+    # we create the holding archive to a given extension
+    archive = create_arborescence_archive(
+        root_path,
+        "archive1",
+        "file1",
+        b"some content in file",
+        extension=archive_extension,
+    )
+
+    return create_deposit(archive, client, collection_name, atom_dataset)
+
+
+def create_deposit_archive_with_archive(
+    root_path, archive_extension, client, collection_name, atom_dataset
+):
+    """Create a deposit with an invalid archive (archive within archive)"""
+
     # we create the holding archive to a given extension
     archive = create_arborescence_archive(
         root_path,
@@ -182,27 +248,4 @@ def create_deposit_archive_with_archive(
     # now we create an archive holding the first created archive
     invalid_archive = create_archive_with_archive(root_path, "invalid.tgz", archive)
 
-    # we deposit it
-    response = client.post(
-        reverse(COL_IRI, args=[collection_name]),
-        content_type="application/x-tar",
-        data=invalid_archive["data"],
-        CONTENT_LENGTH=invalid_archive["length"],
-        HTTP_MD5SUM=invalid_archive["md5sum"],
-        HTTP_SLUG="external-id",
-        HTTP_IN_PROGRESS=False,
-        HTTP_CONTENT_DISPOSITION="attachment; filename=%s" % (invalid_archive["name"],),
-    )
-
-    # then
-    assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(response.content)
-    deposit_status = response_content.findtext(
-        "swh:deposit_status", namespaces=NAMESPACES
-    )
-    assert deposit_status == DEPOSIT_STATUS_DEPOSITED
-    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
-
-    deposit = Deposit.objects.get(pk=deposit_id)
-    assert DEPOSIT_STATUS_DEPOSITED == deposit.status
-    return deposit
+    return create_deposit(invalid_archive, client, collection_name, atom_dataset)

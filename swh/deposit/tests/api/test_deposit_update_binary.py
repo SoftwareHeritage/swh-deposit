@@ -74,7 +74,8 @@ def test_post_deposit_binary_and_post_to_add_another_archive(
         authenticated_client,
         update_uri,
         archive2,
-        HTTP_SLUG=external_id,
+        slug=external_id,
+        in_progress=False,
     )
 
     assert response.status_code == status.HTTP_201_CREATED
