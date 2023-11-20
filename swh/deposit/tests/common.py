@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2023  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -13,6 +13,8 @@ import tempfile
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from swh.core import tarball
+
+SUPPORTED_TARBALL_MODES = ["xz", "gz", "bz2"]
 
 
 def compute_info(archive_path):
@@ -40,7 +42,13 @@ def compute_info(archive_path):
 
 
 def _compress(path, extension, dir_path):
-    """Compress path according to extension"""
+    """Compress path according to extension in the dir_path.
+
+    Note: For test purposes, extension can be suffixed with -foobar. This will create a
+    tarball nonethess (with extension -foobar stripped, if the mode is supported). This
+    is to ensure those "improper" tarball gets filtered out by technical checks.
+
+    """
     if extension == "zip" or extension == "tar":
         return tarball.compress(path, extension, dir_path)
     elif "." in extension:
@@ -48,19 +56,21 @@ def _compress(path, extension, dir_path):
         if split_ext[0] != "tar":
             raise ValueError(
                 "Development error, only zip or tar archive supported, "
-                "%s not supported" % extension
+                f"{extension} not supported"
             )
 
-        # deal with specific tar
-        mode = split_ext[1]
-        supported_mode = ["xz", "gz", "bz2"]
-        if mode not in supported_mode:
+        # Deal with specific tar. For test purposes, we can create dummy
+        # {extension}-foobar tarballs (they will be rejected later)
+        mode = split_ext[1].rstrip("-foobar")
+
+        if mode not in SUPPORTED_TARBALL_MODES:
             raise ValueError(
-                "Development error, only %s supported, %s not supported"
-                % (supported_mode, mode)
+                f"Development error, only {SUPPORTED_TARBALL_MODES} supported, "
+                f"{mode} not supported"
             )
+
         files = tarball._ls(dir_path)
-        with tarfile.open(path, "w:%s" % mode) as t:
+        with tarfile.open(path, f"w:{mode}") as t:
             for fpath, fname in files:
                 t.add(fpath, arcname=fname, recursive=False)
 
