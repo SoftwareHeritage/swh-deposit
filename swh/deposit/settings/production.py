@@ -123,15 +123,27 @@ if cfg_azure:
                 f"Production: invalid configuration; missing {key} config entry."
             )
 
+    # Default options
+    options = dict(
+        azure_container=cfg_azure["container_name"],
+        connection_string=cfg_azure["connection_string"],
+    )
+
+    # Which may be enhanced with some extra options, lookup "object_parameters" in
+    # https://django-storages.readthedocs.io/en/latest/backends/azure.html
+    object_parameters = {}
+    for optional_config_key in ["content_type", "content_disposition"]:
+        if optional_config_key in cfg_azure:
+            object_parameters[optional_config_key] = cfg_azure[optional_config_key]
+
+    options.update(dict(object_parameters=object_parameters))
+
     STORAGES = {
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
         },
         "default": {
             "BACKEND": "storages.backends.azure_storage.AzureStorage",
-            "OPTIONS": {
-                "azure_container": cfg_azure["container_name"],
-                "connection_string": cfg_azure["connection_string"],
-            },
+            "OPTIONS": options,
         },
     }
