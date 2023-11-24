@@ -6,11 +6,10 @@
 import os
 
 import django
-
 from swh.core import config
 
-from .common import *  # noqa
-from .common import ALLOWED_HOSTS, CACHES
+from swh.deposit.settings.common import *  # noqa
+from swh.deposit.settings.common import ALLOWED_HOSTS, CACHES
 
 ALLOWED_HOSTS += ["deposit.softwareheritage.org"]
 # Setup support for proxy headers

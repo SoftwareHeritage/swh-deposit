@@ -27,12 +27,13 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import (
+    SUPPORTED_TARBALL_MODES,
     create_arborescence_archive,
     create_archive_with_archive,
+    post_archive,
+    post_atom,
 )
 from swh.deposit.utils import NAMESPACES
-
-from ..common import SUPPORTED_TARBALL_MODES, post_archive, post_atom
 
 PRIVATE_CHECK_DEPOSIT_NC = PRIVATE_CHECK_DEPOSIT + "-nc"
 

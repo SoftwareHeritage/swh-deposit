@@ -23,13 +23,6 @@ from rest_framework.authentication import BaseAuthentication, BasicAuthenticatio
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
-
-from swh.deposit.api.checks import check_metadata, check_url_match_provider
-from swh.deposit.api.converters import convert_status_detail
-from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
-from swh.deposit.models import DEPOSIT_METADATA_ONLY, Deposit
-from swh.deposit.parsers import parse_xml
-from swh.deposit.utils import compute_metadata_context, parse_swh_metadata_provenance
 from swh.model import hashutil
 from swh.model.model import (
     MetadataAuthority,
@@ -45,7 +38,10 @@ from swh.model.swhids import (
 )
 from swh.scheduler.utils import create_oneshot_task_dict
 
-from ..config import (
+from swh.deposit.api.checks import check_metadata, check_url_match_provider
+from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
+from swh.deposit.config import (
     ARCHIVE_KEY,
     ARCHIVE_TYPE,
     CONT_FILE_IRI,
@@ -60,7 +56,7 @@ from ..config import (
     STATE_IRI,
     APIConfig,
 )
-from ..errors import (
+from swh.deposit.errors import (
     BAD_REQUEST,
     CHECKSUM_MISMATCH,
     ERROR_CONTENT,
@@ -73,10 +69,19 @@ from ..errors import (
     DepositError,
     ParserError,
 )
-from ..models import DepositClient, DepositCollection, DepositRequest
-from ..utils import (
+from swh.deposit.models import (
+    DEPOSIT_METADATA_ONLY,
+    Deposit,
+    DepositClient,
+    DepositCollection,
+    DepositRequest,
+)
+from swh.deposit.parsers import parse_xml
+from swh.deposit.utils import (
+    compute_metadata_context,
     extended_swhid_from_qualified,
     parse_swh_deposit_origin,
+    parse_swh_metadata_provenance,
     parse_swh_reference,
 )
 

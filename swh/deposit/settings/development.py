@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from .common import *  # noqa
+from swh.deposit.settings.common import *  # noqa
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

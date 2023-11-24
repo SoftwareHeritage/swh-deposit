@@ -6,14 +6,13 @@
 from typing import Optional, Tuple
 
 from rest_framework import status
-
 from swh.storage import get_storage
 from swh.storage.interface import StorageInterface
 
-from ..config import EDIT_IRI, EM_IRI
-from ..models import Deposit
-from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIPost, ParsedRequestHeaders, Receipt
+from swh.deposit.api.common import APIPost, ParsedRequestHeaders, Receipt
+from swh.deposit.config import EDIT_IRI, EM_IRI
+from swh.deposit.models import Deposit
+from swh.deposit.parsers import SWHAtomEntryParser, SWHMultiPartParser
 
 
 class SwordEditAPI(APIPost):

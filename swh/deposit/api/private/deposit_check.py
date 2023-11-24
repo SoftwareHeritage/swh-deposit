@@ -14,14 +14,17 @@ import zipfile
 
 from rest_framework import status
 from rest_framework.request import Request
-
 from swh.scheduler.utils import create_oneshot_task_dict
 
-from . import APIPrivateView, DepositReadMixin
-from ...config import ARCHIVE_TYPE, DEPOSIT_STATUS_REJECTED, DEPOSIT_STATUS_VERIFIED
-from ...models import Deposit, DepositRequest
-from ..checks import check_metadata
-from ..common import APIGet
+from swh.deposit.api.checks import check_metadata
+from swh.deposit.api.common import APIGet
+from swh.deposit.api.private import APIPrivateView, DepositReadMixin
+from swh.deposit.config import (
+    ARCHIVE_TYPE,
+    DEPOSIT_STATUS_REJECTED,
+    DEPOSIT_STATUS_VERIFIED,
+)
+from swh.deposit.models import Deposit, DepositRequest
 
 MANDATORY_ARCHIVE_UNREADABLE = (
     "At least one of its associated archives is not readable"  # noqa
