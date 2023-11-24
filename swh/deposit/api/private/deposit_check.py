@@ -125,6 +125,11 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
             # Use python's File api which is consistent across different types of
             # storage backends (e.g. file, azure, ...)
 
+            # I did not find any other) workaround for azure blobstorage use, noop
+            # otherwise
+            reset_content_settings_if_needed(archive)
+            # FIXME: ^ Implement a better way (after digging into django-storages[azure]
+
             with archive.open("rb") as archive_fp:
                 try:
                     with zipfile.ZipFile(archive_fp) as zip_fp:
@@ -214,3 +219,35 @@ class APIChecks(APIPrivateView, APIGet, DepositReadMixin):
         deposit.save()
 
         return status.HTTP_200_OK, response, "application/json"
+
+
+def reset_content_settings_if_needed(archive) -> None:
+    """This resets the content_settings on the associated blob stored in an azure
+    blobstorage. This prevents the correct reading of the file and failing the checks
+    for no good reason.
+
+    """
+    try:
+        from storages.backends.azure_storage import AzureStorage
+    except ImportError:
+        return None
+
+    if not isinstance(archive.storage, AzureStorage):
+        return None
+
+    from azure.storage.blob import ContentSettings
+
+    blob_client = archive.storage.client.get_blob_client(archive.name)
+
+    # Get the existing blob properties
+    properties = blob_client.get_blob_properties()
+
+    # reset content encoding in the settings
+    content_settings = dict(properties.content_settings)
+    content_settings["content_encoding"] = ""
+
+    # Set the content_type and content_language headers, and populate the remaining
+    # headers from the existing properties
+    blob_headers = ContentSettings(**content_settings)
+
+    blob_client.set_http_headers(blob_headers)
