@@ -134,7 +134,10 @@ if cfg_azure:
     object_parameters = {}
     for optional_config_key in ["content_type", "content_disposition"]:
         if optional_config_key in cfg_azure:
-            object_parameters[optional_config_key] = cfg_azure[optional_config_key]
+            value = cfg_azure[optional_config_key]
+            # Explicit "" as None instead of empty string which is not interpreted
+            # correctly
+            object_parameters[optional_config_key] = None if not value else value
 
     options.update(dict(object_parameters=object_parameters))
 
