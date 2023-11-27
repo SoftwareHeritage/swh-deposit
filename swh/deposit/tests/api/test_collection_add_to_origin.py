@@ -109,30 +109,6 @@ def test_add_deposit_add_to_wrong_origin(
     assert b"must start with" in response.content
 
 
-def test_add_deposit_with_add_to_origin_and_external_identifier(
-    authenticated_client,
-    deposit_collection,
-    completed_deposit,
-    atom_dataset,
-    deposit_user,
-):
-    """Posting deposit with <swh:add_to_origin> creates a new deposit with parent"""
-    # given multiple deposit already loaded
-    origin_url = deposit_user.provider_url + completed_deposit.external_id
-
-    # adding a new deposit with the same external id as a completed deposit
-    # creates the parenting chain
-    response = post_atom(
-        authenticated_client,
-        reverse(COL_IRI, args=[deposit_collection.name]),
-        data=atom_dataset["entry-data-with-both-add-to-origin-and-external-id"]
-        % origin_url,
-    )
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert b"&lt;external_identifier&gt; is deprecated" in response.content
-
-
 def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):

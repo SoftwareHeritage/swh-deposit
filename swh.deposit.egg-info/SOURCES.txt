@@ -237,7 +237,6 @@ swh/deposit/tests/data/atom/entry-data-no-origin-url.xml
 swh/deposit/tests/data/atom/entry-data-parsing-error-prone.xml
 swh/deposit/tests/data/atom/entry-data-with-add-to-origin-no-prov.xml
 swh/deposit/tests/data/atom/entry-data-with-add-to-origin.xml
-swh/deposit/tests/data/atom/entry-data-with-both-add-to-origin-and-external-id.xml
 swh/deposit/tests/data/atom/entry-data-with-both-create-origin-and-add-to-origin.xml
 swh/deposit/tests/data/atom/entry-data-with-metadata-provenance.xml
 swh/deposit/tests/data/atom/entry-data-with-origin-reference.xml
@@ -255,8 +254,6 @@ swh/deposit/tests/data/atom/entry-only-create-origin.xml
 swh/deposit/tests/data/atom/entry-update-in-place.xml
 swh/deposit/tests/data/atom/error-cli.xml
 swh/deposit/tests/data/atom/error-with-decimal.xml
-swh/deposit/tests/data/atom/error-with-external-identifier-and-create-origin.xml
-swh/deposit/tests/data/atom/error-with-external-identifier.xml
 swh/deposit/tests/data/atom/error-with-reference-and-create-origin.xml
 swh/deposit/tests/data/atom/metadata.xml
 swh/deposit/tests/data/https_deposit.swh.test/1_servicedocument

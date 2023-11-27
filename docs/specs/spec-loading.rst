@@ -316,7 +316,6 @@ It contains the same fields as any revision object; in particular:
             "codemeta:url": "https://hal.archives-ouvertes.fr/hal-01883795",
             "codemeta:version": "1",
             "committer": "David Picard",
-            "external_identifier": "hal-01883795",
             "id": "hal-01883795"
         },
         "parents": [],
