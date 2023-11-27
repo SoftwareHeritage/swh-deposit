@@ -45,8 +45,8 @@ _parameters1 = [
             "atom-only-with-name",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <name>foo</name>
                 <author>someone</author>
                 {PROVENANCE_XML}
@@ -57,19 +57,19 @@ _parameters1 = [
             "atom-only-with-title",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
             </entry>
             """,
         ),
         (
-            "atom-only-and-external_identifier",
+            "atom-only-and-id",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <name>foo</name>
                 <author>no one</author>
                 {PROVENANCE_XML}
@@ -80,7 +80,7 @@ _parameters1 = [
             "atom-and-codemeta-minimal",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>no one</codemeta:name>
@@ -90,24 +90,10 @@ _parameters1 = [
             """,
         ),
         (
-            "unknown-codemeta-inner-element-after",
-            f"""\
-            <entry {XMLNS}>
-                <url>some url</url>
-                <codemeta:name>bar</codemeta:name>
-                <codemeta:author>
-                    <codemeta:name>someone</codemeta:name>
-                    <codemeta:unknown-tag>should allow anything here</codemeta:unknown-tag>
-                </codemeta:author>
-                {PROVENANCE_XML}
-            </entry>
-            """,
-        ),
-        (
             "unknown-schema-inner-element-after",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -121,7 +107,7 @@ _parameters1 = [
             "unknown-schema-inner-element-before",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <schema:unknown-tag>should allow anything here</schema:unknown-tag>
@@ -135,7 +121,7 @@ _parameters1 = [
             "unknown-schema-inner-element-before-and-after",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <schema:unknown-tag>should allow anything here</schema:unknown-tag>
@@ -150,7 +136,7 @@ _parameters1 = [
             "identifier-is-halid",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -164,7 +150,7 @@ _parameters1 = [
             "identifier-is-propertyvalue",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -182,8 +168,8 @@ _parameters1 = [
             "codemeta-dates",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>some id</external_identifier>
+                <uri>some url</uri>
+                <id>some id</id>
                 <name>nar</name>
                 <author>no one</author>
                 <codemeta:datePublished>2020-12-21</codemeta:datePublished>
@@ -199,8 +185,8 @@ _parameters1 = [
             # Allowed by ISO8601, therefore by schema:Date, but not by xsd:date
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>some id</external_identifier>
+                <uri>some url</uri>
+                <id>some id</id>
                 <name>nar</name>
                 <author>no one</author>
                 <codemeta:datePublished>2020-12</codemeta:datePublished>
@@ -215,8 +201,8 @@ _parameters1 = [
             # Allowed by ISO8601, therefore by schema:Date, but not by xsd:date
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>some id</external_identifier>
+                <uri>some url</uri>
+                <id>some id</id>
                 <name>nar</name>
                 <author>no one</author>
                 <codemeta:datePublished>2020</codemeta:datePublished>
@@ -232,8 +218,8 @@ _parameters1 = [
             # for backward compatibility with old swh-deposit versions
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>some id</external_identifier>
+                <uri>some url</uri>
+                <id>some id</id>
                 <name>nar</name>
                 <author>no one</author>
                 <codemeta:datePublished>2020-12-21T12:00:00</codemeta:datePublished>
@@ -247,7 +233,7 @@ _parameters1 = [
             "author-two-names",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -263,7 +249,7 @@ _parameters1 = [
             "element-in--affiliation",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -281,7 +267,7 @@ _parameters1 = [
             "chardata-in-affiliation",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -295,8 +281,8 @@ _parameters1 = [
             "swh:add_to_origin",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -314,8 +300,8 @@ _parameters1 = [
             "swh:reference-origin",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -333,8 +319,8 @@ _parameters1 = [
             "swh:reference-object",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -353,7 +339,7 @@ _parameters1 = [
             "codemeta-full",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
+                <uri>something</uri>
                 <name>foo</name>
                 <author>someone</author>
                 <codemeta:author>
@@ -433,7 +419,7 @@ _parameters2 = [
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <id>something-else</id>
                 <author>someone</author>
                 {PROVENANCE_XML}
             </entry>
@@ -448,7 +434,7 @@ _parameters2 = [
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <id>something-else</id>
                 <title>foobar</title>
                 {PROVENANCE_XML}
             </entry>
@@ -459,11 +445,94 @@ _parameters2 = [
             },
         ),
         (
+            "wrong-root-element",
+            f"""\
+            <not-entry {XMLNS}>
+                <url>some url</url>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </not-entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{http://www.w3.org/2005/Atom}not-entry",
+            },
+        ),
+        (
+            "wrong-root-element-namespace",
+            f"""\
+            <codemeta:entry {XMLNS}>
+                <url>some url</url>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+            </codemeta:entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}entry",
+            },
+        ),
+        (
+            "wrong-root-element-no-namespace",
+            f"""\
+            <entry xmlns:atom="http://www.w3.org/2005/Atom"
+                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                   xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                   xmlns:schema="http://schema.org/">
+                <atom:url>some url</atom:url>
+                <codemeta:name>bar</codemeta:name>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+            </entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is entry",
+            },
+        ),
+        (
+            "wrong-root-element-default-namespace",
+            f"""\
+            <entry xmlns:atom="http://www.w3.org/2005/Atom"
+                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                   xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                   xmlns:schema="http://schema.org/">
+                <atom:url>some url</atom:url>
+                <name>bar</name>
+                <author>
+                    <name>someone</name>
+                    <name>an alias</name>
+                </author>
+            </entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}entry",
+            },
+        ),
+        (
             "wrong-title-namespace",
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <id>something-else</id>
                 <codemeta:title>bar</codemeta:title>
                 <author>someone</author>
                 {PROVENANCE_XML}
@@ -477,16 +546,16 @@ _parameters2 = [
         (
             "wrong-author-namespace",
             f"""\
-            <entry xmlns:atom="http://www.w3.org/2005/Atom"
-                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
-                   xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-                   xmlns:schema="http://schema.org/">
+            <atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+                        xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                        xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                        xmlns:schema="http://schema.org/">
                 <atom:url>something</atom:url>
-                <atom:external_identifier>something-else</atom:external_identifier>
+                <atom:id>something-else</atom:id>
                 <atom:title>foobar</atom:title>
                 <author>foo</author>
                 {PROVENANCE_XML}
-            </entry>
+            </atom:entry>
             """,
             {
                 "summary": "Mandatory fields are missing",
@@ -498,7 +567,7 @@ _parameters2 = [
             f"""\
             <entry {XMLNS}>
                 <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <id>something-else</id>
                 <title>bar</title>
                 <authorblahblah>someone</authorblahblah>
                 {PROVENANCE_XML}
@@ -507,6 +576,82 @@ _parameters2 = [
             {
                 "summary": "Mandatory fields are missing",
                 "fields": ["atom:author or codemeta:author"],
+            },
+        ),
+        (
+            "unknown-atom",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <unknown-tag>but in known namespace</unknown-tag>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Atom element, see "
+                "https://datatracker.ietf.org/doc/html/rfc4287",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:unknown-tag>but in known namespace</codemeta:unknown-tag>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Codemeta 2.0 term, see "
+                "https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-atom-in-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <unknown-tag>but in known namespace</unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Atom element, see "
+                "https://datatracker.ietf.org/doc/html/rfc4287",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-codemeta-in-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:unknown-tag>but in known namespace</codemeta:unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Codemeta 2.0 term, see "
+                "https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld",
+                "fields": ["unknown-tag"],
             },
         ),
     ]
@@ -529,7 +674,7 @@ _parameters3 = [
             "child-element-in-name",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>
                     <codemeta:name>bar</codemeta:name>
                 </codemeta:name>
@@ -548,7 +693,7 @@ _parameters3 = [
             "affiliation-with-no-name",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -570,7 +715,7 @@ _parameters3 = [
             "empty-affiliation",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
@@ -591,7 +736,7 @@ _parameters3 = [
             "chardata-in-author",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>no one</codemeta:author>
                 {PROVENANCE_XML}
@@ -608,7 +753,7 @@ _parameters3 = [
             "author-with-no-name",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <schema:unknown-tag>should allow anything here</schema:unknown-tag>
@@ -627,7 +772,7 @@ _parameters3 = [
             "contributor-with-no-name",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>should allow anything here</codemeta:name>
@@ -649,7 +794,7 @@ _parameters3 = [
             "maintainer-with-no-name",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>should allow anything here</codemeta:name>
@@ -671,7 +816,7 @@ _parameters3 = [
             "id-is-not-url",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -691,7 +836,7 @@ _parameters3 = [
             "identifier-is-invalid-url",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -713,7 +858,7 @@ _parameters3 = [
             "identifier-is-not-url",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -733,7 +878,7 @@ _parameters3 = [
             "identifier-is-not-url2",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>
                     <codemeta:name>The Author</codemeta:name>
@@ -753,8 +898,8 @@ _parameters3 = [
             "invalid-dates",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <codemeta:datePublished>2020-aa-21</codemeta:datePublished>
@@ -777,8 +922,8 @@ _parameters3 = [
             "invalid-dateModified",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>someid</external_identifier>
+                <uri>some url</uri>
+                <id>someid</id>
                 <title>bar</title>
                 <author>no one</author>
                 <codemeta:dateModified>2020-12-aa</codemeta:dateModified>
@@ -796,8 +941,8 @@ _parameters3 = [
             "invalid-embargoDate",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
-                <external_identifier>someid</external_identifier>
+                <uri>some url</uri>
+                <id>someid</id>
                 <title>bar</title>
                 <author>no one</author>
                 <codemeta:embargoDate>2022-02-28T12:00:00</codemeta:embargoDate>
@@ -815,7 +960,7 @@ _parameters3 = [
             "error-and-missing-provenance",
             f"""\
             <entry {XMLNS}>
-                <url>some url</url>
+                <uri>some url</uri>
                 <codemeta:name>bar</codemeta:name>
                 <codemeta:author>no one</codemeta:author>
             </entry>
@@ -835,8 +980,8 @@ _parameters3 = [
             "unknown-tag-in-swh-namespace",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -863,8 +1008,8 @@ _parameters3 = [
             "multiple-swh:add_to_origin",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -893,8 +1038,8 @@ _parameters3 = [
             "swh:add_to_origin-and-swh:create_origin",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -925,8 +1070,8 @@ _parameters3 = [
             "swh:reference-and-swh:create_origin",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -957,8 +1102,8 @@ _parameters3 = [
             "swh:add_to_origin-and-swh:reference",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -989,8 +1134,8 @@ _parameters3 = [
             "swh:reference-two-children",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -1015,8 +1160,8 @@ _parameters3 = [
             "swh:reference-two-origins",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
@@ -1041,8 +1186,8 @@ _parameters3 = [
             "swh:reference-two-objects",
             f"""\
             <entry {XMLNS}>
-                <url>something</url>
-                <external_identifier>something-else</external_identifier>
+                <uri>something</uri>
+                <id>something-else</id>
                 <title>bar</title>
                 <author>someone</author>
                 <swh:deposit>
