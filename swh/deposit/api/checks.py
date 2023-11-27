@@ -120,6 +120,19 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
           - (False, <detailed-error>) otherwise.
 
     """
+    if metadata.tag != "{http://www.w3.org/2005/Atom}entry":
+        return False, {
+            "metadata": [
+                {
+                    "fields": ["atom:entry"],
+                    "summary": (
+                        "Root element should be {http://www.w3.org/2005/Atom}entry, "
+                        f"but it is {metadata.tag}"
+                    ),
+                }
+            ]
+        }
+
     suggested_fields = []
     # at least one value per couple below is mandatory
     alternate_fields = {

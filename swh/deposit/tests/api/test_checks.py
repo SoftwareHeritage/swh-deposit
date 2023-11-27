@@ -459,6 +459,89 @@ _parameters2 = [
             },
         ),
         (
+            "wrong-root-element",
+            f"""\
+            <not-entry {XMLNS}>
+                <url>some url</url>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </not-entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{http://www.w3.org/2005/Atom}not-entry",
+            },
+        ),
+        (
+            "wrong-root-element-namespace",
+            f"""\
+            <codemeta:entry {XMLNS}>
+                <url>some url</url>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+            </codemeta:entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}entry",
+            },
+        ),
+        (
+            "wrong-root-element-no-namespace",
+            f"""\
+            <entry xmlns:atom="http://www.w3.org/2005/Atom"
+                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                   xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                   xmlns:schema="http://schema.org/">
+                <atom:url>some url</atom:url>
+                <codemeta:name>bar</codemeta:name>
+                <title>bar</title>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:name>an alias</codemeta:name>
+                </codemeta:author>
+            </entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is entry",
+            },
+        ),
+        (
+            "wrong-root-element-default-namespace",
+            f"""\
+            <entry xmlns:atom="http://www.w3.org/2005/Atom"
+                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                   xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                   xmlns:schema="http://schema.org/">
+                <atom:url>some url</atom:url>
+                <name>bar</name>
+                <author>
+                    <name>someone</name>
+                    <name>an alias</name>
+                </author>
+            </entry>
+            """,
+            {
+                "fields": ["atom:entry"],
+                "summary": "Root element should be "
+                "{http://www.w3.org/2005/Atom}entry, but it is "
+                "{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}entry",
+            },
+        ),
+        (
             "wrong-title-namespace",
             f"""\
             <entry {XMLNS}>
@@ -477,16 +560,16 @@ _parameters2 = [
         (
             "wrong-author-namespace",
             f"""\
-            <entry xmlns:atom="http://www.w3.org/2005/Atom"
-                   xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
-                   xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
-                   xmlns:schema="http://schema.org/">
+            <atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+                        xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit"
+                        xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+                        xmlns:schema="http://schema.org/">
                 <atom:url>something</atom:url>
                 <atom:external_identifier>something-else</atom:external_identifier>
                 <atom:title>foobar</atom:title>
                 <author>foo</author>
                 {PROVENANCE_XML}
-            </entry>
+            </atom:entry>
             """,
             {
                 "summary": "Mandatory fields are missing",
