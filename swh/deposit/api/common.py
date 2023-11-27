@@ -29,11 +29,7 @@ from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.models import DEPOSIT_METADATA_ONLY, Deposit
 from swh.deposit.parsers import parse_xml
-from swh.deposit.utils import (
-    NAMESPACES,
-    compute_metadata_context,
-    parse_swh_metadata_provenance,
-)
+from swh.deposit.utils import compute_metadata_context, parse_swh_metadata_provenance
 from swh.model import hashutil
 from swh.model.model import (
     MetadataAuthority,
@@ -944,29 +940,6 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 .get()
             )
             deposit.origin_url = origin_url
-
-        external_identifier_element = metadata.find(
-            "atom:external_identifier", namespaces=NAMESPACES
-        )
-        if external_identifier_element is not None:
-            # Deprecated tag.
-            # When clients stopped using it, this should raise an error
-            # unconditionally
-
-            if deposit.origin_url:
-                raise DepositError(
-                    BAD_REQUEST,
-                    "<external_identifier> is deprecated, you should only use "
-                    "<swh:create_origin> and <swh:add_to_origin> from now on.",
-                )
-
-            if headers.slug and external_identifier_element.text != headers.slug:
-                raise DepositError(
-                    BAD_REQUEST,
-                    "The <external_identifier> tag and Slug header are deprecated, "
-                    "<swh:create_origin> or <swh:add_to_origin> "
-                    "should be used instead.",
-                )
 
     def _empty_post(
         self,

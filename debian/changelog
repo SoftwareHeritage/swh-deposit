@@ -1,8 +1,13 @@
-swh-deposit (1.4.4-1~swh1~bpo10+1) buster-swh; urgency=medium
+swh-deposit (2.0.0-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 2.0.0     - (tagged by Valentin Lorentz
+    <vlorentz@softwareheritage.org> on 2023-11-27 16:36:15 +0100)
+  * Upstream changes:     - v2.0.0     - * Reject deposits whose root
+    element is not <atom:entry>     - * Reject deposits with invalid tag
+    names in Atom and Codemeta namespaces     - * Remove support for
+    external_identifier
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 24 Nov 2023 11:50:40 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 27 Nov 2023 15:42:51 +0000
 
 swh-deposit (1.4.4-1~swh1) unstable-swh; urgency=medium
 
