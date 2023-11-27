@@ -90,20 +90,6 @@ _parameters1 = [
             """,
         ),
         (
-            "unknown-codemeta-inner-element-after",
-            f"""\
-            <entry {XMLNS}>
-                <uri>some url</uri>
-                <codemeta:name>bar</codemeta:name>
-                <codemeta:author>
-                    <codemeta:name>someone</codemeta:name>
-                    <codemeta:unknown-tag>should allow anything here</codemeta:unknown-tag>
-                </codemeta:author>
-                {PROVENANCE_XML}
-            </entry>
-            """,
-        ),
-        (
             "unknown-schema-inner-element-after",
             f"""\
             <entry {XMLNS}>
@@ -590,6 +576,82 @@ _parameters2 = [
             {
                 "summary": "Mandatory fields are missing",
                 "fields": ["atom:author or codemeta:author"],
+            },
+        ),
+        (
+            "unknown-atom",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <unknown-tag>but in known namespace</unknown-tag>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Atom element, see "
+                "https://datatracker.ietf.org/doc/html/rfc4287",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:unknown-tag>but in known namespace</codemeta:unknown-tag>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Codemeta 2.0 term, see "
+                "https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-atom-in-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <unknown-tag>but in known namespace</unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Atom element, see "
+                "https://datatracker.ietf.org/doc/html/rfc4287",
+                "fields": ["unknown-tag"],
+            },
+        ),
+        (
+            "unknown-codemeta-in-codemeta",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <codemeta:unknown-tag>but in known namespace</codemeta:unknown-tag>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            {
+                "summary": "unknown-tag is not a valid Codemeta 2.0 term, see "
+                "https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld",
+                "fields": ["unknown-tag"],
             },
         ),
     ]

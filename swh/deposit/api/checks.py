@@ -35,6 +35,115 @@ METADATA_PROVENANCE_KEY = "swh:metadata-provenance"
 
 AFFILIATION_NO_NAME = "Reason: affiliation does not have a <codemeta:name> element"
 
+# from https://datatracker.ietf.org/doc/html/rfc4287
+ATOM_ELEMENTS = [
+    "name",
+    "uri",
+    "email",
+    # specifically not allowing this one, because clients are supposed to send one
+    # entry at a time:
+    # "feed",
+    "entry",
+    # ditto:
+    # "content",
+    "author",
+    "category",
+    "contributor",
+    "generator",
+    "icon",
+    "id",
+    "link",
+    "logo",
+    "published",
+    "rights",
+    "source",
+    "subtitle",
+    "summary",
+    "title",
+    "updated",
+    # we used to recommend this, so we still need to support it so we don't break
+    # existing clients
+    "external_identifier",
+]
+
+# from https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld
+CODEMETA2_CONTEXT = {
+    "type": "@type",
+    "id": "@id",
+    "schema": "http://schema.org/",
+    "codemeta": "https://codemeta.github.io/terms/",
+    "Organization": {"@id": "schema:Organization"},
+    "Person": {"@id": "schema:Person"},
+    "SoftwareSourceCode": {"@id": "schema:SoftwareSourceCode"},
+    "SoftwareApplication": {"@id": "schema:SoftwareApplication"},
+    "Text": {"@id": "schema:Text"},
+    "URL": {"@id": "schema:URL"},
+    "address": {"@id": "schema:address"},
+    "affiliation": {"@id": "schema:affiliation"},
+    "applicationCategory": {"@id": "schema:applicationCategory", "@type": "@id"},
+    "applicationSubCategory": {"@id": "schema:applicationSubCategory", "@type": "@id"},
+    "citation": {"@id": "schema:citation"},
+    "codeRepository": {"@id": "schema:codeRepository", "@type": "@id"},
+    "contributor": {"@id": "schema:contributor"},
+    "copyrightHolder": {"@id": "schema:copyrightHolder"},
+    "copyrightYear": {"@id": "schema:copyrightYear"},
+    "creator": {"@id": "schema:creator"},
+    "dateCreated": {"@id": "schema:dateCreated", "@type": "schema:Date"},
+    "dateModified": {"@id": "schema:dateModified", "@type": "schema:Date"},
+    "datePublished": {"@id": "schema:datePublished", "@type": "schema:Date"},
+    "description": {"@id": "schema:description"},
+    "downloadUrl": {"@id": "schema:downloadUrl", "@type": "@id"},
+    "email": {"@id": "schema:email"},
+    "editor": {"@id": "schema:editor"},
+    "encoding": {"@id": "schema:encoding"},
+    "familyName": {"@id": "schema:familyName"},
+    "fileFormat": {"@id": "schema:fileFormat", "@type": "@id"},
+    "fileSize": {"@id": "schema:fileSize"},
+    "funder": {"@id": "schema:funder"},
+    "givenName": {"@id": "schema:givenName"},
+    "hasPart": {"@id": "schema:hasPart"},
+    "identifier": {"@id": "schema:identifier", "@type": "@id"},
+    "installUrl": {"@id": "schema:installUrl", "@type": "@id"},
+    "isAccessibleForFree": {"@id": "schema:isAccessibleForFree"},
+    "isPartOf": {"@id": "schema:isPartOf"},
+    "keywords": {"@id": "schema:keywords"},
+    "license": {"@id": "schema:license", "@type": "@id"},
+    "memoryRequirements": {"@id": "schema:memoryRequirements", "@type": "@id"},
+    "name": {"@id": "schema:name"},
+    "operatingSystem": {"@id": "schema:operatingSystem"},
+    "permissions": {"@id": "schema:permissions"},
+    "position": {"@id": "schema:position"},
+    "processorRequirements": {"@id": "schema:processorRequirements"},
+    "producer": {"@id": "schema:producer"},
+    "programmingLanguage": {"@id": "schema:programmingLanguage"},
+    "provider": {"@id": "schema:provider"},
+    "publisher": {"@id": "schema:publisher"},
+    "relatedLink": {"@id": "schema:relatedLink", "@type": "@id"},
+    "releaseNotes": {"@id": "schema:releaseNotes", "@type": "@id"},
+    "runtimePlatform": {"@id": "schema:runtimePlatform"},
+    "sameAs": {"@id": "schema:sameAs", "@type": "@id"},
+    "softwareHelp": {"@id": "schema:softwareHelp"},
+    "softwareRequirements": {"@id": "schema:softwareRequirements", "@type": "@id"},
+    "softwareVersion": {"@id": "schema:softwareVersion"},
+    "sponsor": {"@id": "schema:sponsor"},
+    "storageRequirements": {"@id": "schema:storageRequirements", "@type": "@id"},
+    "supportingData": {"@id": "schema:supportingData"},
+    "targetProduct": {"@id": "schema:targetProduct"},
+    "url": {"@id": "schema:url", "@type": "@id"},
+    "version": {"@id": "schema:version"},
+    "author": {"@id": "schema:author", "@container": "@list"},
+    "softwareSuggestions": {"@id": "codemeta:softwareSuggestions", "@type": "@id"},
+    "contIntegration": {"@id": "codemeta:contIntegration", "@type": "@id"},
+    "buildInstructions": {"@id": "codemeta:buildInstructions", "@type": "@id"},
+    "developmentStatus": {"@id": "codemeta:developmentStatus", "@type": "@id"},
+    "embargoDate": {"@id": "codemeta:embargoDate", "@type": "schema:Date"},
+    "funding": {"@id": "codemeta:funding"},
+    "readme": {"@id": "codemeta:readme", "@type": "@id"},
+    "issueTracker": {"@id": "codemeta:issueTracker", "@type": "@id"},
+    "referencePublication": {"@id": "codemeta:referencePublication", "@type": "@id"},
+    "maintainer": {"@id": "codemeta:maintainer"},
+}
+
 
 def extra_validator(
     element: ElementTree.Element,
@@ -236,6 +345,51 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
                             }
                         )
                         break
+
+    for element in metadata.iter():
+        if element.tag.startswith("{http://www.w3.org/2005/Atom}"):
+            _, local_name = element.tag.split("}", 1)
+            if local_name not in ATOM_ELEMENTS:
+                if local_name in CODEMETA2_CONTEXT:
+                    # Probably confused the two namespaces, display a nicer error
+                    detail.append(
+                        {
+                            "fields": [local_name],
+                            "summary": f"{local_name} is not a valid Atom element. "
+                            "However, it would be a valid a Codemeta term; make sure "
+                            "namespaces are not swapped",
+                        }
+                    )
+                else:
+                    detail.append(
+                        {
+                            "fields": [local_name],
+                            "summary": f"{local_name} is not a valid Atom element, "
+                            "see https://datatracker.ietf.org/doc/html/rfc4287",
+                        }
+                    )
+        elif element.tag.startswith("{https://doi.org/10.5063/SCHEMA/CODEMETA-2.0}"):
+            _, local_name = element.tag.split("}", 1)
+            if local_name not in CODEMETA2_CONTEXT:
+                if local_name in CODEMETA2_CONTEXT:
+                    # Probably confused the two namespaces, display a nicer error
+                    detail.append(
+                        {
+                            "fields": [local_name],
+                            "summary": f"{local_name} is not a valid Codemeta 2.0 term. "
+                            "However, it would be a valid Atom element; make sure "
+                            "namespaces are not swapped",
+                        }
+                    )
+                else:
+                    detail.append(
+                        {
+                            "fields": [local_name],
+                            "summary": f"{local_name} is not a valid Codemeta 2.0 term, "
+                            "see "
+                            "https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld",
+                        }
+                    )
 
     if detail:
         return False, {"metadata": detail + suggested_fields}
