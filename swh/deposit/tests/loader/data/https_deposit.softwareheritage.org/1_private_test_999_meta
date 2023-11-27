@@ -13,7 +13,6 @@
                 "no one"
             ],
             "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-            "external_identifier": "some-external-id",
             "url": "https://hal-test.archives-ouvertes.fr/some-external-id"
         },
         "provider": {
@@ -57,7 +56,6 @@
                        "another one",
                        "no one"],
             "codemeta:dateCreated": "2017-10-07T15:17:08Z",
-            "external_identifier": "some-external-id",
             "url": "https://hal-test.archives-ouvertes.fr/some-external-id"
         },
         "synthetic": "true",

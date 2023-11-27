@@ -523,43 +523,6 @@ def test_put_update_metadata_done_deposit_failure_functional_checks(
     assert msg in response.content
 
 
-def test_put_atom_with_create_origin_and_external_identifier(
-    authenticated_client, deposit_collection, atom_dataset, deposit_user
-):
-    """<atom:external_identifier> was deprecated before <swh:create_origin>
-    was introduced, clients should get an error when trying to use both
-
-    """
-    external_id = "foobar"
-    origin_url = deposit_user.provider_url + external_id
-    url = reverse(COL_IRI, args=[deposit_collection.name])
-
-    response = post_atom(
-        authenticated_client,
-        url,
-        data=atom_dataset["entry-data0"] % origin_url,
-        HTTP_IN_PROGRESS="true",
-    )
-
-    assert response.status_code == status.HTTP_201_CREATED
-    response_content = parse_xml(response.content)
-
-    edit_iri = response_content.find(
-        "atom:link[@rel='edit']", namespaces=NAMESPACES
-    ).attrib["href"]
-
-    # when
-    response = put_atom(
-        authenticated_client,
-        edit_iri,
-        data=atom_dataset["error-with-external-identifier"] % external_id,
-        HTTP_IN_PROGRESS="false",
-    )
-
-    assert b"&lt;external_identifier&gt; is deprecated" in response.content
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
 def test_put_atom_with_create_origin_and_reference(
     authenticated_client, deposit_collection, atom_dataset, deposit_user
 ):

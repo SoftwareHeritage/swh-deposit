@@ -61,9 +61,6 @@ ATOM_ELEMENTS = [
     "summary",
     "title",
     "updated",
-    # we used to recommend this, so we still need to support it so we don't break
-    # existing clients
-    "external_identifier",
 ]
 
 # from https://github.com/codemeta/codemeta/blob/2.0/codemeta.jsonld
@@ -350,7 +347,16 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
         if element.tag.startswith("{http://www.w3.org/2005/Atom}"):
             _, local_name = element.tag.split("}", 1)
             if local_name not in ATOM_ELEMENTS:
-                if local_name in CODEMETA2_CONTEXT:
+                if local_name == "external_identifier":
+                    detail.append(
+                        {
+                            "fields": [local_name],
+                            "summary": "<external_identifier> is not supported anymore, "
+                            "<swh:create_origin> or <swh:add_to_origin> should be used "
+                            "instead.",
+                        }
+                    )
+                elif local_name in CODEMETA2_CONTEXT:
                     # Probably confused the two namespaces, display a nicer error
                     detail.append(
                         {
