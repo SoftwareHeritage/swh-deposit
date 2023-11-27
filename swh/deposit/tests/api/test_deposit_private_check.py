@@ -59,7 +59,7 @@ def test_deposit_ok(
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["status"] == DEPOSIT_STATUS_VERIFIED
+        assert data["status"] == DEPOSIT_STATUS_VERIFIED, data
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_VERIFIED
 
@@ -202,7 +202,7 @@ def test_check_deposit_metadata_ok(
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        assert data["status"] == DEPOSIT_STATUS_VERIFIED
+        assert data["status"] == DEPOSIT_STATUS_VERIFIED, data
         deposit = Deposit.objects.get(pk=deposit.id)
         assert deposit.status == DEPOSIT_STATUS_VERIFIED
 
