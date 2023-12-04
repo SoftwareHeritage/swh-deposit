@@ -544,7 +544,6 @@ def partial_deposit_with_metadata(
 def partial_deposit_only_metadata(
     deposit_collection, authenticated_client, atom_dataset
 ):
-
     response = post_atom(
         authenticated_client,
         reverse(COL_IRI, args=[deposit_collection.name]),
