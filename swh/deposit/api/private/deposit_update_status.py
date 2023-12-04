@@ -4,8 +4,6 @@
 # See top-level LICENSE file for more information
 
 from rest_framework.parsers import JSONParser
-from swh.model.hashutil import hash_to_bytes
-from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
 from swh.deposit.api.common import APIPut, ParsedRequestHeaders
 from swh.deposit.api.private import APIPrivateView
@@ -15,6 +13,8 @@ from swh.deposit.models import (
     DEPOSIT_STATUS_LOAD_SUCCESS,
     Deposit,
 )
+from swh.model.hashutil import hash_to_bytes
+from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
 MANDATORY_KEYS = ["origin_url", "release_id", "directory_id", "snapshot_id"]
 

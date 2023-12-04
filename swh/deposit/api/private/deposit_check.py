@@ -14,7 +14,6 @@ import zipfile
 
 from rest_framework import status
 from rest_framework.request import Request
-from swh.scheduler.utils import create_oneshot_task_dict
 
 from swh.deposit.api.checks import check_metadata
 from swh.deposit.api.common import APIGet
@@ -25,6 +24,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_VERIFIED,
 )
 from swh.deposit.models import Deposit, DepositRequest
+from swh.scheduler.utils import create_oneshot_task_dict
 
 MANDATORY_ARCHIVE_UNREADABLE = (
     "At least one of its associated archives is not readable"  # noqa

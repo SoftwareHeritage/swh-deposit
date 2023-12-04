@@ -13,7 +13,6 @@ from unittest.mock import MagicMock
 from xml.etree import ElementTree
 
 import pytest
-from swh.model.exceptions import ValidationError
 import yaml
 
 from swh.deposit.api.checks import (
@@ -32,6 +31,7 @@ from swh.deposit.client import (
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.conftest import TEST_USER
 from swh.deposit.utils import NAMESPACES
+from swh.model.exceptions import ValidationError
 
 
 def generate_slug() -> str:

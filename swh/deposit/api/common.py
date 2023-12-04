@@ -23,20 +23,6 @@ from rest_framework.authentication import BaseAuthentication, BasicAuthenticatio
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
-from swh.model import hashutil
-from swh.model.model import (
-    MetadataAuthority,
-    MetadataAuthorityType,
-    Origin,
-    RawExtrinsicMetadata,
-)
-from swh.model.swhids import (
-    ExtendedObjectType,
-    ExtendedSWHID,
-    QualifiedSWHID,
-    ValidationError,
-)
-from swh.scheduler.utils import create_oneshot_task_dict
 
 from swh.deposit.api.checks import check_metadata, check_url_match_provider
 from swh.deposit.api.converters import convert_status_detail
@@ -84,6 +70,20 @@ from swh.deposit.utils import (
     parse_swh_metadata_provenance,
     parse_swh_reference,
 )
+from swh.model import hashutil
+from swh.model.model import (
+    MetadataAuthority,
+    MetadataAuthorityType,
+    Origin,
+    RawExtrinsicMetadata,
+)
+from swh.model.swhids import (
+    ExtendedObjectType,
+    ExtendedSWHID,
+    QualifiedSWHID,
+    ValidationError,
+)
+from swh.scheduler.utils import create_oneshot_task_dict
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]

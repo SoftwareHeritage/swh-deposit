@@ -6,8 +6,8 @@
 import os
 
 import django
-from swh.core import config
 
+from swh.core import config
 from swh.deposit.settings.common import *  # noqa
 from swh.deposit.settings.common import ALLOWED_HOSTS, CACHES
 

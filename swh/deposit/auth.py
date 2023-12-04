@@ -13,6 +13,7 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
 from sentry_sdk import capture_exception
+
 from swh.auth.django.models import OIDCUser
 from swh.auth.django.utils import oidc_user_from_profile
 from swh.auth.keycloak import (
@@ -20,7 +21,6 @@ from swh.auth.keycloak import (
     KeycloakOpenIDConnect,
     keycloak_error_message,
 )
-
 from swh.deposit.errors import UNAUTHORIZED, make_error_response
 from swh.deposit.models import DepositClient
 

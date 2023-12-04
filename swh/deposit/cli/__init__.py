@@ -8,6 +8,7 @@ import logging
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
 import click
+
 from swh.core.cli import CONTEXT_SETTINGS
 from swh.core.cli import swh as swh_cli_group
 
