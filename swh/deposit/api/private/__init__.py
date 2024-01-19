@@ -8,8 +8,8 @@ from typing import Optional
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
-from ...config import METADATA_TYPE, APIConfig
-from ...models import Deposit, DepositRequest
+from swh.deposit.config import METADATA_TYPE, APIConfig
+from swh.deposit.models import Deposit, DepositRequest
 
 
 class DepositReadMixin:

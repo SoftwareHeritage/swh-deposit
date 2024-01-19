@@ -10,9 +10,8 @@ from swh.deposit.config import COL_IRI, DEPOSIT_STATUS_LOAD_SUCCESS
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
+from swh.deposit.tests.conftest import internal_create_deposit
 from swh.deposit.utils import NAMESPACES
-
-from ..conftest import internal_create_deposit
 
 
 def test_add_deposit_with_add_to_origin(

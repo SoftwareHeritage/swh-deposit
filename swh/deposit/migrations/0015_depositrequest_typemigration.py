@@ -16,7 +16,6 @@ def populate_deposit_type2(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("deposit", "0014_auto_20180720_1221"),
     ]

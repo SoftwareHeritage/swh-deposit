@@ -1,8 +1,5 @@
-[console_scripts]
-swh-deposit = swh.deposit.cli:main
-
 [swh.cli.subcommands]
-deposit = swh.deposit.cli
+swh.deposit = swh.deposit.cli
 
 [swh.workers]
-deposit.worker = swh.deposit.loader:register
+swh.deposit = swh.deposit.loader:register

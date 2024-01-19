@@ -1,4 +1,4 @@
-include ../../swh-docs/Makefile.sphinx
+include Makefile.sphinx
 
 APIDOC_EXCLUDES += ../swh/*/settings/*
 

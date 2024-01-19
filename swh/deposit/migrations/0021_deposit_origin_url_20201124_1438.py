@@ -12,7 +12,6 @@ def fill_origin_url(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("deposit", "0020_auto_20200929_0855"),
     ]

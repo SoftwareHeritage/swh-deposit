@@ -7,7 +7,6 @@ from swh.deposit.models import JSONField
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("deposit", "0022_auto_20220223_1542"),
     ]

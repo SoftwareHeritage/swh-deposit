@@ -21,9 +21,8 @@ from swh.auth.keycloak import (
     KeycloakOpenIDConnect,
     keycloak_error_message,
 )
+from swh.deposit.errors import UNAUTHORIZED, make_error_response
 from swh.deposit.models import DepositClient
-
-from .errors import UNAUTHORIZED, make_error_response
 
 logger = logging.getLogger(__name__)
 

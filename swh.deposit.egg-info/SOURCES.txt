@@ -1,3 +1,4 @@
+.copier-answers.yml
 .git-blame-ignore-revs
 .gitignore
 .pre-commit-config.yaml
@@ -5,7 +6,6 @@ AUTHORS
 CODE_OF_CONDUCT.md
 CONTRIBUTORS
 LICENSE
-MANIFEST.in
 Makefile
 Makefile.local
 README.rst
@@ -20,7 +20,6 @@ requirements-swh.txt
 requirements-test.txt
 requirements.txt
 setup.cfg
-setup.py
 tox.ini
 bin/Makefile
 bin/content.sh
@@ -81,7 +80,6 @@ docs/specs/protocol-reference.rst
 docs/specs/spec-loading.rst
 docs/specs/spec-meta-deposit.rst
 resources/deposit/server.yml
-swh/__init__.py
 swh.deposit.egg-info/PKG-INFO
 swh.deposit.egg-info/SOURCES.txt
 swh.deposit.egg-info/dependency_links.txt

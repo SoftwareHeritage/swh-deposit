@@ -31,10 +31,10 @@ def main():
 
 # These import statements MUST be executed after defining the 'deposit' group
 # since the subcommands in these are defined using this 'deposit' group.
-from . import client  # noqa
+from swh.deposit.cli import client  # noqa
 
 try:
-    from . import admin  # noqa
+    from swh.deposit.cli import admin  # noqa
 except ImportError:  # server part is optional
     logger.debug("admin subcommand not loaded")
 

@@ -3,10 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from .common import *  # noqa
-from .common import ALLOWED_HOSTS
-from .development import *  # noqa
-from .development import INSTALLED_APPS
+from swh.deposit.settings.common import *  # noqa
+from swh.deposit.settings.common import ALLOWED_HOSTS
+from swh.deposit.settings.development import *  # noqa
+from swh.deposit.settings.development import INSTALLED_APPS
 
 # django setup
 ALLOWED_HOSTS += ["testserver"]

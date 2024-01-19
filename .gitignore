@@ -1,26 +1,16 @@
-*.pyc
-*.sw?
-*~
-/.coverage
-/.coverage.*
-.eggs/
-__pycache__
 *.egg-info/
-version.txt
+*.pyc
+.coverage
+.eggs/
+.hypothesis
+.mypy_cache
+.tox
+__pycache__
 build/
 dist/
-/analysis.org
-/swh/deposit/fixtures/private_data.yaml
-/swh/deposit.json
-/test.json
-/swh/test
-db.sqlite3
-/.noseids
-*.tgz
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.lzma
-.tox/
-.mypy_cache/
-.hypothesis/
+# these are symlinks created by a hook in swh-docs' main sphinx conf.py
+docs/README.rst
+docs/README.md
+# this should be a symlink for people who want to build the sphinx doc
+# without using tox, generally created by the swh-env/bin/update script
+docs/Makefile.sphinx

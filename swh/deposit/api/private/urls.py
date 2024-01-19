@@ -5,7 +5,11 @@
 
 from django.urls import re_path as url
 
-from ...config import (
+from swh.deposit.api.private.deposit_check import APIChecks
+from swh.deposit.api.private.deposit_list import APIList, deposit_list_datatables
+from swh.deposit.api.private.deposit_read import APIReadArchives, APIReadMetadata
+from swh.deposit.api.private.deposit_update_status import APIUpdateStatus
+from swh.deposit.config import (
     PRIVATE_CHECK_DEPOSIT,
     PRIVATE_GET_DEPOSIT_METADATA,
     PRIVATE_GET_RAW_CONTENT,
@@ -13,10 +17,6 @@ from ...config import (
     PRIVATE_LIST_DEPOSITS_DATATABLES,
     PRIVATE_PUT_DEPOSIT,
 )
-from .deposit_check import APIChecks
-from .deposit_list import APIList, deposit_list_datatables
-from .deposit_read import APIReadArchives, APIReadMetadata
-from .deposit_update_status import APIUpdateStatus
 
 urlpatterns = [
     # Retrieve deposit's raw archives' content

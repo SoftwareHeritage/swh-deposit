@@ -7,9 +7,9 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework import status
 
-from ..models import DEPOSIT_STATUS_DETAIL
-from .common import APIBase, get_deposit_by_id
-from .converters import convert_status_detail
+from swh.deposit.api.common import APIBase, get_deposit_by_id
+from swh.deposit.api.converters import convert_status_detail
+from swh.deposit.models import DEPOSIT_STATUS_DETAIL
 
 
 class StateAPI(APIBase):

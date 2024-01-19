@@ -7,11 +7,7 @@ from typing import Optional, Tuple
 
 from rest_framework import status
 
-from ..config import CONT_FILE_IRI
-from ..errors import BAD_REQUEST, DepositError
-from ..models import Deposit
-from ..parsers import SWHFileUploadTarParser, SWHFileUploadZipParser
-from .common import (
+from swh.deposit.api.common import (
     ACCEPT_ARCHIVE_CONTENT_TYPES,
     APIDelete,
     APIPost,
@@ -19,6 +15,10 @@ from .common import (
     ParsedRequestHeaders,
     Receipt,
 )
+from swh.deposit.config import CONT_FILE_IRI
+from swh.deposit.errors import BAD_REQUEST, DepositError
+from swh.deposit.models import Deposit
+from swh.deposit.parsers import SWHFileUploadTarParser, SWHFileUploadZipParser
 
 
 class EditMediaAPI(APIPost, APIPut, APIDelete):

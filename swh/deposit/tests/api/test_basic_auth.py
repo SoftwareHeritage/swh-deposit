@@ -11,8 +11,7 @@ from django.urls import reverse_lazy as reverse
 import pytest
 
 from swh.deposit.config import SD_IRI
-
-from .test_service_document import check_response
+from swh.deposit.tests.api.test_service_document import check_response
 
 
 @pytest.fixture()
