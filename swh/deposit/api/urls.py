@@ -10,14 +10,22 @@
 from django.shortcuts import render
 from django.urls import re_path as url
 
-from ..config import COL_IRI, CONT_FILE_IRI, EDIT_IRI, EM_IRI, SD_IRI, SE_IRI, STATE_IRI
-from .collection import CollectionAPI
-from .content import ContentAPI
-from .edit import EditAPI
-from .edit_media import EditMediaAPI
-from .service_document import ServiceDocumentAPI
-from .state import StateAPI
-from .sword_edit import SwordEditAPI
+from swh.deposit.api.collection import CollectionAPI
+from swh.deposit.api.content import ContentAPI
+from swh.deposit.api.edit import EditAPI
+from swh.deposit.api.edit_media import EditMediaAPI
+from swh.deposit.api.service_document import ServiceDocumentAPI
+from swh.deposit.api.state import StateAPI
+from swh.deposit.api.sword_edit import SwordEditAPI
+from swh.deposit.config import (
+    COL_IRI,
+    CONT_FILE_IRI,
+    EDIT_IRI,
+    EM_IRI,
+    SD_IRI,
+    SE_IRI,
+    STATE_IRI,
+)
 
 
 def api_view(req):

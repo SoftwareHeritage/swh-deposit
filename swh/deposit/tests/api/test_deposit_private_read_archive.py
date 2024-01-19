@@ -12,9 +12,11 @@ from rest_framework import status
 from swh.deposit.api.private.deposit_read import aggregate_tarballs
 from swh.deposit.config import EM_IRI, PRIVATE_GET_RAW_CONTENT
 from swh.deposit.models import DepositRequest
-from swh.deposit.tests.common import create_arborescence_archive
-
-from ..common import compute_info, post_archive
+from swh.deposit.tests.common import (
+    compute_info,
+    create_arborescence_archive,
+    post_archive,
+)
 
 PRIVATE_GET_RAW_CONTENT_NC = PRIVATE_GET_RAW_CONTENT + "-nc"
 

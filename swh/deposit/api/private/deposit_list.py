@@ -20,12 +20,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 import sentry_sdk
 
+from swh.deposit.api.private import APIPrivateView
 from swh.deposit.api.utils import DefaultPagination, DepositSerializer
+from swh.deposit.models import Deposit
 from swh.deposit.utils import parse_swh_deposit_origin, parse_swh_metadata_provenance
 from swh.model.swhids import QualifiedSWHID
-
-from . import APIPrivateView
-from ...models import Deposit
 
 
 def _enrich_deposit_with_metadata(deposit: Deposit) -> Deposit:

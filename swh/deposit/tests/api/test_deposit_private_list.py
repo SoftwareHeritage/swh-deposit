@@ -161,7 +161,6 @@ def test_deposit_list_for_username(
     deposit_user,
     deposit_another_user,
 ):
-
     # create a new deposit with a user different from deposit_user,
     # the one that created completed_deposit
     internal_create_deposit(
@@ -227,7 +226,6 @@ def test_deposit_list_datatables_pagination(
     deposits,
     authenticated_client,
 ):
-
     deposits_data = []
     for i in range(len(deposits)):
         query_params = QueryDict(mutable=True)
@@ -254,7 +252,6 @@ def test_deposit_list_datatables_ordering(
     authenticated_client,
     sort_direction,
 ):
-
     deposits_date_sorted = list(sorted(deposits, key=lambda d: d.reception_date))
 
     if sort_direction == "desc":
@@ -289,7 +286,6 @@ def test_deposit_list_datatables_search(
     deposits,
     authenticated_client,
 ):
-
     query_params = QueryDict(mutable=True)
     query_params.update(
         {
@@ -323,7 +319,6 @@ def test_deposit_list_datatables_exclude_pattern(
     deposits,
     authenticated_client,
 ):
-
     query_params = QueryDict(mutable=True)
     query_params.update(
         {
@@ -360,7 +355,6 @@ def test_deposit_list_datatables_username(
     deposit_another_collection,
     authenticated_client,
 ):
-
     # create a new deposit with a user different from deposit_user,
     # the one that created completed_deposit
     completed_deposit_another_user = internal_create_deposit(

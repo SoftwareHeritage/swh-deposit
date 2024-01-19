@@ -29,10 +29,9 @@ from swh.deposit.client import (
     ServiceDocumentDepositClient,
 )
 from swh.deposit.parsers import parse_xml
+from swh.deposit.tests.conftest import TEST_USER
 from swh.deposit.utils import NAMESPACES
 from swh.model.exceptions import ValidationError
-
-from ..conftest import TEST_USER
 
 
 def generate_slug() -> str:
@@ -327,7 +326,7 @@ def test_cli_single_minimal_deposit_with_slug(
         assert authors[0].text == "Jane Doe"
 
     count_warnings = 0
-    for (_, log_level, _) in caplog.record_tuples:
+    for _, log_level, _ in caplog.record_tuples:
         count_warnings += 1 if log_level == logging.WARNING else 0
 
     assert (
@@ -412,7 +411,7 @@ def test_cli_single_minimal_deposit_with_create_origin(
         assert authors[0].text == "Jane Doe"
 
     count_warnings = 0
-    for (_, log_level, _) in caplog.record_tuples:
+    for _, log_level, _ in caplog.record_tuples:
         count_warnings += 1 if log_level == logging.WARNING else 0
 
     assert (
@@ -916,7 +915,7 @@ def test_cli_metadata_only_deposit_full_metadata_file(
 
     count_warnings = 0
     warning_record: Optional[str] = None
-    for (_, log_level, msg) in caplog.record_tuples:
+    for _, log_level, msg in caplog.record_tuples:
         if log_level == logging.WARNING:
             count_warnings += 1
             warning_record = msg
@@ -1025,7 +1024,7 @@ def test_cli_deposit_warning_missing_origin(
     )
     # fmt: on
 
-    for (_, log_level, _) in caplog.record_tuples:
+    for _, log_level, _ in caplog.record_tuples:
         # all messages are info or below messages so everything is fine
         assert log_level < logging.WARNING
 

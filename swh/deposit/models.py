@@ -21,8 +21,7 @@ except ImportError:
     from django.contrib.postgres.fields import JSONField as OrigJSONField
 
 from swh.auth.django.models import OIDCUser
-
-from .config import (
+from swh.deposit.config import (
     ARCHIVE_TYPE,
     DEPOSIT_STATUS_DEPOSITED,
     DEPOSIT_STATUS_LOAD_FAILURE,

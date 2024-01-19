@@ -5,13 +5,12 @@
 
 from rest_framework.request import Request
 
+from swh.deposit.api.common import APIDelete, APIPut, ParsedRequestHeaders
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
+from swh.deposit.errors import BAD_REQUEST, DepositError, ParserError
 from swh.deposit.models import Deposit
+from swh.deposit.parsers import SWHAtomEntryParser, SWHMultiPartParser
 from swh.model.swhids import QualifiedSWHID
-
-from ..config import DEPOSIT_STATUS_LOAD_SUCCESS
-from ..errors import BAD_REQUEST, DepositError, ParserError
-from ..parsers import SWHAtomEntryParser, SWHMultiPartParser
-from .common import APIDelete, APIPut, ParsedRequestHeaders
 
 
 class EditAPI(APIPut, APIDelete):

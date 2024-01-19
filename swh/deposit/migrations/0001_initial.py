@@ -14,7 +14,6 @@ from swh.deposit.models import JSONField
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

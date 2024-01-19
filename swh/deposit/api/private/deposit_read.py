@@ -14,15 +14,14 @@ from xml.etree import ElementTree
 from rest_framework import status
 
 from swh.core import tarball
+from swh.deposit.api.common import APIGet
+from swh.deposit.api.private import APIPrivateView, DepositReadMixin
+from swh.deposit.config import ARCHIVE_TYPE, SWH_PERSON
+from swh.deposit.models import Deposit
 from swh.deposit.utils import NAMESPACES, normalize_date
 from swh.model.hashutil import hash_to_hex
 from swh.model.model import MetadataAuthorityType
 from swh.model.swhids import CoreSWHID
-
-from . import APIPrivateView, DepositReadMixin
-from ...config import ARCHIVE_TYPE, SWH_PERSON
-from ...models import Deposit
-from ..common import APIGet
 
 
 @contextmanager

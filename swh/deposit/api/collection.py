@@ -9,22 +9,22 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 
-from ..config import DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_IRI
-from ..models import Deposit
-from ..parsers import (
-    SWHAtomEntryParser,
-    SWHFileUploadTarParser,
-    SWHFileUploadZipParser,
-    SWHMultiPartParser,
-)
-from .common import (
+from swh.deposit.api.common import (
     ACCEPT_ARCHIVE_CONTENT_TYPES,
     APIPost,
     ParsedRequestHeaders,
     Receipt,
     get_collection_by_name,
 )
-from .utils import DefaultPagination, DepositSerializer
+from swh.deposit.api.utils import DefaultPagination, DepositSerializer
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS, EDIT_IRI
+from swh.deposit.models import Deposit
+from swh.deposit.parsers import (
+    SWHAtomEntryParser,
+    SWHFileUploadTarParser,
+    SWHFileUploadZipParser,
+    SWHMultiPartParser,
+)
 
 
 class CollectionAPI(ListAPIView, APIPost):

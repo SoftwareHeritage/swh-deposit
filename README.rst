@@ -14,8 +14,8 @@ Description
 -----------
 
 Most of the software source code artifacts present in the SWH Archive are gathered by
-the mean of :term:`loader <loader>` workers run by the SWH project from source code
-origins identified by :term:`lister <lister>` workers. This is a pull mechanism: it's
+the mean of `loader`_ workers run by the SWH project from source code
+origins identified by `lister`_ workers. This is a pull mechanism: it's
 the responsibility of the SWH project to gather and collect source code artifacts that
 way.
 
@@ -29,16 +29,16 @@ This mechanism is the ``deposit``.
 
 The main idea is the deposit is an authenticated access to an API allowing the user to
 provide source code artifacts -- with metadata -- to be ingested in the SWH Archive. The
-result of that is a :ref:`SWHID <persistent-identifiers>` that can be used to uniquely
+result of that is a `SWHID`_ that can be used to uniquely
 and persistently identify that very piece of source code.
 
 This unique identifier can then be used to `reference the source code
 <https://hal.archives-ouvertes.fr/hal-02446202>`_ (e.g. in a `scientific paper
 <https://www.softwareheritage.org/2020/05/26/citing-software-with-style/>`_) and
-retrieve it using the :ref:`vault <swh-vault>` feature of the SWH Archive platform.
+retrieve it using the `vault`_ feature of the SWH Archive platform.
 
 The differences between a piece of code uploaded using the deposit rather than simply
-asking SWH to archive a repository using the :swh_web:`save code now <save/>` feature
+asking SWH to archive a repository using the `save code now`_ feature
 are:
 
 - a deposited artifact is provided from one of the SWH partners which is regarded as a
@@ -52,20 +52,31 @@ are:
 - the deposit API uses the `SWORD v2`_ API, thus requires some tooling to send deposits
   to SWH. These tools are provided with this repository.
 
-See the :ref:`deposit-user-manual` page for more details on how to use the deposit client
+
+See the `User Manual`_ page for more details on how to use the deposit client
 command line tools to push a deposit in the SWH Archive.
 
-See the :ref:`deposit-api-specifications` reference pages of the SWORDv2 API implementation
-in `swh.deposit` if you want to do upload deposits using HTTP requests.
+See the `API Documentation`_ reference pages of the SWORDv2 API implementation
+in ``swh.deposit`` if you want to do upload deposits using HTTP requests.
 
-Read the :ref:`deposit-metadata` chapter to get more details on what metadata
+Read the `Deposit metadata`_ chapter to get more details on what metadata
 are supported when doing a deposit.
 
-See :ref:`swh-deposit-dev-env` if you want to hack the code of the ``swh.deposit`` module.
+See `Running swh-deposit locally`_ if you want to hack the code of the ``swh.deposit`` module.
 
-See :ref:`swh-deposit-prod-env` if you want to deploy your own copy of the
+See `Production deployment`_ if you want to deploy your own copy of the
 `swh.deposit` stack.
 
 
 .. _codemeta: https://codemeta.github.io/
 .. _SWORD v2: http://swordapp.org/sword-v2/
+.. _loader: https://docs.softwareheritage.org/devel/glossary.html#term-loader
+.. _lister: https://docs.softwareheritage.org/devel/glossary.html#term-lister
+.. _SWHID: https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html#persistent-identifiers
+.. _vault: https://docs.softwareheritage.org/devel/swh-vault/index.html#swh-vault
+.. _save code now: https://archive.softwareheritage.org/save/
+.. _User Manual: https://docs.softwareheritage.org/devel/swh-deposit/api/user-manual.html#deposit-user-manual
+.. _API Documentation: https://docs.softwareheritage.org/devel/swh-deposit/api/api-documentation.html#deposit-api-specifications
+.. _Deposit metadata: https://docs.softwareheritage.org/devel/swh-deposit/api/metadata.html#deposit-metadata
+.. _Running swh-deposit locally: https://docs.softwareheritage.org/devel/swh-deposit/internals/dev-environment.html#swh-deposit-dev-env
+.. _Production deployment: https://docs.softwareheritage.org/devel/swh-deposit/internals/prod-environment.html#swh-deposit-prod-env

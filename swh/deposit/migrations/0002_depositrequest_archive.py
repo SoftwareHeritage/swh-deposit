@@ -8,7 +8,6 @@ import swh.deposit.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("deposit", "0001_initial"),
     ]

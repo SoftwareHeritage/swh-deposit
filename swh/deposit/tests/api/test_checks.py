@@ -40,7 +40,10 @@ PROVENANCE_XML = """
 
 _parameters1 = [
     pytest.param(textwrap.dedent(metadata_ok), id=id_)
-    for (id_, metadata_ok,) in [
+    for (
+        id_,
+        metadata_ok,
+    ) in [
         (
             "atom-only-with-name",
             f"""\
@@ -1222,7 +1225,7 @@ def test_api_checks_check_metadata_ko_schema(
         "metadata"
     ]
 
-    for (detail, expected_summary) in zip(error_detail["metadata"], expected_summaries):
+    for detail, expected_summary in zip(error_detail["metadata"], expected_summaries):
         assert detail["fields"] == expected_summary["fields"]
 
         # xmlschema returns very detailed errors, we cannot reasonably test them

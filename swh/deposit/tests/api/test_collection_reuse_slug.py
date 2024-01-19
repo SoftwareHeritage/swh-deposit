@@ -16,9 +16,8 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import post_atom
+from swh.deposit.tests.conftest import internal_create_deposit
 from swh.deposit.utils import NAMESPACES
-
-from ..conftest import internal_create_deposit
 
 
 def test_act_on_deposit_rejected_is_not_permitted(

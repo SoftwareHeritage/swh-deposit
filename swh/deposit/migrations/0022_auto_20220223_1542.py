@@ -37,7 +37,6 @@ def fill_deposit_type(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("deposit", "0021_deposit_origin_url_20201124_1438"),
     ]
