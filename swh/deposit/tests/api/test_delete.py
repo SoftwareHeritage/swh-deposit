@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -22,7 +22,7 @@ from swh.deposit.utils import NAMESPACES
 
 
 def count_deposit_request_types(deposit_requests) -> Mapping[str, int]:
-    deposit_request_types = defaultdict(int)  # type: Dict[str, int]
+    deposit_request_types: Dict[str, int] = defaultdict(int)
     for dr in deposit_requests:
         deposit_request_types[dr.type] += 1
     return deposit_request_types
