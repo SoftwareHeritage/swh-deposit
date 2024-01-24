@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -1062,7 +1062,7 @@ _parameters3 = [
                 {
                     "summary": (
                         r".*Reason: assertion test if false.*"
-                        r"Schema:\n*"
+                        r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-add".*'
                     ),
                     "fields": ["swh:deposit"],
@@ -1094,7 +1094,7 @@ _parameters3 = [
                 {
                     "summary": (
                         r".*Reason: assertion test if false.*"
-                        r"Schema:\n*"
+                        r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-reference".*'
                     ),
                     "fields": ["swh:deposit"],
@@ -1126,7 +1126,7 @@ _parameters3 = [
                 {
                     "summary": (
                         r".*Reason: assertion test if false.*"
-                        r"Schema:\n*"
+                        r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-add-and-reference".*'
                     ),
                     "fields": ["swh:deposit"],
