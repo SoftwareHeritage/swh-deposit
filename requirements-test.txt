@@ -1,9 +1,9 @@
 pytest
 pytest-django
 pytest-mock
-swh.scheduler[testing]
+swh.scheduler[testing] >= 2.0.0
 swh.loader.core[testing]
-pytest-postgresql >=3, < 4.0.0  # version 4.0 depends on psycopg 3. https://github.com/ClearcodeHQ/pytest-postgresql/blob/main/CHANGES.rst#400
+pytest-postgresql >= 5
 requests_mock
 django-stubs
 djangorestframework-stubs >= 1.4
