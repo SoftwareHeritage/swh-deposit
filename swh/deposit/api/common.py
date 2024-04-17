@@ -1,13 +1,14 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from abc import ABCMeta, abstractmethod
+import contextlib
 import datetime
 import hashlib
 import json
-from typing import Any, Dict, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, Type, Union
 import uuid
 from xml.etree import ElementTree
 
@@ -238,18 +239,31 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
             swhid=meta.get("HTTP_X_CHECK_SWHID"),
         )
 
-    def _deposit_put(self, deposit: Deposit, in_progress: bool = False) -> None:
+    @contextlib.contextmanager
+    def _deposit_put(
+        self, deposit: Deposit, in_progress: bool = False
+    ) -> Iterator[None]:
         """Save/Update a deposit in db.
+
+        Acts as a context manager, ensuring the deposit object exists before entering
+        the block, and completes the deposit after (successfully) exiting the block.
 
         Args:
             deposit: deposit being updated/created
             in_progress: deposit status
         """
-        if in_progress is False:
-            self._complete_deposit(deposit)
-        else:
+        if in_progress:
             deposit.status = DEPOSIT_STATUS_PARTIAL
             deposit.save()
+            yield
+        else:
+            if deposit.pk is None:
+                # We need to save the Deposit to the database so DepositRequest objects
+                # can be created with the Deposit as foreign key
+                deposit.status = DEPOSIT_STATUS_PARTIAL
+                deposit.save()
+            yield
+            self._complete_deposit(deposit)
 
     def _complete_deposit(self, deposit: Deposit) -> None:
         """Marks the deposit as 'deposited', then schedule a check task if configured
@@ -479,16 +493,16 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 
         # actual storage of data
         archive_metadata = filehandler
-        self._deposit_put(
+        with self._deposit_put(
             deposit=deposit,
             in_progress=headers.in_progress,
-        )
-        self._deposit_request_put(
-            deposit,
-            {ARCHIVE_KEY: archive_metadata},
-            replace_metadata=replace_metadata,
-            replace_archives=replace_archives,
-        )
+        ):
+            self._deposit_request_put(
+                deposit,
+                {ARCHIVE_KEY: archive_metadata},
+                replace_metadata=replace_metadata,
+                replace_archives=replace_archives,
+            )
 
         return Receipt(
             deposit_id=deposit.id,
@@ -618,17 +632,17 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         self._set_deposit_origin_from_metadata(deposit, metadata_tree, headers)
 
         # actual storage of data
-        self._deposit_put(
+        with self._deposit_put(
             deposit=deposit,
             in_progress=headers.in_progress,
-        )
-        deposit_request_data = {
-            ARCHIVE_KEY: filehandler,
-            RAW_METADATA_KEY: raw_metadata,
-        }
-        self._deposit_request_put(
-            deposit, deposit_request_data, replace_metadata, replace_archives
-        )
+        ):
+            deposit_request_data = {
+                ARCHIVE_KEY: filehandler,
+                RAW_METADATA_KEY: raw_metadata,
+            }
+            self._deposit_request_put(
+                deposit, deposit_request_data, replace_metadata, replace_archives
+            )
 
         return Receipt(
             deposit_id=deposit.id,
@@ -897,17 +911,16 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 archive=None,
             )
 
-        self._deposit_put(
+        with self._deposit_put(
             deposit=deposit,
             in_progress=headers.in_progress,
-        )
-
-        self._deposit_request_put(
-            deposit,
-            {RAW_METADATA_KEY: raw_metadata},
-            replace_metadata,
-            replace_archives,
-        )
+        ):
+            self._deposit_request_put(
+                deposit,
+                {RAW_METADATA_KEY: raw_metadata},
+                replace_metadata,
+                replace_archives,
+            )
 
         return Receipt(
             deposit_id=deposit.id,
