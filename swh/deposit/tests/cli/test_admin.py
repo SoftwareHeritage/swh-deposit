@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2020 The Software Heritage developers
+# Copyright (C) 2019-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -12,7 +12,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_VERIFIED,
 )
 from swh.deposit.models import DepositClient, DepositCollection
-from swh.scheduler.utils import create_oneshot_task_dict
+from swh.scheduler.utils import create_oneshot_task
 
 
 @pytest.fixture(autouse=True)
@@ -320,16 +320,16 @@ def test_cli_admin_reschedule_nominal(cli_runner, complete_deposit, swh_schedule
     from swh.deposit.models import Deposit
 
     # create a task to keep a reference on it
-    task = create_oneshot_task_dict(
+    task = create_oneshot_task(
         "load-deposit", url=deposit.origin_url, deposit_id=deposit.id, retries_left=3
     )
     scheduled_task = swh_scheduler.create_tasks([task])[0]
     # disable it
-    swh_scheduler.set_status_tasks([scheduled_task["id"]], status="disabled")
+    swh_scheduler.set_status_tasks([scheduled_task.id], status="disabled")
 
     # Now update the deposit state with some swhid and relevant load_task_id
     deposit = complete_deposit
-    deposit.load_task_id = scheduled_task["id"]
+    deposit.load_task_id = scheduled_task.id
     deposit.swhid = "swh:1:dir:02ed6084fb0e8384ac58980e07548a547431cf74"
     deposit.swhid_context = f"{deposit.swhid};origin=https://url/external-id"
     deposit.save()
@@ -350,4 +350,4 @@ def test_cli_admin_reschedule_nominal(cli_runner, complete_deposit, swh_schedule
     assert deposit.status == DEPOSIT_STATUS_VERIFIED
 
     task = swh_scheduler.search_tasks(task_id=deposit.load_task_id)[0]
-    assert task["status"] == "next_run_not_scheduled"
+    assert task.status == "next_run_not_scheduled"

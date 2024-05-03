@@ -84,7 +84,7 @@ from swh.model.swhids import (
     QualifiedSWHID,
     ValidationError,
 )
-from swh.scheduler.utils import create_oneshot_task_dict
+from swh.scheduler.utils import create_oneshot_task
 
 ACCEPT_PACKAGINGS = ["http://purl.org/net/sword/package/SimpleZip"]
 ACCEPT_ARCHIVE_CONTENT_TYPES = ["application/zip", "application/x-tar"]
@@ -278,14 +278,14 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         if self.config["checks"]:
             scheduler = self.scheduler
             if deposit.status == DEPOSIT_STATUS_DEPOSITED and not deposit.check_task_id:
-                task = create_oneshot_task_dict(
+                task = create_oneshot_task(
                     "check-deposit",
                     collection=deposit.collection.name,
                     deposit_id=deposit.id,
                     retries_left=3,
                 )
-                check_task_id = scheduler.create_tasks([task])[0]["id"]
-                deposit.check_task_id = check_task_id
+                check_task_id = scheduler.create_tasks([task])[0].id
+                deposit.check_task_id = str(check_task_id)
 
         deposit.save()
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023  The Software Heritage developers
+# Copyright (C) 2019-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -174,21 +174,23 @@ def deposit_autoconfig(deposit_config_path):
     cfg = read(deposit_config_path)
 
     if "scheduler" in cfg:
+        from swh.scheduler.model import TaskType
+
         # scheduler setup: require the check-deposit and load-deposit tasks
         scheduler = get_scheduler(**cfg["scheduler"])
         task_types = [
-            {
-                "type": "check-deposit",
-                "backend_name": "swh.deposit.loader.tasks.ChecksDepositTsk",
-                "description": "Check deposit metadata/archive before loading",
-                "num_retries": 3,
-            },
-            {
-                "type": "load-deposit",
-                "backend_name": "swh.loader.package.deposit.tasks.LoadDeposit",
-                "description": "Loading deposit archive into swh archive",
-                "num_retries": 3,
-            },
+            TaskType(
+                type="check-deposit",
+                backend_name="swh.deposit.loader.tasks.ChecksDepositTsk",
+                description="Check deposit metadata/archive before loading",
+                num_retries=3,
+            ),
+            TaskType(
+                type="load-deposit",
+                backend_name="swh.loader.package.deposit.tasks.LoadDeposit",
+                description="Loading deposit archive into swh archive",
+                num_retries=3,
+            ),
         ]
         for task_type in task_types:
             scheduler.create_task_type(task_type)

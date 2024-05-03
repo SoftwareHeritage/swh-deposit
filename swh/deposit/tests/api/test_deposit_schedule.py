@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021  The Software Heritage developers
+# Copyright (C) 2020-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -18,6 +18,7 @@ from swh.deposit.config import (
 )
 from swh.deposit.parsers import parse_xml
 from swh.deposit.utils import NAMESPACES
+from swh.scheduler.model import TaskArguments
 
 
 @pytest.fixture()
@@ -40,17 +41,17 @@ def assert_task_for_deposit(
     assert len(tasks) == 1
     task = tasks[0]
 
-    assert timestamp_before_call <= task.pop("next_run") <= timestamp_after_call
-    assert task["arguments"] == {
-        "args": [],
-        "kwargs": {
+    assert timestamp_before_call <= task.next_run <= timestamp_after_call
+    assert task.arguments == TaskArguments(
+        args=[],
+        kwargs={
             "collection": "test",
             "deposit_id": deposit_id,
         },
-    }
-    assert task["policy"] == "oneshot"
-    assert task["type"] == "check-deposit"
-    assert task["retries_left"] == 3
+    )
+    assert task.policy == "oneshot"
+    assert task.type == "check-deposit"
+    assert task.retries_left == 3
 
 
 def test_add_deposit_schedules_check(
