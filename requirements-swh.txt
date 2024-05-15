@@ -2,4 +2,4 @@
 # Server dependencies go to requirements-swh-server.txt instead.
 
 swh.core[http] >= 3.0.0
-swh.model >= 4.4.0
+swh.model >= 6.13.0

@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 from swh.deposit.client import PrivateApiDepositClient
 from swh.model.hashutil import hash_to_bytes, hash_to_hex
-from swh.model.model import SnapshotBranch, TargetType
+from swh.model.model import SnapshotBranch, SnapshotTargetType
 from swh.storage.algos.snapshot import snapshot_get_all_branches
 
 CLIENT_TEST_CONFIG = {
@@ -92,7 +92,7 @@ def decode_target(branch: Optional[SnapshotBranch]) -> Optional[Dict]:
         return None
     target_type = branch.target_type
 
-    if target_type == TargetType.ALIAS:
+    if target_type == SnapshotTargetType.ALIAS:
         decoded_target = branch.target.decode("utf-8")
     else:
         decoded_target = hash_to_hex(branch.target)
