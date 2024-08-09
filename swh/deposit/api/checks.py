@@ -145,7 +145,7 @@ CODEMETA2_CONTEXT = {
 def extra_validator(
     element: ElementTree.Element,
     xsd_element: xmlschema.validators.elements.Xsd11Element,
-) -> Optional[Iterator[xmlschema.XMLSchemaValidationError]]:
+) -> Iterator[xmlschema.XMLSchemaValidationError]:
     """Performs extra checks on Atom elements that cannot be implemented purely
     within XML Schema.
 
