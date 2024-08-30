@@ -188,9 +188,9 @@ def deposit_list_datatables(request: Request) -> JsonResponse:
 
     except Exception as exc:
         sentry_sdk.capture_exception(exc)
-        table_data[
-            "error"
-        ] = "An error occurred while retrieving the list of deposits !"
+        table_data["error"] = (
+            "An error occurred while retrieving the list of deposits !"
+        )
         if settings.DEBUG:
             table_data["error"] += "\n" + str(exc)
 
