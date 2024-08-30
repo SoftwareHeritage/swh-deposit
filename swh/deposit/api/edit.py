@@ -54,7 +54,7 @@ class EditAPI(APIPut, APIDelete):
           with the provided ones.
         - atom: replace all the deposit (status partial) metadata with the
           provided ones.
-        - with swhid, atom: Add new metatada to deposit (status done) with provided ones
+        - with swhid, atom: Add new metadata to deposit (status done) with provided ones
           and push such metadata to the metadata storage directly.
 
            source:
