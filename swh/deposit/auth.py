@@ -144,20 +144,15 @@ class KeycloakBasicAuthentication(BasicAuthentication):
             Tuple of deposit_client, None.
 
         """
-        oidc_user = self.get_user(user_id)
-        ttl: Optional[int] = None
-        if not oidc_user:
-            try:
-                oidc_profile = self.client.login(user_id, password)
-            except KeycloakError as e:
-                logger.debug("KeycloakError: e: %s", e)
-                error_msg = keycloak_error_message(e)
-                raise AuthenticationFailed(error_msg)
+        try:
+            oidc_profile = self.client.login(user_id, password)
+        except KeycloakError as e:
+            logger.debug("KeycloakError: e: %s", e)
+            error_msg = keycloak_error_message(e)
+            raise AuthenticationFailed(error_msg)
 
-            oidc_user = oidc_user_from_profile(self.client, oidc_profile)
-            ttl = int(
-                oidc_user.refresh_expires_at.timestamp() - timezone.now().timestamp()
-            )
+        oidc_user = oidc_user_from_profile(self.client, oidc_profile)
+        ttl = int(oidc_user.refresh_expires_at.timestamp() - timezone.now().timestamp())
 
         # Making sure the associated deposit client is correctly configured in backend
         try:
