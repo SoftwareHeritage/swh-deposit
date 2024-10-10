@@ -421,7 +421,7 @@ Schema
 ------
 
 Here is an XML schema to summarize the syntax described in this document:
-https://forge.softwareheritage.org/source/swh-deposit/browse/master/swh/deposit/xsd/swh.xsd
+https://gitlab.softwareheritage.org/swh/devel/swh-deposit/-/blob/master/swh/deposit/xsd/swh.xsd
 
 
 
