@@ -11,6 +11,11 @@ Register account
 
 .. _swh-deposit-register-account-as-deposit-client:
 
+Becoming a deposit client is very easy, just write to deposit@softwareheritage.org
+to setup the deposit partner agreement. With the agreement signed you can follow the
+steps below.
+
+
 As a deposit client
 -------------------
 
