@@ -122,3 +122,21 @@ def test_post_deposit_atom_403_add_to_wrong_origin_url_prefix(
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert "URL mismatch" in response.content.decode()
+
+
+def test_add_deposit_with_add_to_origin_missing_parent(
+    authenticated_client,
+    deposit_collection,
+    completed_deposit,
+    atom_dataset,
+    deposit_user,
+):
+    """Add to an unknown origin"""
+    origin_url = deposit_user.provider_url + "unknown_origin"
+    response = post_atom(
+        authenticated_client,
+        reverse(COL_IRI, args=[deposit_collection.name]),
+        data=atom_dataset["entry-data-with-add-to-origin"] % origin_url,
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND, response.content.decode()
+    assert "if you want to create a new Deposit" in response.content.decode()

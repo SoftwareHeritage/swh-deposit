@@ -948,15 +948,23 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         if add_to_origin:
             origin_url = add_to_origin
             check_url_match_provider(origin_url, deposit.client.provider_url)
-            deposit.parent = (
+            parent = (
                 Deposit.objects.filter(
                     client=deposit.client,
                     origin_url=origin_url,
                     status=DEPOSIT_STATUS_LOAD_SUCCESS,
                 )
-                .order_by("-id")[0:1]
-                .get()
+                .order_by("-id")
+                .first()
             )
+            if not parent:
+                raise DepositError(
+                    NOT_FOUND,
+                    f"<swh:add_to_origin> references URL {origin_url!r}, which does not exist "
+                    f"or was not created by a Deposit. "
+                    f"Use <swh:create_origin> instead if you want to create a new Deposit.",
+                )
+            deposit.parent = parent
             deposit.origin_url = origin_url
 
     def _empty_post(
