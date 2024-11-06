@@ -138,7 +138,7 @@ def common_deposit_config(swh_scheduler_config, swh_storage_backend_config):
         "extraction_dir": "/tmp/swh-deposit/test/extraction-dir",
         "checks": False,
         "scheduler": {
-            "cls": "local",
+            "cls": "postgresql",
             **swh_scheduler_config,
         },
         "storage": swh_storage_backend_config,
