@@ -265,22 +265,23 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
         detail = [{"summary": MANDATORY_FIELDS_MISSING, "fields": mandatory_result}]
         return False, {"metadata": detail + suggested_fields}
 
-    deposit_elt = metadata.find("swh:deposit", namespaces=NAMESPACES)
-    if deposit_elt:
-        try:
-            schemas().swh.validate(
-                deposit_elt,
-                extra_validator=cast(
-                    # ExtraValidatorType is a callable with "SchemaType" as second
-                    # argument, but extra_validator() is actually passed Xsd11Element
-                    # as second argument
-                    # https://github.com/sissaschool/xmlschema/issues/291
-                    xmlschema.aliases.ExtraValidatorType,
-                    extra_validator,
-                ),
-            )
-        except xmlschema.exceptions.XMLSchemaException as e:
-            return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
+    for tag in ("swh:deposit", "swh:jsonld"):
+        path = f".//{tag}"  # select recursively
+        for elt in metadata.findall(path, namespaces=NAMESPACES):
+            try:
+                schemas().swh.validate(
+                    elt,
+                    extra_validator=cast(
+                        # ExtraValidatorType is a callable with "SchemaType" as second
+                        # argument, but extra_validator() is actually passed Xsd11Element
+                        # as second argument
+                        # https://github.com/sissaschool/xmlschema/issues/291
+                        xmlschema.aliases.ExtraValidatorType,
+                        extra_validator,
+                    ),
+                )
+            except xmlschema.exceptions.XMLSchemaException as e:
+                return False, {"metadata": [{"fields": [tag], "summary": str(e)}]}
 
     detail = []
     for child in metadata:

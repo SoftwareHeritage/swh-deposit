@@ -283,6 +283,68 @@ All deposits must include:
 We also highly recommend their CodeMeta equivalent, and any other relevant
 metadata, but this is not enforced.
 
+Embedding JSON-LD
+^^^^^^^^^^^^^^^^^
+
+For simplicity if you already have JSON-LD, or need to express things that are
+not possible with the above format, you can embed JSON-LD documents inside the
+XML document using the ``<swhdeposit:jsonld>`` tag, and its content will be merged
+with the rest of the XML document, excluding mandatory attributes.
+
+For example,
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+               xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+               xmlns:schema="http://schema.org/">
+     <name>My Software</name>
+     <version>http://example.org/my-software</version>
+     <schema:sameAs>http://example.org/my-software</schema:sameAs>
+   </atom:entry>
+
+is equivalent to:
+
+.. code:: xml
+
+   <?xml version="1.0"?>
+   <atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+               xmlns="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0"
+               xmlns:schema="http://schema.org/"
+               xmlns:swh="https://www.softwareheritage.org/schema/2018/deposit">
+     <name>My Software</name>
+     <swh:jsonld>
+        {
+            "version": "http://example.org/my-software",
+            "schema:sameAs": "http://example.org/my-software"
+        }
+     </swh:jsonld>
+   </atom:entry>
+
+If ``<swh:jsonld>`` contains anything that could be interpreted as an XML entity
+or tag, they MUST be escaped. For example, this is invalid:
+
+.. code:: xml
+
+     <swh:jsonld>
+        {
+            "name": "The role of < and > in arithmetic"
+        }
+     </swh:jsonld>
+
+Because the angle brackets are interpreted as an XML tags. A possible way to escape
+them is:
+
+.. code:: xml
+
+     <swh:jsonld>
+        {
+            "name": "The role of &lt; and &gt; in arithmetic"
+        }
+     </swh:jsonld>
+
+
 .. _metadata-only-deposit:
 
 Metadata-only deposit

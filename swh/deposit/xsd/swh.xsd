@@ -78,4 +78,7 @@
       <xsd:attribute type="xsd:string" name="url"/>
     </xsd:complexType>
   </xsd:element>
+
+  <!-- embed arbitrary JSON-LD -->
+  <xsd:element name="jsonld" type="xsd:string" />
 </xsd:schema>

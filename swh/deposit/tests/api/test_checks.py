@@ -249,7 +249,7 @@ _parameters1 = [
         (
             # Required by codemeta.jsonld, but forbidden by
             # https://codemeta.github.io/terms/
-            "element-in--affiliation",
+            "element-in-affiliation",
             f"""\
             <entry {XMLNS}>
                 <uri>some url</uri>
@@ -275,6 +275,26 @@ _parameters1 = [
                 <codemeta:author>
                     <codemeta:name>someone</codemeta:name>
                     <codemeta:affiliation>My Orga</codemeta:affiliation>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+        ),
+        (
+            "embed-jsonld",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <swh:jsonld>
+                        {{
+                            "codemeta:affiliation": {{
+                                "codemeta:name": "My Orga"
+                            }}
+                        }}
+                    </swh:jsonld>
                 </codemeta:author>
                 {PROVENANCE_XML}
             </entry>
@@ -1208,6 +1228,33 @@ _parameters3 = [
                 {
                     "summary": r".*Reason: Unexpected child with tag 'swh:object'.*",
                     "fields": ["swh:deposit"],
+                },
+            ],
+        ),
+        (
+            "tag-in-embedded-jsonld",
+            f"""\
+            <entry {XMLNS}>
+                <uri>some url</uri>
+                <codemeta:name>bar</codemeta:name>
+                <codemeta:author>
+                    <codemeta:name>someone</codemeta:name>
+                    <swh:jsonld>
+                        {{
+                            "codemeta:affiliation": {{
+                                "codemeta:name": "My Orga"
+                            }}
+                        }}
+                        <codemeta:givenName>Someone</codemeta:givenName>
+                    </swh:jsonld>
+                </codemeta:author>
+                {PROVENANCE_XML}
+            </entry>
+            """,
+            [
+                {
+                    "summary": "failed validating .*givenName.*",
+                    "fields": ["swh:jsonld"],
                 },
             ],
         ),
