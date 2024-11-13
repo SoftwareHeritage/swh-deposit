@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -15,7 +15,7 @@ from swh.deposit.config import (
     DEPOSIT_STATUS_LOAD_SUCCESS,
     PRIVATE_PUT_DEPOSIT,
 )
-from swh.deposit.models import Deposit
+from swh.deposit.models import Deposit, DepositRequest
 
 PRIVATE_PUT_DEPOSIT_NC = PRIVATE_PUT_DEPOSIT + "-nc"
 
@@ -188,3 +188,45 @@ def test_update_deposit_status_success_without_swhid_fail(
         assert (
             b"Updating deposit status to done requires information" in response.content
         )
+
+
+def test_update_deposit_status_success_with_release_infos(
+    authenticated_client, deposit_collection, ready_deposit_verified
+):
+    deposit = ready_deposit_verified
+
+    raw_metadata = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <codemeta:softwareVersion>v0.0.1</codemeta:softwareVersion>
+            <codemeta:releaseNotes>CHANGELOG</codemeta:releaseNotes>
+        </entry>"""
+
+    # Create an extra deposit_request with release metadata
+    DepositRequest.objects.create(deposit=deposit, raw_metadata=raw_metadata)
+
+    full_body_info = {
+        "status": DEPOSIT_STATUS_LOAD_SUCCESS,
+        "status_detail": "it works!",
+        "release_id": "47dc6b4636c7f6cba0df83e3d5490bf4334d987e",
+        "directory_id": "42a13fc721c8716ff695d0d62fc851d641f3a12b",
+        "snapshot_id": "68c0d26104d47e278dd6be07ed61fafb561d0d20",
+        "origin_url": "something",
+    }
+
+    for url in private_check_url_endpoints(deposit_collection, deposit):
+        response = authenticated_client.put(
+            url,
+            content_type="application/json",
+            data=json.dumps(full_body_info),
+        )
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        deposit = Deposit.objects.get(pk=deposit.id)
+        assert deposit.software_version == "v0.0.1"
+        assert deposit.release_notes == "CHANGELOG"
+
+        # Reset deposit
+        deposit = ready_deposit_verified
+        deposit.save()

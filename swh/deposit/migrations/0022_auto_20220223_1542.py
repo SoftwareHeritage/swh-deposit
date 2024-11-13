@@ -6,12 +6,7 @@
 from django.db import migrations, models
 
 from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
-from swh.deposit.models import (
-    DEPOSIT_CODE,
-    DEPOSIT_METADATA_ONLY,
-    DEPOSIT_TYPES,
-    Deposit,
-)
+from swh.deposit.models import DEPOSIT_CODE, DEPOSIT_METADATA_ONLY, DEPOSIT_TYPES
 
 
 def fill_deposit_type(apps, schema_editor):
@@ -20,7 +15,7 @@ def fill_deposit_type(apps, schema_editor):
     reception date, and they have their swhid filled in.
 
     """
-
+    Deposit = apps.get_model("deposit", "Deposit")
     for deposit in Deposit.objects.all():
         deposit.type = (
             DEPOSIT_METADATA_ONLY

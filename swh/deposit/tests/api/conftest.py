@@ -7,6 +7,7 @@ import hashlib
 import os
 
 from django.urls import reverse_lazy as reverse
+from django.utils import timezone
 import pytest
 
 from swh.deposit.api.private.deposit_check import APIChecks
@@ -37,9 +38,10 @@ def ready_deposit_ok(partial_deposit_with_metadata):
 
 @pytest.fixture
 def ready_deposit_verified(partial_deposit_with_metadata):
-    """Returns a deposit ready for checks (it will pass the checks)."""
+    """Returns a verified deposit."""
     deposit = partial_deposit_with_metadata
     deposit.status = DEPOSIT_STATUS_VERIFIED
+    deposit.complete_date = timezone.now()
     deposit.save()
     return deposit
 

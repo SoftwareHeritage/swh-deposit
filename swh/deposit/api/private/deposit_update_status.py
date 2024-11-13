@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020  The Software Heritage developers
+# Copyright (C) 2017-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -13,6 +13,7 @@ from swh.deposit.models import (
     DEPOSIT_STATUS_LOAD_SUCCESS,
     Deposit,
 )
+from swh.deposit.utils import extract_release_data
 from swh.model.hashutil import hash_to_bytes
 from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
@@ -74,12 +75,11 @@ class APIUpdateStatus(APIPrivateView, APIPut):
         collection_name: str,
         deposit: Deposit,
     ) -> None:
-        """Update the deposit with status and SWHIDs
+        """Update the deposit with status, SWHIDs and release infos.
 
         Returns:
             204 No content
             400 Bad request if checks fail
-
         """
         data = request.data
 
@@ -112,6 +112,10 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                     path="/",
                 )
             )
+            # Set release infos
+            if release_data := extract_release_data(deposit):
+                deposit.software_version = release_data.software_version
+                deposit.release_notes = release_data.release_notes
         else:  # rejected
             deposit.status = status
 

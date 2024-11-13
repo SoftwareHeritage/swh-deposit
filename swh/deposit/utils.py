@@ -1,8 +1,9 @@
-# Copyright (C) 2018-2022 The Software Heritage developers
+# Copyright (C) 2018-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from collections import namedtuple
 import logging
 from typing import Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
@@ -12,6 +13,8 @@ import iso8601
 from swh.model.exceptions import ValidationError
 from swh.model.model import TimestampWithTimezone
 from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
+
+from .models import Deposit
 
 logger = logging.getLogger(__name__)
 
@@ -255,3 +258,66 @@ def to_header_link(link: str, link_name: str) -> str:
 
     """
     return f'<{link}>; rel="{link_name}"'
+
+
+def get_element_text(element: ElementTree.Element, tag: str) -> Optional[str]:
+    """Get an XML element's text.
+
+    Args:
+        element: an XML element
+        tag: a tag name, namespaced if needed
+
+    Returns:
+        The text property of the found element or None
+    """
+    sub_element = element.find(tag, namespaces=NAMESPACES)
+    return sub_element.text if sub_element is not None else None
+
+
+ReleaseData = namedtuple("ReleaseData", ["software_version", "release_notes"])
+
+
+def extract_release_data(deposit: Deposit) -> Optional[ReleaseData]:
+    """Extract `deposit` release data from its last request.
+
+    This will get the latest `deposit_request` with metadata of this `deposit` and
+    extract properties from it:
+    - `software_version` uses `codemeta:softwareVersion` or the count of previous
+    releases
+    - `release_notes` comes from either `codemeta:releaseNotes` or `schema:releaseNotes`
+
+    Args:
+        deposit: a Deposit instance (should be a `done` one)
+
+    Returns:
+        A namedtuple of software_version & release_notes
+    """
+    deposit_request = (
+        deposit.depositrequest_set.filter(raw_metadata__isnull=False)
+        .order_by("-date")
+        .first()
+    )
+    if not deposit_request:
+        return None
+    assert deposit_request.raw_metadata  # ok mypy
+    metadata = ElementTree.fromstring(deposit_request.raw_metadata)
+
+    software_version = get_element_text(metadata, "codemeta:softwareVersion")
+    if not software_version:
+        count_previous_releases = (
+            type(deposit)
+            .objects.filter(
+                origin_url=deposit.origin_url,
+                complete_date__lt=deposit.complete_date,
+                complete_date__isnull=False,
+            )
+            .count()
+        )
+        software_version = str(count_previous_releases + 1)
+    release_notes = (
+        get_element_text(metadata, "codemeta:releaseNotes")
+        or get_element_text(metadata, "schema:releaseNotes")
+        or ""
+    )
+
+    return ReleaseData(software_version, release_notes)

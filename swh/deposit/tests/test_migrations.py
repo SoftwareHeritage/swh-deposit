@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 The Software Heritage developers
+# Copyright (C) 2021-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,7 +10,8 @@
 
 from datetime import datetime, timezone
 
-from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS
+from swh.deposit.config import DEPOSIT_STATUS_LOAD_SUCCESS, DEPOSIT_STATUS_PARTIAL
+from swh.deposit.models import DEPOSIT_CODE, DEPOSIT_METADATA_ONLY
 from swh.model.hashutil import hash_to_bytes
 from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
@@ -116,7 +117,9 @@ def test_migrations_22_add_deposit_type_column_model_and_data(migrator):
     assert hasattr(old_deposit, "type") is False
 
     # Migrate to the latest schema
-    new_state = migrator.apply_tested_migration(("deposit", "0022_auto_20220223_1542"))
+    new_state = migrator.apply_tested_migration(
+        ("deposit", "0024_deposit_software_version_and_release_notes")
+    )
     new_deposit = new_state.apps.get_model("deposit", "Deposit")
 
     assert hasattr(new_deposit, "type") is True
@@ -130,3 +133,105 @@ def test_migrations_22_add_deposit_type_column_model_and_data(migrator):
             assert deposit.type == DEPOSIT_CODE
         else:
             assert deposit.id == deposit3.id and deposit.type == DEPOSIT_METADATA_ONLY
+
+
+def test_migration_24_adds_release_data_fields(migrator):
+    fields = ["software_version", "release_notes"]
+
+    old_state = migrator.apply_initial_migration(
+        ("deposit", "0023_alter_deposit_status_detail_alter_deposit_type_and_more")
+    )
+    old_deposit = old_state.apps.get_model("deposit", "Deposit")
+    for field in fields:
+        assert not hasattr(old_deposit, field)
+
+    new_state = migrator.apply_tested_migration(
+        ("deposit", "0024_deposit_software_version_and_release_notes")
+    )
+    new_deposit = new_state.apps.get_model("deposit", "Deposit")
+    for field in fields:
+        assert hasattr(new_deposit, field)
+
+
+def test_migration_25_populates_release_data_fields(migrator):
+    metadata = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <codemeta:softwareVersion>v0.1.1</codemeta:softwareVersion>
+            <codemeta:releaseNotes>CHANGELOG</codemeta:releaseNotes>
+        </entry>"""
+
+    # Before the data migration
+    old_state = migrator.apply_initial_migration(
+        ("deposit", "0024_deposit_software_version_and_release_notes")
+    )
+    Deposit = old_state.apps.get_model("deposit", "Deposit")
+    DepositRequest = old_state.apps.get_model("deposit", "DepositRequest")
+    DepositCollection = old_state.apps.get_model("deposit", "DepositCollection")
+    DepositClient = old_state.apps.get_model("deposit", "DepositClient")
+
+    collection = DepositCollection.objects.create(name="hello")
+    client = DepositClient.objects.create(username="name", collections=[collection.id])
+
+    # this deposit will be updated by the migration (done + code, with metadata)
+    deposit_done = Deposit.objects.create(
+        client=client,
+        collection=collection,
+        origin_url="http://test.localhost",
+        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+        type=DEPOSIT_CODE,
+    )
+
+    DepositRequest.objects.create(deposit=deposit_done, raw_metadata=metadata)
+    # this deposit will not be updated (not done)
+    deposit_partial = Deposit.objects.create(
+        client=client,
+        collection=collection,
+        origin_url="http://test.localhost",
+        status=DEPOSIT_STATUS_PARTIAL,
+        type=DEPOSIT_CODE,
+    )
+    DepositRequest.objects.create(deposit=deposit_partial, raw_metadata=metadata)
+    # this deposit will not be updated by the migration (no metadata)
+    deposit_no_meta = Deposit.objects.create(
+        client=client,
+        collection=collection,
+        origin_url="http://test.localhost",
+        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+        type=DEPOSIT_CODE,
+    )
+    DepositRequest.objects.create(deposit=deposit_no_meta)
+    # this deposit will not be updated (not code)
+    deposit_not_code = Deposit.objects.create(
+        client=client,
+        collection=collection,
+        origin_url="http://test.localhost",
+        status=DEPOSIT_STATUS_LOAD_SUCCESS,
+        type=DEPOSIT_METADATA_ONLY,
+    )
+    DepositRequest.objects.create(deposit=deposit_not_code, raw_metadata=metadata)
+
+    # Default release data values
+    for deposit in [deposit_done, deposit_partial, deposit_no_meta, deposit_not_code]:
+        assert deposit_done.software_version == ""
+        assert deposit_done.release_notes == ""
+
+    # After the data migration
+    new_state = migrator.apply_tested_migration(("deposit", "0025_set_release_data"))
+    Deposit = new_state.apps.get_model("deposit", "Deposit")
+
+    new_deposit_done = Deposit.objects.get(pk=deposit_done.id)
+    assert new_deposit_done.software_version == "v0.1.1"
+    assert new_deposit_done.release_notes == "CHANGELOG"
+
+    new_deposit_partial = Deposit.objects.get(pk=deposit_partial.id)
+    assert new_deposit_partial.software_version == ""
+    assert new_deposit_partial.release_notes == ""
+
+    new_deposit_no_meta = Deposit.objects.get(pk=deposit_no_meta.id)
+    assert new_deposit_no_meta.software_version == ""
+    assert new_deposit_no_meta.release_notes == ""
+
+    new_deposit_not_code = Deposit.objects.get(pk=deposit_not_code.id)
+    assert new_deposit_not_code.software_version == ""
+    assert new_deposit_not_code.release_notes == ""

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -165,6 +165,10 @@ class Deposit(models.Model):
         blank=True, null=True, verbose_name="Scheduler's associated loading task id"
     )
     type = models.CharField(max_length=4, choices=DEPOSIT_TYPES, default=DEPOSIT_CODE)
+
+    # Release data
+    software_version = models.TextField(default="")
+    release_notes = models.TextField(default="")
 
     raw_metadata: Optional[str] = None
 

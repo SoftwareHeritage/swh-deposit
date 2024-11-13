@@ -1,10 +1,10 @@
 from django.db import migrations, models
 
 from swh.deposit.api.common import guess_deposit_origin_url
-from swh.deposit.models import Deposit
 
 
 def fill_origin_url(apps, schema_editor):
+    Deposit = apps.get_model("deposit", "Deposit")
     for deposit in Deposit.objects.all():
         if deposit.origin_url is None:
             deposit.origin_url = guess_deposit_origin_url(deposit)

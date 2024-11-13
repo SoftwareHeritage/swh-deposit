@@ -1,13 +1,15 @@
-# Copyright (C) 2018-2022  The Software Heritage developers
+# Copyright (C) 2018-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 from xml.etree import ElementTree
 
+from django.utils import timezone
 import pytest
 
 from swh.deposit import utils
+from swh.deposit.models import DepositRequest
 from swh.model.exceptions import ValidationError
 from swh.model.swhids import CoreSWHID, QualifiedSWHID
 
@@ -216,3 +218,70 @@ def test_parse_swh_metadata_provenance2(xml_with_metadata_provenance):
     actual_url = utils.parse_swh_metadata_provenance(metadata)
 
     assert actual_url == "https://url.org/metadata/url"
+
+
+@pytest.mark.parametrize(
+    "tag,value,arg,expected",
+    [
+        ("codemeta:softwareVersion", "v1.1.1", "codemeta:softwareVersion", "v1.1.1"),
+        ("releaseNotes", "changelog", "codemeta:softwareVersion", None),
+    ],
+)
+def test_get_element_text(tag, value, arg, expected):
+    xml_data = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <{tag}>{value}</{tag}>
+        </entry>
+    """
+    metadata = ElementTree.fromstring(xml_data.format(tag=tag, value=value))
+
+    assert utils.get_element_text(metadata, arg) == expected
+
+
+def test_extract_release_data_defaults(complete_deposit):
+    xml_data = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+        </entry>"""
+    DepositRequest.objects.create(deposit=complete_deposit, raw_metadata=xml_data)
+    release_data = utils.extract_release_data(complete_deposit)
+    assert release_data.software_version == "1"  # the only release for this origin
+    assert release_data.release_notes == ""
+
+
+def test_extract_release_data_software_version(complete_deposit):
+    xml_data = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <codemeta:softwareVersion>v1.1.1</codemeta:softwareVersion>
+        </entry>"""
+    DepositRequest.objects.create(deposit=complete_deposit, raw_metadata=xml_data)
+    release_data = utils.extract_release_data(complete_deposit)
+    assert release_data.software_version == "v1.1.1"
+
+
+def test_extract_release_data_release_notes(complete_deposit):
+    xml_data = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+            <codemeta:softwareVersion>v1.1.1</codemeta:softwareVersion>
+            <codemeta:releaseNotes>CHANGELOG</codemeta:releaseNotes>
+        </entry>"""
+    DepositRequest.objects.create(deposit=complete_deposit, raw_metadata=xml_data)
+    release_data = utils.extract_release_data(complete_deposit)
+    assert release_data.release_notes == "CHANGELOG"
+
+
+def test_extract_release_data_guess_software_version(complete_deposit):
+    complete_deposit.id = None
+    complete_deposit.complete_date = timezone.now()
+    complete_deposit.save()  # Creates a new deposit with the same origin url
+
+    xml_data = """<?xml version="1.0"?>
+        <entry xmlns="http://www.w3.org/2005/Atom"
+                xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
+        </entry>"""
+    DepositRequest.objects.create(deposit=complete_deposit, raw_metadata=xml_data)
+    release_data = utils.extract_release_data(complete_deposit)
+    assert release_data.software_version == "2"
