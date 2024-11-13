@@ -49,3 +49,7 @@ FILE_UPLOAD_HANDLERS = [
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "swh.deposit.exception.custom_exception_handler",
 }
+
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.MD5PasswordHasher",
+]
