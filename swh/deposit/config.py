@@ -28,6 +28,7 @@ PRIVATE_PUT_DEPOSIT = "private-update"
 PRIVATE_GET_DEPOSIT_METADATA = "private-read"
 PRIVATE_LIST_DEPOSITS = "private-deposit-list"
 PRIVATE_LIST_DEPOSITS_DATATABLES = "private-deposit-list-datatables"
+PRIVATE_GET_RELEASES = "private-releases"
 
 ARCHIVE_KEY = "archive"
 RAW_METADATA_KEY = "raw-metadata"

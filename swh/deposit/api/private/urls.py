@@ -3,16 +3,19 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from django.urls import path
 from django.urls import re_path as url
 
 from swh.deposit.api.private.deposit_check import APIChecks
 from swh.deposit.api.private.deposit_list import APIList, deposit_list_datatables
 from swh.deposit.api.private.deposit_read import APIReadArchives, APIReadMetadata
+from swh.deposit.api.private.deposit_releases import APIReleases
 from swh.deposit.api.private.deposit_update_status import APIUpdateStatus
 from swh.deposit.config import (
     PRIVATE_CHECK_DEPOSIT,
     PRIVATE_GET_DEPOSIT_METADATA,
     PRIVATE_GET_RAW_CONTENT,
+    PRIVATE_GET_RELEASES,
     PRIVATE_LIST_DEPOSITS,
     PRIVATE_LIST_DEPOSITS_DATATABLES,
     PRIVATE_PUT_DEPOSIT,
@@ -80,5 +83,12 @@ urlpatterns = [
         r"^deposits/datatables/$",
         deposit_list_datatables,
         name=PRIVATE_LIST_DEPOSITS_DATATABLES,
+    ),
+    # Retrieve all releases for a specific deposit
+    # -> GET
+    path(
+        "<int:deposit_id>/releases/",
+        APIReleases.as_view(),
+        name=PRIVATE_GET_RELEASES,
     ),
 ]

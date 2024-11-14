@@ -8,6 +8,7 @@ import logging
 from typing import Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
 
+from django.db.models import QuerySet
 import iso8601
 
 from swh.model.exceptions import ValidationError
@@ -106,7 +107,7 @@ def parse_swh_metadata_provenance(
     Raises:
         ValidationError in case of invalid xml
 
-    Returns:
+    Returns:QuerySet
         Either the metadata provenance url if any or None otherwise
 
     """
@@ -287,7 +288,7 @@ def extract_release_data(deposit: Deposit) -> Optional[ReleaseData]:
     - `release_notes` comes from either `codemeta:releaseNotes` or `schema:releaseNotes`
 
     Args:
-        deposit: a Deposit instance (should be a `done` one)
+        deposit: a Deposit instance
 
     Returns:
         A namedtuple of software_version & release_notes
@@ -307,9 +308,9 @@ def extract_release_data(deposit: Deposit) -> Optional[ReleaseData]:
         count_previous_releases = (
             type(deposit)
             .objects.filter(
-                origin_url=deposit.origin_url,
-                complete_date__lt=deposit.complete_date,
                 complete_date__isnull=False,
+                id__lt=deposit.id,
+                origin_url=deposit.origin_url,
             )
             .count()
         )
@@ -321,3 +322,28 @@ def extract_release_data(deposit: Deposit) -> Optional[ReleaseData]:
     )
 
     return ReleaseData(software_version, release_notes)
+
+
+def get_releases(deposit: Deposit) -> QuerySet:
+    """List all completed deposits to the same origin as the given ``deposit``.
+
+    All releases share the same origin_url, are in status ``done`` and have a non-
+    empty ``software_version``.
+
+    Deposits are grouped by ``software_version`` and ordered by ``complete_date`` so
+    that if multiple deposits where made with the same software version only the last
+    one (by date) will be returned by this query.
+
+    Args:
+        deposit: a Deposit instance
+
+    Returns:
+        A queryset of deposits
+    """
+    return (
+        Deposit.objects.filter(origin_url=deposit.origin_url)
+        .exclude(software_version="")
+        .exclude(complete_date__isnull=True)
+        .order_by("software_version", "-complete_date")
+        .distinct("software_version")
+    )

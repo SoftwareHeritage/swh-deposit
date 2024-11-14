@@ -9,7 +9,7 @@ from django.utils import timezone
 import pytest
 
 from swh.deposit import utils
-from swh.deposit.models import DepositRequest
+from swh.deposit.models import Deposit, DepositRequest
 from swh.model.exceptions import ValidationError
 from swh.model.swhids import CoreSWHID, QualifiedSWHID
 
@@ -285,3 +285,78 @@ def test_extract_release_data_guess_software_version(complete_deposit):
     DepositRequest.objects.create(deposit=complete_deposit, raw_metadata=xml_data)
     release_data = utils.extract_release_data(complete_deposit)
     assert release_data.software_version == "2"
+
+
+def test_get_releases(complete_deposit):
+    # the complete_deposit fixture has no software_version, it will be ignored
+    no_version_deposit = complete_deposit
+
+    # simple case: this deposit has a unique software_version and a single deposit
+    # request
+    deposit_v1 = Deposit.objects.get(id=complete_deposit.id)
+    deposit_v1.id = None
+    deposit_v1.software_version = "v1"
+    deposit_v1.complete_date = timezone.now()
+    deposit_v1.save()
+    DepositRequest.objects.create(deposit=deposit_v1, raw_metadata="v1 metadata")
+
+    # this deposit will not be part of our releases as it will be overwritten by
+    # deposit_v2_2
+    deposit_v2 = Deposit.objects.get(id=complete_deposit.id)
+    deposit_v2.id = None
+    deposit_v2.software_version = "v2"
+    deposit_v2.complete_date = timezone.now()
+    deposit_v2.save()
+    DepositRequest.objects.create(deposit=deposit_v2, raw_metadata="ignored release")
+
+    # this deposit has multiple deposit requests, only the last one is used
+    deposit_v3 = Deposit.objects.get(id=complete_deposit.id)
+    deposit_v3.id = None
+    deposit_v3.software_version = "v3"
+    deposit_v3.complete_date = timezone.now()
+    deposit_v3.save()
+    DepositRequest.objects.create(
+        deposit=deposit_v3, raw_metadata="overwritten by the next dr"
+    )
+    DepositRequest.objects.create(deposit=deposit_v3, raw_metadata="this one is kept")
+
+    # this deposit has multiple deposit requests, the one with metadata is used
+    deposit_v2_2 = Deposit.objects.get(id=complete_deposit.id)
+    deposit_v2_2.id = None
+    deposit_v2_2.software_version = "v2"
+    deposit_v2_2.complete_date = timezone.now()
+    deposit_v2_2.save()
+    DepositRequest.objects.create(deposit=deposit_v2_2, raw_metadata="v2 metadata")
+    DepositRequest.objects.create(deposit=deposit_v2_2)
+
+    # v0 is deposited after v2 but releases are ordered by software_version
+    deposit_v0 = Deposit.objects.get(id=complete_deposit.id)
+    deposit_v0.id = None
+    deposit_v0.software_version = "v0"
+    deposit_v0.complete_date = timezone.now()
+    deposit_v0.save()
+
+    # this deposit is not related to the others
+    deposit_other_origin = Deposit.objects.get(id=complete_deposit.id)
+    deposit_other_origin.id = None
+    deposit_other_origin.software_version = "v4"
+    deposit_other_origin.complete_date = timezone.now()
+    deposit_other_origin.origin_url = "http://example.localhost/1234"
+    deposit_other_origin.save()
+    DepositRequest.objects.create(
+        deposit=deposit_other_origin, raw_metadata="other origin"
+    )
+
+    releases = utils.get_releases(deposit_v1)
+
+    assert len(releases) == 4
+
+    assert no_version_deposit not in releases
+    assert deposit_other_origin not in releases
+    assert deposit_v2 not in releases
+
+    # results are ordered by software_version
+    assert releases[0] == deposit_v0
+    assert releases[1] == deposit_v1
+    assert releases[2] == deposit_v2_2
+    assert releases[3] == deposit_v3
