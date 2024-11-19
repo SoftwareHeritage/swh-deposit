@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -20,7 +20,6 @@ import xml.etree.ElementTree as ET
 import click
 
 from swh.deposit.cli import deposit
-from swh.deposit.utils import NAMESPACES as NS
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +65,20 @@ def _url(url: str) -> str:
     return url
 
 
+def _init_django():
+    """Initialize django but without overriding logging configuration
+    set by swh CLI.
+    """
+    import os
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swh.deposit.settings.development")
+
+    from django.apps import apps
+    from django.conf import settings
+
+    apps.populate(settings.INSTALLED_APPS)
+
+
 def generate_metadata(
     deposit_client: str,
     name: str,
@@ -106,6 +119,8 @@ def generate_metadata(
         metadata xml string
 
     """
+    from swh.deposit.utils import NAMESPACES as NS
+
     # generate a metadata file with the minimum required metadata
     document = ET.Element(f"{{{NS['atom']}}}entry")
     now = datetime.now(tz=timezone.utc)
@@ -460,6 +475,8 @@ def upload(
     """
     import tempfile
 
+    _init_django()
+
     from swh.deposit.client import PublicApiDepositClient
 
     if archive_deposit or metadata_deposit:
@@ -536,6 +553,9 @@ def upload(
 @click.pass_context
 def status(ctx, url, username, password, deposit_id, output_format):
     """Deposit's status"""
+
+    _init_django()
+
     from swh.deposit.client import PublicApiDepositClient
 
     url = _url(url)
@@ -578,6 +598,8 @@ def print_result(data: Dict[str, Any], output_format: Optional[str]) -> None:
 def metadata_only(ctx, url, username, password, metadata_path, output_format):
     """Deposit metadata only upload"""
     from xml.etree import ElementTree
+
+    _init_django()
 
     from swh.deposit.client import PublicApiDepositClient
     from swh.deposit.utils import parse_swh_metadata_provenance, parse_swh_reference
@@ -622,6 +644,8 @@ def metadata_only(ctx, url, username, password, metadata_path, output_format):
 @click.pass_context
 def deposit_list(ctx, url, username, password, output_format, page, page_size):
     """Client deposit listing"""
+    _init_django()
+
     from swh.deposit.client import PublicApiDepositClient
 
     url = _url(url)
