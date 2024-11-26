@@ -67,6 +67,7 @@ from swh.deposit.parsers import parse_xml
 from swh.deposit.utils import (
     compute_metadata_context,
     extended_swhid_from_qualified,
+    extract_release_data,
     parse_swh_deposit_origin,
     parse_swh_metadata_provenance,
     parse_swh_reference,
@@ -268,6 +269,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
     def _complete_deposit(self, deposit: Deposit) -> None:
         """Marks the deposit as 'deposited', then schedule a check task if configured
         to do so."""
+
         deposit.complete_date = timezone.now()
         deposit.status = DEPOSIT_STATUS_DEPOSITED
         deposit.save()
@@ -334,6 +336,14 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
                 raw_metadata=raw_metadata.decode("utf-8"),
             )
             deposit_request.save()
+
+        if deposit_request:
+            # Set release infos
+            release_data = extract_release_data(deposit)
+            if release_data:
+                deposit.software_version = release_data.software_version
+                deposit.release_notes = release_data.release_notes
+                deposit.save()
 
         assert deposit_request is not None
         return deposit_request

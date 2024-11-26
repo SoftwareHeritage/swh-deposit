@@ -13,7 +13,6 @@ from swh.deposit.models import (
     DEPOSIT_STATUS_LOAD_SUCCESS,
     Deposit,
 )
-from swh.deposit.utils import extract_release_data
 from swh.model.hashutil import hash_to_bytes
 from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 
@@ -112,10 +111,6 @@ class APIUpdateStatus(APIPrivateView, APIPut):
                     path="/",
                 )
             )
-            # Set release infos
-            if release_data := extract_release_data(deposit):
-                deposit.software_version = release_data.software_version
-                deposit.release_notes = release_data.release_notes
         else:  # rejected
             deposit.status = status
 
