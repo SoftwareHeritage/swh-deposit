@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 The Software Heritage developers
+# Copyright (C) 2017-2024 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -61,7 +61,8 @@ def aggregate_tarballs(extraction_dir: str, archives: List) -> Iterator[str]:
 
                 archive_path = str(tarball_path_dir / tarball_path.name)
                 with open(archive_path, "wb") as f:
-                    f.write(archive_fp.read())
+                    while chunk := archive_fp.read(10 * 1024 * 1024):
+                        f.write(chunk)
 
         tarball.uncompress(archive_path, aggregated_tarball_rootdir)
 
