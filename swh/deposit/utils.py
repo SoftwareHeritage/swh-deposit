@@ -2,20 +2,24 @@
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
+from __future__ import annotations
 
 from collections import namedtuple
 import logging
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
 
-from django.db.models import QuerySet
 import iso8601
 
 from swh.model.exceptions import ValidationError
 from swh.model.model import TimestampWithTimezone
 from swh.model.swhids import ExtendedSWHID, ObjectType, QualifiedSWHID
 
-from .models import Deposit
+if TYPE_CHECKING:
+    # Prevent side effects when tasks load utils outside a django context
+    from django.db.models import QuerySet
+
+    from swh.deposit.models import Deposit
 
 logger = logging.getLogger(__name__)
 
@@ -340,6 +344,9 @@ def get_releases(deposit: Deposit) -> QuerySet:
     Returns:
         A queryset of deposits
     """
+    #
+    from swh.deposit.models import Deposit
+
     return (
         Deposit.objects.filter(origin_url=deposit.origin_url)
         .exclude(software_version="")
