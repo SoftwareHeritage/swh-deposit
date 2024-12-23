@@ -15,8 +15,7 @@ from xml.etree import ElementTree
 
 from django.test.utils import setup_databases
 from django.urls import reverse_lazy as reverse
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import psycopg
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -223,10 +222,9 @@ def django_db_setup(request, django_db_blocker, postgresql_proc):
 
 def execute_sql(sql):
     """Execute sql to postgres db"""
-    with psycopg2.connect(database="postgres") as conn:
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
-        cur.execute(sql)
+    with psycopg.connect(database="postgres", autocommit=True) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
 
 
 @pytest.fixture(autouse=True, scope="session")

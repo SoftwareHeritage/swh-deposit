@@ -1,8 +1,8 @@
 pytest
 pytest-django
 pytest-mock
-swh.scheduler[testing] >= 2.3.0
-swh.loader.core[testing]
+swh.scheduler[testing] >= 3.0.0
+swh.loader.core[testing] >= 4.0.0
 pytest-postgresql >= 5
 requests_mock
 django-stubs

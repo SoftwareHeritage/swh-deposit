@@ -1,5 +1,5 @@
 # These dependencies will be installed by deposit clients.
 # Server dependencies go to requirements-swh-server.txt instead.
 
-swh.core[http] >= 3.0.0
+swh.core[http] >= 4.0.0
 swh.model >= 6.13.0
