@@ -126,6 +126,7 @@ if cfg_azure:
     options = dict(
         azure_container=cfg_azure["container_name"],
         connection_string=cfg_azure["connection_string"],
+        timeout=cfg_azure.get("connection_timeout", 120),
     )
 
     # Which may be enhanced with some extra options, lookup "object_parameters" in
