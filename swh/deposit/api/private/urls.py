@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023  The Software Heritage developers
+# Copyright (C) 2017-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,11 +11,13 @@ from swh.deposit.api.private.deposit_list import APIList, deposit_list_datatable
 from swh.deposit.api.private.deposit_read import APIReadArchives, APIReadMetadata
 from swh.deposit.api.private.deposit_releases import APIReleases
 from swh.deposit.api.private.deposit_update_status import APIUpdateStatus
+from swh.deposit.api.private.deposit_upload_urls import APIUploadURLs
 from swh.deposit.config import (
     PRIVATE_CHECK_DEPOSIT,
     PRIVATE_GET_DEPOSIT_METADATA,
     PRIVATE_GET_RAW_CONTENT,
     PRIVATE_GET_RELEASES,
+    PRIVATE_GET_UPLOAD_URLS,
     PRIVATE_LIST_DEPOSITS,
     PRIVATE_LIST_DEPOSITS_DATATABLES,
     PRIVATE_PUT_DEPOSIT,
@@ -90,5 +92,12 @@ urlpatterns = [
         "<int:deposit_id>/releases/",
         APIReleases.as_view(),
         name=PRIVATE_GET_RELEASES,
+    ),
+    # Retrieve download URLs for the tarballs uploaded with a deposit
+    # -> GET
+    path(
+        "<int:deposit_id>/upload-urls/",
+        APIUploadURLs.as_view(),
+        name=PRIVATE_GET_UPLOAD_URLS,
     ),
 ]

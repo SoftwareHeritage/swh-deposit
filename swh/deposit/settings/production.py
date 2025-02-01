@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023  The Software Heritage developers
+# Copyright (C) 2017-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -127,6 +127,8 @@ if cfg_azure:
         azure_container=cfg_azure["container_name"],
         connection_string=cfg_azure["connection_string"],
         timeout=cfg_azure.get("connection_timeout", 120),
+        # ensure to generate temporary download links with shared access signature
+        expiration_secs=cfg_azure.get("expiration_secs", 1800),
     )
 
     # Which may be enhanced with some extra options, lookup "object_parameters" in
