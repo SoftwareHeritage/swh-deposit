@@ -24,7 +24,6 @@ from xml.etree import ElementTree
 
 import xmlschema
 
-from swh.deposit.errors import FORBIDDEN, DepositError
 from swh.deposit.utils import NAMESPACES, parse_swh_metadata_provenance
 
 MANDATORY_FIELDS_MISSING = "Mandatory fields are missing"
@@ -404,17 +403,3 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
         return True, {"metadata": suggested_fields}
 
     return True, None
-
-
-def check_url_match_provider(url: str, provider_url: str) -> None:
-    """Check url matches the provider url.
-
-    Raises DepositError in case of mismatch
-
-    """
-    provider_url = provider_url.rstrip("/") + "/"
-    if not url.startswith(provider_url):
-        raise DepositError(
-            FORBIDDEN,
-            f"URL mismatch: {url} must start with {provider_url}",
-        )

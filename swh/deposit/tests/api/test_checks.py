@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024  The Software Heritage developers
+# Copyright (C) 2017-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,7 +14,7 @@ from xml.etree import ElementTree
 
 import pytest
 
-from swh.deposit.api.checks import (
+from swh.deposit.loader.checks import (
     METADATA_PROVENANCE_KEY,
     SUGGESTED_FIELDS_MISSING,
     check_metadata,
@@ -396,7 +396,7 @@ _parameters1 = [
     "metadata_ok",
     _parameters1,
 )
-def test_api_checks_check_metadata_ok(metadata_ok, swh_checks_deposit):
+def test_api_checks_check_metadata_ok(metadata_ok):
     actual_check, detail = check_metadata(ElementTree.fromstring(metadata_ok))
     assert actual_check is True, f"Unexpected result:\n{pprint.pformat(detail)}"
     if "swh:deposit" in metadata_ok:
@@ -662,9 +662,7 @@ _parameters2 = [
 
 
 @pytest.mark.parametrize("metadata_ko,expected_summary", _parameters2)
-def test_api_checks_check_metadata_ko(
-    metadata_ko, expected_summary, swh_checks_deposit
-):
+def test_api_checks_check_metadata_ko(metadata_ko, expected_summary):
     actual_check, error_detail = check_metadata(ElementTree.fromstring(metadata_ko))
     assert actual_check is False
     assert error_detail == {"metadata": [expected_summary]}
@@ -1216,9 +1214,7 @@ _parameters3 = [
 
 
 @pytest.mark.parametrize("metadata_ko,expected_summaries", _parameters3)
-def test_api_checks_check_metadata_ko_schema(
-    metadata_ko, expected_summaries, swh_checks_deposit
-):
+def test_api_checks_check_metadata_ko_schema(metadata_ko, expected_summaries):
     actual_check, error_detail = check_metadata(ElementTree.fromstring(metadata_ko))
     assert actual_check is False
     assert len(error_detail["metadata"]) == len(expected_summaries), error_detail[

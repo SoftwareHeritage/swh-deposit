@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2022 The Software Heritage developers
+# Copyright (C) 2020-2025 The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -15,11 +15,6 @@ from xml.etree import ElementTree
 import pytest
 import yaml
 
-from swh.deposit.api.checks import (
-    METADATA_PROVENANCE_KEY,
-    SUGGESTED_FIELDS_MISSING,
-    check_metadata,
-)
 from swh.deposit.cli import deposit as cli
 from swh.deposit.cli.client import InputError, _collection, _url, generate_metadata
 from swh.deposit.client import (
@@ -27,6 +22,11 @@ from swh.deposit.client import (
     MaintenanceError,
     PublicApiDepositClient,
     ServiceDocumentDepositClient,
+)
+from swh.deposit.loader.checks import (
+    METADATA_PROVENANCE_KEY,
+    SUGGESTED_FIELDS_MISSING,
+    check_metadata,
 )
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.conftest import TEST_USER

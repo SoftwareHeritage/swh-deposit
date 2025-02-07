@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<entry xmlns="http://www.w3.org/2005/Atom">
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:codemeta="https://doi.org/10.5063/SCHEMA/CODEMETA-2.0">
     <id>urn:uuid:2225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
     <updated>2017-10-07T15:17:08Z</updated>
+    <codemeta:datePublished>2017-10-07T15:17:08Z</codemeta:datePublished>
     <author>some awesome author</author>
     <name>awesome-compiler</name>
 </entry>

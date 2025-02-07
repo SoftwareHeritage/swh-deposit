@@ -9,10 +9,6 @@ from typing import Any, Dict, Optional
 from swh.core import config
 from swh.deposit import __version__
 from swh.model.model import MetadataAuthority, MetadataAuthorityType, MetadataFetcher
-from swh.scheduler import get_scheduler
-from swh.scheduler.interface import SchedulerInterface
-from swh.storage import get_storage
-from swh.storage.interface import StorageInterface
 
 # IRIs (Internationalized Resource identifier) sword 2.0 specified
 EDIT_IRI = "edit_iri"
@@ -23,7 +19,6 @@ SD_IRI = "servicedocument"
 COL_IRI = "upload"
 STATE_IRI = "state_iri"
 PRIVATE_GET_RAW_CONTENT = "private-download"
-PRIVATE_CHECK_DEPOSIT = "check-deposit"
 PRIVATE_PUT_DEPOSIT = "private-update"
 PRIVATE_GET_DEPOSIT_METADATA = "private-read"
 PRIVATE_LIST_DEPOSITS = "private-deposit-list"
@@ -100,6 +95,11 @@ class APIConfig:
     """
 
     def __init__(self):
+        from swh.scheduler import get_scheduler
+        from swh.scheduler.interface import SchedulerInterface
+        from swh.storage import get_storage
+        from swh.storage.interface import StorageInterface
+
         self.config: Dict[str, Any] = config.load_from_envvar(DEFAULT_CONFIG)
         self.scheduler: SchedulerInterface = get_scheduler(**self.config["scheduler"])
         self.tool = {

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024  The Software Heritage developers
+# Copyright (C) 2017-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -25,7 +25,6 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from swh.deposit.api.checks import check_metadata, check_url_match_provider
 from swh.deposit.api.converters import convert_status_detail
 from swh.deposit.auth import HasDepositPermission, KeycloakBasicAuthentication
 from swh.deposit.config import (
@@ -56,6 +55,7 @@ from swh.deposit.errors import (
     DepositError,
     ParserError,
 )
+from swh.deposit.loader.checks import check_metadata
 from swh.deposit.models import (
     DEPOSIT_METADATA_ONLY,
     Deposit,
@@ -164,6 +164,20 @@ def guess_deposit_origin_url(deposit: Deposit):
         # but SWORD requires we support it. So let's generate a random slug.
         external_id = str(uuid.uuid4())
     return "%s/%s" % (deposit.client.provider_url.rstrip("/"), external_id)
+
+
+def check_url_match_provider(url: str, provider_url: str) -> None:
+    """Check url matches the provider url.
+
+    Raises DepositError in case of mismatch
+
+    """
+    provider_url = provider_url.rstrip("/") + "/"
+    if not url.startswith(provider_url):
+        raise DepositError(
+            FORBIDDEN,
+            f"URL mismatch: {url} must start with {provider_url}",
+        )
 
 
 class APIBase(APIConfig, APIView, metaclass=ABCMeta):
