@@ -6,14 +6,12 @@
 from django.urls import path
 from django.urls import re_path as url
 
-from swh.deposit.api.private.deposit_check import APIChecks
 from swh.deposit.api.private.deposit_list import APIList, deposit_list_datatables
 from swh.deposit.api.private.deposit_read import APIReadArchives, APIReadMetadata
 from swh.deposit.api.private.deposit_releases import APIReleases
 from swh.deposit.api.private.deposit_update_status import APIUpdateStatus
 from swh.deposit.api.private.deposit_upload_urls import APIUploadURLs
 from swh.deposit.config import (
-    PRIVATE_CHECK_DEPOSIT,
     PRIVATE_GET_DEPOSIT_METADATA,
     PRIVATE_GET_RAW_CONTENT,
     PRIVATE_GET_RELEASES,
@@ -45,13 +43,6 @@ urlpatterns = [
         APIReadMetadata.as_view(),
         name=PRIVATE_GET_DEPOSIT_METADATA,
     ),
-    # Check archive and metadata information on a specific deposit
-    # -> GET
-    url(
-        r"^(?P<collection_name>[^/]+)/(?P<deposit_id>[^/]+)/check/$",
-        APIChecks.as_view(),
-        name=PRIVATE_CHECK_DEPOSIT,
-    ),
     # Retrieve deposit's raw archives' content
     # -> GET
     url(
@@ -72,13 +63,6 @@ urlpatterns = [
         r"^(?P<deposit_id>[^/]+)/meta/$",
         APIReadMetadata.as_view(),
         name=PRIVATE_GET_DEPOSIT_METADATA + "-nc",
-    ),
-    # Check archive and metadata information on a specific deposit
-    # -> GET
-    url(
-        r"^(?P<deposit_id>[^/]+)/check/$",
-        APIChecks.as_view(),
-        name=PRIVATE_CHECK_DEPOSIT + "-nc",
     ),
     url(r"^deposits/$", APIList.as_view(), name=PRIVATE_LIST_DEPOSITS),
     url(

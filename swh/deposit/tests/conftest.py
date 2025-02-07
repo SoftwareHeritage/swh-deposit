@@ -6,6 +6,7 @@
 import base64
 from copy import deepcopy
 from functools import partial
+import hashlib
 import os
 import re
 from typing import TYPE_CHECKING, Dict, Mapping
@@ -35,6 +36,8 @@ from swh.deposit.config import (
     SE_IRI,
     setup_django_for,
 )
+from swh.deposit.models import Deposit
+from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import (
     create_arborescence_archive,
     post_archive,
@@ -46,7 +49,7 @@ from swh.model.swhids import CoreSWHID, ObjectType, QualifiedSWHID
 from swh.scheduler import get_scheduler
 
 if TYPE_CHECKING:
-    from swh.deposit.models import Deposit, DepositClient, DepositCollection
+    from swh.deposit.models import DepositClient, DepositCollection
 
 
 # mypy is asked to ignore the import statement above because setup_databases
@@ -590,6 +593,56 @@ def complete_deposit(sample_archive, deposit_collection, authenticated_client):
             path=b"/",
         )
     )
+    deposit.save()
+    return deposit
+
+
+@pytest.fixture
+def ready_deposit_invalid_archive(authenticated_client, deposit_collection):
+    url = reverse(COL_IRI, args=[deposit_collection.name])
+
+    data = b"some data which is clearly not a zip file"
+    md5sum = hashlib.md5(data).hexdigest()
+
+    # when
+    response = authenticated_client.post(
+        url,
+        content_type="application/zip",  # as zip
+        data=data,
+        # + headers
+        CONTENT_LENGTH=len(data),
+        # other headers needs HTTP_ prefix to be taken into account
+        HTTP_SLUG="external-id-invalid",
+        HTTP_CONTENT_MD5=md5sum,
+        HTTP_PACKAGING="http://purl.org/net/sword/package/SimpleZip",
+        HTTP_CONTENT_DISPOSITION="attachment; filename=filename0",
+    )
+
+    response_content = parse_xml(response.content)
+    deposit_id = int(response_content.findtext("swh:deposit_id", namespaces=NAMESPACES))
+    deposit = Deposit.objects.get(pk=deposit_id)
+    deposit.status = DEPOSIT_STATUS_DEPOSITED
+    deposit.save()
+    return deposit
+
+
+@pytest.fixture
+def ready_deposit_ok(partial_deposit_with_metadata):
+    """Returns a deposit ready for checks (it will pass the checks)."""
+    deposit = partial_deposit_with_metadata
+    deposit.status = DEPOSIT_STATUS_DEPOSITED
+    deposit.save()
+    return deposit
+
+
+@pytest.fixture
+def ready_deposit_only_metadata(partial_deposit_only_metadata):
+    """Deposit in status ready that will fail the checks (because missing
+    archive).
+
+    """
+    deposit = partial_deposit_only_metadata
+    deposit.status = DEPOSIT_STATUS_DEPOSITED
     deposit.save()
     return deposit
 
