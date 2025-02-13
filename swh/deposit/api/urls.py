@@ -3,9 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""SWH's deposit api URL Configuration
-
-"""
+"""SWH's deposit api URL Configuration"""
 
 from django.shortcuts import render
 from django.urls import re_path as url

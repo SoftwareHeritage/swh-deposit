@@ -3,9 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Module to check at least one basic authentication works.
-
-"""
+"""Module to check at least one basic authentication works."""
 
 from django.urls import reverse_lazy as reverse
 import pytest

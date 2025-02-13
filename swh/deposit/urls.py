@@ -3,9 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""SWH's main deposit URL Configuration
-
-"""
+"""SWH's main deposit URL Configuration"""
 from __future__ import annotations
 
 from typing import Sequence, Union

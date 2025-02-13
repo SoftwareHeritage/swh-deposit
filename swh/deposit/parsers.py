@@ -4,9 +4,7 @@
 # See top-level LICENSE file for more information
 
 
-"""Module in charge of defining parsers with SWORD 2.0 supported mediatypes.
-
-"""
+"""Module in charge of defining parsers with SWORD 2.0 supported mediatypes."""
 
 import logging
 from xml.etree import ElementTree
