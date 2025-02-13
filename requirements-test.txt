@@ -9,5 +9,6 @@ django-stubs
 djangorestframework-stubs >= 1.4
 django-test-migrations
 
+celery-types
 types-requests
 types-pyyaml

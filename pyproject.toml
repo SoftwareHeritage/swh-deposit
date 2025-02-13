@@ -82,7 +82,6 @@ plugins = [
 # 3rd party libraries without stubs (yet)
 [[tool.mypy.overrides]]
 module = [
-    "celery.*",
     "storages.backends.azure_storage.*"
 ]
 ignore_missing_imports = true
