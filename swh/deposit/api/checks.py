@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -16,12 +16,12 @@ Suggested fields:
 
 import dataclasses
 import functools
+import importlib.resources
 import re
 from typing import Dict, Iterator, Optional, Tuple, cast
 import urllib
 from xml.etree import ElementTree
 
-import pkg_resources
 import xmlschema
 
 from swh.deposit.errors import FORBIDDEN, DepositError
@@ -206,9 +206,9 @@ class Schemas:
 @functools.lru_cache(1)
 def schemas() -> Schemas:
     def load_xsd(name) -> xmlschema.XMLSchema11:
-        return xmlschema.XMLSchema11(
-            pkg_resources.resource_string("swh.deposit", f"xsd/{name}.xsd").decode()
-        )
+        xsd_path = importlib.resources.files("swh.deposit").joinpath(f"xsd/{name}.xsd")
+        with importlib.resources.as_file(xsd_path) as xsd:
+            return xmlschema.XMLSchema11(xsd.as_posix())
 
     return Schemas(swh=load_xsd("swh"), codemeta=load_xsd("codemeta"))
 
