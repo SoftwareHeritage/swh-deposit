@@ -1,12 +1,9 @@
-# Copyright (C) 2018-2020  The Software Heritage developers
+# Copyright (C) 2018-2025  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import pytest
 
-
-@pytest.mark.db
 def test_task_check_eventful(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
@@ -27,7 +24,6 @@ def test_task_check_eventful(
     client.assert_called_once_with(f"/{collection}/{deposit_id}/check/")
 
 
-@pytest.mark.db
 def test_task_check_failure(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
@@ -48,7 +44,6 @@ def test_task_check_failure(
     client.assert_called_once_with(f"/{collection}/{deposit_id}/check/")
 
 
-@pytest.mark.db
 def test_task_check_3(
     mocker, deposit_config_path, swh_scheduler_celery_app, swh_scheduler_celery_worker
 ):
