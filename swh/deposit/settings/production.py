@@ -131,10 +131,20 @@ if cfg_azure:
         expiration_secs=cfg_azure.get("expiration_secs", 1800),
     )
 
-    # Which may be enhanced with some extra options, lookup "object_parameters" in
-    # https://django-storages.readthedocs.io/en/latest/backends/azure.html
-    object_parameters = {}
-    for optional_config_key in ["content_type", "content_disposition"]:
+    # Ensure azure blob storage do not serve uploaded tarballs with gzip encoding
+    # as they are usually already compressed and uncompressed tarballs with wrong
+    # extensions (.tgz instead .tar) are erroneously detected as gzip encoded by
+    # django-storages due to the use of the mimetypes module
+    # (see https://github.com/jschneier/django-storages/blob/
+    # 80031d313ea1872ea455fbbeacfd7cfc68900a77/storages/backends/azure_storage.py#L334)
+    object_parameters = {"content_encoding": None}
+
+    # azure config may be enhanced with some extra options, lookup "object_parameters"
+    # in https://django-storages.readthedocs.io/en/latest/backends/azure.html
+    for optional_config_key in [
+        "content_type",
+        "content_disposition",
+    ]:
         if optional_config_key in cfg_azure:
             value = cfg_azure[optional_config_key]
             # Explicit "" as None instead of empty string which is not interpreted

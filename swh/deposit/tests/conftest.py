@@ -9,6 +9,7 @@ from functools import partial
 import hashlib
 import os
 import re
+import shutil
 from typing import TYPE_CHECKING, Dict, Mapping
 from xml.etree import ElementTree
 
@@ -39,6 +40,7 @@ from swh.deposit.config import (
 from swh.deposit.models import Deposit
 from swh.deposit.parsers import parse_xml
 from swh.deposit.tests.common import (
+    compute_info,
     create_arborescence_archive,
     post_archive,
     post_atom,
@@ -375,13 +377,32 @@ def insufficient_perm_client(
 
 @pytest.fixture
 def sample_archive(tmp_path):
-    """Returns a sample archive"""
+    """Returns a sample archive as a zip file"""
     tmp_path = str(tmp_path)  # pytest version limitation in previous version
     archive = create_arborescence_archive(
         tmp_path, "archive1", "file1", b"some content in file"
     )
 
     return archive
+
+
+@pytest.fixture
+def sample_tarfile(tmp_path):
+    """Returns a sample archive as a tar file"""
+    tmp_path = str(tmp_path)  # pytest version limitation in previous version
+    archive = create_arborescence_archive(
+        tmp_path, "archive1", "file1", b"some content in file", extension="tar"
+    )
+
+    return archive
+
+
+@pytest.fixture
+def sample_tarfile_tgz_extension(sample_tarfile):
+    """Returns a sample archive as a tar file but with tgz extension"""
+    tgz_path = sample_tarfile["path"].replace(".tar", ".tgz")
+    shutil.copyfile(sample_tarfile["path"], tgz_path)
+    return compute_info(tgz_path)
 
 
 @pytest.fixture

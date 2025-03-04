@@ -9,6 +9,7 @@ import secrets
 import shutil
 import subprocess
 
+from azure.core.exceptions import ResourceExistsError
 from azure.storage.blob import BlobServiceClient
 from django.urls import reverse_lazy as reverse
 import pytest
@@ -83,17 +84,24 @@ def azurite_connection_string(tmpdir_factory):
     azurite_proc.wait(2)
 
 
+@pytest.fixture(
+    params=["sample_archive", "sample_tarfile", "sample_tarfile_tgz_extension"]
+)
+def sample_tarball(request):
+    return request.getfixturevalue(request.param)
+
+
 def check_deposit_upload_urls(
     tmp_path,
     authenticated_client,
     deposit_collection,
-    sample_archive,
+    sample_tarball,
 ):
     # Add a first archive to deposit
     partial_deposit = create_deposit(
         authenticated_client,
         collection_name=deposit_collection.name,
-        sample_archive=sample_archive,
+        sample_archive=sample_tarball,
         external_id="external-id",
         deposit_status=DEPOSIT_STATUS_PARTIAL,
     )
@@ -123,7 +131,7 @@ def check_deposit_upload_urls(
     response = authenticated_client.get(url)
     upload_urls = response.json()
     assert len(upload_urls) == 2
-    assert "archive1.zip" in upload_urls[0]
+    assert sample_tarball["name"] in upload_urls[0]
     assert "archive2.zip" in upload_urls[1]
     tarball_shasums = set()
     for upload_url in upload_urls:
@@ -143,20 +151,20 @@ def check_deposit_upload_urls(
             ).hexdigest()
         )
 
-    assert tarball_shasums == {sample_archive["sha1sum"], archive2["sha1sum"]}
+    assert tarball_shasums == {sample_tarball["sha1sum"], archive2["sha1sum"]}
 
 
 def test_deposit_upload_urls_local_filesystem_storage_backend(
     tmp_path,
     authenticated_client,
     deposit_collection,
-    sample_archive,
+    sample_tarball,
 ):
     check_deposit_upload_urls(
         tmp_path,
         authenticated_client,
         deposit_collection,
-        sample_archive,
+        sample_tarball,
     )
 
 
@@ -165,13 +173,17 @@ def test_deposit_upload_urls_azure_storage_backend(
     tmp_path,
     authenticated_client,
     deposit_collection,
-    sample_archive,
+    sample_tarball,
     settings,
     azurite_connection_string,
     azure_container_name,
 ):
     blob_client = BlobServiceClient.from_connection_string(azurite_connection_string)
-    blob_client.create_container(azure_container_name)
+    try:
+        blob_client.create_container(azure_container_name)
+    except ResourceExistsError:
+        pass
+
     settings.STORAGES = {
         "default": {
             "BACKEND": "storages.backends.azure_storage.AzureStorage",
@@ -179,6 +191,9 @@ def test_deposit_upload_urls_azure_storage_backend(
                 "connection_string": azurite_connection_string,
                 "azure_container": azure_container_name,
                 "expiration_secs": 1800,
+                "object_parameters": {
+                    "content_encoding": None,
+                },
             },
         },
     }
@@ -186,5 +201,5 @@ def test_deposit_upload_urls_azure_storage_backend(
         tmp_path,
         authenticated_client,
         deposit_collection,
-        sample_archive,
+        sample_tarball,
     )
