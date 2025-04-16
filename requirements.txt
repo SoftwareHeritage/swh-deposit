@@ -5,4 +5,4 @@ click
 iso8601
 requests
 sentry-sdk
-xmlschema
+xmlschema >= 4.0.1

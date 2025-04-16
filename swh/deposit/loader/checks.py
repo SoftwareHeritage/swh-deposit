@@ -179,6 +179,7 @@ def absolute_uri_validator(
             xsd_element,
             element,
             f"{element.text!r} is not a valid URI",
+            namespaces=NAMESPACES,
         )
     else:
         if not url.scheme or not url.netloc:
@@ -193,6 +194,7 @@ def absolute_uri_validator(
                 xsd_element,
                 element,
                 f"{element.text!r} is not a valid URI",
+                namespaces=NAMESPACES,
             )
 
 
@@ -277,6 +279,7 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
                     xmlschema.aliases.ExtraValidatorType,
                     extra_validator,
                 ),
+                namespaces=NAMESPACES,
             )
         except xmlschema.exceptions.XMLSchemaException as e:
             return False, {"metadata": [{"fields": ["swh:deposit"], "summary": str(e)}]}
@@ -300,6 +303,7 @@ def check_metadata(metadata: ElementTree.Element) -> Tuple[bool, Optional[Dict]]
                     xmlschema.aliases.ExtraValidatorType,
                     extra_validator,
                 ),
+                namespaces=NAMESPACES,
             )
         except xmlschema.exceptions.XMLSchemaException as e:
             detail.append({"fields": [schema_element.prefixed_name], "summary": str(e)})
