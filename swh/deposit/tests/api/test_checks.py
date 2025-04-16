@@ -1059,7 +1059,7 @@ _parameters3 = [
             [
                 {
                     "summary": (
-                        r".*Reason: assertion test if false.*"
+                        r".*Reason: assertion test is false.*"
                         r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-add".*'
                     ),
@@ -1091,7 +1091,7 @@ _parameters3 = [
             [
                 {
                     "summary": (
-                        r".*Reason: assertion test if false.*"
+                        r".*Reason: assertion test is false.*"
                         r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-create-and-reference".*'
                     ),
@@ -1123,7 +1123,7 @@ _parameters3 = [
             [
                 {
                     "summary": (
-                        r".*Reason: assertion test if false.*"
+                        r".*Reason: assertion test is false.*"
                         r"Schema.*:\n*"
                         r' *<xsd:assert[^>]+ id="swhdeposit-incompatible-add-and-reference".*'
                     ),
