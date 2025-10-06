@@ -155,7 +155,7 @@ def test_cli_deposit_with_server_down_for_maintenance(
     # fmt: on
 
     assert result.exit_code == 1, result.output
-    assert result.output == ""
+    assert result.stdout == ""
     down_for_maintenance_log_record = (
         "swh.deposit.cli.client",
         logging.ERROR,
@@ -450,7 +450,7 @@ def test_cli_validation_metadata(
         # fmt: on
 
         assert result.exit_code == 1, f"unexpected result: {result.output}"
-        assert result.output == ""
+        assert result.stdout == ""
         expected_error_log_record = (
             "swh.deposit.cli.client",
             logging.ERROR,
@@ -483,7 +483,7 @@ def test_cli_validation_metadata(
         )
         # fmt: on
         assert result.exit_code == 1, f"unexpected result: {result.output}"
-        assert result.output == ""
+        assert result.stdout == ""
         expected_error_log_record = (
             "swh.deposit.cli.client",
             logging.ERROR,
@@ -517,7 +517,7 @@ def test_cli_validation_metadata(
         # fmt: on
 
         assert result.exit_code == 1, result.output
-        assert result.output == ""
+        assert result.stdout == ""
         expected_error_log_record = (
             "swh.deposit.cli.client",
             logging.ERROR,
@@ -549,7 +549,7 @@ def test_cli_validation_no_actionable_command(caplog, cli_runner):
     # fmt: on
 
     assert result.exit_code == 1, result.output
-    assert result.output == ""
+    assert result.stdout == ""
     expected_error_log_record = (
         "swh.deposit.cli.client",
         logging.ERROR,
@@ -583,7 +583,7 @@ def test_cli_validation_replace_with_no_deposit_id_fails(
     # fmt: on
 
     assert result.exit_code == 1, result.output
-    assert result.output == ""
+    assert result.stdout == ""
     expected_error_log_record = (
         "swh.deposit.cli.client",
         logging.ERROR,
