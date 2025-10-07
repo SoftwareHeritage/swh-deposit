@@ -1117,7 +1117,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
 class APIGet(APIBase, metaclass=ABCMeta):
     """Mixin for class to support GET method."""
 
-    def get(  # type: ignore
+    def get(
         self, request: Request, collection_name: str, deposit_id: int
     ) -> Union[HttpResponse, FileResponse]:
         """Endpoint to create/add resources to deposit.
@@ -1161,7 +1161,7 @@ class APIGet(APIBase, metaclass=ABCMeta):
 class APIPost(APIBase, metaclass=ABCMeta):
     """Mixin for class to support POST method."""
 
-    def post(  # type: ignore
+    def post(
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
     ) -> HttpResponse:
         """Endpoint to create/add resources to deposit.
@@ -1246,7 +1246,7 @@ class APIPost(APIBase, metaclass=ABCMeta):
 class APIPut(APIBase, metaclass=ABCMeta):
     """Mixin for class to support PUT method."""
 
-    def put(  # type: ignore
+    def put(
         self, request: Request, collection_name: str, deposit_id: int
     ) -> HttpResponse:
         """Endpoint to update deposit resources.
@@ -1286,7 +1286,7 @@ class APIPut(APIBase, metaclass=ABCMeta):
 class APIDelete(APIBase, metaclass=ABCMeta):
     """Mixin for class to support DELETE method."""
 
-    def delete(  # type: ignore
+    def delete(
         self, request: Request, collection_name: str, deposit_id: Optional[int] = None
     ) -> HttpResponse:
         """Endpoint to delete some deposit's resources (archives, deposit).
