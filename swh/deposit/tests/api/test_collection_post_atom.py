@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -83,15 +83,13 @@ def _assert_deposit_info_on_metadata(
     assert len(page_results.results) == 1
     assert page_results.next_page_token is None
 
-    expected_xml_data = textwrap.dedent(
-        f"""\
+    expected_xml_data = textwrap.dedent(f"""\
         <deposit xmlns="https://www.softwareheritage.org/schema/2018/deposit">
             <deposit_id>{deposit.id}</deposit_id>
             <deposit_client>https://hal-test.archives-ouvertes.fr/</deposit_client>
             <deposit_collection>test</deposit_collection>
         </deposit>
-        """
-    )
+        """)
     assert page_results == PagedResult(
         results=[
             RawExtrinsicMetadata(

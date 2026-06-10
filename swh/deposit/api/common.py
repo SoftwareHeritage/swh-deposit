@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2025  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -954,7 +954,7 @@ class APIBase(APIConfig, APIView, metaclass=ABCMeta):
         )
 
     def _set_deposit_origin_from_metadata(self, deposit, metadata, headers):
-        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata)
+        create_origin, add_to_origin = parse_swh_deposit_origin(metadata)
 
         if create_origin and add_to_origin:
             raise DepositError(

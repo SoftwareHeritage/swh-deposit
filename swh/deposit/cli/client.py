@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -271,7 +271,7 @@ def client_command_parse_input(
         )
 
         metadata_tree = ElementTree.fromstring(open(metadata).read())
-        (create_origin, add_to_origin) = parse_swh_deposit_origin(metadata_tree)
+        create_origin, add_to_origin = parse_swh_deposit_origin(metadata_tree)
         if create_origin and add_to_origin:
             logger.error(
                 "The metadata file provided must not contain both "

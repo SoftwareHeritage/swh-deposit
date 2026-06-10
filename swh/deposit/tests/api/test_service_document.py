@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -41,9 +41,7 @@ def test_service_document_with_http_accept_header(authenticated_client):
 
 def check_response(response, username):
     assert response.status_code == status.HTTP_200_OK, f"Response: {response.content}"
-    assert (
-        response.content.decode("utf-8")
-        == """<?xml version="1.0" ?>
+    assert response.content.decode("utf-8") == """<?xml version="1.0" ?>
 <service xmlns:dcterms="http://purl.org/dc/terms/"
     xmlns:sword="http://purl.org/net/sword/terms/"
     xmlns:atom="http://www.w3.org/2005/Atom"
@@ -69,6 +67,4 @@ def check_response(response, username):
         </collection>
     </workspace>
 </service>
-"""
-        % (5000, username, username, username, username)
-    )  # noqa
+""" % (5000, username, username, username, username)  # noqa

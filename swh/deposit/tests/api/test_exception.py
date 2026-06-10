@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021  The Software Heritage developers
+# Copyright (C) 2020-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -22,8 +22,7 @@ def test_custom_exception_handler_operational_error(mocker):
     status = "Database backend maintenance"
     detail = "Service temporarily unavailable, try again later."
     assert (
-        response.content.decode("utf-8")
-        == f"""<?xml version="1.0" encoding="utf-8"?>
+        response.content.decode("utf-8") == f"""<?xml version="1.0" encoding="utf-8"?>
 <sword:error xmlns="http://www.w3.org/2005/Atom"
        xmlns:sword="http://purl.org/net/sword/">
     <summary>{status}</summary>

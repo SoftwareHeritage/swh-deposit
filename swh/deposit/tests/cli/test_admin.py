@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2024  The Software Heritage developers
+# Copyright (C) 2019-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -113,12 +113,9 @@ def test_cli_admin_create_collection(cli_runner):
     collection = DepositCollection.objects.get(name=collection_name)
     assert collection is not None
 
-    assert (
-        result.output
-        == f"""Create collection '{collection_name}'.
+    assert result.output == f"""Create collection '{collection_name}'.
 Collection '{collection_name}' created.
 """
-    )
 
     result2 = cli_runner.invoke(
         cli,
@@ -130,11 +127,8 @@ Collection '{collection_name}' created.
         ],
     )
     assert result2.exit_code == 0, f"Unexpected output: {result.output}"
-    assert (
-        result2.output
-        == f"""Collection '{collection_name}' exists, skipping.
+    assert result2.output == f"""Collection '{collection_name}' exists, skipping.
 """
-    )
 
 
 def test_cli_admin_user_create(cli_runner):
@@ -168,14 +162,11 @@ def test_cli_admin_user_create(cli_runner):
     collection = DepositCollection.objects.get(name=collection_name)
     assert collection is not None
 
-    assert (
-        result.output
-        == f"""Create collection '{user_name}'.
+    assert result.output == f"""Create collection '{user_name}'.
 Collection '{collection_name}' created.
 Create user '{user_name}'.
 User '{user_name}' created.
 """
-    )
 
     assert collection.name == collection_name
     assert user.username == user_name
@@ -232,13 +223,10 @@ User '{user_name}' created.
     assert user.first_name == "User"
     assert user.last_name == "no one"
 
-    assert (
-        result2.output
-        == f"""Collection '{collection_name}' exists, skipping.
+    assert result2.output == f"""Collection '{collection_name}' exists, skipping.
 Update user '{user_name}'.
 User '{user_name}' updated.
 """
-    )
 
 
 def test_cli_admin_reschedule_unknown_deposit(cli_runner):
