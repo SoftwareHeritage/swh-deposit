@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2025  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -37,7 +37,7 @@ if not os.path.exists(config_file):
         f"Production: configuration file {config_file} does not exist!",
     )
 
-conf = config.load_named_config(config_file)
+conf = config.read(config_file)
 if not conf:
     raise ValueError(f"Production: configuration {config_file} does not exist.")
 

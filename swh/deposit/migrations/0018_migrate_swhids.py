@@ -49,7 +49,7 @@ def get_storage() -> Optional[Any]:
                 "Production: configuration file %s does not exist!" % (config_file,)
             )
 
-        conf = config.load_named_config(config_file)
+        conf = config.read(config_file)
         if not conf:
             raise ValueError(
                 "Production: configuration %s does not exist." % (config_file,)

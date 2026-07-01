@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2017-2019  The Software Heritage developers
+# Copyright (C) 2017-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     settings_file = "development"
     if sys.argv[1] == "runserver":
         # override the default host:port for the 'runserver' task
-        conf = config.load_named_config("deposit/server", default_conf=DEFAULT_CONFIG)
+        conf = config.read("deposit/server", default_conf=DEFAULT_CONFIG)
         extra_cmd = ["%s:%s" % (conf["host"], conf["port"])]
         cmd = sys.argv + extra_cmd
     elif sys.argv[1] == "test":
