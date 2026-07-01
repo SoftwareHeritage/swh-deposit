@@ -15,7 +15,6 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any, Collection, Dict, List, Optional
 import warnings
-import xml.etree.ElementTree as ET
 
 import click
 
@@ -105,6 +104,8 @@ def generate_metadata(
         metadata xml string
 
     """
+    import xml.etree.ElementTree as ET
+
     from swh.deposit.utils import NAMESPACES as NS
 
     # generate a metadata file with the minimum required metadata
