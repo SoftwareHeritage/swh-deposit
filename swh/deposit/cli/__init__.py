@@ -9,7 +9,7 @@ import logging
 # control
 import click
 
-from swh.core.cli import CONTEXT_SETTINGS
+from swh.core.cli import CONTEXT_SETTINGS, setup_config
 from swh.core.cli import swh as swh_cli_group
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def deposit(ctx):
     """Deposit main command"""
-    ctx.ensure_object(dict)
+    setup_config(ctx, config_file=None)
     log_level = ctx.obj.get("log_level", logging.INFO)
     logger.setLevel(log_level)
 
