@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2024  The Software Heritage developers
+# Copyright (C) 2018-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -235,7 +235,7 @@ def parse_swh_reference(
             and visit.object_type == ObjectType.SNAPSHOT
             and anchor.object_type == ObjectType.SNAPSHOT
         ):
-            logger.warn(
+            logger.warning(
                 "SWHID use of both anchor and visit targeting "
                 f"a snapshot: {swhid_reference}"
             )
